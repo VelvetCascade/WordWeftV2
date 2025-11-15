@@ -18,7 +18,7 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
   
   const contentThemeClasses: Record<ContentTheme, string> = {
     light: 'bg-background text-text-body',
-    dark: 'bg-gray-900 text-gray-300',
+    dark: 'bg-[#261F1D] text-[#BCAAA4]',
     sepia: 'bg-[#FBF0D9] text-[#5B4636]',
   };
   
@@ -83,7 +83,7 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
             The air in the Grand Archives of Aerthos was thick with the scent of aged parchment and forgotten magic. Elara traced a finger over the spine of a leather-bound tome, dust motes dancing in the slivers of light that pierced the high, vaulted windows. Each book here held a story, a life, a world unto itself. But she wasn't here for just any story. She was searching for a beginning—her own.
           </p>
           <p>
-            Her earliest memory was of waking in this very library, a book of constellations clutched in her small hands and a name whispered on her lips: Lyra. It was the only clue to her past, a single star in a sky of unknowns. The archivists had raised her, feeding her knowledge as they would a fledgling bird, but none could tell her where she came from.
+            Her earliest memory was of waking in this very library, a book of constellations clutched in her small hands and a name whispered on her lips: Lyra. It was the only clue to her past, a single star in a sky of unknowns. The archivists had raised her, feeding her knowledge as they would a fledgling bird, but none could tell her where she from.
           </p>
           <blockquote>
             "A book is a dream you hold in your hand." - Neil Gaiman
@@ -113,7 +113,7 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
                 <PaintBrushIcon className="w-5 h-5" />
             </button>
             <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity`}>
-                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-yellow-500"/></button>
+                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600"/></button>
                 <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
                 <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`}><MoonIcon className="w-5 h-5 text-gray-700"/></button>
             </div>

@@ -69,7 +69,7 @@ export const BookDetailsPage: React.FC<{ navigateTo: NavigateTo; book: Book }> =
             <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <span className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</span></p>
             <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(book.rating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}`} />)}
+                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(book.rating) ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`} />)}
                 </div>
                 <span className="font-sans font-semibold dark:text-dark-text-body">{book.rating}</span>
                 <span className="text-gray-500 dark:text-gray-400">({book.reviewsCount.toLocaleString()} reviews)</span>
@@ -79,7 +79,7 @@ export const BookDetailsPage: React.FC<{ navigateTo: NavigateTo; book: Book }> =
             </div>
             <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed mb-8">{book.summary}</p>
             <div className="flex flex-col sm:flex-row gap-4">
-                <button onClick={() => navigateTo({ name: 'reader', book: book, chapterIndex: 0 })} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-purple-700 transition-transform hover:scale-105 duration-300 shadow-lg">Read from Start</button>
+                <button onClick={() => navigateTo({ name: 'reader', book: book, chapterIndex: 0 })} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-opacity-80 transition-all hover:scale-105 duration-300 shadow-lg">Read from Start</button>
                 <button 
                   onClick={() => setInLibrary(!inLibrary)}
                   className={`w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
@@ -117,7 +117,7 @@ export const BookDetailsPage: React.FC<{ navigateTo: NavigateTo; book: Book }> =
                             <div className="flex items-center gap-4 mb-1">
                                 <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{review.user.name}</h4>
                                 <div className="flex items-center">
-                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-4 h-4 ${i < review.rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}`} />)}
+                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-4 h-4 ${i < review.rating ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`} />)}
                                 </div>
                             </div>
                              <p className="text-text-body dark:text-dark-text-body">{review.comment}</p>
