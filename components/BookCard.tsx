@@ -28,7 +28,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         <h3 className="font-sans font-bold text-md text-text-rich dark:text-dark-text-rich truncate">{book.title}</h3>
         <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.author.name}</p>
         <div className="flex items-center mt-1">
-          <StarIcon className="w-4 h-4 text-amber-400" />
+          <StarIcon className="w-4 h-4 text-amber-600" />
           <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">{book.rating}</span>
         </div>
       </div>

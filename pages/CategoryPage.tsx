@@ -19,7 +19,7 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
             <h3 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">{book.title}</h3>
             <p className="text-sm font-medium text-text-body dark:text-dark-text-body mb-2">by {book.author.name}</p>
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-3">
-                <StarIcon className="w-4 h-4 text-amber-400 mr-1"/>
+                <StarIcon className="w-4 h-4 text-amber-600 mr-1"/>
                 <span>{book.rating}</span>
                 <span className="mx-2">·</span>
                 <span>{book.reviewsCount.toLocaleString()} reviews</span>
