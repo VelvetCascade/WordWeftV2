@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { NavigateTo } from '../types';
 import { GoogleIcon, XMarkIcon } from '../components/icons/Icons';
@@ -7,7 +8,14 @@ interface AuthPageProps {
   onLogin: () => void;
 }
 
-const InputField: React.FC<{ id: string; label: string; type: string; placeholder: string;}> = ({ id, label, type, placeholder }) => (
+const InputField: React.FC<{ 
+    id: string; 
+    label: string; 
+    type: string; 
+    placeholder: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ id, label, type, placeholder, value, onChange }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
             {label}
@@ -18,24 +26,41 @@ const InputField: React.FC<{ id: string; label: string; type: string; placeholde
             placeholder={placeholder}
             className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
             required
+            value={value}
+            onChange={onChange}
         />
     </div>
 );
 
 export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
   const [isLoginView, setIsLoginView] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleAuthAction = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would call an API with form data
-    onLogin();
+    setError(null);
+
+    if (isLoginView) {
+      if (email === 'test@gmail.com' && password === 'admin') {
+        onLogin();
+      } else {
+        setError('Invalid email or password.');
+      }
+    } else {
+      // In a real app, this would register the user. For this demo, we'll just log in.
+      onLogin();
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
       <div className="w-full max-w-md">
          <a href="#/" onClick={(e) => { e.preventDefault(); navigateTo({ name: 'home' })}} className="font-sans font-bold text-3xl text-primary dark:text-gray-100 tracking-tighter text-center block mb-6">
-            Aetherium
+            WordWeft
           </a>
         <div className="relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">
             <button 
@@ -66,21 +91,29 @@ export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
             <form onSubmit={handleAuthAction} className="space-y-4">
                 {!isLoginView && (
                     <>
-                        <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" />
-                        <InputField id="birthday" label="Birthday" type="date" placeholder="" />
+                        <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
+                        <InputField id="birthday" label="Birthday" type="date" placeholder="" value={birthday} onChange={e => setBirthday(e.target.value)} />
                     </>
                 )}
-                <InputField id="email" label="Email Address" type="email" placeholder="you@example.com" />
-                <InputField id="password" label="Password" type="password" placeholder="••••••••" />
+                <InputField id="email" label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <InputField id="password" label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+
+                {error && <p className="text-center text-sm text-danger font-sans pt-2">{error}</p>}
             
-                <button type="submit" className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-purple-700 transition-transform hover:scale-105 duration-300 shadow-lg mt-2">
+                <button type="submit" className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-purple-700 transition-transform hover:scale-105 duration-300 shadow-lg !mt-6">
                     {isLoginView ? 'Sign In' : 'Create Account'}
                 </button>
             </form>
             
             <p className="text-center text-sm text-text-body dark:text-dark-text-body mt-8">
                 {isLoginView ? "Don't have an account?" : "Already have an account?"}
-                <button onClick={() => setIsLoginView(!isLoginView)} className="font-semibold text-accent hover:underline ml-1">
+                <button 
+                    onClick={() => {
+                        setIsLoginView(!isLoginView);
+                        setError(null);
+                    }} 
+                    className="font-semibold text-accent hover:underline ml-1"
+                >
                     {isLoginView ? 'Sign Up' : 'Sign In'}
                 </button>
             </p>
