@@ -7,7 +7,7 @@ export const Footer: React.FC = () => {
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <h3 className="font-sans font-bold text-xl text-primary dark:text-gray-100 tracking-tighter mb-2">Aetherium</h3>
+            <h3 className="font-sans font-bold text-xl text-primary dark:text-gray-100 tracking-tighter mb-2">WordWeft</h3>
             <p className="text-sm max-w-sm">A next-gen platform for readers and storytellers. Discover your next favorite book or share your own story with the world.</p>
           </div>
           <div className="col-span-1">
@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-gray-200/80 dark:border-dark-border text-center text-xs text-gray-500 dark:text-gray-400">
-          <p>&copy; {new Date().getFullYear()} Aetherium Books. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} WordWeft. All rights reserved.</p>
         </div>
       </div>
     </footer>

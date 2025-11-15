@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { NavigateTo } from '../types';
 import { GoogleIcon, XMarkIcon } from '../components/icons/Icons';
@@ -35,7 +36,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
       <div className="w-full max-w-md">
          <a href="#/" onClick={(e) => { e.preventDefault(); navigateTo({ name: 'home' })}} className="font-sans font-bold text-3xl text-primary dark:text-gray-100 tracking-tighter text-center block mb-6">
-            Aetherium
+            WordWeft
           </a>
         <div className="relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">
             <button 

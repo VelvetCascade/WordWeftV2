@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { NavigateTo } from '../types';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
@@ -43,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
       <header className={`fixed top-0 left-0 right-0 z-50 hidden md:block transition-all duration-300 ${isScrolled ? 'bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-lg shadow-soft dark:border-b dark:border-dark-border' : 'bg-transparent'}`}>
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <a href="#/" onClick={(e) => { e.preventDefault(); navigateTo({ name: 'home' })}} className="font-sans font-bold text-2xl text-primary dark:text-gray-100 tracking-tighter">
-            Aetherium
+            WordWeft
           </a>
           <nav className="flex items-center space-x-8">
             {desktopNavLinks.map((link) => (
