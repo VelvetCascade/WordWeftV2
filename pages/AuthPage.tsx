@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { NavigateTo } from '../types';
-import { GoogleIcon } from '../components/icons/Icons';
+import { GoogleIcon, XMarkIcon } from '../components/icons/Icons';
 
 interface AuthPageProps {
   navigateTo: NavigateTo;
@@ -37,7 +37,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
          <a href="#/" onClick={(e) => { e.preventDefault(); navigateTo({ name: 'home' })}} className="font-sans font-bold text-3xl text-primary dark:text-gray-100 tracking-tighter text-center block mb-6">
             Aetherium
           </a>
-        <div className="bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">
+        <div className="relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">
+            <button 
+              onClick={() => navigateTo({ name: 'home' })} 
+              className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
+              aria-label="Close"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
             <h2 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
             {isLoginView ? 'Welcome Back' : 'Create Account'}
             </h2>
