@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import type { NavigateTo } from '../types';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
-import { sampleUser } from '../constants';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface NavbarProps {
@@ -26,16 +25,16 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
   const desktopNavLinks = [
     { label: 'Home', action: () => { window.location.hash = '/'; navigateTo({ name: 'home' }); } },
     { label: 'Genres', action: () => { window.location.hash = '/category'; navigateTo({ name: 'category', genre: null }); } },
-    { label: 'Library', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile', user: sampleUser }); } },
+    { label: 'Library', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }); } },
     { label: 'Write', action: () => { window.location.hash = '/write'; navigateTo({ name: 'writer-dashboard' }); } },
   ];
 
   const mobileNavLinks = [
       { label: 'Home', action: () => { window.location.hash = '/'; navigateTo({ name: 'home' }); }, icon: HomeIcon },
       { label: 'Genres', action: () => { window.location.hash = '/category'; navigateTo({ name: 'category', genre: null }); }, icon: Squares2X2Icon },
-      { label: 'Library', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile', user: sampleUser }); }, icon: BookOpenIcon },
+      { label: 'Library', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }); }, icon: BookOpenIcon },
       { label: 'Write', action: () => { window.location.hash = '/write'; navigateTo({ name: 'writer-dashboard' }); }, icon: PencilSquareIcon },
-      { label: 'Profile', action: () => { isAuthenticated ? navigateTo({ name: 'profile', user: sampleUser }) : navigateTo({ name: 'auth' }) }, icon: UserCircleIcon },
+      { label: 'Profile', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }) }, icon: UserCircleIcon },
   ];
 
   return (
@@ -59,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
             </button>
             {isAuthenticated ? (
               <>
-                <button onClick={() => { window.location.hash = '/profile'; navigateTo({ name: 'profile', user: sampleUser }); }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                <button onClick={() => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }); }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
                   <UserCircleIcon className="w-6 h-6 text-text-body dark:text-dark-text-body" />
                 </button>
                 <button onClick={onLogout} title="Logout" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
@@ -67,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
                 </button>
               </>
             ) : (
-              <button onClick={() => navigateTo({ name: 'auth' })} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              <button onClick={() => { window.location.hash = '/auth'; navigateTo({ name: 'auth' }); }} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
                 Login / Sign Up
               </button>
             )}
@@ -81,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
           {mobileNavLinks.map((link) => {
             if (link.label === 'Profile' && !isAuthenticated) {
                 return (
-                    <button key="Login" onClick={() => navigateTo({ name: 'auth' })} className="flex flex-col items-center justify-center space-y-1 text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors w-1/5">
+                    <button key="Login" onClick={() => { window.location.hash = '/auth'; navigateTo({ name: 'auth' }); }} className="flex flex-col items-center justify-center space-y-1 text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors w-1/5">
                         <ArrowRightOnRectangleIcon className="w-6 h-6" />
                         <span className="text-xs font-sans">Login</span>
                     </button>

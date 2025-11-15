@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
@@ -17,7 +17,7 @@ export type Page =
   | { name: 'book-details'; book: Book }
   | { name: 'reader'; book: Book; chapterIndex: number }
   | { name: 'writer-dashboard' }
-  | { name: 'profile'; user: User }
+  | { name: 'profile' }
   | { name: 'auth' };
 
 const App: React.FC = () => {
@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
 
-  const navigateTo = (newPage: Page) => {
+  const navigateTo = useCallback((newPage: Page) => {
     const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile'];
 
     if (protectedRoutes.includes(newPage.name) && !isAuthenticated) {
@@ -38,7 +38,7 @@ const App: React.FC = () => {
     
     window.scrollTo(0, 0);
     setPage(newPage);
-  };
+  }, [isAuthenticated]);
   
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -81,7 +81,7 @@ const App: React.FC = () => {
       } else if (hash.startsWith('write')) {
         targetPage = { name: 'writer-dashboard' };
       } else if (hash.startsWith('profile')) {
-        targetPage = { name: 'profile', user: sampleUser };
+        targetPage = { name: 'profile' };
       } else if (hash.startsWith('auth')) {
         targetPage = { name: 'auth' };
       } else {
@@ -94,8 +94,7 @@ const App: React.FC = () => {
     handleHashChange(); // Initial check
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [navigateTo]);
 
 
   const renderPage = () => {
@@ -111,7 +110,13 @@ const App: React.FC = () => {
       case 'writer-dashboard':
         return <WriterDashboardPage navigateTo={navigateTo} />;
       case 'profile':
-        return <ProfilePage navigateTo={navigateTo} user={page.user} />;
+        if (!currentUser) {
+          // This should not happen if navigateTo guard works, but as a fallback
+          window.location.hash = '/auth';
+          navigateTo({ name: 'auth' });
+          return null;
+        }
+        return <ProfilePage navigateTo={navigateTo} user={currentUser} />;
       case 'auth':
         return <AuthPage navigateTo={navigateTo} onLogin={handleLogin} />;
       default:
