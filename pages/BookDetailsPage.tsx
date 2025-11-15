@@ -127,7 +127,7 @@ export const BookDetailsPage: React.FC<{ navigateTo: NavigateTo; book: Book }> =
             ))}
             <button className="w-full text-center font-sans font-semibold text-accent py-3 rounded-xl hover:bg-accent/10 transition-colors">Show all reviews</button>
           </div>
-        section>
+        </section>
 
         {/* Author Bio */}
         {authorBooks.length > 0 && (
