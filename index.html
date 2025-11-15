@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-ag" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aetherium Books</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Literata:opsz,wght@7..72,400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Literata', 'serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              primary: '#3B2F5C',
+              accent: '#8A63FF',
+              // Light Theme
+              background: '#FAF9F7',
+              surface: '#FFFFFF',
+              'text-rich': '#111111',
+              'text-body': '#4a4a4a',
+              // Dark Theme
+              'dark-background': '#121212',
+              'dark-surface': '#1E1E1E',
+              'dark-surface-alt': '#2A2A2A',
+              'dark-text-rich': '#F5F5F5',
+              'dark-text-body': '#A0A0A0',
+              'dark-border': '#383838',
+              // Common
+              success: '#10B981',
+              warning: '#F59E0B',
+              danger: '#EF4444',
+            },
+            borderRadius: {
+              'xl': '12px',
+              '2xl': '16px',
+              '3xl': '20px',
+            },
+            boxShadow: {
+              'soft': '0 4px 12px rgba(0, 0, 0, 0.05)',
+              'lifted': '0 10px 25px rgba(0, 0, 0, 0.08)',
+              'glow': '0 0 15px rgba(138, 99, 255, 0.3)',
+            },
+            keyframes: {
+              'gradient-shift': {
+                '0%, 100%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+              },
+              'ripple': {
+                'to': { transform: 'scale(4)', opacity: '0' },
+              },
+              'slide-in-bottom': {
+                '0%': { transform: 'translateY(100%)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            },
+            animation: {
+              'gradient-shift': 'gradient-shift 10s ease infinite',
+              'ripple': 'ripple 0.6s linear',
+              'slide-in-bottom': 'slide-in-bottom 0.3s ease-out forwards',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .bg-animated-gradient {
+        background: linear-gradient(-45deg, #3B2F5C, #53457E, #8A63FF, #3B2F5C);
+        background-size: 400% 400%;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.2",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "url": "https://aistudiocdn.com/url@^0.11.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background dark:bg-dark-background font-serif text-text-body dark:text-dark-text-body">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
