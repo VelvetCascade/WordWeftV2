@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Navbar } from './components/Navbar';
@@ -8,8 +9,9 @@ import { ReaderPage } from './pages/ReaderPage';
 import { WriterDashboardPage } from './pages/WriterDashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
-import type { Book, User } from './types';
-import { sampleBooks, sampleUser } from './constants';
+import { AuthorPage } from './pages/AuthorPage';
+import type { Book, User, Author, Shelf } from './types';
+import { sampleBooks, sampleUser, mainAuthor, otherAuthors } from './constants';
 
 export type Page = 
   | { name: 'home' }
@@ -18,7 +20,8 @@ export type Page =
   | { name: 'reader'; book: Book; chapterIndex: number }
   | { name: 'writer-dashboard' }
   | { name: 'profile' }
-  | { name: 'auth' };
+  | { name: 'auth' }
+  | { name: 'author'; author: Author };
 
 const App: React.FC = () => {
   const [page, setPage] = useState<Page>({ name: 'home' });
@@ -27,7 +30,7 @@ const App: React.FC = () => {
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
 
   const navigateTo = useCallback((newPage: Page) => {
-    const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile'];
+    const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author'];
 
     if (protectedRoutes.includes(newPage.name) && !isAuthenticated) {
       setIntendedPage(newPage);
@@ -42,12 +45,14 @@ const App: React.FC = () => {
   
   const handleLogin = () => {
     setIsAuthenticated(true);
-    setCurrentUser(sampleUser);
+    setCurrentUser(JSON.parse(JSON.stringify(sampleUser))); // Deep copy to make mutable
     const targetPage = intendedPage || { name: 'home' };
     
     // Set hash based on target page
     if (targetPage.name === 'book-details') {
       window.location.hash = `/book/${targetPage.book.id}`;
+    } else if (targetPage.name === 'author') {
+      window.location.hash = `/author/${targetPage.author.id}`;
     } else if(targetPage.name !== 'home' && targetPage.name !== 'auth') {
        window.location.hash = `/${targetPage.name}`;
     } else {
@@ -65,6 +70,12 @@ const App: React.FC = () => {
     navigateTo({ name: 'home' });
   };
   
+  const updateUserLibrary = (newLibrary: Shelf[]) => {
+    if (currentUser) {
+      setCurrentUser(prevUser => prevUser ? { ...prevUser, library: newLibrary } : null);
+    }
+  };
+
   // On initial load, if there's a hash, try to navigate. This is a simple router.
   useEffect(() => {
     const handleHashChange = () => {
@@ -75,6 +86,11 @@ const App: React.FC = () => {
         const bookId = parseInt(hash.split('/')[1], 10);
         const book = sampleBooks.find(b => b.id === bookId);
         targetPage = book ? { name: 'book-details', book } : { name: 'home' };
+      } else if (hash.startsWith('author/')) {
+        const authorId = parseInt(hash.split('/')[1], 10);
+        const allAuthors = [mainAuthor, ...otherAuthors];
+        const author = allAuthors.find(a => a.id === authorId);
+        targetPage = author ? { name: 'author', author } : { name: 'home' };
       } else if (hash.startsWith('category')) {
         // This is a simplified genre parsing
         targetPage = { name: 'category', genre: null };
@@ -104,7 +120,7 @@ const App: React.FC = () => {
       case 'category':
         return <CategoryPage navigateTo={navigateTo} genre={page.genre} />;
       case 'book-details':
-        return <BookDetailsPage navigateTo={navigateTo} book={page.book} />;
+        return <BookDetailsPage navigateTo={navigateTo} book={page.book} currentUser={currentUser} updateUserLibrary={updateUserLibrary} />;
       case 'reader':
         return <ReaderPage navigateTo={navigateTo} book={page.book} chapterIndex={page.chapterIndex} />;
       case 'writer-dashboard':
@@ -116,9 +132,11 @@ const App: React.FC = () => {
           navigateTo({ name: 'auth' });
           return null;
         }
-        return <ProfilePage navigateTo={navigateTo} user={currentUser} />;
+        return <ProfilePage navigateTo={navigateTo} user={currentUser} updateUserLibrary={updateUserLibrary} />;
       case 'auth':
         return <AuthPage navigateTo={navigateTo} onLogin={handleLogin} />;
+      case 'author':
+        return <AuthorPage navigateTo={navigateTo} author={page.author} />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }

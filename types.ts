@@ -67,3 +67,17 @@ export interface LibraryBook extends Book {
 
 
 export type NavigateTo = (page: Page) => void;
+
+// --- Reading Progress Types ---
+
+export interface ChapterProgress {
+  progress: number; // 0-100
+  scrollPosition: number;
+}
+
+export interface BookProgress {
+  overallProgress: number; // 0-100
+  lastReadChapterIndex: number;
+  lastReadScrollPosition: number;
+  chapters: { [chapterId: number]: ChapterProgress };
+}

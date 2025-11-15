@@ -100,7 +100,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
 
                 {error && <p className="text-center text-sm text-danger font-sans pt-2">{error}</p>}
             
-                <button type="submit" className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-purple-700 transition-transform hover:scale-105 duration-300 shadow-lg !mt-6">
+                <button type="submit" className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6">
                     {isLoginView ? 'Sign In' : 'Create Account'}
                 </button>
             </form>

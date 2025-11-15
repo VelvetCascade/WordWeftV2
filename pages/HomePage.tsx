@@ -53,6 +53,7 @@ const HeroCarousel: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
 
 export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
   const [searchValue, setSearchValue] = useState("");
+  const spotlightAuthor = sampleBooks[0].author;
   
   return (
     <div className="overflow-x-hidden">
@@ -69,7 +70,7 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
               A next-gen platform for readers and storytellers.
             </p>
             <div className="flex justify-center md:justify-start space-x-4">
-              <button onClick={() => navigateTo({ name: 'category', genre: null })} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-purple-700 transition-transform hover:scale-105 duration-300 shadow-lg">Start Reading</button>
+              <button onClick={() => navigateTo({ name: 'category', genre: null })} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg">Start Reading</button>
               <button onClick={() => navigateTo({ name: 'writer-dashboard' })} className="bg-surface/20 font-sans font-semibold px-8 py-3 rounded-xl hover:bg-surface/30 transition-transform hover:scale-105 duration-300 shadow-lg">Start Writing</button>
             </div>
           </div>
@@ -124,12 +125,12 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
       <section className="bg-white dark:bg-dark-surface py-24">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center bg-surface dark:bg-dark-surface-alt rounded-3xl shadow-soft p-8 md:p-12 gap-8">
-            <img src={sampleBooks[0].author.avatarUrl} alt={sampleBooks[0].author.name} className="w-32 h-32 rounded-full object-cover" />
+            <img src={spotlightAuthor.avatarUrl} alt={spotlightAuthor.name} className="w-32 h-32 rounded-full object-cover" />
             <div className="text-center md:text-left">
               <p className="font-sans text-sm font-semibold text-accent mb-2">Author Spotlight</p>
-              <h3 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-2">{sampleBooks[0].author.name}</h3>
-              <p className="max-w-xl mb-4">{sampleBooks[0].author.bio}</p>
-              <button onClick={() => alert('Author profile coming soon!')} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
+              <h3 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-2">{spotlightAuthor.name}</h3>
+              <p className="max-w-xl mb-4">{spotlightAuthor.bio}</p>
+              <button onClick={() => { window.location.hash=`/author/${spotlightAuthor.id}`; navigateTo({ name: 'author', author: spotlightAuthor }); }} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
             </div>
           </div>
         </div>
