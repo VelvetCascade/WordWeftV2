@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { sampleBooks, sampleReviews } from '../constants';
@@ -37,7 +36,8 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                     </div>
                 </div>
             </div>
-            {chapter.isReleased ? (
+            {/* FIX: Use `chapter.status` to check if chapter is published instead of non-existent `isReleased` property */}
+            {chapter.status === 'published' ? (
                 <button onClick={onRead} className="font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
                     {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Start Reading'}
                 </button>

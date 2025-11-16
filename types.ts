@@ -27,8 +27,8 @@ export interface Chapter {
   id: number;
   title: string;
   wordCount: number;
-  content: string; // This would be more complex (e.g., structured JSON) in a real app
-  isReleased: boolean;
+  content: string;
+  status: 'draft' | 'published';
 }
 
 export interface Book {
@@ -42,7 +42,11 @@ export interface Book {
   tags: string[];
   summary: string;
   chapters: Chapter[];
-  status: 'Completed' | 'Ongoing';
+  readingStatus: 'Completed' | 'Ongoing';
+  publicationStatus: 'draft' | 'published';
+  publishedDate?: string;
+  isMature: boolean;
+  description: string;
 }
 
 export interface User {
@@ -58,6 +62,7 @@ export interface User {
   };
   following: Author[];
   library: Shelf[];
+  writtenBooks?: Book[];
 }
 
 export interface Shelf {

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { User, Shelf, LibraryBook, BookProgress } from '../types';
 import { Footer } from '../components/Footer';
@@ -32,14 +31,15 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: number) 
     
     const isCompleted = book.progress >= 100;
 
+    // FIX: Use `c.status` to check if chapter is published instead of non-existent `isReleased` property
     const completedChapters = useMemo(() => {
         // This is a mock calculation for the tooltip as we don't have the full progress object here.
         // A more robust solution would pass the full BookProgress object.
-        const totalReleased = book.chapters.filter(c => c.isReleased).length;
+        const totalReleased = book.chapters.filter(c => c.status === 'published').length;
         return Math.floor((book.progress / 100) * totalReleased);
     }, [book.progress, book.chapters]);
 
-    const cardTooltip = `${completedChapters} / ${book.chapters.filter(c => c.isReleased).length} chapters completed.`;
+    const cardTooltip = `${completedChapters} / ${book.chapters.filter(c => c.status === 'published').length} chapters completed.`;
 
     return (
         <div className="group" title={cardTooltip}>

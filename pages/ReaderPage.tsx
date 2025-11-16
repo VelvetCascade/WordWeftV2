@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Book, BookProgress } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon } from '../components/icons/Icons';
@@ -59,7 +58,8 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
         bookProgress.lastReadScrollPosition = Math.round(scrollPosition);
         
         // Recalculate overall progress
-        const totalChapters = book.chapters.filter(c => c.isReleased).length;
+        // FIX: Use `c.status` to check if chapter is published instead of non-existent `isReleased` property
+        const totalChapters = book.chapters.filter(c => c.status === 'published').length;
         // Re-evaluate the sum of progress from the potentially updated chapters map
         const completedChaptersSum = Object.values(bookProgress.chapters).reduce((sum: number, chap: any) => sum + (chap.progress || 0), 0);
         bookProgress.overallProgress = totalChapters > 0 ? Math.round(completedChaptersSum / totalChapters) : 0;
@@ -270,16 +270,17 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
         <ul className="overflow-y-auto h-[calc(100%-65px)]">
           {book.chapters.map((chap, index) => (
             <li key={chap.id}>
+              {/* FIX: Use `chap.status` to check if chapter is published instead of non-existent `isReleased` property */}
               <button 
                 onClick={() => { 
                   goToChapter(index); 
                   setIsTocVisible(false);
                 }}
-                className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${!chap.isReleased ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
-                disabled={!chap.isReleased}
+                className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                disabled={chap.status !== 'published'}
               >
                 <span className="block truncate">{chap.title}</span>
-                {!chap.isReleased && <span className="text-xs">(Not Released)</span>}
+                {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
               </button>
             </li>
           ))}

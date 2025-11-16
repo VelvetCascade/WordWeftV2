@@ -1,12 +1,16 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Navbar } from './components/Navbar';
+import { WriterLayout } from './components/WriterLayout';
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
 import { BookDetailsPage } from './pages/BookDetailsPage';
 import { ReaderPage } from './pages/ReaderPage';
 import { WriterDashboardPage } from './pages/WriterDashboardPage';
+import { CreateBookPage } from './pages/CreateBookPage';
+import { ManageChaptersPage } from './pages/ManageChaptersPage';
+import { ChapterEditorPage } from './pages/ChapterEditorPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
@@ -20,6 +24,9 @@ export type Page =
   | { name: 'book-details'; book: Book }
   | { name: 'reader'; book: Book; chapterIndex: number }
   | { name: 'writer-dashboard' }
+  | { name: 'writer-create-book' }
+  | { name: 'writer-manage-book'; bookId: number }
+  | { name: 'writer-edit-chapter'; bookId: number, chapterId: number | 'new' }
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; author: Author }
@@ -58,15 +65,16 @@ const App: React.FC = () => {
     window.location.hash = '/';
   };
   
-  const updateUserLibrary = (newLibrary: Shelf[]) => {
-    if (currentUser) {
-      setCurrentUser(prevUser => prevUser ? { ...prevUser, library: newLibrary } : null);
-    }
+  const updateUser = (updater: (user: User) => User) => {
+      setCurrentUser(currentUser => {
+          if (!currentUser) return null;
+          return updater(JSON.parse(JSON.stringify(currentUser)));
+      });
   };
 
   const handleUpdateProfile = (updatedData: Partial<User>) => {
     if (currentUser) {
-      setCurrentUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+      updateUser(user => ({...user, ...updatedData}));
       window.location.hash = '/profile';
     }
   };
@@ -78,18 +86,15 @@ const App: React.FC = () => {
         if (progressExists) return;
 
         const allProgress = {
-            // Alice (ID: 101)
             '101': {
                 '1': { overallProgress: 35, lastReadChapterIndex: 1, lastReadScrollPosition: 1200, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 40, scrollPosition: 1200 } } },
                 '2': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
                 '7': { overallProgress: 0, lastReadChapterIndex: 0, lastReadScrollPosition: 0, chapters: {} },
             },
-            // Rahul (ID: 102)
             '102': {
                 '3': { overallProgress: 80, lastReadChapterIndex: 2, lastReadScrollPosition: 2000, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 70, scrollPosition: 2000 } } },
                 '7': { overallProgress: 10, lastReadChapterIndex: 1, lastReadScrollPosition: 500, chapters: { '101': { progress: 100, scrollPosition: 9999 }, '102': { progress: 5, scrollPosition: 500 } } },
             },
-            // Mei (ID: 103)
             '103': {
                 '1': { overallProgress: 100, lastReadChapterIndex: 3, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 100, scrollPosition: 9999 }, '4': { progress: 100, scrollPosition: 9999 } } },
                 '2': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
@@ -113,7 +118,8 @@ const App: React.FC = () => {
 
       if (hash.startsWith('book/')) {
         const bookId = parseInt(hash.split('/')[1], 10);
-        const book = sampleBooks.find(b => b.id === bookId);
+        const allBooks = [...sampleBooks, ...sampleUsers.flatMap(u => u.writtenBooks || [])];
+        const book = allBooks.find(b => b.id === bookId);
         targetPage = book ? { name: 'book-details', book } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
         const authorId = parseInt(hash.split('/')[1], 10);
@@ -126,10 +132,23 @@ const App: React.FC = () => {
         const chapterIndex = parseInt(parts[4], 10) || 0;
         const book = sampleBooks.find(b => b.id === bookId);
         targetPage = book ? { name: 'reader', book, chapterIndex: chapterIndex } : { name: 'home' };
-      } else if (hash.startsWith('category')) {
-        targetPage = { name: 'category', genre: null };
+      } else if (hash.startsWith('write/book/create')) {
+        targetPage = { name: 'writer-create-book' };
+      } else if (hash.startsWith('write/book/')) {
+        const parts = hash.split('/');
+        const bookId = parseInt(parts[2], 10);
+        if (parts[3] === 'manage') {
+          targetPage = { name: 'writer-manage-book', bookId };
+        } else if (parts[3] === 'chapter' && parts[5] === 'edit') {
+          const chapterId = parts[4] === 'new' ? 'new' : parseInt(parts[4], 10);
+          targetPage = { name: 'writer-edit-chapter', bookId, chapterId };
+        } else {
+          targetPage = { name: 'writer-dashboard' };
+        }
       } else if (hash.startsWith('write')) {
         targetPage = { name: 'writer-dashboard' };
+      } else if (hash.startsWith('category')) {
+        targetPage = { name: 'category', genre: null };
       } else if (hash.startsWith('profile')) {
         targetPage = { name: 'profile' };
       } else if (hash.startsWith('edit-profile')) {
@@ -140,7 +159,7 @@ const App: React.FC = () => {
         targetPage = { name: 'home' };
       }
       
-      const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author', 'edit-profile'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
@@ -160,30 +179,31 @@ const App: React.FC = () => {
 
 
   const renderPage = () => {
+    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {
+      return null;
+    }
+
     switch (page.name) {
       case 'home':
         return <HomePage />;
       case 'category':
         return <CategoryPage genre={page.genre} />;
       case 'book-details':
-        return <BookDetailsPage book={page.book} currentUser={currentUser} updateUserLibrary={updateUserLibrary} />;
+        return <BookDetailsPage book={page.book} currentUser={currentUser} updateUserLibrary={(library) => updateUser(user => ({...user, library}))} />;
       case 'reader':
         return <ReaderPage book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
       case 'writer-dashboard':
-        return <WriterDashboardPage />;
+        return <WriterDashboardPage currentUser={currentUser!} onUpdateUser={updateUser}/>;
+      case 'writer-create-book':
+        return <CreateBookPage currentUser={currentUser!} onUpdateUser={updateUser} />;
+      case 'writer-manage-book':
+        return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUpdateUser={updateUser} />;
+      case 'writer-edit-chapter':
+        return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUpdateUser={updateUser} />;
       case 'profile':
-        if (!currentUser) {
-          // This check is now a fallback, as the router should prevent this state.
-          window.location.hash = '/auth';
-          return null;
-        }
-        return <ProfilePage user={currentUser} updateUserLibrary={updateUserLibrary} />;
+        return <ProfilePage user={currentUser!} updateUserLibrary={(library) => updateUser(user => ({...user, library}))} />;
       case 'edit-profile':
-        if (!currentUser) {
-          window.location.hash = '/auth';
-          return null;
-        }
-        return <EditProfilePage user={currentUser} onUpdateProfile={handleUpdateProfile} />;
+        return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'auth':
         return <AuthPage onLogin={handleLogin} />;
       case 'author':
@@ -193,14 +213,22 @@ const App: React.FC = () => {
     }
   };
   
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile';
+  const isWriterPage = page.name.startsWith('writer-');
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && !isWriterPage;
 
   return (
     <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
       {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />}
-      <main className={showNavbar ? "pt-20" : ""}>
-        {renderPage()}
-      </main>
+      
+      {isWriterPage ? (
+        <WriterLayout>
+          {renderPage()}
+        </WriterLayout>
+      ) : (
+        <main className={showNavbar ? "pt-20" : ""}>
+          {renderPage()}
+        </main>
+      )}
     </div>
   );
 };
