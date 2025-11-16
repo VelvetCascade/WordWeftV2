@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import type { Book, NavigateTo, BookProgress, ChapterProgress } from '../types';
+import type { User, Book, NavigateTo, BookProgress, ChapterProgress } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -32,11 +33,24 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
             chapters: {},
         };
 
-        // Update current chapter progress
         const chapterId = book.chapters[chapterIndex].id;
-        const currentChapterProgress = Math.min(100, Math.max(0, (scrollPosition / contentHeight) * 100));
+        
+        let currentChapterProgress: number;
+
+        // If content isn't scrollable or user is at the bottom, progress is 100%
+        if (contentHeight <= 0 || (scrollPosition >= contentHeight - 5)) {
+            currentChapterProgress = 100;
+        } else {
+            currentChapterProgress = (scrollPosition / contentHeight) * 100;
+        }
+        
+        currentChapterProgress = Math.min(100, Math.max(0, currentChapterProgress));
+
+        // Get existing progress to avoid overwriting 100% with a smaller value if user scrolls up.
+        const existingChapterProgress = bookProgress.chapters[chapterId]?.progress || 0;
+
         bookProgress.chapters[chapterId] = {
-            progress: currentChapterProgress,
+            progress: Math.max(existingChapterProgress, currentChapterProgress), // Only update if new progress is higher
             scrollPosition: Math.round(scrollPosition),
         };
 
@@ -46,7 +60,8 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
         
         // Recalculate overall progress
         const totalChapters = book.chapters.filter(c => c.isReleased).length;
-        const completedChaptersSum = Object.values(bookProgress.chapters).reduce((sum, chap) => sum + chap.progress, 0);
+        // Re-evaluate the sum of progress from the potentially updated chapters map
+        const completedChaptersSum = Object.values(bookProgress.chapters).reduce((sum: number, chap: any) => sum + (chap.progress || 0), 0);
         bookProgress.overallProgress = totalChapters > 0 ? Math.round(completedChaptersSum / totalChapters) : 0;
         
         allProgress[userId][book.id] = bookProgress;
@@ -56,7 +71,15 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
     }
 };
 
-export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterIndex: number }> = ({ navigateTo, book, chapterIndex }) => {
+
+interface ReaderPageProps {
+    navigateTo: NavigateTo;
+    book: Book;
+    chapterIndex: number;
+    currentUser: User | null;
+}
+
+export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapterIndex, currentUser }) => {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
   const [fontSize, setFontSize] = useState(18);
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
@@ -67,9 +90,6 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
   const scrollTimeoutRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { theme: globalTheme } = useTheme();
-
-  // A mock user ID. In a real app, this would come from the auth context.
-  const MOCK_USER_ID = 101;
 
   const chapter = book.chapters[currentChapterIndex];
   
@@ -88,6 +108,21 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
     }
   }, [globalTheme]);
 
+  // Effect to handle non-scrollable content and mark it as read.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!currentUser || !contentRef.current) return;
+      
+      const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+      if (contentHeight <= 0) {
+        saveReadingProgress(currentUser.id, book, currentChapterIndex, 0, contentHeight);
+      }
+    }, 500); // Wait a bit for content to fully render and layout to be calculated.
+
+    return () => clearTimeout(timer);
+  }, [book, currentChapterIndex, currentUser]);
+
   const goToChapter = (index: number) => {
     if (index >= 0 && index < book.chapters.length) {
       setCurrentChapterIndex(index);
@@ -97,32 +132,35 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
 
   // Effect to check for saved progress on load
   useEffect(() => {
-    const savedProgress = getReadingProgressForBook(MOCK_USER_ID, book.id);
+    if (!currentUser) return;
+    const savedProgress = getReadingProgressForBook(currentUser.id, book.id);
     if (savedProgress && savedProgress.overallProgress > 0) {
       // Show prompt only if there's meaningful progress
       setResumeData(savedProgress);
     }
-  }, [book.id]);
+  }, [book.id, currentUser]);
 
   // Effect to save progress on scroll and chapter change
   useEffect(() => {
     const handleSaveProgress = () => {
+        if (!currentUser) return;
         if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
         }
         scrollTimeoutRef.current = window.setTimeout(() => {
             const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
             if (contentHeight > 0) {
-              saveReadingProgress(MOCK_USER_ID, book, currentChapterIndex, window.scrollY, contentHeight);
+              saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
             }
         }, 300); // Throttle saving
     };
 
     const handleVisibilityChange = () => {
+        if (!currentUser) return;
         if (document.visibilityState === 'hidden') {
             const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
             if (contentHeight > 0) {
-              saveReadingProgress(MOCK_USER_ID, book, currentChapterIndex, window.scrollY, contentHeight);
+              saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
             }
         }
     }
@@ -136,13 +174,14 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
         if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
         }
+        if (!currentUser) return;
         // Save one last time on unmount
         const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
         if (contentHeight > 0) {
-            saveReadingProgress(MOCK_USER_ID, book, currentChapterIndex, window.scrollY, contentHeight);
+            saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
         }
     };
-  }, [book, currentChapterIndex]);
+  }, [book, currentChapterIndex, currentUser]);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -184,7 +223,8 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
   
   // Jump to last scroll position for the current chapter when it loads
   useEffect(() => {
-    const progress = getReadingProgressForBook(MOCK_USER_ID, book.id);
+    if (!currentUser) return;
+    const progress = getReadingProgressForBook(currentUser.id, book.id);
     const chapterProgress = progress?.chapters[chapter.id];
 
     // Only auto-scroll if we're not showing the main "resume" prompt
@@ -195,7 +235,7 @@ export const ReaderPage: React.FC<{ navigateTo: NavigateTo; book: Book; chapterI
             setTimeout(() => window.scrollTo({ top: chapterProgress.scrollPosition, behavior: 'auto' }), 50);
         }
     }
-  }, [currentChapterIndex, book.id, chapter.id, resumeData, chapterIndex]);
+  }, [currentChapterIndex, book.id, chapter.id, resumeData, chapterIndex, currentUser]);
 
 
   return (

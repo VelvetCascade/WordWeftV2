@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import type { NavigateTo } from '../types';
+import type { NavigateTo, User } from '../types';
 import { GoogleIcon, XMarkIcon } from '../components/icons/Icons';
+import { sampleUsers } from '../constants';
 
 interface AuthPageProps {
   navigateTo: NavigateTo;
-  onLogin: () => void;
+  onLogin: (user: User) => void;
 }
 
 const InputField: React.FC<{ 
@@ -45,14 +46,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
     setError(null);
 
     if (isLoginView) {
-      if (email === 'test@gmail.com' && password === 'admin') {
-        onLogin();
+      // Mock login for multiple users. In a real app, this would be an API call.
+      const user = sampleUsers.find(u => u.email === email);
+      if (user && password === 'password') {
+        onLogin(user);
       } else {
         setError('Invalid email or password.');
       }
     } else {
-      // In a real app, this would register the user. For this demo, we'll just log in.
-      onLogin();
+      // In a real app, this would register the user. For this demo, we'll just log in with the first user.
+      onLogin(sampleUsers[0]);
     }
   };
 

@@ -1,3 +1,4 @@
+
 import type { Book, Author, Review, Chapter, User, LibraryBook, Shelf } from './types';
 
 export const mainAuthor: Author = {
@@ -160,68 +161,83 @@ export const genres = [
 
 // --- New mock data for User Profile ---
 
-export const libraryBooks: LibraryBook[] = [
+const createLibraryBook = (bookId: number, addedDate: string): LibraryBook => ({
+    ...sampleBooks.find(b => b.id === bookId)!,
+    progress: 0, // Progress will be populated dynamically
+    addedDate,
+});
+
+const aliceLibrary: Shelf[] = [
+    { id: 1, name: 'My Reading List', books: [
+        createLibraryBook(1, '2023-10-15'), // The Obsidian Heart
+        createLibraryBook(7, '2023-11-02'), // The Sunken City
+        createLibraryBook(2, '2023-08-20'), // Echoes of a Neon City
+    ]},
+];
+
+const rahulLibrary: Shelf[] = [
+    { id: 1, name: 'Currently Reading', books: [
+        createLibraryBook(3, '2023-09-01'), // The Serpent and the Star
+        createLibraryBook(7, '2023-11-05'), // The Sunken City
+    ]},
+     { id: 2, name: 'Want to Read', books: [
+        createLibraryBook(4, '2023-11-01'), // Whispers in the Fen
+    ]},
+];
+
+const meiLibrary: Shelf[] = [
+    { id: 1, name: 'All Books', books: [
+        createLibraryBook(1, '2023-01-01'),
+        createLibraryBook(2, '2023-02-01'),
+        createLibraryBook(3, '2023-03-01'),
+        createLibraryBook(4, '2023-04-01'),
+        createLibraryBook(6, '2023-05-01'),
+        createLibraryBook(7, '2023-06-01'),
+    ]},
+];
+
+
+export const sampleUsers: User[] = [
   {
-    ...sampleBooks.find(b => b.id === 1)!, // The Obsidian Heart
-    progress: 35,
-    addedDate: '2023-10-15',
+    id: 101,
+    name: 'Alice',
+    email: 'alice@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user101/200/200',
+    joinDate: '2023-05-21',
+    stats: {
+      booksRead: 1,
+      chaptersRead: 3,
+      favoriteGenres: ['High Fantasy', 'Cyberpunk'],
+    },
+    following: [mainAuthor, otherAuthors[0]],
+    library: aliceLibrary,
   },
   {
-    ...sampleBooks.find(b => b.id === 3)!, // The Serpent and the Star
-    progress: 80,
-    addedDate: '2023-09-01',
+    id: 102,
+    name: 'Rahul',
+    email: 'rahul@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user102/200/200',
+    joinDate: '2023-06-15',
+    stats: {
+      booksRead: 0,
+      chaptersRead: 5,
+      favoriteGenres: ['Urban Fantasy', 'Mystery'],
+    },
+    following: [otherAuthors[1], otherAuthors[2]],
+    library: rahulLibrary,
   },
   {
-    ...sampleBooks.find(b => b.id === 2)!, // Echoes of a Neon City
-    progress: 100,
-    addedDate: '2023-08-20',
-  },
-  {
-    ...sampleBooks.find(b => b.id === 4)!, // Whispers in the Fen
-    progress: 0,
-    addedDate: '2023-11-01',
-  },
-  {
-    ...sampleBooks.find(b => b.id === 6)!, // Gears of Retribution
-    progress: 100,
-    addedDate: '2023-06-10',
-  },
-  {
-    ...sampleBooks.find(b => b.id === 7)!, // The Sunken City of Aerthos
-    progress: 0,
-    addedDate: '2023-11-02',
+    id: 103,
+    name: 'Mei',
+    email: 'mei@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user103/200/200',
+    joinDate: '2022-12-10',
+    stats: {
+      booksRead: 12,
+      chaptersRead: 148,
+      favoriteGenres: ['Steampunk', 'Adventure'],
+    },
+    following: [mainAuthor, otherAuthors[0], otherAuthors[1], otherAuthors[2]],
+    library: meiLibrary,
   }
 ];
-
-export const sampleShelves: Shelf[] = [
-  {
-    id: 1,
-    name: 'Reading',
-    books: libraryBooks.filter(b => b.progress > 0 && b.progress < 100),
-  },
-  {
-    id: 2,
-    name: 'To Read',
-    books: libraryBooks.filter(b => b.progress === 0),
-  },
-  {
-    id: 3,
-    name: 'Completed',
-    books: libraryBooks.filter(b => b.progress === 100),
-  },
-];
-
-
-export const sampleUser: User = {
-  id: 101,
-  name: 'Jane Doe',
-  avatarUrl: 'https://picsum.photos/seed/user101/200/200',
-  joinDate: '2023-05-21',
-  stats: {
-    booksRead: 12,
-    chaptersRead: 148,
-    favoriteGenres: ['High Fantasy', 'Cyberpunk', 'Mystery'],
-  },
-  following: [mainAuthor, otherAuthors[0]],
-  library: sampleShelves,
-};

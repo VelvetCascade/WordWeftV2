@@ -1,3 +1,4 @@
+
 import type { Page } from './App';
 
 export interface Author {
@@ -43,6 +44,7 @@ export interface Book {
 export interface User {
   id: number;
   name: string;
+  email: string;
   avatarUrl: string;
   joinDate: string;
   stats: {
