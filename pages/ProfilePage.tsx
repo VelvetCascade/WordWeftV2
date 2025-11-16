@@ -1,6 +1,5 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
-import type { User, NavigateTo, Shelf, LibraryBook, BookProgress } from '../types';
+import React, { useState, useMemo } from 'react';
+import type { User, Shelf, LibraryBook, BookProgress } from '../types';
 import { Footer } from '../components/Footer';
 import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
 
@@ -32,14 +31,15 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: number) 
     
     const isCompleted = book.progress >= 100;
 
+    // FIX: Use `c.status` to check if chapter is published instead of non-existent `isReleased` property
     const completedChapters = useMemo(() => {
         // This is a mock calculation for the tooltip as we don't have the full progress object here.
         // A more robust solution would pass the full BookProgress object.
-        const totalReleased = book.chapters.filter(c => c.isReleased).length;
+        const totalReleased = book.chapters.filter(c => c.status === 'published').length;
         return Math.floor((book.progress / 100) * totalReleased);
     }, [book.progress, book.chapters]);
 
-    const cardTooltip = `${completedChapters} / ${book.chapters.filter(c => c.isReleased).length} chapters completed.`;
+    const cardTooltip = `${completedChapters} / ${book.chapters.filter(c => c.status === 'published').length} chapters completed.`;
 
     return (
         <div className="group" title={cardTooltip}>
@@ -105,12 +105,11 @@ const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label:
 );
 
 interface ProfilePageProps {
-    navigateTo: NavigateTo;
     user: User;
     updateUserLibrary: (newLibrary: Shelf[]) => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, updateUserLibrary }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ user, updateUserLibrary }) => {
     const [activeShelfId, setActiveShelfId] = useState<'all' | number>('all');
     const [forceUpdate, setForceUpdate] = useState(0); // Used to re-render after progress changes
 
@@ -212,7 +211,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
     const handleBookClick = (book: LibraryBook) => {
         const progress = getReadingProgressForAllBooks(user.id)?.[book.id];
         const chapterIndex = progress ? progress.lastReadChapterIndex : 0;
-        navigateTo({ name: 'reader', book, chapterIndex });
+        window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
     };
 
     return (
@@ -226,7 +225,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
                             <p className="text-text-body dark:text-dark-text-body mt-1">Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
                         </div>
                         <button 
-                            onClick={() => { window.location.hash = '/edit-profile'; navigateTo({ name: 'edit-profile' })}}
+                            onClick={() => { window.location.hash = '/edit-profile'; }}
                             className="bg-gray-100 dark:bg-dark-surface-alt font-sans font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors"
                         >
                             <Cog6ToothIcon className="w-5 h-5"/> Edit Profile
@@ -272,7 +271,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
                         ) : (
                             <div className="text-center py-16 bg-gray-50 dark:bg-dark-surface rounded-2xl">
                                 <p className="text-text-body dark:text-dark-text-body">This shelf is empty.</p>
-                                <button onClick={() => navigateTo({name: 'category', genre: null})} className="mt-4 font-sans font-semibold text-accent hover:underline">Find books to add</button>
+                                <button onClick={() => window.location.hash = '/category'} className="mt-4 font-sans font-semibold text-accent hover:underline">Find books to add</button>
                             </div>
                         )}
                     </main>

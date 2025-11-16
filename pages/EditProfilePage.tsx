@@ -1,14 +1,14 @@
+
 import React, { useState } from 'react';
-import type { User, NavigateTo } from '../types';
+import type { User } from '../types';
 import { ArrowLeftIcon } from '../components/icons/Icons';
 
 interface EditProfilePageProps {
   user: User;
   onUpdateProfile: (updatedData: Partial<User>) => void;
-  navigateTo: NavigateTo;
 }
 
-export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, navigateTo }) => {
+export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile }) => {
   const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
   
@@ -21,7 +21,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateProfile({ name, avatarUrl });
-    // Navigation back is handled in App.tsx's onUpdateProfile
+    // Navigation back to profile is handled in App.tsx's onUpdateProfile via hash change
   };
 
   const handlePasswordChange = (e: React.FormEvent) => {
@@ -53,7 +53,6 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
   const handleCancel = () => {
     window.location.hash = '/profile';
-    navigateTo({ name: 'profile' });
   };
 
   return (

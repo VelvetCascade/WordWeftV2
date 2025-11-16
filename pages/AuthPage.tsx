@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import type { NavigateTo, User } from '../types';
+import type { User } from '../types';
 import { GoogleIcon, XMarkIcon } from '../components/icons/Icons';
 import { sampleUsers } from '../constants';
 
 interface AuthPageProps {
-  navigateTo: NavigateTo;
   onLogin: (user: User) => void;
 }
 
@@ -33,7 +32,7 @@ const InputField: React.FC<{
     </div>
 );
 
-export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [isLoginView, setIsLoginView] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,12 +61,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ navigateTo, onLogin }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
       <div className="w-full max-w-md">
-         <a href="#/" onClick={(e) => { e.preventDefault(); navigateTo({ name: 'home' })}} className="font-sans font-bold text-3xl text-primary dark:text-gray-100 tracking-tighter text-center block mb-6">
+         <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="font-sans font-bold text-3xl text-primary dark:text-gray-100 tracking-tighter text-center block mb-6">
             WordWeft
           </a>
         <div className="relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">
             <button 
-              onClick={() => navigateTo({ name: 'home' })} 
+              onClick={() => window.location.hash = '/'} 
               className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
               aria-label="Close"
             >

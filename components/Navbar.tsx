@@ -1,16 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import type { NavigateTo } from '../types';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface NavbarProps {
-  navigateTo: NavigateTo;
   isAuthenticated: boolean;
   onLogout: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -23,18 +21,18 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
   }, []);
 
   const desktopNavLinks = [
-    { label: 'Home', action: () => { window.location.hash = '/'; navigateTo({ name: 'home' }); } },
-    { label: 'Genres', action: () => { window.location.hash = '/category'; navigateTo({ name: 'category', genre: null }); } },
-    { label: 'Library', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }); } },
-    { label: 'Write', action: () => { window.location.hash = '/write'; navigateTo({ name: 'writer-dashboard' }); } },
+    { label: 'Home', action: () => { window.location.hash = '/'; } },
+    { label: 'Genres', action: () => { window.location.hash = '/category'; } },
+    { label: 'Library', action: () => { window.location.hash = '/profile'; } },
+    { label: 'Write', action: () => { window.location.hash = '/write'; } },
   ];
 
   const mobileNavLinks = [
-      { label: 'Home', action: () => { window.location.hash = '/'; navigateTo({ name: 'home' }); }, icon: HomeIcon },
-      { label: 'Genres', action: () => { window.location.hash = '/category'; navigateTo({ name: 'category', genre: null }); }, icon: Squares2X2Icon },
-      { label: 'Library', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }); }, icon: BookOpenIcon },
-      { label: 'Write', action: () => { window.location.hash = '/write'; navigateTo({ name: 'writer-dashboard' }); }, icon: PencilSquareIcon },
-      { label: 'Profile', action: () => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }) }, icon: UserCircleIcon },
+      { label: 'Home', action: () => { window.location.hash = '/'; }, icon: HomeIcon },
+      { label: 'Genres', action: () => { window.location.hash = '/category'; }, icon: Squares2X2Icon },
+      { label: 'Library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
+      { label: 'Write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
+      { label: 'Profile', action: () => { window.location.hash = '/profile'; }, icon: UserCircleIcon },
   ];
 
   return (
@@ -42,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
       {/* Desktop Navbar */}
       <header className={`fixed top-0 left-0 right-0 z-50 hidden md:block transition-all duration-300 ${isScrolled ? 'bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-lg shadow-soft dark:border-b dark:border-dark-border' : 'bg-transparent'}`}>
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <a href="#/" onClick={(e) => { e.preventDefault(); navigateTo({ name: 'home' })}} className="font-sans font-bold text-2xl text-primary dark:text-gray-100 tracking-tighter">
+          <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="font-sans font-bold text-2xl text-primary dark:text-gray-100 tracking-tighter">
             WordWeft
           </a>
           <nav className="flex items-center space-x-8">
@@ -58,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
             </button>
             {isAuthenticated ? (
               <>
-                <button onClick={() => { window.location.hash = '/profile'; navigateTo({ name: 'profile' }); }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                <button onClick={() => { window.location.hash = '/profile'; }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
                   <UserCircleIcon className="w-6 h-6 text-text-body dark:text-dark-text-body" />
                 </button>
                 <button onClick={onLogout} title="Logout" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
@@ -66,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
                 </button>
               </>
             ) : (
-              <button onClick={() => { window.location.hash = '/auth'; navigateTo({ name: 'auth' }); }} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-primary transition-colors">
+              <button onClick={() => { window.location.hash = '/auth'; }} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-primary transition-colors">
                 Login / Sign Up
               </button>
             )}
@@ -80,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
           {mobileNavLinks.map((link) => {
             if (link.label === 'Profile' && !isAuthenticated) {
                 return (
-                    <button key="Login" onClick={() => { window.location.hash = '/auth'; navigateTo({ name: 'auth' }); }} className="flex flex-col items-center justify-center space-y-1 text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors w-1/5">
+                    <button key="Login" onClick={() => { window.location.hash = '/auth'; }} className="flex flex-col items-center justify-center space-y-1 text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors w-1/5">
                         <ArrowRightOnRectangleIcon className="w-6 h-6" />
                         <span className="text-xs font-sans">Login</span>
                     </button>

@@ -1,12 +1,16 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Navbar } from './components/Navbar';
+import { WriterLayout } from './components/WriterLayout';
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
 import { BookDetailsPage } from './pages/BookDetailsPage';
 import { ReaderPage } from './pages/ReaderPage';
 import { WriterDashboardPage } from './pages/WriterDashboardPage';
+import { CreateBookPage } from './pages/CreateBookPage';
+import { ManageChaptersPage } from './pages/ManageChaptersPage';
+import { ChapterEditorPage } from './pages/ChapterEditorPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
@@ -20,6 +24,9 @@ export type Page =
   | { name: 'book-details'; book: Book }
   | { name: 'reader'; book: Book; chapterIndex: number }
   | { name: 'writer-dashboard' }
+  | { name: 'writer-create-book' }
+  | { name: 'writer-manage-book'; bookId: number }
+  | { name: 'writer-edit-chapter'; bookId: number, chapterId: number | 'new' }
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; author: Author }
@@ -32,27 +39,13 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
-
-  const navigateTo = useCallback((newPage: Page) => {
-    const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author', 'edit-profile'];
-
-    if (protectedRoutes.includes(newPage.name) && !isAuthenticated) {
-      setIntendedPage(newPage);
-      window.location.hash = '/auth';
-      setPage({ name: 'auth' });
-      return;
-    }
-    
-    window.scrollTo(0, 0);
-    setPage(newPage);
-  }, [isAuthenticated]);
   
   const handleLogin = (user: User) => {
     setIsAuthenticated(true);
     setCurrentUser(JSON.parse(JSON.stringify(user))); // Deep copy to make mutable
     const targetPage = intendedPage || { name: 'home' };
     
-    // Set hash based on target page
+    // Set hash based on target page, the hashchange listener will handle navigation
     if (targetPage.name === 'book-details') {
       window.location.hash = `/book/${targetPage.book.id}`;
     } else if (targetPage.name === 'author') {
@@ -63,7 +56,6 @@ const App: React.FC = () => {
        window.location.hash = '/';
     }
 
-    navigateTo(targetPage);
     setIntendedPage(null);
   };
 
@@ -71,20 +63,19 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
     window.location.hash = '/';
-    navigateTo({ name: 'home' });
   };
   
-  const updateUserLibrary = (newLibrary: Shelf[]) => {
-    if (currentUser) {
-      setCurrentUser(prevUser => prevUser ? { ...prevUser, library: newLibrary } : null);
-    }
+  const updateUser = (updater: (user: User) => User) => {
+      setCurrentUser(currentUser => {
+          if (!currentUser) return null;
+          return updater(JSON.parse(JSON.stringify(currentUser)));
+      });
   };
 
   const handleUpdateProfile = (updatedData: Partial<User>) => {
     if (currentUser) {
-      setCurrentUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+      updateUser(user => ({...user, ...updatedData}));
       window.location.hash = '/profile';
-      navigateTo({ name: 'profile' });
     }
   };
   
@@ -95,18 +86,15 @@ const App: React.FC = () => {
         if (progressExists) return;
 
         const allProgress = {
-            // Alice (ID: 101)
             '101': {
                 '1': { overallProgress: 35, lastReadChapterIndex: 1, lastReadScrollPosition: 1200, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 40, scrollPosition: 1200 } } },
                 '2': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
                 '7': { overallProgress: 0, lastReadChapterIndex: 0, lastReadScrollPosition: 0, chapters: {} },
             },
-            // Rahul (ID: 102)
             '102': {
                 '3': { overallProgress: 80, lastReadChapterIndex: 2, lastReadScrollPosition: 2000, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 70, scrollPosition: 2000 } } },
                 '7': { overallProgress: 10, lastReadChapterIndex: 1, lastReadScrollPosition: 500, chapters: { '101': { progress: 100, scrollPosition: 9999 }, '102': { progress: 5, scrollPosition: 500 } } },
             },
-            // Mei (ID: 103)
             '103': {
                 '1': { overallProgress: 100, lastReadChapterIndex: 3, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 100, scrollPosition: 9999 }, '4': { progress: 100, scrollPosition: 9999 } } },
                 '2': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
@@ -122,7 +110,7 @@ const App: React.FC = () => {
     initProgress();
   }, []);
 
-  // On initial load, if there's a hash, try to navigate. This is a simple router.
+  // Centralized routing logic
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#/', '');
@@ -130,18 +118,37 @@ const App: React.FC = () => {
 
       if (hash.startsWith('book/')) {
         const bookId = parseInt(hash.split('/')[1], 10);
-        const book = sampleBooks.find(b => b.id === bookId);
+        const allBooks = [...sampleBooks, ...sampleUsers.flatMap(u => u.writtenBooks || [])];
+        const book = allBooks.find(b => b.id === bookId);
         targetPage = book ? { name: 'book-details', book } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
         const authorId = parseInt(hash.split('/')[1], 10);
         const allAuthors = [mainAuthor, ...otherAuthors];
         const author = allAuthors.find(a => a.id === authorId);
         targetPage = author ? { name: 'author', author } : { name: 'home' };
-      } else if (hash.startsWith('category')) {
-        // This is a simplified genre parsing
-        targetPage = { name: 'category', genre: null };
+      } else if (hash.startsWith('read/book/')) {
+        const parts = hash.split('/');
+        const bookId = parseInt(parts[2], 10);
+        const chapterIndex = parseInt(parts[4], 10) || 0;
+        const book = sampleBooks.find(b => b.id === bookId);
+        targetPage = book ? { name: 'reader', book, chapterIndex: chapterIndex } : { name: 'home' };
+      } else if (hash.startsWith('write/book/create')) {
+        targetPage = { name: 'writer-create-book' };
+      } else if (hash.startsWith('write/book/')) {
+        const parts = hash.split('/');
+        const bookId = parseInt(parts[2], 10);
+        if (parts[3] === 'manage') {
+          targetPage = { name: 'writer-manage-book', bookId };
+        } else if (parts[3] === 'chapter' && parts[5] === 'edit') {
+          const chapterId = parts[4] === 'new' ? 'new' : parseInt(parts[4], 10);
+          targetPage = { name: 'writer-edit-chapter', bookId, chapterId };
+        } else {
+          targetPage = { name: 'writer-dashboard' };
+        }
       } else if (hash.startsWith('write')) {
         targetPage = { name: 'writer-dashboard' };
+      } else if (hash.startsWith('category')) {
+        targetPage = { name: 'category', genre: null };
       } else if (hash.startsWith('profile')) {
         targetPage = { name: 'profile' };
       } else if (hash.startsWith('edit-profile')) {
@@ -151,60 +158,77 @@ const App: React.FC = () => {
       } else {
         targetPage = { name: 'home' };
       }
-      navigateTo(targetPage);
+      
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile'];
+
+      if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
+        setIntendedPage(targetPage);
+        window.location.hash = '/auth'; // This re-triggers the hashchange event
+        return; // Stop processing to avoid rendering the protected page
+      }
+      
+      window.scrollTo(0, 0);
+      setPage(targetPage);
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initial check
+    handleHashChange(); // Initial check for the current hash
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [navigateTo]);
+  }, [isAuthenticated]);
 
 
   const renderPage = () => {
+    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {
+      return null;
+    }
+
     switch (page.name) {
       case 'home':
-        return <HomePage navigateTo={navigateTo} />;
+        return <HomePage />;
       case 'category':
-        return <CategoryPage navigateTo={navigateTo} genre={page.genre} />;
+        return <CategoryPage genre={page.genre} />;
       case 'book-details':
-        return <BookDetailsPage navigateTo={navigateTo} book={page.book} currentUser={currentUser} updateUserLibrary={updateUserLibrary} />;
+        return <BookDetailsPage book={page.book} currentUser={currentUser} updateUserLibrary={(library) => updateUser(user => ({...user, library}))} />;
       case 'reader':
-        return <ReaderPage navigateTo={navigateTo} book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
+        return <ReaderPage book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
       case 'writer-dashboard':
-        return <WriterDashboardPage navigateTo={navigateTo} />;
+        return <WriterDashboardPage currentUser={currentUser!} onUpdateUser={updateUser}/>;
+      case 'writer-create-book':
+        return <CreateBookPage currentUser={currentUser!} onUpdateUser={updateUser} />;
+      case 'writer-manage-book':
+        return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUpdateUser={updateUser} />;
+      case 'writer-edit-chapter':
+        return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUpdateUser={updateUser} />;
       case 'profile':
-        if (!currentUser) {
-          // This should not happen if navigateTo guard works, but as a fallback
-          window.location.hash = '/auth';
-          navigateTo({ name: 'auth' });
-          return null;
-        }
-        return <ProfilePage navigateTo={navigateTo} user={currentUser} updateUserLibrary={updateUserLibrary} />;
+        return <ProfilePage user={currentUser!} updateUserLibrary={(library) => updateUser(user => ({...user, library}))} />;
       case 'edit-profile':
-        if (!currentUser) {
-          window.location.hash = '/auth';
-          navigateTo({ name: 'auth' });
-          return null;
-        }
-        return <EditProfilePage user={currentUser} onUpdateProfile={handleUpdateProfile} navigateTo={navigateTo} />;
+        return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'auth':
-        return <AuthPage navigateTo={navigateTo} onLogin={handleLogin} />;
+        return <AuthPage onLogin={handleLogin} />;
       case 'author':
-        return <AuthorPage navigateTo={navigateTo} author={page.author} />;
+        return <AuthorPage author={page.author} />;
       default:
-        return <HomePage navigateTo={navigateTo} />;
+        return <HomePage />;
     }
   };
   
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile';
+  const isWriterPage = page.name.startsWith('writer-');
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && !isWriterPage;
 
   return (
     <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
-      {showNavbar && <Navbar navigateTo={navigateTo} isAuthenticated={isAuthenticated} onLogout={handleLogout} />}
-      <main className={showNavbar ? "pt-20" : ""}>
-        {renderPage()}
-      </main>
+      {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />}
+      
+      {isWriterPage ? (
+        <WriterLayout>
+          {renderPage()}
+        </WriterLayout>
+      ) : (
+        <main className={showNavbar ? "pt-20" : ""}>
+          {renderPage()}
+        </main>
+      )}
     </div>
   );
 };

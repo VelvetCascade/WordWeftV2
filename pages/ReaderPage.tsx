@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { User, Book, NavigateTo, BookProgress, ChapterProgress } from '../types';
+import type { User, Book, BookProgress } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -58,7 +58,8 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
         bookProgress.lastReadScrollPosition = Math.round(scrollPosition);
         
         // Recalculate overall progress
-        const totalChapters = book.chapters.filter(c => c.isReleased).length;
+        // FIX: Use `c.status` to check if chapter is published instead of non-existent `isReleased` property
+        const totalChapters = book.chapters.filter(c => c.status === 'published').length;
         // Re-evaluate the sum of progress from the potentially updated chapters map
         const completedChaptersSum = Object.values(bookProgress.chapters).reduce((sum: number, chap: any) => sum + (chap.progress || 0), 0);
         bookProgress.overallProgress = totalChapters > 0 ? Math.round(completedChaptersSum / totalChapters) : 0;
@@ -72,13 +73,12 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
 
 
 interface ReaderPageProps {
-    navigateTo: NavigateTo;
     book: Book;
     chapterIndex: number;
     currentUser: User | null;
 }
 
-export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapterIndex, currentUser }) => {
+export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, currentUser }) => {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
   const [fontSize, setFontSize] = useState(18);
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
@@ -270,16 +270,17 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
         <ul className="overflow-y-auto h-[calc(100%-65px)]">
           {book.chapters.map((chap, index) => (
             <li key={chap.id}>
+              {/* FIX: Use `chap.status` to check if chapter is published instead of non-existent `isReleased` property */}
               <button 
                 onClick={() => { 
                   goToChapter(index); 
                   setIsTocVisible(false);
                 }}
-                className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${!chap.isReleased ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
-                disabled={!chap.isReleased}
+                className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                disabled={chap.status !== 'published'}
               >
                 <span className="block truncate">{chap.title}</span>
-                {!chap.isReleased && <span className="text-xs">(Not Released)</span>}
+                {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
               </button>
             </li>
           ))}
@@ -295,7 +296,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
       {/* Floating Header */}
       <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border' : 'bg-background/80 border-gray-200'} backdrop-blur-md border-b`}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-            <button onClick={() => navigateTo({ name: 'book-details', book })} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
+            <button onClick={() => window.location.hash = `/book/${book.id}`} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
                 <ChevronLeftIcon className="w-5 h-5"/>
                 <span>{book.title}</span>
             </button>
