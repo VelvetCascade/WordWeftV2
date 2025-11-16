@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import type { User, Book, NavigateTo, BookProgress, ChapterProgress } from '../types';
+import type { User, Book, BookProgress } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -72,13 +73,12 @@ const saveReadingProgress = (userId: number, book: Book, chapterIndex: number, s
 
 
 interface ReaderPageProps {
-    navigateTo: NavigateTo;
     book: Book;
     chapterIndex: number;
     currentUser: User | null;
 }
 
-export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapterIndex, currentUser }) => {
+export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, currentUser }) => {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
   const [fontSize, setFontSize] = useState(18);
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
@@ -295,7 +295,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
       {/* Floating Header */}
       <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border' : 'bg-background/80 border-gray-200'} backdrop-blur-md border-b`}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-            <button onClick={() => navigateTo({ name: 'book-details', book })} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
+            <button onClick={() => window.location.hash = `/book/${book.id}`} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
                 <ChevronLeftIcon className="w-5 h-5"/>
                 <span>{book.title}</span>
             </button>

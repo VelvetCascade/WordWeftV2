@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Book, NavigateTo, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
+import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { sampleBooks, sampleReviews } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
@@ -71,13 +71,12 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
 
 
 interface BookDetailsPageProps {
-  navigateTo: NavigateTo;
   book: Book;
   currentUser: User | null;
   updateUserLibrary: (newLibrary: Shelf[]) => void;
 }
 
-export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, book, currentUser, updateUserLibrary }) => {
+export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentUser, updateUserLibrary }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
   
@@ -119,10 +118,18 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
     if (!currentUser) return false;
     return currentUser.library.some(shelf => shelf.books.some(b => b.id === book.id));
   }, [currentUser, book.id]);
+  
+  const handleBack = () => {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.hash = '/category';
+    }
+  };
 
   const handleToggleLibrary = () => {
     if (!currentUser) {
-      navigateTo({ name: 'auth' });
+      window.location.hash = '/auth';
       return;
     };
 
@@ -157,13 +164,16 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
   
   const handleAuthorClick = () => {
     window.location.hash = `/author/${book.author.id}`;
-    navigateTo({ name: 'author', author: book.author });
   };
   
   const handleReadClick = () => {
     const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
-    navigateTo({ name: 'reader', book: book, chapterIndex: startChapter });
+    window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
   };
+
+  const handleReadChapterClick = (chapterIndex: number) => {
+    window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
+  }
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +217,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
           <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-              <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent transition-colors">
+              <button onClick={handleBack} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent transition-colors">
                   <ArrowLeftIcon className="w-5 h-5" /> Back
               </button>
               <div className="flex-1 min-w-0 text-center px-4">
@@ -270,7 +280,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
                         chapter={chapter} 
                         index={i} 
                         progress={chapterProgress}
-                        onRead={() => navigateTo({ name: 'reader', book: book, chapterIndex: i })} 
+                        onRead={() => handleReadChapterClick(i)} 
                     />
                 )
             })}
@@ -286,7 +296,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
               {!currentUser ? (
                 <div className="text-center">
                   <p className="mb-4">You must be logged in to leave a review.</p>
-                  <button onClick={() => navigateTo({ name: 'auth'})} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors">
+                  <button onClick={() => window.location.hash = '/auth'} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors">
                     Log in to leave a review
                   </button>
                 </div>
@@ -359,7 +369,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">More from {book.author.name}</h3>
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {authorBooks.map(b => (
-                    <BookCard key={b.id} book={b} onClick={() => navigateTo({ name: 'book-details', book: b })} />
+                    <BookCard key={b.id} book={b} onClick={() => window.location.hash = `/book/${b.id}`} />
                 ))}
             </div>
         </section>

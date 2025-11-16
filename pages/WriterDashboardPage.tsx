@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import type { NavigateTo } from '../types';
 import { HomeIcon, BookOpenIcon, PlusCircleIcon, Cog6ToothIcon, Bars3Icon, XMarkIcon } from '../components/icons/Icons';
 import { ChapterCreationPage } from './ChapterCreationPage';
 
@@ -121,7 +120,7 @@ const BookCreationPage: React.FC<{ setView: (view: WriterView) => void }> = ({ s
     );
 };
 
-export const WriterDashboardPage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
+export const WriterDashboardPage: React.FC = () => {
   const [view, setView] = useState<WriterView>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 

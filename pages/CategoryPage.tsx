@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import type { Book, NavigateTo } from '../types';
+import type { Book } from '../types';
 import { sampleBooks, genres } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
@@ -30,7 +31,7 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
 );
 
 
-export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | null }> = ({ navigateTo, genre }) => {
+export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortOption, setSortOption] = useState<SortOption>('Recent');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(genre ? [genre] : []);
@@ -184,13 +185,13 @@ export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | nu
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
             {filteredAndSortedBooks.map(book => (
-              <BookCard key={book.id} book={book} onClick={() => navigateTo({ name: 'book-details', book })} />
+              <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-6">
             {filteredAndSortedBooks.map(book => (
-              <BookListItem key={book.id} book={book} onClick={() => navigateTo({ name: 'book-details', book })} />
+              <BookListItem key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
             ))}
           </div>
         )}

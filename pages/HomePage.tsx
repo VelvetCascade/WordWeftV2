@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import type { NavigateTo } from '../types';
 import { sampleBooks, genres } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 
 
-const HeroCarousel: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
+const HeroCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselBooks = sampleBooks.slice(0, 5);
 
@@ -41,7 +40,7 @@ const HeroCarousel: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
           key={book.id}
           className="absolute w-40 md:w-64 transition-transform duration-700 ease-in-out"
           style={getCardStyle(index)}
-          onClick={() => navigateTo({ name: 'book-details', book })}
+          onClick={() => window.location.hash = `/book/${book.id}`}
         >
           <img src={book.coverUrl} alt={book.title} className="w-full h-auto object-cover rounded-xl shadow-lifted cursor-pointer" />
         </div>
@@ -51,7 +50,7 @@ const HeroCarousel: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
 };
 
 
-export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) => {
+export const HomePage: React.FC = () => {
   const [searchValue, setSearchValue] = useState("");
   const spotlightAuthor = sampleBooks[0].author;
   
@@ -70,12 +69,12 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
               A next-gen platform for readers and storytellers.
             </p>
             <div className="flex justify-center md:justify-start space-x-4">
-              <button onClick={() => navigateTo({ name: 'category', genre: null })} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg">Start Reading</button>
-              <button onClick={() => navigateTo({ name: 'writer-dashboard' })} className="bg-surface/20 font-sans font-semibold px-8 py-3 rounded-xl hover:bg-surface/30 transition-transform hover:scale-105 duration-300 shadow-lg">Start Writing</button>
+              <button onClick={() => window.location.hash = '/category'} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg">Start Reading</button>
+              <button onClick={() => window.location.hash = '/write'} className="bg-surface/20 font-sans font-semibold px-8 py-3 rounded-xl hover:bg-surface/30 transition-transform hover:scale-105 duration-300 shadow-lg">Start Writing</button>
             </div>
           </div>
           <div className="hidden md:block">
-            <HeroCarousel navigateTo={navigateTo} />
+            <HeroCarousel />
           </div>
         </div>
       </section>
@@ -102,7 +101,7 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
         <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Trending Books</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
           {sampleBooks.slice(0, 6).map(book => (
-            <BookCard key={book.id} book={book} onClick={() => navigateTo({ name: 'book-details', book })} />
+            <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
           ))}
         </div>
       </section>
@@ -112,7 +111,7 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
         <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Top Genres</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {genres.slice(0, 5).map(genre => (
-            <div key={genre} onClick={() => navigateTo({ name: 'category', genre: genre })} className="relative h-28 rounded-2xl p-4 flex items-end justify-start text-white font-sans font-bold text-xl cursor-pointer overflow-hidden group">
+            <div key={genre} onClick={() => window.location.hash = '/category'} className="relative h-28 rounded-2xl p-4 flex items-end justify-start text-white font-sans font-bold text-xl cursor-pointer overflow-hidden group">
               <div className="absolute inset-0 bg-primary dark:bg-dark-surface-alt group-hover:bg-animated-gradient group-hover:animate-gradient-shift transition-all duration-300"></div>
               <div className="absolute inset-0 bg-black/30"></div>
               <span className="relative z-10">{genre}</span>
@@ -130,7 +129,7 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
               <p className="font-sans text-sm font-semibold text-accent mb-2">Author Spotlight</p>
               <h3 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-2">{spotlightAuthor.name}</h3>
               <p className="max-w-xl mb-4">{spotlightAuthor.bio}</p>
-              <button onClick={() => { window.location.hash=`/author/${spotlightAuthor.id}`; navigateTo({ name: 'author', author: spotlightAuthor }); }} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
+              <button onClick={() => window.location.hash = `/author/${spotlightAuthor.id}`} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
             </div>
           </div>
         </div>

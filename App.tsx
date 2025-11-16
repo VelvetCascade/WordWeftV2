@@ -32,27 +32,13 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
-
-  const navigateTo = useCallback((newPage: Page) => {
-    const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author', 'edit-profile'];
-
-    if (protectedRoutes.includes(newPage.name) && !isAuthenticated) {
-      setIntendedPage(newPage);
-      window.location.hash = '/auth';
-      setPage({ name: 'auth' });
-      return;
-    }
-    
-    window.scrollTo(0, 0);
-    setPage(newPage);
-  }, [isAuthenticated]);
   
   const handleLogin = (user: User) => {
     setIsAuthenticated(true);
     setCurrentUser(JSON.parse(JSON.stringify(user))); // Deep copy to make mutable
     const targetPage = intendedPage || { name: 'home' };
     
-    // Set hash based on target page
+    // Set hash based on target page, the hashchange listener will handle navigation
     if (targetPage.name === 'book-details') {
       window.location.hash = `/book/${targetPage.book.id}`;
     } else if (targetPage.name === 'author') {
@@ -63,7 +49,6 @@ const App: React.FC = () => {
        window.location.hash = '/';
     }
 
-    navigateTo(targetPage);
     setIntendedPage(null);
   };
 
@@ -71,7 +56,6 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
     window.location.hash = '/';
-    navigateTo({ name: 'home' });
   };
   
   const updateUserLibrary = (newLibrary: Shelf[]) => {
@@ -84,7 +68,6 @@ const App: React.FC = () => {
     if (currentUser) {
       setCurrentUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
       window.location.hash = '/profile';
-      navigateTo({ name: 'profile' });
     }
   };
   
@@ -122,7 +105,7 @@ const App: React.FC = () => {
     initProgress();
   }, []);
 
-  // On initial load, if there's a hash, try to navigate. This is a simple router.
+  // Centralized routing logic
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#/', '');
@@ -137,8 +120,13 @@ const App: React.FC = () => {
         const allAuthors = [mainAuthor, ...otherAuthors];
         const author = allAuthors.find(a => a.id === authorId);
         targetPage = author ? { name: 'author', author } : { name: 'home' };
+      } else if (hash.startsWith('read/book/')) {
+        const parts = hash.split('/');
+        const bookId = parseInt(parts[2], 10);
+        const chapterIndex = parseInt(parts[4], 10) || 0;
+        const book = sampleBooks.find(b => b.id === bookId);
+        targetPage = book ? { name: 'reader', book, chapterIndex: chapterIndex } : { name: 'home' };
       } else if (hash.startsWith('category')) {
-        // This is a simplified genre parsing
         targetPage = { name: 'category', genre: null };
       } else if (hash.startsWith('write')) {
         targetPage = { name: 'writer-dashboard' };
@@ -151,49 +139,57 @@ const App: React.FC = () => {
       } else {
         targetPage = { name: 'home' };
       }
-      navigateTo(targetPage);
+      
+      const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author', 'edit-profile'];
+
+      if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
+        setIntendedPage(targetPage);
+        window.location.hash = '/auth'; // This re-triggers the hashchange event
+        return; // Stop processing to avoid rendering the protected page
+      }
+      
+      window.scrollTo(0, 0);
+      setPage(targetPage);
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initial check
+    handleHashChange(); // Initial check for the current hash
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [navigateTo]);
+  }, [isAuthenticated]);
 
 
   const renderPage = () => {
     switch (page.name) {
       case 'home':
-        return <HomePage navigateTo={navigateTo} />;
+        return <HomePage />;
       case 'category':
-        return <CategoryPage navigateTo={navigateTo} genre={page.genre} />;
+        return <CategoryPage genre={page.genre} />;
       case 'book-details':
-        return <BookDetailsPage navigateTo={navigateTo} book={page.book} currentUser={currentUser} updateUserLibrary={updateUserLibrary} />;
+        return <BookDetailsPage book={page.book} currentUser={currentUser} updateUserLibrary={updateUserLibrary} />;
       case 'reader':
-        return <ReaderPage navigateTo={navigateTo} book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
+        return <ReaderPage book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
       case 'writer-dashboard':
-        return <WriterDashboardPage navigateTo={navigateTo} />;
+        return <WriterDashboardPage />;
       case 'profile':
         if (!currentUser) {
-          // This should not happen if navigateTo guard works, but as a fallback
+          // This check is now a fallback, as the router should prevent this state.
           window.location.hash = '/auth';
-          navigateTo({ name: 'auth' });
           return null;
         }
-        return <ProfilePage navigateTo={navigateTo} user={currentUser} updateUserLibrary={updateUserLibrary} />;
+        return <ProfilePage user={currentUser} updateUserLibrary={updateUserLibrary} />;
       case 'edit-profile':
         if (!currentUser) {
           window.location.hash = '/auth';
-          navigateTo({ name: 'auth' });
           return null;
         }
-        return <EditProfilePage user={currentUser} onUpdateProfile={handleUpdateProfile} navigateTo={navigateTo} />;
+        return <EditProfilePage user={currentUser} onUpdateProfile={handleUpdateProfile} />;
       case 'auth':
-        return <AuthPage navigateTo={navigateTo} onLogin={handleLogin} />;
+        return <AuthPage onLogin={handleLogin} />;
       case 'author':
-        return <AuthorPage navigateTo={navigateTo} author={page.author} />;
+        return <AuthorPage author={page.author} />;
       default:
-        return <HomePage navigateTo={navigateTo} />;
+        return <HomePage />;
     }
   };
   
@@ -201,7 +197,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
-      {showNavbar && <Navbar navigateTo={navigateTo} isAuthenticated={isAuthenticated} onLogout={handleLogout} />}
+      {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />}
       <main className={showNavbar ? "pt-20" : ""}>
         {renderPage()}
       </main>

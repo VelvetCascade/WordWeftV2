@@ -1,12 +1,11 @@
 
 import React from 'react';
-import type { Author, NavigateTo } from '../types';
+import type { Author } from '../types';
 import { sampleBooks } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon } from '../components/icons/Icons';
 
-export const AuthorPage: React.FC<{ navigateTo: NavigateTo; author: Author }> = ({ navigateTo, author }) => {
+export const AuthorPage: React.FC<{ author: Author }> = ({ author }) => {
     const authorBooks = sampleBooks.filter(b => b.author.id === author.id);
 
     return (
@@ -29,7 +28,7 @@ export const AuthorPage: React.FC<{ navigateTo: NavigateTo; author: Author }> = 
                 {authorBooks.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
                         {authorBooks.map(book => (
-                            <BookCard key={book.id} book={book} onClick={() => navigateTo({ name: 'book-details', book })}/>
+                            <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`}/>
                         ))}
                     </div>
                 ) : (
