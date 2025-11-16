@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { User, NavigateTo, Shelf, LibraryBook, BookProgress } from '../types';
 import { Footer } from '../components/Footer';
@@ -224,7 +225,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
                             <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">{user.name}</h1>
                             <p className="text-text-body dark:text-dark-text-body mt-1">Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
                         </div>
-                        <button className="bg-gray-100 dark:bg-dark-surface-alt font-sans font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
+                        <button 
+                            onClick={() => { window.location.hash = '/edit-profile'; navigateTo({ name: 'edit-profile' })}}
+                            className="bg-gray-100 dark:bg-dark-surface-alt font-sans font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors"
+                        >
                             <Cog6ToothIcon className="w-5 h-5"/> Edit Profile
                         </button>
                     </div>

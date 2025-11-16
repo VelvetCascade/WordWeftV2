@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Book, NavigateTo } from '../types';
 import { sampleBooks, genres } from '../constants';
 import { BookCard } from '../components/BookCard';
@@ -36,10 +35,30 @@ export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | nu
   const [sortOption, setSortOption] = useState<SortOption>('Recent');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(genre ? [genre] : []);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isGenreOpen, setIsGenreOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
+  const genreDropdownRef = useRef<HTMLDivElement>(null);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+  
   const toggleGenre = (g: string) => {
       setSelectedGenres(prev => prev.includes(g) ? prev.filter(i => i !== g) : [...prev, g]);
   };
+  
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target as Node)) {
+                setIsGenreOpen(false);
+            }
+            if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+                setIsSortOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
   const filteredAndSortedBooks = useMemo(() => {
     let books = sampleBooks;
@@ -57,6 +76,17 @@ export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | nu
         }
     });
   }, [selectedGenres, sortOption]);
+  
+  const handleGenreToggle = () => {
+    setIsGenreOpen(prev => !prev);
+    setIsSortOpen(false); // Close other dropdown
+  };
+
+  const handleSortToggle = () => {
+    setIsSortOpen(prev => !prev);
+    setIsGenreOpen(false); // Close other dropdown
+  };
+
 
   const FilterDrawer: React.FC = () => (
     <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isFilterOpen ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} onClick={() => setIsFilterOpen(false)}>
@@ -95,11 +125,11 @@ export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | nu
           <div className="flex justify-between items-center">
             {/* Desktop Filters */}
             <div className="hidden md:flex items-center gap-4">
-               <div className="relative group">
-                    <button className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        Genre <ChevronDownIcon className="w-4 h-4" />
+               <div ref={genreDropdownRef} className="relative">
+                    <button onClick={handleGenreToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                        Genre <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isGenreOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    <div className="absolute top-full mt-2 w-72 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 border dark:border-dark-border">
+                    <div className={`absolute top-full mt-2 w-72 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 transition-all duration-200 origin-top-left border dark:border-dark-border ${isGenreOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
                          <div className="flex flex-wrap gap-2">
                             {genres.map(g => (
                                 <button key={g} onClick={() => toggleGenre(g)} className={`px-2 py-1 rounded-md text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
@@ -110,13 +140,13 @@ export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | nu
                         {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="text-xs text-accent mt-3 hover:underline">Clear all</button>}
                     </div>
                </div>
-                <div className="relative group">
-                    <button className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        Sort by: {sortOption} <ChevronDownIcon className="w-4 h-4" />
+                <div ref={sortDropdownRef} className="relative">
+                    <button onClick={handleSortToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                        Sort by: {sortOption} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    <div className="absolute top-full mt-2 w-40 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 border dark:border-dark-border">
+                    <div className={`absolute top-full mt-2 w-40 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 transition-all duration-200 origin-top-left border dark:border-dark-border ${isSortOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
                         {(['Recent', 'Rating', 'Popular'] as SortOption[]).map(opt => (
-                           <a key={opt} href="#" onClick={(e) => { e.preventDefault(); setSortOption(opt); }} className="block px-4 py-2 text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{opt}</a>
+                           <a key={opt} href="#" onClick={(e) => { e.preventDefault(); setSortOption(opt); setIsSortOpen(false); }} className="block px-4 py-2 text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{opt}</a>
                         ))}
                     </div>
                </div>

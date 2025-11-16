@@ -14,11 +14,59 @@ export const otherAuthors: Author[] = [
   { id: 4, name: 'Kaelen Moriarty', avatarUrl: 'https://picsum.photos/seed/author4/100/100', bio: 'Kaelen Moriarty pens dark, atmospheric mysteries.' },
 ];
 
-export const sampleReviews: Review[] = [
-  { id: 1, user: { name: 'Alex', avatarUrl: 'https://picsum.photos/seed/user1/50/50' }, rating: 5, comment: 'An absolute masterpiece! The world-building is second to none.', sentiment: 'positive' },
-  { id: 2, user: { name: 'Brianna', avatarUrl: 'https://picsum.photos/seed/user2/50/50' }, rating: 4, comment: 'A great read, though the ending felt a bit rushed. Still highly recommend!', sentiment: 'positive' },
-  { id: 3, user: { name: 'Carlos', avatarUrl: 'https://picsum.photos/seed/user3/50/50' }, rating: 3, comment: 'It was okay. The main character was a bit bland for my taste.', sentiment: 'neutral' },
+export const sampleUsers: User[] = [
+  {
+    id: 101,
+    name: 'Alice',
+    email: 'alice@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user101/200/200',
+    joinDate: '2023-05-21',
+    stats: {
+      booksRead: 1,
+      chaptersRead: 3,
+      favoriteGenres: ['High Fantasy', 'Cyberpunk'],
+    },
+    following: [mainAuthor, otherAuthors[0]],
+    library: [], // Library will be populated later
+  },
+  {
+    id: 102,
+    name: 'Rahul',
+    email: 'rahul@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user102/200/200',
+    joinDate: '2023-06-15',
+    stats: {
+      booksRead: 0,
+      chaptersRead: 5,
+      favoriteGenres: ['Urban Fantasy', 'Mystery'],
+    },
+    following: [otherAuthors[1], otherAuthors[2]],
+    library: [],
+  },
+  {
+    id: 103,
+    name: 'Mei',
+    email: 'mei@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user103/200/200',
+    joinDate: '2022-12-10',
+    stats: {
+      booksRead: 12,
+      chaptersRead: 148,
+      favoriteGenres: ['Steampunk', 'Adventure'],
+    },
+    following: [mainAuthor, otherAuthors[0], otherAuthors[1], otherAuthors[2]],
+    library: [],
+  }
 ];
+
+export const sampleReviews: Review[] = [
+  { id: 1, bookId: 1, userId: 101, user: { id: 101, name: 'Alice', avatarUrl: 'https://picsum.photos/seed/user101/50/50' }, rating: 5, comment: 'An absolute masterpiece! The world-building is second to none, and I was completely captivated from the first page. Elara Vance is a genius.', date: '2023-11-10', sentiment: 'positive' },
+  { id: 2, bookId: 1, userId: 102, user: { id: 102, name: 'Rahul', avatarUrl: 'https://picsum.photos/seed/user102/50/50' }, rating: 4, comment: 'A great read, though the ending felt a bit rushed. Still highly recommend for any fantasy lover!', date: '2023-11-12', sentiment: 'positive' },
+  { id: 3, bookId: 1, userId: 103, user: { id: 103, name: 'Mei', avatarUrl: 'https://picsum.photos/seed/user103/50/50' }, rating: 3, comment: 'It was okay. The main character was a bit bland for my taste, but the side characters were interesting.', date: '2023-11-08', sentiment: 'neutral' },
+  { id: 4, bookId: 2, userId: 101, user: { id: 101, name: 'Alice', avatarUrl: 'https://picsum.photos/seed/user101/50/50' }, rating: 4, comment: 'Classic cyberpunk noir. The atmosphere is thick and the plot has enough twists to keep you guessing.', date: '2023-10-05', sentiment: 'positive' },
+  { id: 5, bookId: 7, userId: 103, user: { id: 103, name: 'Mei', avatarUrl: 'https://picsum.photos/seed/user103/50/50' }, rating: 5, comment: 'I couldn\'t put this down! The mystery of the sunken city is so compelling. The mix of adventure and ancient magic is perfect. A must-read!', date: '2023-11-20', sentiment: 'positive' },
+];
+
 
 const sampleChapters: Chapter[] = [
   { id: 1, title: 'The Whispering Archives', wordCount: 3200, content: 'The air in the Grand Archives of Aerthos was thick with the scent of aged parchment and forgotten magic...', isReleased: true },
@@ -174,6 +222,7 @@ const aliceLibrary: Shelf[] = [
         createLibraryBook(2, '2023-08-20'), // Echoes of a Neon City
     ]},
 ];
+sampleUsers.find(u => u.id === 101)!.library = aliceLibrary;
 
 const rahulLibrary: Shelf[] = [
     { id: 1, name: 'Currently Reading', books: [
@@ -184,6 +233,8 @@ const rahulLibrary: Shelf[] = [
         createLibraryBook(4, '2023-11-01'), // Whispers in the Fen
     ]},
 ];
+sampleUsers.find(u => u.id === 102)!.library = rahulLibrary;
+
 
 const meiLibrary: Shelf[] = [
     { id: 1, name: 'All Books', books: [
@@ -195,49 +246,4 @@ const meiLibrary: Shelf[] = [
         createLibraryBook(7, '2023-06-01'),
     ]},
 ];
-
-
-export const sampleUsers: User[] = [
-  {
-    id: 101,
-    name: 'Alice',
-    email: 'alice@wordweft.com',
-    avatarUrl: 'https://picsum.photos/seed/user101/200/200',
-    joinDate: '2023-05-21',
-    stats: {
-      booksRead: 1,
-      chaptersRead: 3,
-      favoriteGenres: ['High Fantasy', 'Cyberpunk'],
-    },
-    following: [mainAuthor, otherAuthors[0]],
-    library: aliceLibrary,
-  },
-  {
-    id: 102,
-    name: 'Rahul',
-    email: 'rahul@wordweft.com',
-    avatarUrl: 'https://picsum.photos/seed/user102/200/200',
-    joinDate: '2023-06-15',
-    stats: {
-      booksRead: 0,
-      chaptersRead: 5,
-      favoriteGenres: ['Urban Fantasy', 'Mystery'],
-    },
-    following: [otherAuthors[1], otherAuthors[2]],
-    library: rahulLibrary,
-  },
-  {
-    id: 103,
-    name: 'Mei',
-    email: 'mei@wordweft.com',
-    avatarUrl: 'https://picsum.photos/seed/user103/200/200',
-    joinDate: '2022-12-10',
-    stats: {
-      booksRead: 12,
-      chaptersRead: 148,
-      favoriteGenres: ['Steampunk', 'Adventure'],
-    },
-    following: [mainAuthor, otherAuthors[0], otherAuthors[1], otherAuthors[2]],
-    library: meiLibrary,
-  }
-];
+sampleUsers.find(u => u.id === 103)!.library = meiLibrary;

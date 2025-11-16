@@ -1,10 +1,10 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Book, NavigateTo, User, Shelf, LibraryBook, BookProgress } from '../types';
-// FIX: Import `sampleReviews` to be used in the component.
+import type { Book, NavigateTo, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { sampleBooks, sampleReviews } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon } from '../components/icons/Icons';
 
 const PROGRESS_STORAGE_KEY = 'wordweft_reading_progress_v2';
 const getReadingProgressForBook = (userId: number, bookId: number): BookProgress | null => {
@@ -48,6 +48,27 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
     );
 };
 
+const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void; hoverRating: number; setHoverRating: (r: number) => void; }> = ({ rating, setRating, hoverRating, setHoverRating }) => {
+    return (
+        <div className="flex items-center" onMouseLeave={() => setHoverRating(0)}>
+            {[...Array(5)].map((_, i) => {
+                const starValue = i + 1;
+                return (
+                    <button
+                        type="button"
+                        key={starValue}
+                        onClick={() => setRating(starValue)}
+                        onMouseEnter={() => setHoverRating(starValue)}
+                        className="p-1"
+                    >
+                        <StarIcon className={`w-6 h-6 transition-colors ${starValue <= (hoverRating || rating) ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />
+                    </button>
+                );
+            })}
+        </div>
+    );
+};
+
 
 interface BookDetailsPageProps {
   navigateTo: NavigateTo;
@@ -60,7 +81,20 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
   
+  // Review State
+  const [allReviews, setAllReviews] = useState<Review[]>(() => sampleReviews.filter(r => r.bookId === book.id));
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [userComment, setUserComment] = useState('');
+  const [isEditingReview, setIsEditingReview] = useState(false);
+
   const authorBooks = sampleBooks.filter(b => b.author.id === book.author.id && b.id !== book.id);
+  
+  const currentUserReview = useMemo(() => {
+    if (!currentUser) return null;
+    return allReviews.find(r => r.userId === currentUser.id);
+  }, [allReviews, currentUser]);
+
 
   useEffect(() => {
     if(currentUser) {
@@ -68,6 +102,18 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
         setReadingProgress(progress);
     }
   }, [currentUser, book.id]);
+
+   useEffect(() => {
+    if (currentUserReview) {
+      setUserRating(currentUserReview.rating);
+      setUserComment(currentUserReview.comment);
+      setIsEditingReview(false);
+    } else {
+      // Reset form if user has no review
+      setUserRating(0);
+      setUserComment('');
+    }
+  }, [currentUserReview]);
   
   const isBookInLibrary = useMemo(() => {
     if (!currentUser) return false;
@@ -83,24 +129,29 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
     let newLibrary: Shelf[];
 
     if (isBookInLibrary) {
-      // Remove the book
       newLibrary = currentUser.library.map(shelf => ({
         ...shelf,
         books: shelf.books.filter(b => b.id !== book.id),
       }));
     } else {
-      // Add the book to "To Read"
       const newBook: LibraryBook = { ...book, progress: 0, addedDate: new Date().toISOString().split('T')[0] };
       newLibrary = currentUser.library.map(shelf => {
-        if (shelf.name === 'To Read') {
-          // Avoid adding duplicates if somehow it's already there
+        if (shelf.name === 'To Read' || shelf.id === 2) { // Target "To Read" or a default shelf
           if (shelf.books.some(b => b.id === newBook.id)) return shelf;
           return { ...shelf, books: [newBook, ...shelf.books] };
         }
         return shelf;
       });
+       // If no "To Read" shelf exists, add to the first one.
+      if (!newLibrary.some(s => s.name === "To Read" || s.id === 2)) {
+          if (newLibrary.length > 0) {
+            newLibrary[0].books.unshift(newBook);
+          } else {
+             // Create a default shelf if none exist
+            newLibrary.push({ id: 1, name: 'My Library', books: [newBook] });
+          }
+      }
     }
-
     updateUserLibrary(newLibrary);
   };
   
@@ -112,7 +163,44 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
   const handleReadClick = () => {
     const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
     navigateTo({ name: 'reader', book: book, chapterIndex: startChapter });
-  }
+  };
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || userRating === 0 || !userComment) return;
+
+    if (currentUserReview) { // Updating existing review
+      const updatedReviews = allReviews.map(r => 
+        r.id === currentUserReview.id 
+        ? { ...r, rating: userRating, comment: userComment, date: new Date().toISOString().split('T')[0] } 
+        : r
+      );
+      setAllReviews(updatedReviews);
+    } else { // Adding new review
+      const newReview: Review = {
+        id: Date.now(),
+        bookId: book.id,
+        userId: currentUser.id,
+        user: { id: currentUser.id, name: currentUser.name, avatarUrl: currentUser.avatarUrl },
+        rating: userRating,
+        comment: userComment,
+        date: new Date().toISOString().split('T')[0],
+        sentiment: 'neutral', // This would be determined by an API in a real app
+      };
+      setAllReviews([newReview, ...allReviews]);
+    }
+    setIsEditingReview(false);
+  };
+
+  const handleDeleteReview = () => {
+    if (!currentUserReview) return;
+    if (window.confirm('Are you sure you want to delete your review?')) {
+        setAllReviews(allReviews.filter(r => r.id !== currentUserReview.id));
+        setUserRating(0);
+        setUserComment('');
+    }
+  };
+
 
   return (
     <div className="bg-white dark:bg-dark-surface">
@@ -145,7 +233,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
                     {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(book.rating) ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`} />)}
                 </div>
                 <span className="font-sans font-semibold dark:text-dark-text-body">{book.rating}</span>
-                <span className="text-gray-500 dark:text-gray-400">({book.reviewsCount.toLocaleString()} reviews)</span>
+                <span className="text-gray-500 dark:text-gray-400">({allReviews.length} reviews)</span>
             </div>
             <div className="flex flex-wrap gap-2 mb-6">
               {book.genres.map(g => <span key={g} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full">{g}</span>)}
@@ -191,27 +279,79 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
 
         {/* Reviews Section */}
         <section className="max-w-4xl mx-auto mb-16">
-          <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Reviews</h3>
-          <div className="space-y-6">
-            {sampleReviews.map(review => (
-                <div key={review.id} className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
-                    <div className="flex items-start gap-4">
-                        <img src={review.user.avatarUrl} alt={review.user.name} className="w-12 h-12 rounded-full"/>
-                        <div>
-                            <div className="flex items-center gap-4 mb-1">
-                                <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{review.user.name}</h4>
-                                <div className="flex items-center">
-                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-4 h-4 ${i < review.rating ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`} />)}
+          <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Community Reviews</h3>
+            
+            {/* Review Form / User's Review */}
+            <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border mb-8">
+              {!currentUser ? (
+                <div className="text-center">
+                  <p className="mb-4">You must be logged in to leave a review.</p>
+                  <button onClick={() => navigateTo({ name: 'auth'})} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors">
+                    Log in to leave a review
+                  </button>
+                </div>
+              ) : currentUserReview && !isEditingReview ? (
+                // Display user's existing review
+                <div>
+                   <div className="flex justify-between items-start">
+                      <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-4">Your Review</h4>
+                      <div className="flex items-center gap-2">
+                          <button onClick={() => setIsEditingReview(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/></button>
+                          <button onClick={handleDeleteReview} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/></button>
+                      </div>
+                   </div>
+                   <div className="flex items-center">
+                       {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < currentUserReview.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
+                   </div>
+                   <p className="text-text-body dark:text-dark-text-body mt-2">{currentUserReview.comment}</p>
+                </div>
+              ) : (
+                // Display review form
+                <form onSubmit={handleSubmitReview}>
+                  <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-2">{currentUserReview ? 'Edit Your Review' : 'Write a Review'}</h4>
+                  <StarRatingInput rating={userRating} setRating={setUserRating} hoverRating={hoverRating} setHoverRating={setHoverRating} />
+                  <textarea
+                    value={userComment}
+                    onChange={(e) => setUserComment(e.target.value)}
+                    placeholder="Share your thoughts..."
+                    className="w-full mt-4 p-3 rounded-lg border-gray-300 focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-body"
+                    rows={4}
+                    required
+                  ></textarea>
+                  <div className="flex justify-end items-center gap-4 mt-4">
+                    {isEditingReview && <button type="button" onClick={() => setIsEditingReview(false)} className="font-sans font-semibold text-sm">Cancel</button>}
+                    <button type="submit" disabled={!userRating || !userComment} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                      {currentUserReview ? 'Update Review' : 'Submit Review'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* Other Reviews */}
+            <div className="space-y-6">
+                {allReviews.filter(review => review.userId !== currentUser?.id).map(review => (
+                    <div key={review.id} className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
+                        <div className="flex items-start gap-4">
+                            <img src={review.user.avatarUrl} alt={review.user.name} className="w-12 h-12 rounded-full"/>
+                            <div className="flex-1">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
+                                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{review.user.name}</h4>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 sm:mt-0">
+                                      Posted on {new Date(review.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
                                 </div>
+                                 <div className="flex items-center mb-2">
+                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-4 h-4 ${i < review.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
+                                </div>
+                                <p className="text-text-body dark:text-dark-text-body whitespace-pre-wrap">{review.comment}</p>
                             </div>
-                             <p className="text-text-body dark:text-dark-text-body">{review.comment}</p>
                         </div>
                     </div>
-                </div>
-            ))}
-            <button className="w-full text-center font-sans font-semibold text-accent py-3 rounded-xl hover:bg-accent/10 transition-colors">Show all reviews</button>
-          </div>
+                ))}
+            </div>
         </section>
+
 
         {/* More from author */}
         {authorBooks.length > 0 && (

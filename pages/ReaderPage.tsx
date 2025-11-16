@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Book, NavigateTo, BookProgress, ChapterProgress } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon } from '../components/icons/Icons';
@@ -85,10 +84,15 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
   const [resumeData, setResumeData] = useState<BookProgress | null>(null);
+
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isTocVisible, setIsTocVisible] = useState(false);
+  const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
   
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const settingsPanelRef = useRef<HTMLDivElement>(null);
   const { theme: globalTheme } = useTheme();
 
   const chapter = book.chapters[currentChapterIndex];
@@ -237,9 +241,57 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
     }
   }, [currentChapterIndex, book.id, chapter.id, resumeData, chapterIndex, currentUser]);
 
+    // Effect to close settings panel on outside click
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (settingsPanelRef.current && !settingsPanelRef.current.contains(event.target as Node)) {
+                setIsSettingsPanelVisible(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const TableOfContents: React.FC = () => (
+    <div 
+      className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} 
+      onClick={() => setIsTocVisible(false)}
+    >
+      <div 
+        className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`} 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-4 border-b border-gray-200 dark:border-dark-border">
+          <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
+          <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
+        </div>
+        <ul className="overflow-y-auto h-[calc(100%-65px)]">
+          {book.chapters.map((chap, index) => (
+            <li key={chap.id}>
+              <button 
+                onClick={() => { 
+                  goToChapter(index); 
+                  setIsTocVisible(false);
+                }}
+                className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${!chap.isReleased ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                disabled={!chap.isReleased}
+              >
+                <span className="block truncate">{chap.title}</span>
+                {!chap.isReleased && <span className="text-xs">(Not Released)</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
 
   return (
     <div className={`transition-colors duration-300 ${contentThemeClasses[contentTheme]}`}>
+      <TableOfContents />
       {/* Floating Header */}
       <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border' : 'bg-background/80 border-gray-200'} backdrop-blur-md border-b`}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -250,9 +302,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
              <div className="text-center">
                  <h2 className="font-sans font-semibold truncate dark:text-dark-text-rich">{chapter.title}</h2>
              </div>
-            <div className="flex items-center gap-4 dark:text-dark-text-body">
-                 <button><BookmarkIcon className="w-5 h-5"/></button>
-                 <button><Bars3Icon className="w-5 h-5"/></button>
+            <div className="flex items-center gap-4">
+                 <button onClick={() => setIsBookmarked(!isBookmarked)}>
+                    <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
+                 </button>
+                 <button onClick={() => setIsTocVisible(true)} className="text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent transition-colors">
+                    <Bars3Icon className="w-5 h-5"/>
+                 </button>
             </div>
         </div>
       </header>
@@ -299,18 +355,22 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
 
       {/* Side Toolbar for settings */}
       <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
-        <div className="relative group">
-            <button className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors">
+        <div ref={settingsPanelRef} className="relative">
+            <button 
+                onClick={() => setIsSettingsPanelVisible(prev => !prev)}
+                className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors"
+                aria-label="Reading settings"
+            >
                 <PaintBrushIcon className="w-5 h-5" />
             </button>
-            <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity`}>
-                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600"/></button>
-                <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
-                <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`}><MoonIcon className="w-5 h-5 text-gray-700"/></button>
+            <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`} aria-label="Light theme"><SunIcon className="w-5 h-5 text-amber-600"/></button>
+                <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`} aria-label="Sepia theme"><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
+                <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`} aria-label="Dark theme"><MoonIcon className="w-5 h-5 text-gray-700"/></button>
             </div>
         </div>
-        <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold">A-</button>
-        <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold">A+</button>
+        <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold" aria-label="Decrease font size">A-</button>
+        <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold" aria-label="Increase font size">A+</button>
       </div>
     </div>
   );
