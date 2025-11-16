@@ -52,6 +52,47 @@ let db = {
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms + Math.random() * 100));
 
+/**
+ * Dynamically calculates user stats based on their library and reading progress.
+ * In a real backend, this logic would live on the server, likely updated via triggers or batch jobs.
+ * @example
+ * // Real API Endpoint:
+ * // This logic would likely be part of the user object serialization process.
+ * // For instance, GET /api/v1/users/me would return a user object where the 'stats' field is populated by a server-side calculation like this.
+ */
+const calculateUserStats = (user: User): User['stats'] => {
+    const userProgress = db.progress[user.id] || {};
+    
+    const allLibraryBooks = new Map<number, LibraryBook>();
+    user.library.forEach(shelf => {
+        shelf.books.forEach(book => allLibraryBooks.set(book.id, book));
+    });
+
+    const booksRead = Array.from(allLibraryBooks.values()).filter(book => userProgress[book.id]?.overallProgress >= 100).length;
+
+    const chaptersRead = Object.values(userProgress).reduce((acc, bookProg) => {
+        return acc + Object.values(bookProg.chapters).filter(chap => chap.progress >= 100).length;
+    }, 0);
+    
+    const genreCounts: { [genre: string]: number } = {};
+    allLibraryBooks.forEach(book => {
+        book.genres.forEach(genre => {
+            genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+        });
+    });
+
+    const favoriteGenres = Object.entries(genreCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(entry => entry[0]);
+
+    return {
+        booksRead,
+        chaptersRead,
+        favoriteGenres,
+    };
+};
+
 
 // --- JWT Simulation ---
 const generateToken = (user: User) => btoa(JSON.stringify({ id: user.id, email: user.email }));
@@ -98,6 +139,7 @@ export async function login(email: string, password_used: string): Promise<User 
     const user = db.users.find(u => u.email === email);
     
     if (user && password_used === 'password') {
+        user.stats = calculateUserStats(user);
         const token = generateToken(user);
         localStorage.setItem(JWT_KEY, token);
         return deepClone(user);
@@ -133,6 +175,7 @@ export async function signup(username: string, email: string): Promise<User> {
         writtenBooks: [],
     };
     db.users.push(newUser);
+    newUser.stats = calculateUserStats(newUser);
     
     const token = generateToken(newUser);
     localStorage.setItem(JWT_KEY, token);
@@ -159,13 +202,14 @@ export async function logout(): Promise<void> {
  * // Real API Request:
  * // GET /api/v1/users/me
  * // Headers: { "Authorization": "Bearer <token>" }
- * // Response (200 OK): { "user": { ... } }
+ * // Response (200 OK): { "user": { ..., "stats": { "booksRead": 10, ... } } }
  * // Response (401 Unauthorized): { "error": "Not authenticated" }
  */
 export async function getMe(): Promise<User | null> {
     await delay(50);
     try {
         const user = getAuthenticatedUser();
+        user.stats = calculateUserStats(user);
         return deepClone(user);
     } catch (error) {
         return null;

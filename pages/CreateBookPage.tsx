@@ -1,7 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { User, Book } from '../types';
-import { genres } from '../constants';
 import { ArrowLeftIcon, PhotoIcon, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
@@ -16,6 +15,15 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [isMature, setIsMature] = useState(false);
     const [coverUrl, setCoverUrl] = useState('https://picsum.photos/seed/newbook/400/600');
+    const [allGenres, setAllGenres] = useState<string[]>([]);
+    const [isLoadingGenres, setIsLoadingGenres] = useState(true);
+
+    useEffect(() => {
+        api.getGenres().then(fetchedGenres => {
+            setAllGenres(fetchedGenres);
+            setIsLoadingGenres(false);
+        });
+    }, []);
 
     const toggleGenre = (genre: string) => {
         setSelectedGenres(prev => 
@@ -84,11 +92,15 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                      <div>
                         <label className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-2">Genres</label>
                         <div className="flex flex-wrap gap-2">
-                            {genres.map(g => (
-                                <button key={g} type="button" onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
-                                    {g}
-                                </button>
-                            ))}
+                            {isLoadingGenres ? (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Loading genres...</p>
+                            ) : (
+                                allGenres.map(g => (
+                                    <button key={g} type="button" onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
+                                        {g}
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </div>
                      <div className="flex items-center justify-between pt-4">
