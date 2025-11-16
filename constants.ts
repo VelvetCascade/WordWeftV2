@@ -1,3 +1,4 @@
+
 import type { Book, Author, Review, Chapter, User, LibraryBook, Shelf } from './types';
 
 export const mainAuthor: Author = {
@@ -13,7 +14,7 @@ export const otherAuthors: Author[] = [
   { id: 4, name: 'Kaelen Moriarty', avatarUrl: 'https://picsum.photos/seed/author4/100/100', bio: 'Kaelen Moriarty pens dark, atmospheric mysteries.' },
 ];
 
-const sampleReviews: Review[] = [
+export const sampleReviews: Review[] = [
   { id: 1, user: { name: 'Alex', avatarUrl: 'https://picsum.photos/seed/user1/50/50' }, rating: 5, comment: 'An absolute masterpiece! The world-building is second to none.', sentiment: 'positive' },
   { id: 2, user: { name: 'Brianna', avatarUrl: 'https://picsum.photos/seed/user2/50/50' }, rating: 4, comment: 'A great read, though the ending felt a bit rushed. Still highly recommend!', sentiment: 'positive' },
   { id: 3, user: { name: 'Carlos', avatarUrl: 'https://picsum.photos/seed/user3/50/50' }, rating: 3, comment: 'It was okay. The main character was a bit bland for my taste.', sentiment: 'neutral' },
@@ -24,6 +25,30 @@ const sampleChapters: Chapter[] = [
   { id: 2, title: 'Shadows in the Sundial', wordCount: 4100, content: 'Following the cryptic map, Kaelen found himself before the ancient Sundial of Omens, its shadow stretching like a skeletal finger...', isReleased: true },
   { id: 3, title: 'The Crimson Compass', wordCount: 3800, content: 'The compass, a relic of a fallen empire, pulsed with a faint crimson light, pulling him northward...', isReleased: true },
   { id: 4, title: 'A Prophecy Unfurled', wordCount: 4500, content: 'In the heart of the Crystal Caves, the prophecy unfurled not on a scroll, but in the shimmering facets of the stones themselves.', isReleased: false },
+];
+
+const sunkenCityChapters: Chapter[] = [
+    // FIX: Escaped single quotes within the content string to prevent parsing errors.
+    { id: 101, title: 'The Drowned Map', wordCount: 1250, isReleased: true, content: 'The salt spray of the port city of Oakhaven was a familiar, cloying perfume to Kaelen. By trade, he was a cartographer, but his true reputation—the one whispered in shadowy taverns—was as a finder of lost things. His latest commission sat heavy on the table before him: a water-damaged scroll case of petrified wood, sealed with a crest he didn\'t recognize. His client, a cloaked figure who paid in ancient, sea-worn gold, had called it the key to Aerthos. Not the Aerthos of bustling kingdoms and sprawling forests, but the Sunken City, a place most considered a myth. Kaelen ran a calloused thumb over the seal. It was shaped like a kraken, its tentacles coiling around a fractured crown. With a deft flick of a specialized knife, he broke the wax. Inside, the parchment was impossibly preserved, its ink a vibrant, otherworldly blue. It wasn\'t a map in the conventional sense. It was a star chart, overlaid with tidal patterns and currents that defied modern navigational understanding. At its center, where a destination should be, was a single, cryptic phrase in a language he vaguely recognized as the Old Tongue: "Where the sun kisses the abyss." As he studied the intricate lines, a chill crept up his spine. This was no mere treasure map. It felt alive, pulsing with a forgotten magic, and he knew, with a certainty that settled deep in his bones, that this journey would cost him more than just his time. It was a path to a place that had intentionally been wiped from the charts of the known world, and something told him it wasn\'t waiting to be found by just anyone.' },
+    { id: 102, title: 'The Scholar of Whispers', wordCount: 1300, isReleased: true, content: 'The star chart was a puzzle beyond his expertise. The constellations were depicted as they would have appeared millennia ago, an impossible perspective. There was only one person in Oakhaven who might decipher it: Lyra, a reclusive scholar known as the "Loremistress of the Tides." Her study was a chaotic sanctuary of books and artifacts, smelling of old paper, sea salt, and something faintly floral. Lyra was younger than the rumors suggested, with eyes the color of a stormy sea that seemed to hold ancient knowledge. She looked at the map not with a cartographer\'s eye, but with the reverence of a historian touching a sacred text. "This isn\'t a map to a place," she whispered, her fingers tracing the celestial patterns. "It\'s a key. A temporal key. It charts a course not through space, but through time and tide, to a location that exists only when specific cosmic and oceanic conditions align." She pointed to a series of glyphs Kaelen had mistaken for decorative flourishes. "These are tide-runes, a magical language used by the old Sea Lords to command the ocean itself. To follow this map, you don\'t just need a ship. You need someone who can read the water\'s memory." Kaelen felt a growing unease. This was far beyond finding a sunken chest of gold. "And you can read them?" he asked. Lyra’s gaze met his, and for the first time, he saw a flicker of something other than scholarly curiosity in their depths—a shadow of a past she kept hidden. "I can," she said, her voice barely audible. "But be warned, Cartographer. The Old Tongue is not meant for idle chatter. To speak it is to bargain with forces that have slept for eons. The city was drowned for a reason."' },
+    { id: 103, title: 'The Abyssal Hand', wordCount: 1400, isReleased: true, content: 'News of a high-value map travels fast in a city like Oakhaven. As Kaelen and Lyra prepared for their voyage, they found themselves being watched. The watchers were skilled, moving like ghosts in the bustling crowds, but Kaelen’s years of navigating treacherous lands had honed his senses. They were marked by a subtle tattoo on their wrist: a black, grasping hand. Lyra paled when she saw it. "The Abyssal Hand," she breathed, pulling Kaelen into a darkened alley. "A cult that worships the deep. They believe the Sunken City holds the Trident of the Abyss, an artifact capable of creating unnatural, eternal storms. They would see the world remade into a chaotic, watery grave." The threat was no longer abstract. That night, their lodgings were ransacked. The intruders were disciplined and silent, bypassing locks and guards with ease. They weren\'t common thieves; they were searching for the map. Kaelen and Lyra escaped through a window, the star chart clutched safely in Lyra’s satchel. The chase was on. They fled through the labyrinthine streets of Oakhaven, the silent, black-clad figures of the Abyssal Hand always just a few steps behind. It culminated in a desperate fight on the docks, where Kaelen’s skill with a blade and Lyra’s surprisingly quick thinking—toppling a crane-load of fishing nets onto their pursuers—allowed them to reach their chartered ship, the Sea Serpent. As they cast off, a lone figure stood on the pier, his face obscured by a hood. He raised a hand, not in a wave, but a promise. They had the map, but the Hand would be their shadow across every league of the sea.' },
+    { id: 104, title: 'The Sea Serpent\'s Gamble', wordCount: 1150, isReleased: true, content: 'The Sea Serpent was a sturdy vessel, but its captain, a grizzled man named Garen, was a pragmatist. He had agreed to a lucrative charter, not a suicide mission. "Cultists? Ancient magic? This wasn\'t part of our deal, map-maker," he growled, his hand resting on the hilt of his cutlass. Kaelen laid a heavy purse of the sea-worn gold on the table. "Our deal was for passage, no questions asked. This covers the extra risk." Garen eyed the gold, then Lyra. "And her? What\'s her part in this?" "She reads the tides," Lyra said, her voice steady despite the captain\'s intimidating presence. She unrolled the map. "Your charts are useless where we\'re going. Only this and the ocean’s own memory can guide us." The first few days were a tense truce. The crew was wary, Garen was suspicious, but Lyra proved her worth. She directed them away from predictable shipping lanes into strange, eerily calm waters, her instructions based on the swell of the waves and the patterns of the clouds. They sailed through a fog that seemed to muffle time itself and navigated a strait where the water glowed with an ethereal light. They were leaving the known world behind. But they were not alone. On the third day, a sleek, black-sailed ship appeared on the horizon. It moved with unnatural speed, cutting through the waves without a ripple. The Abyssal Hand had found them. There was nowhere to run. "Get ready," Garen yelled, drawing his steel. "It seems we\'re earning that gold after all."' },
+    { id: 105, title: 'Whispers on the Water', wordCount: 1500, isReleased: true, content: 'The black ship gained on them relentlessly. It was clear a direct confrontation would be their end. Lyra, her face pale but determined, stood at the prow of the Sea Serpent, her eyes closed. Her lips moved, chanting in the Old Tongue—the tide-runes from the map. The sea around them began to change. The calm waters grew agitated, forming strange, unpredictable currents. A thick, unnatural mist rose from the waves, clinging to their ship while avoiding the enemy vessel. "What is she doing?" Kaelen shouted to Garen over the rising wind. "She\'s waking the water," the captain replied, his earlier skepticism replaced by a look of awe. "Steering us through a ghost current." They were sailing through a phantom storm, a memory of a squall that had passed through these waters centuries ago. The Sea Serpent bucked and pitched, but it followed a safe path that only Lyra could see. The Abyssal Hand’s ship, however, was caught in the full fury of the spectral tempest. Kaelen watched as phantom waves crashed over its decks and spectral winds tore at its black sails. The ship was thrown off course, forced to wrestle with an enemy it couldn\'t see or fight. The incantation took a heavy toll on Lyra. When the mist finally cleared and the black ship was a mere speck on the horizon, she collapsed, her nose bleeding. Kaelen caught her. "You did it," he said, his voice filled with a new respect. "The sea remembers its own," she murmured, her energy spent. "And it doesn\'t like being commanded by fanatics." The escape had bought them time, but it had also confirmed the cult\'s fearsome power and Lyra’s own dangerous, latent abilities. The stakes of their quest had just risen immeasurably.' },
+    { id: 106, title: 'The Coral Labyrinth', wordCount: 1200, isReleased: true, content: 'Their next heading, according to Lyra’s interpretation of the map, led them to the Shattered Shoals, a vast, uncharted reef system notorious for wrecking ships. From the surface, it was a death trap of jagged coral and treacherous, shallow waters. "The entrance to the city\'s outer sanctum is below," Lyra explained, pointing to a section of the map that detailed the reef. "It\'s a submerged labyrinth. We can\'t take the Sea Serpent through it." Garen and his crew would go no further. They were sailors, not divers. After a tense negotiation, a deal was struck: Kaelen and Lyra would take a small submersible bell Garen had in his cargo hold—a relic from a failed salvage operation—and the Sea Serpent would wait for them for three days at a designated rendezvous point. The descent was claustrophobic and dark. The bell was a cramped, iron sphere with a single, thick glass portal. As they sank into the blue, the world transformed. The coral labyrinth was a breathtaking, alien landscape of vibrant colors and strange, bioluminescent creatures. It was also disorienting and deadly. The map gave them a route, but it didn\'t account for the shifting coral formations or the powerful, unpredictable currents that threatened to smash their fragile vessel against the razor-sharp walls. Kaelen piloted the bell with tense precision, his cartographer\'s instincts for navigation pushed to their absolute limit. Lyra, meanwhile, seemed to be in a trance, her hand pressed against the glass. "The coral... it sings," she said softly. "It holds the memories of the city’s architects." She guided him through the maze, not by sight, but by feeling the faint, resonant hum of the ancient magic that still permeated the reef. They were close, but the labyrinth had its own guardians. A colossal grouper with scales like cobblestones and a mouth large enough to swallow the bell whole began to stalk them, its territorial anger a palpable force in the crushing pressure of the deep.' },
+    { id: 107, title: 'The Gnomon’s Shadow', wordCount: 1350, isReleased: true, content: 'The giant grouper was relentless. It rammed the bell, the sound of metal groaning under the impact echoing in the small space. A hairline fracture appeared in the portal glass. They were running out of time and air. Thinking fast, Kaelen used the bell’s grappling arm—intended for salvage—to dislodge a massive, precariously balanced pillar of coral. It crashed down, creating a temporary barrier and a cloud of debris that confused the beast. They used the opening to escape, navigating the final, tight passages of the labyrinth. They emerged into a vast, underwater cavern. In its center, bathed in an ethereal glow from phosphorescent flora, stood a colossal, submerged structure: a sundial, just like the one on the map’s seal, but immense. This was the Gnomon of the Tides, the true entrance to Aerthos. The map indicated a specific alignment was needed. "The sun and the abyss," Lyra recited. "We need to cast a shadow on the right rune." The problem was a lack of sun. But Kaelen noticed something. The bioluminescent plants on the cavern walls pulsed with a rhythmic light. "They aren\'t random," he realized. "They\'re tracking something. A deep-sea thermal vent. A pulse of energy from the planet\'s core." Using the bell’s limited thrusters, they maneuvered the vessel between the Gnomon and the brightest cluster of glowing kelp. As the kelp reached its peak luminescence, it cast the bell’s shadow across the sundial’s face. For a heart-stopping moment, nothing happened. Then, the rune their shadow touched began to glow with a brilliant blue light. With a deep, grinding groan that resonated through the water, a section of the cavern floor began to descend, revealing a shimmering, liquid-like portal. They had found the way in.' },
+    { id: 108, title: 'The City of Sleeping Stone', wordCount: 1450, isReleased: true, content: 'Passing through the portal was like diving into liquid starlight. The crushing pressure vanished, replaced by breathable, if strangely humid, air. The submersible bell settled gently on a platform of polished obsidian. They had arrived in Aerthos. The city was miraculously preserved within a colossal air bubble, a testament to the unimaginable power of its creators. Towers of pearlescent coral and basalt spiraled towards the cavernous, glowing ceiling. Streets paved with shimmering mother-of-pearl were lined with buildings that seemed grown rather than built. But it was silent. Utterly, profoundly silent. There were no signs of life, nor were there signs of struggle. It was a metropolis frozen in time, its inhabitants vanished. Statues of serene, aquatic-looking beings stood in silent vigil in grand plazas. The air hummed with a dormant energy, a city holding its breath. "It\'s not abandoned," Lyra said, her voice echoing in the vast stillness. "It\'s sleeping." As they explored, they found inscriptions in the Old Tongue everywhere. Lyra translated them, piecing together the city\'s history. Aerthos was a hub of magical research, its people masters of tidal and arcane energies. They had sought to create a perfect harmony between civilization and the ocean. Their greatest creation was the Heart of the Ocean, an artifact that could calm the seas, raise islands, and grant longevity. But the inscriptions spoke of a schism, a faction that wanted to use the Heart’s power not for harmony, but for control. This faction, led by a powerful tide-mage named Lord Malakor, became the genesis of the Abyssal Hand. To protect the world from Malakor’s ambition, the city\'s elders enacted a final, desperate ritual. They used the Heart to sink Aerthos, placing it and themselves in a magical stasis, a deep sleep from which they could only be awoken by a worthy successor. The Trident of the Abyss, the cult\'s coveted prize, was a twisted, corrupted imitation of the Heart, created by Malakor in his exile.' },
+    { id: 109, title: 'The Heart of the Ocean', wordCount: 1250, isReleased: true, content: 'At the city’s highest point, within the grand Spire of Tides, they found the Heart of the Ocean. It was not a gem or a trinket, but a perfect sphere of captured seawater, swirling with its own internal currents and emitting a soft, pulsating blue light. It rested on a simple stone pedestal in the center of a vast, circular chamber. The walls of the chamber were a mosaic depicting the history of Aerthos, from its founding to its final, sorrowful slumber. As Lyra approached the artifact, it resonated with her presence. The light within the sphere brightened, and the dormant hum of the city intensified. "It knows me," she whispered, her eyes wide. "The blood of the Sea Lords runs in my veins. My ancestor was one of the elders who enacted the ritual." Her hidden past was now laid bare. She was a descendant of the very people who had sacrificed everything to protect the world. The Heart was her birthright. But as she reached out to touch it, a chilling voice echoed through the chamber. "A touching reunion. It\'s a shame it must be your last." From the shadows emerged the leader of the Abyssal Hand, the hooded man from the docks. He was not alone. His elite guard, the Abyssal Wardens, materialized around him. "You led us right to it, child of the traitors," the man said, lowering his hood to reveal a face unnaturally pale, with eyes that held the cold darkness of the deep. "Lord Malakor was our founder, and we are here to finish what he started. The age of men is over. The age of the deep is at hand."' },
+    { id: 110, title: 'Clash of Tides', wordCount: 1500, isReleased: true, content: 'The fight was brutal and swift. The Abyssal Wardens were formidable, wielding weapons of sharpened coral and obsidian that seemed to drink the light. Kaelen was a skilled fighter, but he was outnumbered and outmatched. He fought with desperate courage, his cartographer’s tools—sturdy calipers and a weighted sounding line—becoming improvised weapons. He created space for Lyra, who stood before the Heart, her eyes closed, chanting in the Old Tongue. The leader, who called himself the Hand of the Abyss, ignored Kaelen and advanced on Lyra. "That power is wasted on you," he hissed, conjuring a whip of dark, viscous water. "It belongs to the Abyss!" Lyra’s chanting grew louder. The Heart of the Ocean pulsed in time with her words. The water in the chamber—in the decorative pools, in the very air—responded. It rose to form a protective barrier around her, deflecting the Hand’s attack. Kaelen, seeing his chance, tackled the cult leader, throwing them both off balance. It was a brief distraction, but it was enough. Lyra placed her hands on the Heart of the Ocean. A blinding wave of blue light erupted from the artifact, throwing everyone in the room off their feet. The energy that filled the chamber was not violent; it was ancient, vast, and full of an undeniable authority. The sleeping city was beginning to stir.' },
+    { id: 111, title: 'The Warden Awakens', wordCount: 1300, isReleased: true, content: 'The blue light receded, but the city was no longer silent. A low, resonant hum filled the air, and throughout the stone corridors, the serene statues began to stir. Their stone forms cracked away like shells, revealing the gleaming, aquatic beings within. The people of Aerthos were waking up. One of them, a figure of immense presence with a crown of coral, strode into the chamber. His eyes, the color of the deep ocean, fell upon Lyra and the Hand of the Abyss. This was the High Elder, the leader of the sleeping city. The Abyssal Hand leader scrambled to his feet, a look of fanatical glee on his face. "The masters return! Join us! We have kept the faith!" The High Elder’s expression was one of profound sadness. "Faith? You have twisted our purpose. We sank to protect the world, not to conquer it." He raised a hand, and the water in the air solidified into crystalline chains, binding the Hand and his Wardens. The fight was over. The High Elder turned to Lyra. "Daughter of our blood. You have returned. You have proven yourself worthy by seeking harmony, not power." He then looked at Kaelen, who was nursing a bruised arm. "And you, Cartographer. You protected the key. Your heart is true." The city was awake, but its future was uncertain. They were a people out of time, their world long gone.' },
+    { id: 112, title: 'A City Adrift in Time', wordCount: 1400, isReleased: true, content: 'The following days were a whirlwind of discovery. Lyra, now embraced as a long-lost daughter, delved into the city\'s archives, learning the full extent of its magic and history. Kaelen, true to his nature, began the monumental task of mapping the city and its surrounding cavern, his cartographer\'s soul finding its ultimate challenge and reward. He learned that the great air bubble was maintained by a complex matrix of tidal magic and geothermal energy. It was a self-sustaining ecosystem, a jewel of arcane engineering. The people of Aerthos, serene and wise, were faced with a difficult choice. They could remain hidden, a secret legend, or they could reveal themselves to a world that had long forgotten them, a world that might react with fear and greed. The captured cultists of the Abyssal Hand were a stark reminder of the dangers outside their sanctuary. The High Elder convened a council, with Lyra and Kaelen as honored guests. "The Heart of the Ocean gives us the power to raise Aerthos to the surface once more," he announced. "But should we? The world above is not the one we left." Lyra, who had spent her life studying the world above, spoke with a wisdom that bridged the ages. "The world has its darkness, but it also has its light. Oakhaven, for all its shadows, is a place of life and striving. To remain hidden is to stagnate. To rise is to risk, but also to live." Her words carried weight. The council was swayed. The decision was made: Aerthos would rise. But not in a single, cataclysmic event. They would reveal themselves slowly, cautiously, starting with the establishment of a hidden, protected channel to the surface world.' },
+    { id: 113, title: 'The Cartographer\'s Choice', wordCount: 1150, isReleased: true, content: 'Kaelen’s role in this new world was clear. He would be the bridge. He would be the one to chart the safe passages from Aerthos to the surface, to create the new maps that would connect the ancient and the modern. It was the commission of a lifetime. But it also meant leaving his old life behind. He thought of Oakhaven, of the thrill of discovery in dusty libraries and the satisfaction of a perfectly drawn coastline. He was a man of the surface, of the wind and the sun. Lyra found him staring out a grand observatory portal at the strange, deep-sea life swimming by. "You are thinking of leaving," she said, not as a question, but a statement. "My place is up there," he admitted. "My work is charting the known world. This place... it\'s your home, Lyra. You belong here." "My home was a dusty room full of books," she replied, a soft smile on her lips. "This is my heritage. But my life, the one I chose, was one of learning about the world, not just my own past. The people of Aerthos need an ambassador, someone who understands both worlds." Her implication was clear. She wasn\'t staying hidden in the depths forever. Her journey was just beginning, and she intended for it to be in the world of sun and sky. Kaelen felt a lightness in his chest. "A cartographer could always use a good loremistress," he said. "Especially one who can talk to the tides."' },
+    { id: 114, title: 'The Promise of the Horizon', wordCount: 1250, isReleased: true, content: 'Their departure was not a goodbye, but a commencement. The High Elder gifted Kaelen a set of enchanted charting tools that would never wear and could measure magical currents. To Lyra, he gave a small, smooth stone. "A Hearthstone," he explained. "It is linked to the Heart of the Ocean. It will always let you feel the pulse of your home, and should you ever need it, it will guide you back." They returned to the surface in their small submersible, breaking through the waves into the brilliant light of a new dawn. The Sea Serpent was there, just as Captain Garen had promised. His eyes went wide as they recounted their tale, the skepticism warring with the undeniable truth of the Hearthstone glowing softly in Lyra’s hand. The journey back to Oakhaven was different. The sea seemed calmer, the winds more favorable, as if the ocean itself was wishing them well. The black-sailed ship of the Abyssal Hand was nowhere to be seen, its leaders captured and its power broken for now. Kaelen and Lyra stood on the deck, the Drowned Map spread between them. It no longer looked like a puzzle, but a testament to their journey. "What now?" Kaelen asked. Lyra looked towards the horizon, a line of infinite possibility. "Now," she said, her voice filled with a quiet excitement, "we create a new map. One that connects the past to the future." The Sunken City was no longer a myth. It was a new, secret nation, and they were its first emissaries. Their adventure was over, but the real work—of bridging two worlds—had just begun.' },
+    { id: 115, title: 'Epilogue: A New Current', wordCount: 900, isReleased: true, content: 'One year later, the name Elara Vance was becoming legend in certain circles. No, not Elara, but Lyra. She had taken her ancestor\'s name as her own title. She and Kaelen operated out of a discreetly established coastal enclave, a place where scholars, sailors, and the curious could come to learn about the "deep cultures," as they were euphemistically known. Maps were changing. New, safe shipping lanes appeared where once there were only dangers, courtesy of Kaelen’s charts and Lyra’s tidal guidance. Strange, beautiful coral art began to appear in markets, and tales of glowing fish and serene underwater vistas became the stuff of sailors’ dreams rather than their nightmares. The Abyssal Hand was scattered, its members hunted not by kingdoms, but by the quiet, efficient guardians of Aerthos who could now walk the surface world, cloaked in mist and shadow. They were a subtle, powerful force for balance. Kaelen never stopped exploring, but now his maps had a new dimension. They charted not just land and sea, but the flow of magic, the memory of water. He was happier than he had ever been. Lyra became a teacher, a diplomat, and a scholar, her two worlds blending seamlessly. She often held the Hearthstone, feeling the steady, peaceful pulse of the sleeping city far below, her home, her heritage, her strength. The world did not know of the city of Aerthos, not yet. But it was starting to feel its influence, a new, gentle current changing the tides of history for the better. And at the forefront of that change were a cartographer who found a city that wasn\'t on any map, and a scholar who discovered her own story was the greatest legend of all.' },
+    { id: 116, title: 'The Unseen Hand', wordCount: 1050, isReleased: false, content: 'The victory over the Abyssal Hand felt complete, but deep within the sunken prisons of Aerthos, the captured Hand of the Abyss was not idle. He spoke no words, ate no food, yet his power seemed to grow. He was communicating, not with his scattered cult, but with something far older, something that slumbered in the trenches even deeper than Aerthos. An entity that Malakor had only glimpsed, a power the Sea Lords had sunk their city to escape. The chains forged from pure water began to darken, tainted by an oily, shadowy substance that seemed to bleed from the cultist\'s very pores. The guards of Aerthos felt a new chill in the water, a wrongness that their magic could not identify. One night, the Hearthstone in Lyra\'s study pulsed not with a gentle blue light, but with a frantic, violet alarm. Far below, in the heart of the ocean, the prisons of Aerthos had gone silent. The new current of peace was about to face a tidal wave of ancient darkness, and the world above was blissfully unaware of the true abyss that was stirring.' },
+    { id: 117, title: 'Echoes of Malakor', wordCount: 1100, isReleased: false, content: 'The escape of the Hand of the Abyss sent shockwaves through Aerthos. He left behind a single rune painted in the oily, dark substance on his cell wall: the personal sigil of Lord Malakor. It was a symbol of dominion, of forced servitude of the ocean\'s will. Lyra, delving into the most forbidden archives, discovered Malakor had not just sought power, but had been trying to awaken a primordial ocean entity he called the "Umbral Leviathan." The Trident of the Abyss was not a weapon, but a key—a focusing tool to call the Leviathan to the surface. The Abyssal Hand was not just a cult; they were the heralds of a world-ending god. Kaelen began to see disturbances in his magical cartography. The natural ley lines of the ocean were being twisted, redirected towards a single point in the deepest part of the Grand Ocean, a place known only as the "Kraken\'s Maw." The Hand of the Abyss was not fleeing. He was heading to the Leviathan\'s altar. The race was on, not just to recapture a fugitive, but to stop a ritual that could drown the world in an eternal, shadowy sea, fulfilling Malakor\'s ultimate, insane prophecy.' },
+    { id: 118, title: 'The Kraken\'s Maw', wordCount: 1200, isReleased: false, content: 'The Kraken\'s Maw was a vortex of dark energy, a place where the barrier between the physical world and a realm of pure, abyssal nightmare was thin. The Sea Serpent, now retrofitted with Aerthian technology, sailed into a sea that was unnaturally black and cold. The sky above was a permanent twilight, a storm of shadow clouds gathering directly above the Maw. They found the Hand of the Abyss on a jagged pinnacle of obsidian, performing the final stages of the ritual. The Trident, which his followers had recovered, was pulsing with a malevolent, dark energy, drawing power from the storm above and the depths below. He was no longer just a man; he was a conduit for the Umbral Leviathan\'s power, his body contorting, his voice a chorus of whispers and shrieks. A fleet of black-sailed ships, rallied by the call of their master, emerged from the mists to defend him. The final battle began. The guardians of Aerthos, moving like blurs of seafoam and fury, engaged the cultist fleet. Kaelen and Lyra had to get to the pinnacle, to stop the ritual at its source. It was a desperate charge against time and a rising tide of darkness.' },
+    { id: 119, title: 'Heart Against the Abyss', wordCount: 1300, isReleased: false, content: 'As they fought their way to the pinnacle, Lyra knew that conventional magic would not be enough. The Hand of the Abyss was channeling a power that sought to unmake reality. She held the Hearthstone, its gentle blue light a stark contrast to the oppressive darkness. She had to connect with the Heart of the Ocean, to become a conduit for a power of harmony and life, to counter the abyssal void. Kaelen defended her as she entered a deep trance, her consciousness traveling through the water, back to the Spire of Tides, to the swirling sphere of pure ocean magic. The Heart responded to her desperate plea. On the pinnacle, a brilliant column of blue light erupted from Lyra, pushing back the encroaching darkness. It was a battle of wills, of ideologies, fought on a plane of pure energy. The harmony of the Heart against the nihilism of the Abyss. The Hand of the Abyss screamed as the pure, life-giving energy of the Heart washed over him, his connection to the Leviathan severed. The Trident of the Abyss cracked, its dark power imploding. The storm of shadows broke, and for the first time in what felt like an eternity, sunlight pierced the clouds above the Kraken\'s Maw.' },
+    { id: 120, title: 'The Eternal Tide', wordCount: 950, isReleased: false, content: 'The Hand of the Abyss was gone, consumed by the implosion of his own dark artifact. The cult was broken, its fleet scattered. The Umbral Leviathan, its call unanswered, sank back into its ageless slumber. The victory was immense, but it came at a cost. The final confrontation had drained the Heart of the Ocean of much of its accessible energy. The city of Aerthos was safe, but it could not be raised to the surface for generations to come. Its quiet, slow re-emergence would have to continue. Lyra and Kaelen stood on the deck of the Sea Serpent, watching the dark waters of the Kraken\'s Maw slowly return to a natural, healthy blue. They had saved the world from a threat it never knew existed. Their work was not over. The Abyss was eternal, and there would always be those who sought its power. But the Heart of the Ocean was also eternal. It was the tide of life, of balance, of hope. As long as there were those like them—a cartographer and a loremistress—to stand guard, the world would have its protectors. They set their course for home, their shadows stretching long on the water, two small figures against a vast, endless ocean, forever bound to its deepest secrets and its eternal tides.' },
 ];
 
 
@@ -39,6 +64,19 @@ export const sampleBooks: Book[] = [
     tags: ['Magic', 'Dragons', 'Quest'],
     summary: 'In a world where magic is fading, a young scribe discovers an ancient artifact that could either save her world or shatter it into oblivion. Her journey through forgotten kingdoms and treacherous landscapes will test her courage and redefine her destiny.',
     chapters: sampleChapters,
+    status: 'Ongoing',
+  },
+  {
+    id: 7,
+    title: 'The Sunken City of Aerthos',
+    author: mainAuthor,
+    coverUrl: 'https://picsum.photos/seed/book7/400/600',
+    rating: 4.9,
+    reviewsCount: 3451,
+    genres: ['Fantasy', 'Adventure', 'Mystery'],
+    tags: ['Lost Civilization', 'Magic', 'Ocean', 'Cults'],
+    summary: 'A disgraced cartographer and a mysterious scholar with a haunted past must decipher an ancient, waterlogged map to find the legendary Sunken City of Aerthos. They seek a powerful artifact said to control the tides, but they are not the only ones. A shadowy cabal will stop at nothing to claim the city\'s power for their own dark purposes, forcing our heroes on a perilous journey across stormy seas and into the forgotten depths.',
+    chapters: sunkenCityChapters,
     status: 'Ongoing',
   },
   {
@@ -123,63 +161,83 @@ export const genres = [
 
 // --- New mock data for User Profile ---
 
-export const libraryBooks: LibraryBook[] = [
+const createLibraryBook = (bookId: number, addedDate: string): LibraryBook => ({
+    ...sampleBooks.find(b => b.id === bookId)!,
+    progress: 0, // Progress will be populated dynamically
+    addedDate,
+});
+
+const aliceLibrary: Shelf[] = [
+    { id: 1, name: 'My Reading List', books: [
+        createLibraryBook(1, '2023-10-15'), // The Obsidian Heart
+        createLibraryBook(7, '2023-11-02'), // The Sunken City
+        createLibraryBook(2, '2023-08-20'), // Echoes of a Neon City
+    ]},
+];
+
+const rahulLibrary: Shelf[] = [
+    { id: 1, name: 'Currently Reading', books: [
+        createLibraryBook(3, '2023-09-01'), // The Serpent and the Star
+        createLibraryBook(7, '2023-11-05'), // The Sunken City
+    ]},
+     { id: 2, name: 'Want to Read', books: [
+        createLibraryBook(4, '2023-11-01'), // Whispers in the Fen
+    ]},
+];
+
+const meiLibrary: Shelf[] = [
+    { id: 1, name: 'All Books', books: [
+        createLibraryBook(1, '2023-01-01'),
+        createLibraryBook(2, '2023-02-01'),
+        createLibraryBook(3, '2023-03-01'),
+        createLibraryBook(4, '2023-04-01'),
+        createLibraryBook(6, '2023-05-01'),
+        createLibraryBook(7, '2023-06-01'),
+    ]},
+];
+
+
+export const sampleUsers: User[] = [
   {
-    ...sampleBooks[0], // The Obsidian Heart
-    progress: 35,
-    addedDate: '2023-10-15',
+    id: 101,
+    name: 'Alice',
+    email: 'alice@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user101/200/200',
+    joinDate: '2023-05-21',
+    stats: {
+      booksRead: 1,
+      chaptersRead: 3,
+      favoriteGenres: ['High Fantasy', 'Cyberpunk'],
+    },
+    following: [mainAuthor, otherAuthors[0]],
+    library: aliceLibrary,
   },
   {
-    ...sampleBooks[2], // The Serpent and the Star
-    progress: 80,
-    addedDate: '2023-09-01',
+    id: 102,
+    name: 'Rahul',
+    email: 'rahul@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user102/200/200',
+    joinDate: '2023-06-15',
+    stats: {
+      booksRead: 0,
+      chaptersRead: 5,
+      favoriteGenres: ['Urban Fantasy', 'Mystery'],
+    },
+    following: [otherAuthors[1], otherAuthors[2]],
+    library: rahulLibrary,
   },
   {
-    ...sampleBooks[1], // Echoes of a Neon City
-    progress: 100,
-    addedDate: '2023-08-20',
-  },
-  {
-    ...sampleBooks[3], // Whispers in the Fen
-    progress: 0,
-    addedDate: '2023-11-01',
-  },
-  {
-    ...sampleBooks[5], // Gears of Retribution
-    progress: 100,
-    addedDate: '2023-06-10',
+    id: 103,
+    name: 'Mei',
+    email: 'mei@wordweft.com',
+    avatarUrl: 'https://picsum.photos/seed/user103/200/200',
+    joinDate: '2022-12-10',
+    stats: {
+      booksRead: 12,
+      chaptersRead: 148,
+      favoriteGenres: ['Steampunk', 'Adventure'],
+    },
+    following: [mainAuthor, otherAuthors[0], otherAuthors[1], otherAuthors[2]],
+    library: meiLibrary,
   }
 ];
-
-export const sampleShelves: Shelf[] = [
-  {
-    id: 1,
-    name: 'Reading',
-    books: libraryBooks.filter(b => b.progress > 0 && b.progress < 100),
-  },
-  {
-    id: 2,
-    name: 'To Read',
-    books: libraryBooks.filter(b => b.progress === 0),
-  },
-  {
-    id: 3,
-    name: 'Completed',
-    books: libraryBooks.filter(b => b.progress === 100),
-  },
-];
-
-
-export const sampleUser: User = {
-  id: 101,
-  name: 'Jane Doe',
-  avatarUrl: 'https://picsum.photos/seed/user101/200/200',
-  joinDate: '2023-05-21',
-  stats: {
-    booksRead: 12,
-    chaptersRead: 148,
-    favoriteGenres: ['High Fantasy', 'Cyberpunk', 'Mystery'],
-  },
-  following: [mainAuthor, otherAuthors[0]],
-  library: sampleShelves,
-};

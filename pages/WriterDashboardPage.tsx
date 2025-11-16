@@ -36,7 +36,7 @@ const WriterDashboard: React.FC<{ setView: (view: WriterView) => void }> = ({ se
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Dashboard</h2>
-                <button onClick={() => setView('create-book')} className="bg-accent text-white font-sans font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-purple-700 transition-colors">
+                <button onClick={() => setView('create-book')} className="bg-accent text-white font-sans font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-primary transition-colors">
                     <PlusCircleIcon className="w-5 h-5"/> Create New Book
                 </button>
             </div>
