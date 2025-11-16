@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Book } from '../types';
-import { sampleBooks, genres } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'Recent' | 'Rating' | 'Popular';
@@ -33,11 +33,14 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
 
 export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortOption, setSortOption] = useState<SortOption>('Recent');
+  const [sortOption, setSortOption] = useState<SortOption>('Popular');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(genre ? [genre] : []);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isGenreOpen, setIsGenreOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [allGenres, setAllGenres] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const genreDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
@@ -61,22 +64,17 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
         };
     }, []);
 
-  const filteredAndSortedBooks = useMemo(() => {
-    let books = sampleBooks;
+    useEffect(() => {
+        api.getGenres().then(setAllGenres);
+    }, []);
 
-    if(selectedGenres.length > 0) {
-        books = books.filter(book => selectedGenres.some(g => book.genres.includes(g)));
-    }
-
-    return [...books].sort((a, b) => {
-        switch (sortOption) {
-            case 'Rating': return b.rating - a.rating;
-            case 'Popular': return b.reviewsCount - a.reviewsCount;
-            case 'Recent':
-            default: return b.id - a.id;
-        }
-    });
-  }, [selectedGenres, sortOption]);
+    useEffect(() => {
+        setIsLoading(true);
+        api.getBooks({ genres: selectedGenres, sortBy: sortOption }).then(fetchedBooks => {
+            setBooks(fetchedBooks);
+            setIsLoading(false);
+        });
+    }, [selectedGenres, sortOption]);
   
   const handleGenreToggle = () => {
     setIsGenreOpen(prev => !prev);
@@ -99,7 +97,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             <div>
                 <h4 className="font-sans font-semibold mb-3 dark:text-dark-text-rich">Genres</h4>
                 <div className="flex flex-wrap gap-2">
-                    {genres.map(g => (
+                    {allGenres.map(g => (
                         <button key={g} onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
                             {g}
                         </button>
@@ -132,7 +130,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
                     </button>
                     <div className={`absolute top-full mt-2 w-72 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 transition-all duration-200 origin-top-left border dark:border-dark-border ${isGenreOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
                          <div className="flex flex-wrap gap-2">
-                            {genres.map(g => (
+                            {allGenres.map(g => (
                                 <button key={g} onClick={() => toggleGenre(g)} className={`px-2 py-1 rounded-md text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
                                     {g}
                                 </button>
@@ -146,7 +144,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
                         Sort by: {sortOption} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
                     </button>
                     <div className={`absolute top-full mt-2 w-40 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 transition-all duration-200 origin-top-left border dark:border-dark-border ${isSortOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                        {(['Recent', 'Rating', 'Popular'] as SortOption[]).map(opt => (
+                        {(['Popular', 'Rating', 'Recent'] as SortOption[]).map(opt => (
                            <a key={opt} href="#" onClick={(e) => { e.preventDefault(); setSortOption(opt); setIsSortOpen(false); }} className="block px-4 py-2 text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{opt}</a>
                         ))}
                     </div>
@@ -182,15 +180,17 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
         </div>
 
         {/* Books Display */}
-        {viewMode === 'grid' ? (
+        {isLoading ? (
+            <div className="text-center p-8">Loading books...</div>
+        ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
-            {filteredAndSortedBooks.map(book => (
+            {books.map(book => (
               <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {filteredAndSortedBooks.map(book => (
+            {books.map(book => (
               <BookListItem key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
             ))}
           </div>

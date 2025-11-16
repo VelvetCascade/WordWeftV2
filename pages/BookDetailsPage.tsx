@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
-import { sampleBooks } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon } from '../components/icons/Icons';
@@ -63,12 +62,16 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
 
 
 interface BookDetailsPageProps {
-  book: Book;
+  bookId: number;
   currentUser: User | null;
   onUserUpdate: (user: User) => void;
 }
 
-export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentUser, onUserUpdate }) => {
+export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, currentUser, onUserUpdate }) => {
+  const [book, setBook] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
+
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
   
@@ -78,8 +81,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
   const [hoverRating, setHoverRating] = useState(0);
   const [userComment, setUserComment] = useState('');
   const [isEditingReview, setIsEditingReview] = useState(false);
-
-  const authorBooks = sampleBooks.filter(b => b.author.id === book.author.id && b.id !== book.id);
   
   const currentUserReview = useMemo(() => {
     if (!currentUser) return null;
@@ -88,14 +89,21 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
 
 
   useEffect(() => {
-    // Fetch reviews
-    api.getBookReviews(book.id).then(setAllReviews);
+    setIsLoading(true);
+    api.getBookById(bookId).then(fetchedBook => {
+      setBook(fetchedBook);
+      if(fetchedBook) {
+        api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(setAuthorBooks);
+      }
+      setIsLoading(false);
+    });
 
-    // Fetch progress
+    api.getBookReviews(bookId).then(setAllReviews);
+
     if(currentUser) {
-        api.getReadingProgressForBook(currentUser.id, book.id).then(setReadingProgress);
+        api.getReadingProgressForBook(currentUser.id, bookId).then(setReadingProgress);
     }
-  }, [currentUser, book.id]);
+  }, [currentUser, bookId]);
 
    useEffect(() => {
     if (currentUserReview) {
@@ -111,8 +119,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
   
   const isBookInLibrary = useMemo(() => {
     if (!currentUser) return false;
-    return currentUser.library.some(shelf => shelf.books.some(b => b.id === book.id));
-  }, [currentUser, book.id]);
+    return currentUser.library.some(shelf => shelf.books.some(b => b.id === bookId));
+  }, [currentUser, bookId]);
   
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -123,7 +131,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
   };
 
   const handleToggleLibrary = async () => {
-    if (!currentUser) {
+    if (!currentUser || !book) {
       window.location.hash = '/auth';
       return;
     };
@@ -132,15 +140,18 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
   };
   
   const handleAuthorClick = () => {
+    if (!book) return;
     window.location.hash = `/author/${book.author.id}`;
   };
   
   const handleReadClick = () => {
+    if (!book) return;
     const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
     window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
   };
 
   const handleReadChapterClick = (chapterIndex: number) => {
+    if (!book) return;
     window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
   }
 
@@ -148,7 +159,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
     e.preventDefault();
     if (!currentUser || userRating === 0 || !userComment) return;
 
-    const updatedReviews = await api.submitReview(currentUser.id, book.id, userRating, userComment);
+    const updatedReviews = await api.submitReview(currentUser.id, bookId, userRating, userComment);
     setAllReviews(updatedReviews);
     setIsEditingReview(false);
   };
@@ -156,13 +167,20 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
   const handleDeleteReview = async () => {
     if (!currentUser || !currentUserReview) return;
     if (window.confirm('Are you sure you want to delete your review?')) {
-        const updatedReviews = await api.deleteReview(currentUser.id, book.id);
+        const updatedReviews = await api.deleteReview(currentUser.id, bookId);
         setAllReviews(updatedReviews);
         setUserRating(0);
         setUserComment('');
     }
   };
 
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading book details...</div>;
+  }
+
+  if (!book) {
+    return <div className="min-h-screen flex items-center justify-center">Book not found.</div>;
+  }
 
   return (
     <div className="bg-white dark:bg-dark-surface">

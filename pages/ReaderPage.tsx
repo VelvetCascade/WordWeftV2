@@ -8,12 +8,14 @@ import * as api from '../api/client';
 type ContentTheme = 'light' | 'dark' | 'sepia';
 
 interface ReaderPageProps {
-    book: Book;
+    bookId: number;
     chapterIndex: number;
     currentUser: User | null;
 }
 
-export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, currentUser }) => {
+export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, currentUser }) => {
+  const [book, setBook] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
   const [fontSize, setFontSize] = useState(18);
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
@@ -30,7 +32,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
   const settingsPanelRef = useRef<HTMLDivElement>(null);
   const { theme: globalTheme } = useTheme();
 
-  const chapter = book.chapters[currentChapterIndex];
+  const chapter = book?.chapters[currentChapterIndex];
   
   const contentThemeClasses: Record<ContentTheme, string> = {
     light: 'bg-background text-text-body',
@@ -38,6 +40,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
     sepia: 'bg-[#FBF0D9] text-[#5B4636]',
   };
   
+  useEffect(() => {
+    setIsLoading(true);
+    api.getBookById(bookId).then(fetchedBook => {
+      setBook(fetchedBook);
+      setIsLoading(false);
+    });
+  }, [bookId]);
+
   useEffect(() => {
     if (globalTheme === 'dark') {
       setContentTheme('dark');
@@ -47,12 +57,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
   }, [globalTheme]);
 
   const handleSaveProgress = () => {
-      if (!currentUser) return;
+      if (!currentUser || !book) return;
       const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
       api.saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
   };
 
   useEffect(() => {
+    if (!book) return;
     const timer = setTimeout(() => {
       if (!currentUser || !contentRef.current) return;
       
@@ -66,24 +77,26 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
   }, [book, currentChapterIndex, currentUser]);
 
   const goToChapter = (index: number) => {
-    if (index >= 0 && index < book.chapters.length) {
-        handleSaveProgress(); // Save progress before leaving chapter
-        setCurrentChapterIndex(index);
-        window.location.hash = `/read/book/${book.id}/chapter/${index}`;
-        window.scrollTo(0, 0);
-    }
+    if (!book || (index < 0 || index >= book.chapters.length)) return;
+    
+    handleSaveProgress(); // Save progress before leaving chapter
+    setCurrentChapterIndex(index);
+    window.location.hash = `/read/book/${book.id}/chapter/${index}`;
+    window.scrollTo(0, 0);
   };
 
   useEffect(() => {
     if (!currentUser) return;
-    api.getReadingProgressForBook(currentUser.id, book.id).then(savedProgress => {
+    api.getReadingProgressForBook(currentUser.id, bookId).then(savedProgress => {
         if (savedProgress && savedProgress.overallProgress > 0) {
             setResumeData(savedProgress);
         }
     });
-  }, [book.id, currentUser]);
+  }, [bookId, currentUser]);
 
   useEffect(() => {
+    if (!book) return;
+
     const saveThrottled = () => {
         if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
@@ -147,9 +160,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
   };
   
   useEffect(() => {
-    if (!currentUser || resumeData) return;
+    if (!currentUser || resumeData || !book || !chapter) return;
 
-    api.getReadingProgressForBook(currentUser.id, book.id).then(progress => {
+    api.getReadingProgressForBook(currentUser.id, bookId).then(progress => {
         const chapterProgress = progress?.chapters[chapter.id];
         if (chapterProgress && chapterProgress.scrollPosition > 0) {
             const targetChapterIsCurrent = chapterIndex === currentChapterIndex;
@@ -158,7 +171,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
             }
         }
     });
-  }, [currentChapterIndex, book.id, chapter.id, resumeData, chapterIndex, currentUser]);
+  }, [currentChapterIndex, bookId, chapter, book, resumeData, chapterIndex, currentUser]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -172,40 +185,50 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ book, chapterIndex, curr
         };
     }, []);
 
-    const TableOfContents: React.FC = () => (
-    <div 
-      className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} 
-      onClick={() => setIsTocVisible(false)}
-    >
-      <div 
-        className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`} 
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-4 border-b border-gray-200 dark:border-dark-border">
-          <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
-          <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
-        </div>
-        <ul className="overflow-y-auto h-[calc(100%-65px)]">
-          {book.chapters.map((chap, index) => (
-            <li key={chap.id}>
-              <button 
-                onClick={() => { 
-                  goToChapter(index); 
-                  setIsTocVisible(false);
-                }}
-                className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
-                disabled={chap.status !== 'published'}
-              >
-                <span className="block truncate">{chap.title}</span>
-                {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+    const TableOfContents: React.FC = () => {
+        if (!book) return null;
+        return (
+            <div 
+            className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} 
+            onClick={() => setIsTocVisible(false)}
+            >
+            <div 
+                className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`} 
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="p-4 border-b border-gray-200 dark:border-dark-border">
+                <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
+                <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
+                </div>
+                <ul className="overflow-y-auto h-[calc(100%-65px)]">
+                {book.chapters.map((chap, index) => (
+                    <li key={chap.id}>
+                    <button 
+                        onClick={() => { 
+                        goToChapter(index); 
+                        setIsTocVisible(false);
+                        }}
+                        className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                        disabled={chap.status !== 'published'}
+                    >
+                        <span className="block truncate">{chap.title}</span>
+                        {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
+                    </button>
+                    </li>
+                ))}
+                </ul>
+            </div>
+            </div>
+        );
+    }
 
+    if (isLoading) {
+        return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
+    }
+    
+    if (!book || !chapter) {
+        return <div className="min-h-screen flex items-center justify-center">Could not load book content.</div>;
+    }
 
   return (
     <div className={`transition-colors duration-300 ${contentThemeClasses[contentTheme]}`}>

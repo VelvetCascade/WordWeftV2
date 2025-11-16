@@ -16,21 +16,20 @@ import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import type { Book, User, Author } from './types';
-import { sampleBooks, mainAuthor, otherAuthors, sampleUsers } from './constants';
 import * as api from './api/client';
 
 export type Page = 
   | { name: 'home' }
   | { name: 'category'; genre: string | null }
-  | { name: 'book-details'; book: Book }
-  | { name: 'reader'; book: Book; chapterIndex: number }
+  | { name: 'book-details'; bookId: number }
+  | { name: 'reader'; bookId: number; chapterIndex: number }
   | { name: 'writer-dashboard' }
   | { name: 'writer-create-book' }
   | { name: 'writer-manage-book'; bookId: number }
   | { name: 'writer-edit-chapter'; bookId: number, chapterId: number | 'new' }
   | { name: 'profile' }
   | { name: 'auth' }
-  | { name: 'author'; author: Author }
+  | { name: 'author'; authorId: number }
   | { name: 'edit-profile' };
 
 
@@ -60,9 +59,9 @@ const App: React.FC = () => {
     const targetPage = intendedPage || { name: 'home' };
     
     if (targetPage.name === 'book-details') {
-      window.location.hash = `/book/${targetPage.book.id}`;
+      window.location.hash = `/book/${targetPage.bookId}`;
     } else if (targetPage.name === 'author') {
-      window.location.hash = `/author/${targetPage.author.id}`;
+      window.location.hash = `/author/${targetPage.authorId}`;
     } else if(targetPage.name !== 'home' && targetPage.name !== 'auth') {
        window.location.hash = `/${targetPage.name}`;
     } else {
@@ -104,21 +103,15 @@ const App: React.FC = () => {
 
       if (hash.startsWith('book/')) {
         const bookId = parseInt(hash.split('/')[1], 10);
-        // Search all books, including user-written ones
-        const allBooks = [...sampleBooks, ...sampleUsers.flatMap(u => u.writtenBooks || [])];
-        const book = allBooks.find(b => b.id === bookId);
-        targetPage = book ? { name: 'book-details', book } : { name: 'home' };
+        targetPage = bookId ? { name: 'book-details', bookId } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
         const authorId = parseInt(hash.split('/')[1], 10);
-        const allAuthors = [mainAuthor, ...otherAuthors, ...sampleUsers.map(u => ({id: u.id, name: u.name, avatarUrl: u.avatarUrl, bio: ''}))];
-        const author = allAuthors.find(a => a.id === authorId);
-        targetPage = author ? { name: 'author', author } : { name: 'home' };
+        targetPage = authorId ? { name: 'author', authorId } : { name: 'home' };
       } else if (hash.startsWith('read/book/')) {
         const parts = hash.split('/');
         const bookId = parseInt(parts[2], 10);
         const chapterIndex = parseInt(parts[4], 10) || 0;
-        const book = sampleBooks.find(b => b.id === bookId);
-        targetPage = book ? { name: 'reader', book, chapterIndex: chapterIndex } : { name: 'home' };
+        targetPage = bookId ? { name: 'reader', bookId, chapterIndex: chapterIndex } : { name: 'home' };
       } else if (hash.startsWith('write/book/create')) {
         targetPage = { name: 'writer-create-book' };
       } else if (hash.startsWith('write/book/')) {
@@ -180,9 +173,9 @@ const App: React.FC = () => {
       case 'category':
         return <CategoryPage genre={page.genre} />;
       case 'book-details':
-        return <BookDetailsPage book={page.book} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
+        return <BookDetailsPage bookId={page.bookId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       case 'reader':
-        return <ReaderPage book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
+        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
       case 'writer-dashboard':
         return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser}/>;
       case 'writer-create-book':
@@ -198,7 +191,7 @@ const App: React.FC = () => {
       case 'auth':
         return <AuthPage onLogin={handleLogin} />;
       case 'author':
-        return <AuthorPage author={page.author} />;
+        return <AuthorPage authorId={page.authorId} />;
       default:
         return <HomePage />;
     }
