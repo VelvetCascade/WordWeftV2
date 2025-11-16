@@ -5,13 +5,15 @@ import { ArrowLeftIcon } from '../components/icons/Icons';
 
 interface EditProfilePageProps {
   user: User;
-  onUpdateProfile: (updatedData: Partial<User>) => void;
+  onUpdateProfile: (updatedData: Partial<User>) => Promise<void>;
+  onChangePassword: (oldPassword_unused: string, newPassword_unused: string) => Promise<void>;
 }
 
-export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile }) => {
+export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
   const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
   
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -21,19 +23,18 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateProfile({ name, avatarUrl });
-    // Navigation back to profile is handled in App.tsx's onUpdateProfile via hash change
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError(null);
     setPasswordSuccess(null);
 
-    if (!newPassword || !confirmPassword) {
-        setPasswordError("Please fill in both password fields.");
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        setPasswordError("Please fill in all password fields.");
         return;
     }
-    if (newPassword.length < 8) {
+    if (newPassword.length < 8 && newPassword !== 'password') { // allow 'password' for mock
         setPasswordError("Password must be at least 8 characters long.");
         return;
     }
@@ -41,13 +42,17 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         setPasswordError("New passwords do not match.");
         return;
     }
-
-    // In a real app, this would be an API call.
-    // For this demo, we just show a success message.
-    setPasswordSuccess("Password updated successfully!");
-    setNewPassword('');
-    setConfirmPassword('');
-    setTimeout(() => setPasswordSuccess(null), 3000);
+    
+    try {
+        await onChangePassword(currentPassword, newPassword);
+        setPasswordSuccess("Password updated successfully!");
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setPasswordSuccess(null), 3000);
+    } catch (err: any) {
+        setPasswordError(err.message || "Failed to update password.");
+    }
   };
 
 
@@ -138,6 +143,19 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
           <form onSubmit={handlePasswordChange} className="space-y-6">
             <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">Change Password</h2>
+             <div>
+              <label htmlFor="currentPassword" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
+                Current Password (use "password")
+              </label>
+              <input
+                type="password"
+                id="currentPassword"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
+              />
+            </div>
              <div>
               <label htmlFor="newPassword" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
                 New Password

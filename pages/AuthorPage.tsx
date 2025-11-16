@@ -1,12 +1,34 @@
 
-import React from 'react';
-import type { Author } from '../types';
-import { sampleBooks } from '../constants';
+import React, { useState, useEffect } from 'react';
+import type { Author, Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
+import * as api from '../api/client';
 
-export const AuthorPage: React.FC<{ author: Author }> = ({ author }) => {
-    const authorBooks = sampleBooks.filter(b => b.author.id === author.id);
+export const AuthorPage: React.FC<{ authorId: number }> = ({ authorId }) => {
+    const [author, setAuthor] = useState<Author | null>(null);
+    const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        setIsLoading(true);
+        Promise.all([
+            api.getAuthorById(authorId),
+            api.getBooksByAuthor(authorId)
+        ]).then(([fetchedAuthor, fetchedBooks]) => {
+            setAuthor(fetchedAuthor);
+            setAuthorBooks(fetchedBooks);
+            setIsLoading(false);
+        });
+    }, [authorId]);
+
+    if (isLoading) {
+        return <div className="min-h-screen flex items-center justify-center">Loading author profile...</div>;
+    }
+
+    if (!author) {
+        return <div className="min-h-screen flex items-center justify-center">Author not found.</div>;
+    }
 
     return (
         <div>

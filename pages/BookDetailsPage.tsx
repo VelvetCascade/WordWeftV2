@@ -1,19 +1,11 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
-import { sampleBooks, sampleReviews } from '../constants';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
-const PROGRESS_STORAGE_KEY = 'wordweft_reading_progress_v2';
-const getReadingProgressForBook = (userId: number, bookId: number): BookProgress | null => {
-    try {
-        const allProgress = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}');
-        return allProgress[userId]?.[bookId] || null;
-    } catch (e) {
-        return null;
-    }
-};
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number }> = ({ chapter, index, onRead, progress }) => {
     const isCompleted = progress >= 100;
@@ -36,7 +28,6 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                     </div>
                 </div>
             </div>
-            {/* FIX: Use `chapter.status` to check if chapter is published instead of non-existent `isReleased` property */}
             {chapter.status === 'published' ? (
                 <button onClick={onRead} className="font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
                     {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Start Reading'}
@@ -71,23 +62,25 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
 
 
 interface BookDetailsPageProps {
-  book: Book;
+  bookId: number;
   currentUser: User | null;
-  updateUserLibrary: (newLibrary: Shelf[]) => void;
+  onUserUpdate: (user: User) => void;
 }
 
-export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentUser, updateUserLibrary }) => {
+export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, currentUser, onUserUpdate }) => {
+  const [book, setBook] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
+
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
   
   // Review State
-  const [allReviews, setAllReviews] = useState<Review[]>(() => sampleReviews.filter(r => r.bookId === book.id));
+  const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [userComment, setUserComment] = useState('');
   const [isEditingReview, setIsEditingReview] = useState(false);
-
-  const authorBooks = sampleBooks.filter(b => b.author.id === book.author.id && b.id !== book.id);
   
   const currentUserReview = useMemo(() => {
     if (!currentUser) return null;
@@ -96,11 +89,21 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
 
 
   useEffect(() => {
+    setIsLoading(true);
+    api.getBookById(bookId).then(fetchedBook => {
+      setBook(fetchedBook);
+      if(fetchedBook) {
+        api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(setAuthorBooks);
+      }
+      setIsLoading(false);
+    });
+
+    api.getBookReviews(bookId).then(setAllReviews);
+
     if(currentUser) {
-        const progress = getReadingProgressForBook(currentUser.id, book.id);
-        setReadingProgress(progress);
+        api.getReadingProgressForBook(currentUser.id, bookId).then(setReadingProgress);
     }
-  }, [currentUser, book.id]);
+  }, [currentUser, bookId]);
 
    useEffect(() => {
     if (currentUserReview) {
@@ -116,8 +119,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
   
   const isBookInLibrary = useMemo(() => {
     if (!currentUser) return false;
-    return currentUser.library.some(shelf => shelf.books.some(b => b.id === book.id));
-  }, [currentUser, book.id]);
+    return currentUser.library.some(shelf => shelf.books.some(b => b.id === bookId));
+  }, [currentUser, bookId]);
   
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -127,90 +130,57 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ book, currentU
     }
   };
 
-  const handleToggleLibrary = () => {
-    if (!currentUser) {
+  const handleToggleLibrary = async () => {
+    if (!currentUser || !book) {
       window.location.hash = '/auth';
       return;
     };
-
-    let newLibrary: Shelf[];
-
-    if (isBookInLibrary) {
-      newLibrary = currentUser.library.map(shelf => ({
-        ...shelf,
-        books: shelf.books.filter(b => b.id !== book.id),
-      }));
-    } else {
-      const newBook: LibraryBook = { ...book, progress: 0, addedDate: new Date().toISOString().split('T')[0] };
-      newLibrary = currentUser.library.map(shelf => {
-        if (shelf.name === 'To Read' || shelf.id === 2) { // Target "To Read" or a default shelf
-          if (shelf.books.some(b => b.id === newBook.id)) return shelf;
-          return { ...shelf, books: [newBook, ...shelf.books] };
-        }
-        return shelf;
-      });
-       // If no "To Read" shelf exists, add to the first one.
-      if (!newLibrary.some(s => s.name === "To Read" || s.id === 2)) {
-          if (newLibrary.length > 0) {
-            newLibrary[0].books.unshift(newBook);
-          } else {
-             // Create a default shelf if none exist
-            newLibrary.push({ id: 1, name: 'My Library', books: [newBook] });
-          }
-      }
-    }
-    updateUserLibrary(newLibrary);
+    const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
+    onUserUpdate(updatedUser);
   };
   
   const handleAuthorClick = () => {
+    if (!book) return;
     window.location.hash = `/author/${book.author.id}`;
   };
   
   const handleReadClick = () => {
+    if (!book) return;
     const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
     window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
   };
 
   const handleReadChapterClick = (chapterIndex: number) => {
+    if (!book) return;
     window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
   }
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || userRating === 0 || !userComment) return;
 
-    if (currentUserReview) { // Updating existing review
-      const updatedReviews = allReviews.map(r => 
-        r.id === currentUserReview.id 
-        ? { ...r, rating: userRating, comment: userComment, date: new Date().toISOString().split('T')[0] } 
-        : r
-      );
-      setAllReviews(updatedReviews);
-    } else { // Adding new review
-      const newReview: Review = {
-        id: Date.now(),
-        bookId: book.id,
-        userId: currentUser.id,
-        user: { id: currentUser.id, name: currentUser.name, avatarUrl: currentUser.avatarUrl },
-        rating: userRating,
-        comment: userComment,
-        date: new Date().toISOString().split('T')[0],
-        sentiment: 'neutral', // This would be determined by an API in a real app
-      };
-      setAllReviews([newReview, ...allReviews]);
-    }
+    const updatedReviews = await api.submitReview(currentUser.id, bookId, userRating, userComment);
+    setAllReviews(updatedReviews);
     setIsEditingReview(false);
   };
 
-  const handleDeleteReview = () => {
-    if (!currentUserReview) return;
+  const handleDeleteReview = async () => {
+    if (!currentUser || !currentUserReview) return;
     if (window.confirm('Are you sure you want to delete your review?')) {
-        setAllReviews(allReviews.filter(r => r.id !== currentUserReview.id));
+        const updatedReviews = await api.deleteReview(currentUser.id, bookId);
+        setAllReviews(updatedReviews);
         setUserRating(0);
         setUserComment('');
     }
   };
 
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading book details...</div>;
+  }
+
+  if (!book) {
+    return <div className="min-h-screen flex items-center justify-center">Book not found.</div>;
+  }
 
   return (
     <div className="bg-white dark:bg-dark-surface">

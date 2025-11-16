@@ -1,24 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
-import { sampleBooks, genres } from '../constants';
+import type { Book, Author } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 
-const HeroCarousel: React.FC = () => {
+const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const carouselBooks = sampleBooks.slice(0, 5);
 
   useEffect(() => {
+    if (books.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselBooks.length);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [carouselBooks.length]);
+  }, [books.length]);
   
   const getCardStyle = (index: number) => {
-    const offset = (index - currentIndex + carouselBooks.length) % carouselBooks.length;
+    if (books.length === 0) return {};
+    const offset = (index - currentIndex + books.length) % books.length;
     
     if (offset === 0) { // Active
       return { transform: 'translateX(0) scale(1)', opacity: 1, zIndex: 3 };
@@ -26,16 +28,20 @@ const HeroCarousel: React.FC = () => {
     if (offset === 1) { // Next
       return { transform: 'translateX(50%) scale(0.8)', opacity: 0.7, zIndex: 2 };
     }
-    if (offset === carouselBooks.length - 1) { // Previous
+    if (offset === books.length - 1) { // Previous
       return { transform: 'translateX(-50%) scale(0.8)', opacity: 0.7, zIndex: 2 };
     }
     // Hidden
-    return { transform: `translateX(${offset > carouselBooks.length / 2 ? '-100%' : '100%'}) scale(0.6)`, opacity: 0, zIndex: 1 };
+    return { transform: `translateX(${offset > books.length / 2 ? '-100%' : '100%'}) scale(0.6)`, opacity: 0, zIndex: 1 };
   };
+
+  if (books.length === 0) {
+    return <div className="relative w-full h-64 md:h-96 flex items-center justify-center"><div className="w-64 h-96 bg-gray-200 dark:bg-dark-surface-alt rounded-xl animate-pulse"></div></div>;
+  }
 
   return (
     <div className="relative w-full h-64 md:h-96 flex items-center justify-center perspective-1000">
-      {carouselBooks.map((book, index) => (
+      {books.map((book, index) => (
         <div 
           key={book.id}
           className="absolute w-40 md:w-64 transition-transform duration-700 ease-in-out"
@@ -52,7 +58,19 @@ const HeroCarousel: React.FC = () => {
 
 export const HomePage: React.FC = () => {
   const [searchValue, setSearchValue] = useState("");
-  const spotlightAuthor = sampleBooks[0].author;
+  const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
+  const [genres, setGenres] = useState<string[]>([]);
+  const [spotlightAuthor, setSpotlightAuthor] = useState<Author | null>(null);
+
+  useEffect(() => {
+    api.getBooks({ sortBy: 'Popular', limit: 6 }).then(books => {
+      setTrendingBooks(books);
+      if (books.length > 0) {
+        setSpotlightAuthor(books[0].author);
+      }
+    });
+    api.getGenres().then(setGenres);
+  }, []);
   
   return (
     <div className="overflow-x-hidden">
@@ -74,7 +92,7 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
           <div className="hidden md:block">
-            <HeroCarousel />
+            <HeroCarousel books={trendingBooks.slice(0, 5)} />
           </div>
         </div>
       </section>
@@ -100,9 +118,18 @@ export const HomePage: React.FC = () => {
       <section className="container mx-auto px-6 mb-24 -mt-8">
         <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Trending Books</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {sampleBooks.slice(0, 6).map(book => (
+          {trendingBooks.length > 0 
+           ? trendingBooks.map(book => (
             <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
-          ))}
+          ))
+          : Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-dark-surface-alt rounded-xl"></div>
+              <div className="h-4 bg-gray-200 dark:bg-dark-surface-alt rounded mt-3 w-3/4"></div>
+              <div className="h-3 bg-gray-200 dark:bg-dark-surface-alt rounded mt-2 w-1/2"></div>
+            </div>
+           ))
+          }
         </div>
       </section>
 
@@ -121,19 +148,21 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Author Spotlight */}
-      <section className="bg-white dark:bg-dark-surface py-24">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center bg-surface dark:bg-dark-surface-alt rounded-3xl shadow-soft p-8 md:p-12 gap-8">
-            <img src={spotlightAuthor.avatarUrl} alt={spotlightAuthor.name} className="w-32 h-32 rounded-full object-cover" />
-            <div className="text-center md:text-left">
-              <p className="font-sans text-sm font-semibold text-accent mb-2">Author Spotlight</p>
-              <h3 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-2">{spotlightAuthor.name}</h3>
-              <p className="max-w-xl mb-4">{spotlightAuthor.bio}</p>
-              <button onClick={() => window.location.hash = `/author/${spotlightAuthor.id}`} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
+      {spotlightAuthor && (
+        <section className="bg-white dark:bg-dark-surface py-24">
+          <div className="container mx-auto px-6">
+            <div className="flex flex-col md:flex-row items-center bg-surface dark:bg-dark-surface-alt rounded-3xl shadow-soft p-8 md:p-12 gap-8">
+              <img src={spotlightAuthor.avatarUrl} alt={spotlightAuthor.name} className="w-32 h-32 rounded-full object-cover" />
+              <div className="text-center md:text-left">
+                <p className="font-sans text-sm font-semibold text-accent mb-2">Author Spotlight</p>
+                <h3 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-2">{spotlightAuthor.name}</h3>
+                <p className="max-w-xl mb-4">{spotlightAuthor.bio}</p>
+                <button onClick={() => window.location.hash = `/author/${spotlightAuthor.id}`} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <Footer />
     </div>

@@ -1,45 +1,20 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import type { User, Shelf, LibraryBook, BookProgress } from '../types';
 import { Footer } from '../components/Footer';
 import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
-
-const PROGRESS_STORAGE_KEY = 'wordweft_reading_progress_v2';
-
-const getReadingProgressForAllBooks = (userId: number): { [bookId: number]: BookProgress } | null => {
-    try {
-        const allProgress = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}');
-        return allProgress[userId] || null;
-    } catch (e) {
-        return null;
-    }
-};
-
-const clearReadingProgressForBook = (userId: number, bookId: number) => {
-     try {
-        const allProgress = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}');
-        if (allProgress[userId] && allProgress[userId][bookId]) {
-            delete allProgress[userId][bookId];
-            localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(allProgress));
-        }
-    } catch (e) {
-        console.error("Failed to clear reading progress", e);
-    }
-};
-
+import * as api from '../api/client';
 
 const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: number) => void, onRestart: (bookId: number) => void }> = ({ book, onRemove, onRestart }) => {
     
     const isCompleted = book.progress >= 100;
 
-    // FIX: Use `c.status` to check if chapter is published instead of non-existent `isReleased` property
+    const publishedChaptersCount = useMemo(() => book.chapters.filter(c => c.status === 'published').length, [book.chapters]);
     const completedChapters = useMemo(() => {
-        // This is a mock calculation for the tooltip as we don't have the full progress object here.
-        // A more robust solution would pass the full BookProgress object.
-        const totalReleased = book.chapters.filter(c => c.status === 'published').length;
-        return Math.floor((book.progress / 100) * totalReleased);
-    }, [book.progress, book.chapters]);
+        return Math.floor((book.progress / 100) * publishedChaptersCount);
+    }, [book.progress, publishedChaptersCount]);
 
-    const cardTooltip = `${completedChapters} / ${book.chapters.filter(c => c.status === 'published').length} chapters completed.`;
+    const cardTooltip = `${completedChapters} / ${publishedChaptersCount} chapters completed.`;
 
     return (
         <div className="group" title={cardTooltip}>
@@ -64,7 +39,7 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: number) 
                     >
                         <XMarkIcon className="w-4 h-4" />
                     </button>
-                     {isCompleted && (
+                     {book.progress > 0 && (
                          <button 
                             onClick={(e) => { e.stopPropagation(); onRestart(book.id); }} 
                             className="p-1.5 bg-black/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent backdrop-blur-sm"
@@ -106,17 +81,18 @@ const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label:
 
 interface ProfilePageProps {
     user: User;
-    updateUserLibrary: (newLibrary: Shelf[]) => void;
+    onUserUpdate: (user: User) => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ user, updateUserLibrary }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) => {
     const [activeShelfId, setActiveShelfId] = useState<'all' | number>('all');
-    const [forceUpdate, setForceUpdate] = useState(0); // Used to re-render after progress changes
+    const [allProgress, setAllProgress] = useState<Record<number, BookProgress>>({});
 
+    useEffect(() => {
+        api.getAllReadingProgress(user.id).then(setAllProgress);
+    }, [user.id]);
+    
     const userLibraryWithProgress = useMemo(() => {
-        const allProgress = getReadingProgressForAllBooks(user.id);
-        if (!allProgress) return user.library;
-
         return user.library.map(shelf => ({
             ...shelf,
             books: shelf.books.map(book => ({
@@ -124,25 +100,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, updateUserLibrar
                 progress: allProgress[book.id]?.overallProgress ?? 0,
             }))
         }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user.id, user.library, forceUpdate]);
+    }, [user.library, allProgress]);
 
     const chaptersReadCount = useMemo(() => {
-        const allProgress = getReadingProgressForAllBooks(user.id);
-        if (!allProgress) return 0;
-
         let count = 0;
         Object.values(allProgress).forEach(bookProgress => {
-            if (bookProgress && bookProgress.chapters) {
-                Object.values(bookProgress.chapters).forEach(chapter => {
-                    if (chapter.progress >= 100) {
-                        count++;
-                    }
-                });
-            }
+            Object.values(bookProgress.chapters).forEach(chapter => {
+                if (chapter.progress >= 100) count++;
+            });
         });
         return count;
-    }, [user.id, forceUpdate]);
+    }, [allProgress]);
 
     const dynamicShelves = useMemo(() => {
         const reading: LibraryBook[] = [];
@@ -194,22 +162,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, updateUserLibrar
         </button>
     );
 
-    const handleRemoveBook = (bookId: number) => {
-        const newLibrary = user.library.map(shelf => ({
-            ...shelf,
-            books: shelf.books.filter(b => b.id !== bookId),
-        }));
-        clearReadingProgressForBook(user.id, bookId);
-        updateUserLibrary(newLibrary);
+    const handleRemoveBook = async (bookId: number) => {
+        const updatedUser = await api.removeBookFromLibrary(user.id, bookId);
+        onUserUpdate(updatedUser);
+        const newProgress = { ...allProgress };
+        delete newProgress[bookId];
+        setAllProgress(newProgress);
     };
 
-    const handleRestartBook = (bookId: number) => {
-        clearReadingProgressForBook(user.id, bookId);
-        setForceUpdate(v => v + 1); // Trigger re-render to reflect cleared progress
+    const handleRestartBook = async (bookId: number) => {
+        await api.clearReadingProgress(user.id, bookId);
+        const newProgress = { ...allProgress };
+        delete newProgress[bookId];
+        setAllProgress(newProgress);
     };
 
     const handleBookClick = (book: LibraryBook) => {
-        const progress = getReadingProgressForAllBooks(user.id)?.[book.id];
+        const progress = allProgress[book.id];
         const chapterIndex = progress ? progress.lastReadChapterIndex : 0;
         window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
     };
@@ -234,7 +203,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, updateUserLibrar
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-12">
                        <StatCard icon={<BookOpenIcon className="w-7 h-7" />} value={allBooks.filter(b => b.progress === 100).length} label="Books Read" />
                        <StatCard icon={<ChartPieIcon className="w-7 h-7" />} value={chaptersReadCount} label="Chapters Read" />
-                       <StatCard icon={<StarIcon className="w-7 h-7" />} value={user.stats.favoriteGenres[0]} label="Favorite Genre" />
+                       <StatCard icon={<StarIcon className="w-7 h-7" />} value={user.stats.favoriteGenres[0] || 'N/A'} label="Favorite Genre" />
                        <StatCard icon={<UserGroupIcon className="w-7 h-7" />} value={user.following.length} label="Authors Followed" />
                     </div>
                 </div>

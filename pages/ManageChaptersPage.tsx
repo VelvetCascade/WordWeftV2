@@ -2,11 +2,12 @@
 import React from 'react';
 import type { User, Chapter } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CloudArrowUpIcon, CloudArrowDownIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 interface ManageChaptersPageProps {
   currentUser: User;
   bookId: number;
-  onUpdateUser: (updater: (user: User) => User) => void;
+  onUserUpdate: (user: User) => void;
 }
 
 const ChapterListItem: React.FC<{ chapter: Chapter, bookId: number, index: number, onPublishToggle: () => void }> = ({ chapter, bookId, index, onPublishToggle }) => (
@@ -47,31 +48,12 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: number, index: numbe
 );
 
 
-export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentUser, bookId, onUpdateUser }) => {
+export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentUser, bookId, onUserUpdate }) => {
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
-    const handlePublishToggle = (chapterId: number) => {
-        onUpdateUser(user => {
-            const targetBook = user.writtenBooks?.find(b => b.id === bookId);
-            if (!targetBook) return user;
-            
-            const targetChapter = targetBook.chapters.find(c => c.id === chapterId);
-            if (!targetChapter) return user;
-
-            targetChapter.status = targetChapter.status === 'published' ? 'draft' : 'published';
-
-            const hasPublishedChapters = targetBook.chapters.some(c => c.status === 'published');
-
-            if (targetBook.publicationStatus === 'draft' && hasPublishedChapters) {
-                targetBook.publicationStatus = 'published';
-                targetBook.publishedDate = new Date().toISOString().split('T')[0];
-            } else if (targetBook.publicationStatus === 'published' && !hasPublishedChapters) {
-                targetBook.publicationStatus = 'draft';
-                delete targetBook.publishedDate;
-            }
-            
-            return user;
-        });
+    const handlePublishToggle = async (chapterId: number) => {
+        const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
+        onUserUpdate(updatedUser);
     };
     
     if (!book) {

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import type { User } from '../types';
 import { GoogleIcon, XMarkIcon } from '../components/icons/Icons';
-import { sampleUsers } from '../constants';
+import * as api from '../api/client';
 
 interface AuthPageProps {
   onLogin: (user: User) => void;
@@ -15,7 +15,8 @@ const InputField: React.FC<{
     placeholder: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}> = ({ id, label, type, placeholder, value, onChange }) => (
+    required?: boolean;
+}> = ({ id, label, type, placeholder, value, onChange, required = true }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
             {label}
@@ -25,7 +26,7 @@ const InputField: React.FC<{
             id={id}
             placeholder={placeholder}
             className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
-            required
+            required={required}
             value={value}
             onChange={onChange}
         />
@@ -37,24 +38,28 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [birthday, setBirthday] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAuthAction = (e: React.FormEvent) => {
+  const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
-    if (isLoginView) {
-      // Mock login for multiple users. In a real app, this would be an API call.
-      const user = sampleUsers.find(u => u.email === email);
-      if (user && password === 'password') {
-        onLogin(user);
-      } else {
-        setError('Invalid email or password.');
-      }
-    } else {
-      // In a real app, this would register the user. For this demo, we'll just log in with the first user.
-      onLogin(sampleUsers[0]);
+    try {
+        if (isLoginView) {
+            const user = await api.login(email, password);
+            if (user) {
+                onLogin(user);
+            }
+        } else {
+            const newUser = await api.signup(username, email);
+            onLogin(newUser);
+        }
+    } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred.');
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -92,18 +97,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             
             <form onSubmit={handleAuthAction} className="space-y-4">
                 {!isLoginView && (
-                    <>
-                        <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
-                        <InputField id="birthday" label="Birthday" type="date" placeholder="" value={birthday} onChange={e => setBirthday(e.target.value)} />
-                    </>
+                    <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
                 )}
                 <InputField id="email" label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-                <InputField id="password" label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <InputField 
+                    id="password" 
+                    label="Password" 
+                    type="password" 
+                    placeholder={isLoginView ? "••••••••" : "Create a password (use 'password')"} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required={isLoginView} // Password not needed for mock signup
+                />
 
                 {error && <p className="text-center text-sm text-danger font-sans pt-2">{error}</p>}
             
-                <button type="submit" className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6">
-                    {isLoginView ? 'Sign In' : 'Create Account'}
+                <button type="submit" disabled={isLoading} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
+                    {isLoading ? 'Processing...' : (isLoginView ? 'Sign In' : 'Create Account')}
                 </button>
             </form>
             
@@ -113,6 +123,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     onClick={() => {
                         setIsLoginView(!isLoginView);
                         setError(null);
+                        setEmail('');
+                        setPassword('');
+                        setUsername('');
                     }} 
                     className="font-semibold text-accent hover:underline ml-1"
                 >

@@ -2,10 +2,11 @@
 import React from 'react';
 import type { User, Book } from '../types';
 import { PlusIcon, CloudArrowUpIcon, CloudArrowDownIcon, ChartBarIcon, PencilSquareIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 interface WriterDashboardProps {
   currentUser: User;
-  onUpdateUser: (updater: (user: User) => User) => void;
+  onUserUpdate: (user: User) => void;
 }
 
 const DraftBookListItem: React.FC<{ book: Book }> = ({ book }) => {
@@ -96,23 +97,15 @@ const CreateNewBookCard: React.FC = () => (
 );
 
 
-export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUser, onUpdateUser }) => {
+export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUser, onUserUpdate }) => {
     const drafts = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'draft') ?? [];
     const published = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'published') ?? [];
 
-    const handleUnpublishBook = (bookId: number) => {
+    const handleUnpublishBook = async (bookId: number) => {
         if (!window.confirm("Are you sure you want to unpublish this book? It will be moved to your drafts.")) return;
         
-        onUpdateUser(user => {
-            const book = user.writtenBooks?.find(b => b.id === bookId);
-            if (book) {
-                book.publicationStatus = 'draft';
-                delete book.publishedDate;
-                // Also set all chapters to draft
-                book.chapters.forEach(c => c.status = 'draft');
-            }
-            return user;
-        });
+        const updatedUser = await api.unpublishBook(currentUser.id, bookId);
+        onUserUpdate(updatedUser);
     };
 
     return (
