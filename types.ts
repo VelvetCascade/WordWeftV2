@@ -10,12 +10,16 @@ export interface Author {
 
 export interface Review {
   id: number;
+  bookId: number;
+  userId: number;
   user: {
+    id: number;
     name: string;
     avatarUrl: string;
   };
   rating: number;
   comment: string;
+  date: string;
   sentiment: 'positive' | 'neutral' | 'negative';
 }
 
