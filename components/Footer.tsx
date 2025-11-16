@@ -24,7 +24,7 @@ export const Footer: React.FC = () => {
             <p className="text-sm mb-3">Get the latest news and featured stories.</p>
             <form className="flex">
               <input type="email" placeholder="Your email" className="w-full text-sm rounded-l-lg border-gray-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-body focus:ring-accent focus:border-accent" />
-              <button type="submit" className="bg-accent text-white px-4 rounded-r-lg font-sans text-sm font-semibold hover:bg-purple-700 transition-colors">
+              <button type="submit" className="bg-accent text-white px-4 rounded-r-lg font-sans text-sm font-semibold hover:bg-primary transition-colors">
                 Go
               </button>
             </form>

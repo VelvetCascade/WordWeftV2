@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ navigateTo, isAuthenticated, onL
                 </button>
               </>
             ) : (
-              <button onClick={() => { window.location.hash = '/auth'; navigateTo({ name: 'auth' }); }} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              <button onClick={() => { window.location.hash = '/auth'; navigateTo({ name: 'auth' }); }} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-primary transition-colors">
                 Login / Sign Up
               </button>
             )}

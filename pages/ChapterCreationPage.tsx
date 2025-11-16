@@ -96,7 +96,7 @@ export const ChapterCreationPage: React.FC<ChapterCreationPageProps> = ({ setVie
             <div className="flex items-center gap-2 md:gap-4">
                 <p className="text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-20 text-right">{getSaveText()}</p>
                 <button onClick={() => setView('dashboard')} className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors">Dashboard</button>
-                <button className="bg-accent text-white font-sans font-semibold px-4 py-2 rounded-xl hover:bg-purple-700 transition-colors">Publish</button>
+                <button className="bg-accent text-white font-sans font-semibold px-4 py-2 rounded-xl hover:bg-primary transition-colors">Publish</button>
             </div>
         </div>
         <div className="flex flex-col lg:flex-row gap-6">

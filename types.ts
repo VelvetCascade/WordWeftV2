@@ -1,3 +1,4 @@
+
 import type { Page } from './App';
 
 export interface Author {
@@ -43,6 +44,7 @@ export interface Book {
 export interface User {
   id: number;
   name: string;
+  email: string;
   avatarUrl: string;
   joinDate: string;
   stats: {
@@ -67,3 +69,17 @@ export interface LibraryBook extends Book {
 
 
 export type NavigateTo = (page: Page) => void;
+
+// --- Reading Progress Types ---
+
+export interface ChapterProgress {
+  progress: number; // 0-100
+  scrollPosition: number;
+}
+
+export interface BookProgress {
+  overallProgress: number; // 0-100
+  lastReadChapterIndex: number;
+  lastReadScrollPosition: number;
+  chapters: { [chapterId: number]: ChapterProgress };
+}
