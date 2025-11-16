@@ -19,6 +19,7 @@ export const sampleUsers: User[] = [
     id: 101,
     name: 'Alice',
     email: 'alice@wordweft.com',
+    password: 'password',
     avatarUrl: 'https://picsum.photos/seed/user101/200/200',
     joinDate: '2023-05-21',
     stats: {
@@ -34,6 +35,7 @@ export const sampleUsers: User[] = [
     id: 102,
     name: 'Rahul',
     email: 'rahul@wordweft.com',
+    password: 'password',
     avatarUrl: 'https://picsum.photos/seed/user102/200/200',
     joinDate: '2023-06-15',
     stats: {
@@ -49,6 +51,7 @@ export const sampleUsers: User[] = [
     id: 103,
     name: 'Mei',
     email: 'mei@wordweft.com',
+    password: 'password',
     avatarUrl: 'https://picsum.photos/seed/user103/200/200',
     joinDate: '2022-12-10',
     stats: {

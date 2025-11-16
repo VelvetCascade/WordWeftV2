@@ -15,8 +15,9 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
 import { EditProfilePage } from './pages/EditProfilePage';
-import type { Book, User, Author, Shelf } from './types';
+import type { Book, User, Author } from './types';
 import { sampleBooks, mainAuthor, otherAuthors, sampleUsers } from './constants';
+import * as api from './api/client';
 
 export type Page = 
   | { name: 'home' }
@@ -32,20 +33,32 @@ export type Page =
   | { name: 'author'; author: Author }
   | { name: 'edit-profile' };
 
-const PROGRESS_STORAGE_KEY = 'wordweft_reading_progress_v2';
 
 const App: React.FC = () => {
   const [page, setPage] = useState<Page>({ name: 'home' });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
+  const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
   
+  // Check for existing session on initial load
+  useEffect(() => {
+    const checkSession = async () => {
+      const user = await api.getMe();
+      if (user) {
+        setIsAuthenticated(true);
+        setCurrentUser(user);
+      }
+      setIsInitialAuthCheckDone(true);
+    };
+    checkSession();
+  }, []);
+
   const handleLogin = (user: User) => {
     setIsAuthenticated(true);
-    setCurrentUser(JSON.parse(JSON.stringify(user))); // Deep copy to make mutable
+    setCurrentUser(user);
     const targetPage = intendedPage || { name: 'home' };
     
-    // Set hash based on target page, the hashchange listener will handle navigation
     if (targetPage.name === 'book-details') {
       window.location.hash = `/book/${targetPage.book.id}`;
     } else if (targetPage.name === 'author') {
@@ -59,71 +72,45 @@ const App: React.FC = () => {
     setIntendedPage(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await api.logout();
     setIsAuthenticated(false);
     setCurrentUser(null);
     window.location.hash = '/';
   };
-  
-  const updateUser = (updater: (user: User) => User) => {
-      setCurrentUser(currentUser => {
-          if (!currentUser) return null;
-          return updater(JSON.parse(JSON.stringify(currentUser)));
-      });
-  };
 
-  const handleUpdateProfile = (updatedData: Partial<User>) => {
+  const handleUpdateProfile = async (updatedData: Partial<User>) => {
     if (currentUser) {
-      updateUser(user => ({...user, ...updatedData}));
+      const updatedUser = await api.updateUserProfile(currentUser.id, updatedData);
+      setCurrentUser(updatedUser);
       window.location.hash = '/profile';
     }
   };
   
-  // Initialize mock progress data for sample users if it doesn't exist
-  useEffect(() => {
-    const initProgress = () => {
-        const progressExists = localStorage.getItem('wordweft_progress_initialized_v2');
-        if (progressExists) return;
+  const handleChangePassword = async (oldPassword_unused: string, newPassword_unused: string) => {
+      if (!currentUser) throw new Error("Not logged in");
+      const updatedUser = await api.changePassword(currentUser.id, oldPassword_unused, newPassword_unused);
+      setCurrentUser(updatedUser);
+  };
 
-        const allProgress = {
-            '101': {
-                '1': { overallProgress: 35, lastReadChapterIndex: 1, lastReadScrollPosition: 1200, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 40, scrollPosition: 1200 } } },
-                '2': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
-                '7': { overallProgress: 0, lastReadChapterIndex: 0, lastReadScrollPosition: 0, chapters: {} },
-            },
-            '102': {
-                '3': { overallProgress: 80, lastReadChapterIndex: 2, lastReadScrollPosition: 2000, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 70, scrollPosition: 2000 } } },
-                '7': { overallProgress: 10, lastReadChapterIndex: 1, lastReadScrollPosition: 500, chapters: { '101': { progress: 100, scrollPosition: 9999 }, '102': { progress: 5, scrollPosition: 500 } } },
-            },
-            '103': {
-                '1': { overallProgress: 100, lastReadChapterIndex: 3, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 100, scrollPosition: 9999 }, '4': { progress: 100, scrollPosition: 9999 } } },
-                '2': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
-                '3': { overallProgress: 100, lastReadChapterIndex: 2, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 }, '3': { progress: 100, scrollPosition: 9999 } } },
-                '4': { overallProgress: 100, lastReadChapterIndex: 0, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 } } },
-                '6': { overallProgress: 100, lastReadChapterIndex: 1, lastReadScrollPosition: 9999, chapters: { '1': { progress: 100, scrollPosition: 9999 }, '2': { progress: 100, scrollPosition: 9999 } } },
-                '7': { overallProgress: 5, lastReadChapterIndex: 0, lastReadScrollPosition: 800, chapters: { '101': { progress: 10, scrollPosition: 800 } } }
-            }
-        };
-        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(allProgress));
-        localStorage.setItem('wordweft_progress_initialized_v2', 'true');
-    };
-    initProgress();
-  }, []);
 
   // Centralized routing logic
   useEffect(() => {
+    if (!isInitialAuthCheckDone) return; // Wait until initial auth check is complete
+
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#/', '');
       let targetPage: Page;
 
       if (hash.startsWith('book/')) {
         const bookId = parseInt(hash.split('/')[1], 10);
+        // Search all books, including user-written ones
         const allBooks = [...sampleBooks, ...sampleUsers.flatMap(u => u.writtenBooks || [])];
         const book = allBooks.find(b => b.id === bookId);
         targetPage = book ? { name: 'book-details', book } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
         const authorId = parseInt(hash.split('/')[1], 10);
-        const allAuthors = [mainAuthor, ...otherAuthors];
+        const allAuthors = [mainAuthor, ...otherAuthors, ...sampleUsers.map(u => ({id: u.id, name: u.name, avatarUrl: u.avatarUrl, bio: ''}))];
         const author = allAuthors.find(a => a.id === authorId);
         targetPage = author ? { name: 'author', author } : { name: 'home' };
       } else if (hash.startsWith('read/book/')) {
@@ -175,10 +162,14 @@ const App: React.FC = () => {
     handleHashChange(); // Initial check for the current hash
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInitialAuthCheckDone]);
 
 
   const renderPage = () => {
+    if (!isInitialAuthCheckDone) {
+        return <div className="min-h-screen flex items-center justify-center">Loading...</div>; // Or a proper loader
+    }
+    
     if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {
       return null;
     }
@@ -189,21 +180,21 @@ const App: React.FC = () => {
       case 'category':
         return <CategoryPage genre={page.genre} />;
       case 'book-details':
-        return <BookDetailsPage book={page.book} currentUser={currentUser} updateUserLibrary={(library) => updateUser(user => ({...user, library}))} />;
+        return <BookDetailsPage book={page.book} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       case 'reader':
         return <ReaderPage book={page.book} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
       case 'writer-dashboard':
-        return <WriterDashboardPage currentUser={currentUser!} onUpdateUser={updateUser}/>;
+        return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser}/>;
       case 'writer-create-book':
-        return <CreateBookPage currentUser={currentUser!} onUpdateUser={updateUser} />;
+        return <CreateBookPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'writer-manage-book':
-        return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUpdateUser={updateUser} />;
+        return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUserUpdate={setCurrentUser} />;
       case 'writer-edit-chapter':
-        return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUpdateUser={updateUser} />;
+        return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
       case 'profile':
-        return <ProfilePage user={currentUser!} updateUserLibrary={(library) => updateUser(user => ({...user, library}))} />;
+        return <ProfilePage user={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'edit-profile':
-        return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} />;
+        return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'auth':
         return <AuthPage onLogin={handleLogin} />;
       case 'author':

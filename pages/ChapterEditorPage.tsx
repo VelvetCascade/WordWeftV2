@@ -2,16 +2,19 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User } from '../types';
 import { ArrowLeftIcon, EyeIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 interface ChapterEditorPageProps {
   currentUser: User;
   bookId: number;
   chapterId: number | 'new';
-  onUpdateUser: (updater: (user: User) => User) => void;
+  onUserUpdate: (user: User) => void;
 }
 
-export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId, onUpdateUser }) => {
+export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
+  const [chapterId, setChapterId] = useState(initialChapterId);
   const isNewChapter = chapterId === 'new';
+  
   const book = currentUser.writtenBooks?.find(b => b.id === bookId);
   const chapter = isNewChapter ? null : book?.chapters.find(c => c.id === chapterId);
   
@@ -24,7 +27,6 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
   const wordCount = useMemo(() => content.split(/\s+/).filter(Boolean).length, [content]);
 
   useEffect(() => {
-    // Cleanup timeout on unmount
     return () => {
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
@@ -32,85 +34,55 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     };
   }, []);
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
+  const handleSave = async (status: 'draft' | 'published', currentContent: string, currentTitle: string) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    if (!currentTitle && !currentContent) return; // Don't save empty chapters
+
+    setSaveState('saving');
+    
+    try {
+        const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: currentTitle, content: currentContent }, status);
+        onUserUpdate(updatedUser);
+
+        // If it was a new chapter, find its newly created ID and update state
+        if (chapterId === 'new') {
+            const newChapter = updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === currentTitle);
+            if (newChapter) {
+                setChapterId(newChapter.id);
+            }
+        }
+        
+        setSaveState('saved');
+
+        if (status === 'published') {
+            window.location.hash = `/write/book/${bookId}/manage`;
+        }
+    } catch (error) {
+        console.error("Failed to save chapter:", error);
+        setSaveState('unsaved');
+    }
+  };
+
+  const debouncedSave = (status: 'draft' | 'published', newContent: string, newTitle: string) => {
     setSaveState('unsaved');
     if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
     }
-    // Auto-save after 2 seconds of inactivity
     saveTimeoutRef.current = window.setTimeout(() => {
-        handleSave('draft', newContent, title);
-    }, 2000); 
+        handleSave(status, newContent, newTitle);
+    }, 2000);
+  }
+
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    debouncedSave('draft', newContent, title);
   };
   
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
-    setSaveState('unsaved');
-    if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-    }
-     // Auto-save after 2 seconds of inactivity
-    saveTimeoutRef.current = window.setTimeout(() => {
-        handleSave('draft', content, newTitle);
-    }, 2000);
+    debouncedSave('draft', content, newTitle);
   };
 
-  const handleSave = (status: 'draft' | 'published', currentContent: string, currentTitle: string) => {
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    setSaveState('saving');
-    
-    // Use the latest chapterId if a new chapter was just created
-    const currentChapterId = isNewChapter
-      ? (user: User) => {
-          const targetBook = user.writtenBooks?.find(b => b.id === bookId);
-          // If the chapter was just added, its ID will be in the book data
-          return targetBook?.chapters.find(c => c.title === (chapter?.title || ''))?.id || Date.now();
-        }
-      : chapterId;
-
-    onUpdateUser(user => {
-        const targetBook = user.writtenBooks?.find(b => b.id === bookId);
-        if (!targetBook) return user;
-
-        const finalChapterId = typeof currentChapterId === 'function' ? currentChapterId(user) : currentChapterId;
-
-        const newChapterData = {
-            id: finalChapterId,
-            title: currentTitle || 'Untitled Chapter',
-            content: currentContent,
-            wordCount: currentContent.split(/\s+/).filter(Boolean).length,
-            status: status
-        };
-
-        const chapterExists = targetBook.chapters.some(c => c.id === finalChapterId);
-
-        if (chapterExists) {
-             targetBook.chapters = targetBook.chapters.map(c => 
-                c.id === finalChapterId ? newChapterData : c
-            );
-        } else {
-            targetBook.chapters.push(newChapterData);
-        }
-        
-        if (status === 'published') {
-            if (targetBook.publicationStatus === 'draft') {
-                targetBook.publicationStatus = 'published';
-                targetBook.publishedDate = new Date().toISOString().split('T')[0];
-            }
-        }
-
-        return user;
-    });
-
-    setTimeout(() => {
-        setSaveState('saved');
-        if (status === 'published') {
-            window.location.hash = `/write/book/${bookId}/manage`;
-        }
-    }, 500);
-  };
-  
   const getSaveText = () => {
     switch(saveState) {
         case 'saving': return 'Saving...';

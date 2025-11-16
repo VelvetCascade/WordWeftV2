@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import type { User, Book } from '../types';
 import { genres } from '../constants';
 import { ArrowLeftIcon, PhotoIcon, XMarkIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 interface CreateBookPageProps {
   currentUser: User;
-  onUpdateUser: (updater: (user: User) => User) => void;
+  onUserUpdate: (user: User) => void;
 }
 
-export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onUpdateUser }) => {
+export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onUserUpdate }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -22,39 +23,28 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         );
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const newBook: Book = {
-            id: Date.now(),
+        
+        const newBookData = {
             title,
             description,
             summary: description.substring(0, 150) + '...',
-            author: {
-                id: currentUser.id,
-                name: currentUser.name,
-                avatarUrl: currentUser.avatarUrl,
-                bio: '' // This could be fetched from a more detailed author profile
-            },
             coverUrl,
             genres: selectedGenres,
             tags: selectedGenres,
             isMature,
-            publicationStatus: 'draft',
-            readingStatus: 'Ongoing',
-            chapters: [],
-            rating: 0,
-            reviewsCount: 0,
         };
 
-        onUpdateUser(user => {
-            const writtenBooks = user.writtenBooks || [];
-            return {
-                ...user,
-                writtenBooks: [...writtenBooks, newBook]
-            };
-        });
-
-        window.location.hash = `/write/book/${newBook.id}/manage`;
+        const updatedUser = await api.createBook(currentUser.id, newBookData);
+        onUserUpdate(updatedUser);
+        
+        const newBookId = updatedUser.writtenBooks?.find(b => b.title === title)?.id;
+        if(newBookId) {
+            window.location.hash = `/write/book/${newBookId}/manage`;
+        } else {
+            window.location.hash = '/write';
+        }
     };
 
     return (
