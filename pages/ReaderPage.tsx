@@ -92,6 +92,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const settingsPanelRef = useRef<HTMLDivElement>(null);
   const { theme: globalTheme } = useTheme();
 
   const chapter = book.chapters[currentChapterIndex];
@@ -240,6 +241,19 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
     }
   }, [currentChapterIndex, book.id, chapter.id, resumeData, chapterIndex, currentUser]);
 
+    // Effect to close settings panel on outside click
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (settingsPanelRef.current && !settingsPanelRef.current.contains(event.target as Node)) {
+                setIsSettingsPanelVisible(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     const TableOfContents: React.FC = () => (
     <div 
       className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} 
@@ -341,22 +355,22 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ navigateTo, book, chapte
 
       {/* Side Toolbar for settings */}
       <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
-        <div 
-            className="relative"
-            onMouseEnter={() => setIsSettingsPanelVisible(true)}
-            onMouseLeave={() => setIsSettingsPanelVisible(false)}
-        >
-            <button className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors">
+        <div ref={settingsPanelRef} className="relative">
+            <button 
+                onClick={() => setIsSettingsPanelVisible(prev => !prev)}
+                className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors"
+                aria-label="Reading settings"
+            >
                 <PaintBrushIcon className="w-5 h-5" />
             </button>
-            <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-opacity duration-200 ${isSettingsPanelVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600"/></button>
-                <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
-                <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`}><MoonIcon className="w-5 h-5 text-gray-700"/></button>
+            <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`} aria-label="Light theme"><SunIcon className="w-5 h-5 text-amber-600"/></button>
+                <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`} aria-label="Sepia theme"><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
+                <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`} aria-label="Dark theme"><MoonIcon className="w-5 h-5 text-gray-700"/></button>
             </div>
         </div>
-        <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold">A-</button>
-        <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold">A+</button>
+        <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold" aria-label="Decrease font size">A-</button>
+        <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold" aria-label="Increase font size">A+</button>
       </div>
     </div>
   );
