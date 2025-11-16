@@ -10,6 +10,7 @@ import { WriterDashboardPage } from './pages/WriterDashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
+import { EditProfilePage } from './pages/EditProfilePage';
 import type { Book, User, Author, Shelf } from './types';
 import { sampleBooks, mainAuthor, otherAuthors, sampleUsers } from './constants';
 
@@ -21,7 +22,8 @@ export type Page =
   | { name: 'writer-dashboard' }
   | { name: 'profile' }
   | { name: 'auth' }
-  | { name: 'author'; author: Author };
+  | { name: 'author'; author: Author }
+  | { name: 'edit-profile' };
 
 const PROGRESS_STORAGE_KEY = 'wordweft_reading_progress_v2';
 
@@ -32,7 +34,7 @@ const App: React.FC = () => {
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
 
   const navigateTo = useCallback((newPage: Page) => {
-    const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author'];
+    const protectedRoutes: Page['name'][] = ['book-details', 'reader', 'writer-dashboard', 'profile', 'author', 'edit-profile'];
 
     if (protectedRoutes.includes(newPage.name) && !isAuthenticated) {
       setIntendedPage(newPage);
@@ -75,6 +77,14 @@ const App: React.FC = () => {
   const updateUserLibrary = (newLibrary: Shelf[]) => {
     if (currentUser) {
       setCurrentUser(prevUser => prevUser ? { ...prevUser, library: newLibrary } : null);
+    }
+  };
+
+  const handleUpdateProfile = (updatedData: Partial<User>) => {
+    if (currentUser) {
+      setCurrentUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
+      window.location.hash = '/profile';
+      navigateTo({ name: 'profile' });
     }
   };
   
@@ -134,6 +144,8 @@ const App: React.FC = () => {
         targetPage = { name: 'writer-dashboard' };
       } else if (hash.startsWith('profile')) {
         targetPage = { name: 'profile' };
+      } else if (hash.startsWith('edit-profile')) {
+        targetPage = { name: 'edit-profile' };
       } else if (hash.startsWith('auth')) {
         targetPage = { name: 'auth' };
       } else {
@@ -169,6 +181,13 @@ const App: React.FC = () => {
           return null;
         }
         return <ProfilePage navigateTo={navigateTo} user={currentUser} updateUserLibrary={updateUserLibrary} />;
+      case 'edit-profile':
+        if (!currentUser) {
+          window.location.hash = '/auth';
+          navigateTo({ name: 'auth' });
+          return null;
+        }
+        return <EditProfilePage user={currentUser} onUpdateProfile={handleUpdateProfile} navigateTo={navigateTo} />;
       case 'auth':
         return <AuthPage navigateTo={navigateTo} onLogin={handleLogin} />;
       case 'author':
@@ -178,7 +197,7 @@ const App: React.FC = () => {
     }
   };
   
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth';
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile';
 
   return (
     <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
