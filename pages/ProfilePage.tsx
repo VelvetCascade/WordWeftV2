@@ -127,6 +127,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user.id, user.library, forceUpdate]);
 
+    const chaptersReadCount = useMemo(() => {
+        const allProgress = getReadingProgressForAllBooks(user.id);
+        if (!allProgress) return 0;
+
+        let count = 0;
+        Object.values(allProgress).forEach(bookProgress => {
+            if (bookProgress && bookProgress.chapters) {
+                Object.values(bookProgress.chapters).forEach(chapter => {
+                    if (chapter.progress >= 100) {
+                        count++;
+                    }
+                });
+            }
+        });
+        return count;
+    }, [user.id, forceUpdate]);
+
     const dynamicShelves = useMemo(() => {
         const reading: LibraryBook[] = [];
         const toRead: LibraryBook[] = [];
@@ -213,7 +230,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-12">
                        <StatCard icon={<BookOpenIcon className="w-7 h-7" />} value={allBooks.filter(b => b.progress === 100).length} label="Books Read" />
-                       <StatCard icon={<ChartPieIcon className="w-7 h-7" />} value={user.stats.chaptersRead} label="Chapters Read" />
+                       <StatCard icon={<ChartPieIcon className="w-7 h-7" />} value={chaptersReadCount} label="Chapters Read" />
                        <StatCard icon={<StarIcon className="w-7 h-7" />} value={user.stats.favoriteGenres[0]} label="Favorite Genre" />
                        <StatCard icon={<UserGroupIcon className="w-7 h-7" />} value={user.following.length} label="Authors Followed" />
                     </div>
