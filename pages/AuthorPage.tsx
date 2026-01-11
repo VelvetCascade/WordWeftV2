@@ -38,7 +38,7 @@ export const AuthorPage: React.FC<{ navigateTo: NavigateTo; author: Author }> = 
                     </div>
                 )}
             </div>
-            <Footer />
+            <Footer navigateTo={navigateTo} />
         </div>
     );
 };

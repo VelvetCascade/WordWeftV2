@@ -226,7 +226,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ navigateTo, bo
         )}
       </div>
 
-      <Footer />
+      <Footer navigateTo={navigateTo} />
     </div>
   );
 };

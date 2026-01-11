@@ -10,6 +10,15 @@ import { WriterDashboardPage } from './pages/WriterDashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
+import { OurStoryPage } from './pages/OurStoryPage';
+import { MissionPage } from './pages/MissionPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { WriteWithUsPage } from './pages/WriteWithUsPage';
+import { ContactPage } from './pages/ContactPage';
+import { ContentPolicyPage } from './pages/ContentPolicyPage';
+import { CommunityGuidelinesPage } from './pages/CommunityGuidelinesPage';
+import { FAQsPage } from './pages/FAQsPage';
 import type { Book, User, Author, Shelf } from './types';
 import { sampleBooks, mainAuthor, otherAuthors, sampleUsers } from './constants';
 
@@ -21,7 +30,16 @@ export type Page =
   | { name: 'writer-dashboard' }
   | { name: 'profile' }
   | { name: 'auth' }
-  | { name: 'author'; author: Author };
+  | { name: 'author'; author: Author }
+  | { name: 'our-story' }
+  | { name: 'mission' }
+  | { name: 'terms' }
+  | { name: 'privacy' }
+  | { name: 'write-with-us' }
+  | { name: 'contact' }
+  | { name: 'content-policy' }
+  | { name: 'community-guidelines' }
+  | { name: 'faqs' };
 
 const PROGRESS_STORAGE_KEY = 'wordweft_reading_progress_v2';
 
@@ -136,6 +154,24 @@ const App: React.FC = () => {
         targetPage = { name: 'profile' };
       } else if (hash.startsWith('auth')) {
         targetPage = { name: 'auth' };
+      } else if (hash === 'our-story' || hash.startsWith('our-story')) {
+        targetPage = { name: 'our-story' };
+      } else if (hash === 'mission' || hash.startsWith('mission')) {
+        targetPage = { name: 'mission' };
+      } else if (hash === 'terms' || hash.startsWith('terms')) {
+        targetPage = { name: 'terms' };
+      } else if (hash === 'privacy' || hash.startsWith('privacy')) {
+        targetPage = { name: 'privacy' };
+      } else if (hash === 'write-with-us' || hash.startsWith('write-with-us')) {
+        targetPage = { name: 'write-with-us' };
+      } else if (hash === 'contact' || hash.startsWith('contact')) {
+        targetPage = { name: 'contact' };
+      } else if (hash === 'content-policy' || hash.startsWith('content-policy')) {
+        targetPage = { name: 'content-policy' };
+      } else if (hash === 'community-guidelines' || hash.startsWith('community-guidelines')) {
+        targetPage = { name: 'community-guidelines' };
+      } else if (hash === 'faqs' || hash.startsWith('faqs')) {
+        targetPage = { name: 'faqs' };
       } else {
         targetPage = { name: 'home' };
       }
@@ -173,6 +209,24 @@ const App: React.FC = () => {
         return <AuthPage navigateTo={navigateTo} onLogin={handleLogin} />;
       case 'author':
         return <AuthorPage navigateTo={navigateTo} author={page.author} />;
+      case 'our-story':
+        return <OurStoryPage navigateTo={navigateTo} />;
+      case 'mission':
+        return <MissionPage navigateTo={navigateTo} />;
+      case 'terms':
+        return <TermsPage navigateTo={navigateTo} />;
+      case 'privacy':
+        return <PrivacyPolicyPage navigateTo={navigateTo} />;
+      case 'write-with-us':
+        return <WriteWithUsPage navigateTo={navigateTo} />;
+      case 'contact':
+        return <ContactPage navigateTo={navigateTo} />;
+      case 'content-policy':
+        return <ContentPolicyPage navigateTo={navigateTo} />;
+      case 'community-guidelines':
+        return <CommunityGuidelinesPage navigateTo={navigateTo} />;
+      case 'faqs':
+        return <FAQsPage navigateTo={navigateTo} />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }

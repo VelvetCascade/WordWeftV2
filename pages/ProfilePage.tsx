@@ -274,7 +274,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ navigateTo, user, upda
                     </main>
                 </div>
             </div>
-            <Footer />
+            <Footer navigateTo={navigateTo} />
         </div>
     );
 };

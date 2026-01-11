@@ -166,7 +166,7 @@ export const CategoryPage: React.FC<{ navigateTo: NavigateTo; genre: string | nu
         )}
       </div>
       <FilterDrawer />
-      <Footer />
+      <Footer navigateTo={navigateTo} />
     </div>
   );
 };

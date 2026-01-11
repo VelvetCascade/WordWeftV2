@@ -136,7 +136,7 @@ export const HomePage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
         </div>
       </section>
 
-      <Footer />
+      <Footer navigateTo={navigateTo} />
     </div>
   );
 };
