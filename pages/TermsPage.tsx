@@ -12,7 +12,7 @@ export const TermsPage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) 
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-rich dark:text-dark-text-rich mb-4 tracking-tight leading-tight">
               Terms & Conditions
-            </h1>
+        </h1>
           </div>
         </div>
       </section>
@@ -227,8 +227,8 @@ export const TermsPage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) 
               <p className="font-serif text-base sm:text-lg md:text-xl leading-relaxed text-text-body dark:text-dark-text-body max-w-none font-medium" style={{ lineHeight: '1.8' }}>
                 Together, let's weave a space that feels like home.<br />
                 — The WordWeft Team
-              </p>
-            </div>
+          </p>
+        </div>
       </div>
         </div>
       </section>

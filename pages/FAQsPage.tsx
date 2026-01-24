@@ -110,3 +110,6 @@ export const FAQsPage: React.FC<{ navigateTo: NavigateTo }> = ({ navigateTo }) =
 };
 
 
+
+
+
