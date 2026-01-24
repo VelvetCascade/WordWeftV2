@@ -6,11 +6,11 @@ import * as api from '../api/client';
 
 interface ManageChaptersPageProps {
   currentUser: User;
-  bookId: number;
+  bookId: string;
   onUserUpdate: (user: User) => void;
 }
 
-const ChapterListItem: React.FC<{ chapter: Chapter, bookId: number, index: number, onPublishToggle: () => void }> = ({ chapter, bookId, index, onPublishToggle }) => (
+const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void }> = ({ chapter, bookId, index, onPublishToggle }) => (
     <div className="flex items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group">
         <div className="flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
@@ -51,7 +51,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: number, index: numbe
 export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentUser, bookId, onUserUpdate }) => {
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
-    const handlePublishToggle = async (chapterId: number) => {
+    const handlePublishToggle = async (chapterId: string) => {
         const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
         onUserUpdate(updatedUser);
     };

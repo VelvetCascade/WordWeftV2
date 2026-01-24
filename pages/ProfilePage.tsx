@@ -5,7 +5,7 @@ import { Footer } from '../components/Footer';
 import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
-const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: number) => void, onRestart: (bookId: number) => void }> = ({ book, onRemove, onRestart }) => {
+const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
     
     const isCompleted = book.progress >= 100;
 
@@ -85,8 +85,8 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) => {
-    const [activeShelfId, setActiveShelfId] = useState<'all' | number>('all');
-    const [allProgress, setAllProgress] = useState<Record<number, BookProgress>>({});
+    const [activeShelfId, setActiveShelfId] = useState<'all' | string>('all');
+    const [allProgress, setAllProgress] = useState<Record<string, BookProgress>>({});
 
     useEffect(() => {
         api.getAllReadingProgress(user.id).then(setAllProgress);
@@ -117,7 +117,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         const toRead: LibraryBook[] = [];
         const completed: LibraryBook[] = [];
 
-        const allBooksMap = new Map<number, LibraryBook>();
+        const allBooksMap = new Map<string, LibraryBook>();
         userLibraryWithProgress.forEach(shelf => {
             shelf.books.forEach(book => allBooksMap.set(book.id, book));
         });
@@ -129,14 +129,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         });
 
         return [
-            { id: 1, name: 'Reading', books: reading },
-            { id: 2, name: 'To Read', books: toRead },
-            { id: 3, name: 'Completed', books: completed },
+            { id: '1', name: 'Reading', books: reading },
+            { id: '2', name: 'To Read', books: toRead },
+            { id: '3', name: 'Completed', books: completed },
         ];
     }, [userLibraryWithProgress]);
     
     const allBooks = useMemo(() => {
-       const books = new Map<number, LibraryBook>();
+       const books = new Map<string, LibraryBook>();
         dynamicShelves.forEach(shelf => {
             shelf.books.forEach(book => {
                 books.set(book.id, book);
@@ -162,7 +162,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         </button>
     );
 
-    const handleRemoveBook = async (bookId: number) => {
+    const handleRemoveBook = async (bookId: string) => {
         const updatedUser = await api.removeBookFromLibrary(user.id, bookId);
         onUserUpdate(updatedUser);
         const newProgress = { ...allProgress };
@@ -170,7 +170,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         setAllProgress(newProgress);
     };
 
-    const handleRestartBook = async (bookId: number) => {
+    const handleRestartBook = async (bookId: string) => {
         await api.clearReadingProgress(user.id, bookId);
         const newProgress = { ...allProgress };
         delete newProgress[bookId];

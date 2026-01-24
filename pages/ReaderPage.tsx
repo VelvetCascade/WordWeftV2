@@ -8,7 +8,7 @@ import * as api from '../api/client';
 type ContentTheme = 'light' | 'dark' | 'sepia';
 
 interface ReaderPageProps {
-    bookId: number;
+    bookId: string;
     chapterIndex: number;
     currentUser: User | null;
 }

@@ -6,8 +6,8 @@ import * as api from '../api/client';
 
 interface ChapterEditorPageProps {
   currentUser: User;
-  bookId: number;
-  chapterId: number | 'new';
+  bookId: string;
+  chapterId: string | 'new';
   onUserUpdate: (user: User) => void;
 }
 

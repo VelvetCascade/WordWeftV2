@@ -5,7 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import * as api from '../api/client';
 
-export const AuthorPage: React.FC<{ authorId: number }> = ({ authorId }) => {
+export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
     const [author, setAuthor] = useState<Author | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);

@@ -2,18 +2,18 @@
 import type { Page } from './App';
 
 export interface Author {
-  id: number;
+  id: string;
   name: string;
   avatarUrl: string;
   bio: string;
 }
 
 export interface Review {
-  id: number;
-  bookId: number;
-  userId: number;
+  id: string;
+  bookId: string;
+  userId: string;
   user: {
-    id: number;
+    id: string;
     name: string;
     avatarUrl: string;
   };
@@ -24,7 +24,7 @@ export interface Review {
 }
 
 export interface Chapter {
-  id: number;
+  id: string;
   title: string;
   wordCount: number;
   content: string;
@@ -32,7 +32,7 @@ export interface Chapter {
 }
 
 export interface Book {
-  id: number;
+  id: string;
   title: string;
   author: Author;
   coverUrl: string;
@@ -50,7 +50,7 @@ export interface Book {
 }
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   password?: string;
@@ -70,7 +70,7 @@ export interface User {
 }
 
 export interface Shelf {
-  id: number;
+  id: string;
   name: string;
   books: LibraryBook[];
 }
@@ -94,5 +94,5 @@ export interface BookProgress {
   overallProgress: number; // 0-100
   lastReadChapterIndex: number;
   lastReadScrollPosition: number;
-  chapters: { [chapterId: number]: ChapterProgress };
+  chapters: { [chapterId: string]: ChapterProgress };
 }

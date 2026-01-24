@@ -42,7 +42,7 @@ const DraftBookListItem: React.FC<{ book: Book }> = ({ book }) => {
     );
 };
 
-const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: number) => void; }> = ({ book, onUnpublish }) => {
+const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) => void; }> = ({ book, onUnpublish }) => {
     const publishedChapters = book.chapters.filter(c => c.status === 'published').length;
     const totalChapters = book.chapters.length;
     
@@ -101,7 +101,7 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
     const drafts = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'draft') ?? [];
     const published = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'published') ?? [];
 
-    const handleUnpublishBook = async (bookId: number) => {
+    const handleUnpublishBook = async (bookId: string) => {
         if (!window.confirm("Are you sure you want to unpublish this book? It will be moved to your drafts.")) return;
         
         const updatedUser = await api.unpublishBook(currentUser.id, bookId);
