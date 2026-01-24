@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { User, Shelf, LibraryBook, BookProgress } from '../types';
+import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress } from '../types';
 import { Footer } from '../components/Footer';
 import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -102,10 +102,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         }));
     }, [user.library, allProgress]);
 
+    // Fix: Explicitly type bookProgress and chapter to avoid 'unknown' type inference issues with Object.values
     const chaptersReadCount = useMemo(() => {
         let count = 0;
-        Object.values(allProgress).forEach(bookProgress => {
-            Object.values(bookProgress.chapters).forEach(chapter => {
+        Object.values(allProgress).forEach((bookProgress: BookProgress) => {
+            Object.values(bookProgress.chapters).forEach((chapter: ChapterProgress) => {
                 if (chapter.progress >= 100) count++;
             });
         });
