@@ -22,6 +22,7 @@ const handleResponse = async (response: Response) => {
     try {
         return await response.json();
     } catch (e) {
+        // Some endpoints might return empty body on success
         return null;
     }
 };
@@ -222,6 +223,15 @@ export async function createBook(userId: string, bookData: any): Promise<User> {
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
+export async function updateBookDetails(userId: string, bookId: string, updates: Partial<Book>): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify(updates)
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
 export async function saveChapter(userId: string, bookId: string, chapterId: any, data: any, status: any): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`, {
         method: 'PATCH',
@@ -231,13 +241,17 @@ export async function saveChapter(userId: string, bookId: string, chapterId: any
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function unpublishBook(userId: string, bookId: string): Promise<User> {
+export async function setBookStatus(userId: string, bookId: string, status: 'draft' | 'published'): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/status`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify({ status: 'draft' })
+        body: JSON.stringify({ status })
     });
     return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function unpublishBook(userId: string, bookId: string): Promise<User> {
+    return setBookStatus(userId, bookId, 'draft');
 }
 
 export async function toggleChapterPublication(userId: string, bookId: string, chapterId: any): Promise<User> {
