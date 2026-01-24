@@ -167,7 +167,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 throw new Error("Please accept the Terms and Privacy Policy.");
             }
 
-            const newUser = await api.signup(username, email);
+            // Fixed: Pass password to the API call
+            const newUser = await api.signup(username, email, password);
             onLogin(newUser);
         }
     } catch (err: any) {

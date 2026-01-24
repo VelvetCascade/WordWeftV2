@@ -60,11 +60,11 @@ export async function login(email: string, password_used: string): Promise<User 
     return null;
 }
 
-export async function signup(username: string, email: string): Promise<User> {
+export async function signup(username: string, email: string, password: string): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password: 'Password123!' }) // Note: UI should send password, using default for now or update UI to send it
+        body: JSON.stringify({ username, email, password })
     });
 
     const data = await handleResponse(response);
