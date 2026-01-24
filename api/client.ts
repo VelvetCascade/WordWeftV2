@@ -76,6 +76,29 @@ export async function signup(username: string, email: string, password: string):
     throw new Error("Signup failed");
 }
 
+export async function forgotPassword(email: string): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    if (!response.ok) throw new Error("Failed to send reset link.");
+    return await response.text();
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword })
+    });
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || "Failed to reset password.");
+    }
+    return await response.text();
+}
+
 export async function logout(): Promise<void> {
     localStorage.removeItem(JWT_KEY);
 }
@@ -100,7 +123,10 @@ export async function getMe(): Promise<User | null> {
 export async function updateUserProfile(userId: number, updatedData: Partial<User>): Promise<User> {
     const payload = {
         name: updatedData.name,
-        avatarUrl: updatedData.avatarUrl
+        avatarUrl: updatedData.avatarUrl,
+        bio: updatedData.bio,
+        location: updatedData.location,
+        website: updatedData.website
     };
 
     const response = await fetch(`${API_BASE_URL}/users/me`, {
@@ -138,6 +164,15 @@ function mapBackendUserToFrontend(backendData: any): User {
     // Temporary Hack: Hash the string ID to a number or parse if numeric.
     const numericId = parseInt(backendData.id) || 12345; 
 
+    // Handle Join Date robustness
+    let safeJoinDate = backendData.joinDate;
+    if (Array.isArray(safeJoinDate)) {
+        // Handle [YYYY, MM, DD] array from default Jackson serialization
+        safeJoinDate = new Date(safeJoinDate[0], safeJoinDate[1] - 1, safeJoinDate[2]).toISOString();
+    } else if (!safeJoinDate) {
+        safeJoinDate = new Date().toISOString();
+    }
+
     // Mock Library hydration
     // In production, backend would return this.
     const mockLibrary: Shelf[] = []; 
@@ -147,7 +182,10 @@ function mapBackendUserToFrontend(backendData: any): User {
         name: backendData.username || backendData.name,
         email: backendData.email,
         avatarUrl: backendData.avatarUrl,
-        joinDate: backendData.joinDate,
+        bio: backendData.bio,
+        location: backendData.location,
+        website: backendData.website,
+        joinDate: safeJoinDate,
         stats: backendData.stats || { booksRead: 0, chaptersRead: 0, favoriteGenres: [] },
         following: [], // Mocked empty
         library: mockLibrary, // Mocked empty

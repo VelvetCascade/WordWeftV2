@@ -38,15 +38,11 @@ public class UserController {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new RuntimeException("User not found"));
         
-        if (request.getName() != null) {
-            user.setUsername(request.getName()); // Assuming display name for now
-        }
-        if (request.getAvatarUrl() != null) {
-            user.setAvatarUrl(request.getAvatarUrl());
-        }
-        if (request.getBio() != null) {
-            user.setBio(request.getBio());
-        }
+        if (request.getName() != null) user.setUsername(request.getName());
+        if (request.getAvatarUrl() != null) user.setAvatarUrl(request.getAvatarUrl());
+        if (request.getBio() != null) user.setBio(request.getBio());
+        if (request.getLocation() != null) user.setLocation(request.getLocation());
+        if (request.getWebsite() != null) user.setWebsite(request.getWebsite());
         
         userRepository.save(user);
         return ResponseEntity.ok(user);

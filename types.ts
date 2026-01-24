@@ -55,6 +55,9 @@ export interface User {
   email: string;
   password?: string;
   avatarUrl: string;
+  bio?: string;
+  location?: string;
+  website?: string;
   joinDate: string;
   stats: {
     booksRead: number;

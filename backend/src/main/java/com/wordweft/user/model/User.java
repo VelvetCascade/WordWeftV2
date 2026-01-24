@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,8 +29,16 @@ public class User {
     private String avatarUrl;
     
     private String bio;
+    
+    private String location;
+    
+    private String website;
 
     private LocalDate joinDate;
+    
+    // Password Reset
+    private String resetPasswordToken;
+    private Instant resetPasswordTokenExpiry;
     
     // For future role-based access control (Reader, Author, Admin)
     private Set<String> roles = new HashSet<>();

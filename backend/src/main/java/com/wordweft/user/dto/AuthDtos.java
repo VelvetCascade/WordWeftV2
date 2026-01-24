@@ -46,20 +46,41 @@ public class AuthDtos {
         private String username;
         private String email;
         private String avatarUrl;
+        private String bio;
+        private String location;
+        private String website;
         private List<String> roles;
     }
     
     @Data
     public static class UpdateProfileRequest {
-        private String name; // maps to username for now or display name
+        private String name; 
         private String avatarUrl;
         private String bio;
+        private String location;
+        private String website;
     }
     
     @Data
     public static class ChangePasswordRequest {
         @NotBlank
         private String oldPassword;
+        @NotBlank
+        @Size(min = 8)
+        private String newPassword;
+    }
+    
+    @Data
+    public static class ForgotPasswordRequest {
+        @NotBlank
+        @Email
+        private String email;
+    }
+    
+    @Data
+    public static class ResetPasswordRequest {
+        @NotBlank
+        private String token;
         @NotBlank
         @Size(min = 8)
         private String newPassword;

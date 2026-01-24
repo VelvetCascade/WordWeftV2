@@ -44,6 +44,9 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
   const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
+  const [bio, setBio] = useState(user.bio || '');
+  const [location, setLocation] = useState(user.location || '');
+  const [website, setWebsite] = useState(user.website || '');
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -55,7 +58,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateProfile({ name, avatarUrl });
+    onUpdateProfile({ name, avatarUrl, bio, location, website });
   };
 
   const validatePassword = (pw: string) => {
@@ -151,6 +154,49 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
                 required
               />
+            </div>
+
+            <div>
+              <label htmlFor="bio" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
+                Bio
+              </label>
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell us a bit about yourself..."
+                rows={3}
+                className="w-full p-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich resize-none"
+              />
+            </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label htmlFor="location" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
+                        Location
+                    </label>
+                    <input
+                        type="text"
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g. New York, USA"
+                        className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="website" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
+                        Website
+                    </label>
+                    <input
+                        type="url"
+                        id="website"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        placeholder="https://yoursite.com"
+                        className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
+                    />
+                </div>
             </div>
             
             <div>

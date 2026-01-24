@@ -102,7 +102,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         }));
     }, [user.library, allProgress]);
 
-    // Fix: Explicitly type bookProgress and chapter to avoid 'unknown' type inference issues with Object.values
     const chaptersReadCount = useMemo(() => {
         let count = 0;
         Object.values(allProgress).forEach((bookProgress: BookProgress) => {
@@ -192,7 +191,25 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                         <img src={user.avatarUrl} alt={user.name} className="w-32 h-32 rounded-full object-cover ring-4 ring-white dark:ring-dark-surface shadow-lg" />
                         <div className="flex-1 text-center md:text-left">
                             <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">{user.name}</h1>
-                            <p className="text-text-body dark:text-dark-text-body mt-1">Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
+                            {user.bio && <p className="text-text-body dark:text-dark-text-body mt-2 max-w-xl italic">{user.bio}</p>}
+                            
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
+                                <p>Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                {user.location && (
+                                    <>
+                                        <span>•</span>
+                                        <p>{user.location}</p>
+                                    </>
+                                )}
+                                {user.website && (
+                                    <>
+                                        <span>•</span>
+                                        <a href={user.website.startsWith('http') ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                                            {user.website}
+                                        </a>
+                                    </>
+                                )}
+                            </div>
                         </div>
                         <button 
                             onClick={() => { window.location.hash = '/edit-profile'; }}

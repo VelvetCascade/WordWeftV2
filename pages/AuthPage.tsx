@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import type { User } from '../types';
-import { GoogleIcon, XMarkIcon, CheckCircleIcon } from '../components/icons/Icons';
+import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
 interface AuthPageProps {
@@ -99,7 +99,7 @@ const LegalModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string
 };
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
-  const [isLoginView, setIsLoginView] = useState(true);
+  const [view, setView] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -108,6 +108,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const [modalContent, setModalContent] = useState<{ title: string; content: React.ReactNode } | null>(null);
@@ -136,40 +137,32 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(null);
     setIsLoading(true);
 
     try {
-        if (isLoginView) {
+        if (view === 'login') {
             const user = await api.login(email, password);
             if (user) {
                 onLogin(user);
             }
-        } else {
+        } else if (view === 'signup') {
             // Signup Validations
             if (!validatePassword(password)) {
                 throw new Error("Password does not meet the requirements.");
             }
-
-            if (password !== confirmPassword) {
-                throw new Error("Passwords do not match.");
-            }
-            
-            if (!birthday) {
-                throw new Error("Birthday is required.");
-            }
+            if (password !== confirmPassword) throw new Error("Passwords do not match.");
+            if (!birthday) throw new Error("Birthday is required.");
 
             const age = calculateAge(birthday);
-            if (age < 8 || age > 100) {
-                throw new Error("You must be between 8 and 100 years old to join WordWeft.");
-            }
+            if (age < 8 || age > 100) throw new Error("You must be between 8 and 100 years old to join WordWeft.");
+            if (!termsAccepted || !privacyAccepted) throw new Error("Please accept the Terms and Privacy Policy.");
 
-            if (!termsAccepted || !privacyAccepted) {
-                throw new Error("Please accept the Terms and Privacy Policy.");
-            }
-
-            // Fixed: Pass password to the API call
             const newUser = await api.signup(username, email, password);
             onLogin(newUser);
+        } else if (view === 'forgot') {
+            const msg = await api.forgotPassword(email);
+            setSuccessMsg(msg);
         }
     } catch (err: any) {
         setError(err.message || 'An unexpected error occurred.');
@@ -209,6 +202,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
           </div>
       )
   });
+  
+  const resetForm = (newView: 'login' | 'signup' | 'forgot') => {
+      setView(newView);
+      setError(null);
+      setSuccessMsg(null);
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setUsername('');
+      setBirthday('');
+      setTermsAccepted(false);
+      setPrivacyAccepted(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
@@ -224,26 +230,41 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
+            
+            {view === 'forgot' && (
+                <button onClick={() => resetForm('login')} className="absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors">
+                    <ArrowLeftIcon className="w-6 h-6" />
+                </button>
+            )}
+
             <h2 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
-            {isLoginView ? 'Welcome Back' : 'Create Account'}
+                {view === 'login' && 'Welcome Back'}
+                {view === 'signup' && 'Create Account'}
+                {view === 'forgot' && 'Reset Password'}
             </h2>
             <p className="text-center text-text-body dark:text-dark-text-body mb-8">
-            {isLoginView ? "Sign in to continue your journey." : "Join our community of readers and writers."}
+                {view === 'login' && "Sign in to continue your journey."}
+                {view === 'signup' && "Join our community of readers and writers."}
+                {view === 'forgot' && "Enter your email to receive a reset link."}
             </p>
             
-            <button className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl font-sans font-semibold border border-gray-300 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors">
-                <GoogleIcon className="w-5 h-5" />
-                <span>Sign {isLoginView ? 'in' : 'up'} with Google</span>
-            </button>
-            
-            <div className="flex items-center my-6">
-            <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
-            <span className="flex-shrink mx-4 text-xs text-gray-400 dark:text-gray-500 font-sans uppercase">Or</span>
-            <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
-            </div>
+            {view !== 'forgot' && (
+                <>
+                    <button className="w-full flex items-center justify-center gap-3 h-11 px-4 rounded-xl font-sans font-semibold border border-gray-300 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors">
+                        <GoogleIcon className="w-5 h-5" />
+                        <span>Sign {view === 'login' ? 'in' : 'up'} with Google</span>
+                    </button>
+                    
+                    <div className="flex items-center my-6">
+                    <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
+                    <span className="flex-shrink mx-4 text-xs text-gray-400 dark:text-gray-500 font-sans uppercase">Or</span>
+                    <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
+                    </div>
+                </>
+            )}
             
             <form onSubmit={handleAuthAction} className="space-y-4">
-                {!isLoginView && (
+                {view === 'signup' && (
                     <>
                         <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
                         <InputField 
@@ -256,23 +277,34 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         />
                     </>
                 )}
+                
                 <InputField id="email" label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                 
-                <InputField 
-                    id="password" 
-                    label="Password" 
-                    type="password" 
-                    placeholder={isLoginView ? "••••••••" : "Create a password"} 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    required={true}
-                    onFocus={() => setIsPasswordFocused(true)}
-                    onBlur={() => setIsPasswordFocused(false)}
-                >
-                    <PasswordRequirements password={password} isVisible={isPasswordFocused && !isLoginView} />
-                </InputField>
+                {view !== 'forgot' && (
+                    <InputField 
+                        id="password" 
+                        label="Password" 
+                        type="password" 
+                        placeholder={view === 'login' ? "••••••••" : "Create a password"} 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        required={true}
+                        onFocus={() => setIsPasswordFocused(true)}
+                        onBlur={() => setIsPasswordFocused(false)}
+                    >
+                        <PasswordRequirements password={password} isVisible={isPasswordFocused && view === 'signup'} />
+                    </InputField>
+                )}
 
-                {!isLoginView && (
+                {view === 'login' && (
+                    <div className="flex justify-end">
+                        <button type="button" onClick={() => resetForm('forgot')} className="text-xs font-semibold text-accent hover:underline">
+                            Forgot Password?
+                        </button>
+                    </div>
+                )}
+
+                {view === 'signup' && (
                     <>
                         <InputField 
                             id="confirmPassword" 
@@ -313,31 +345,28 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 )}
 
                 {error && <p className="text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
+                {successMsg && <p className="text-center text-xs text-success font-sans pt-2 leading-tight font-semibold">{successMsg}</p>}
             
                 <button type="submit" disabled={isLoading} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
-                    {isLoading ? 'Processing...' : (isLoginView ? 'Sign In' : 'Create Account')}
+                    {isLoading ? 'Processing...' : (
+                        view === 'login' ? 'Sign In' : 
+                        view === 'signup' ? 'Create Account' : 
+                        'Send Reset Link'
+                    )}
                 </button>
             </form>
             
-            <p className="text-center text-sm text-text-body dark:text-dark-text-body mt-8">
-                {isLoginView ? "Don't have an account?" : "Already have an account?"}
-                <button 
-                    onClick={() => {
-                        setIsLoginView(!isLoginView);
-                        setError(null);
-                        setEmail('');
-                        setPassword('');
-                        setConfirmPassword('');
-                        setUsername('');
-                        setBirthday('');
-                        setTermsAccepted(false);
-                        setPrivacyAccepted(false);
-                    }} 
-                    className="font-semibold text-accent hover:underline ml-1"
-                >
-                    {isLoginView ? 'Sign Up' : 'Sign In'}
-                </button>
-            </p>
+            {view !== 'forgot' && (
+                <p className="text-center text-sm text-text-body dark:text-dark-text-body mt-8">
+                    {view === 'login' ? "Don't have an account?" : "Already have an account?"}
+                    <button 
+                        onClick={() => resetForm(view === 'login' ? 'signup' : 'login')} 
+                        className="font-semibold text-accent hover:underline ml-1"
+                    >
+                        {view === 'login' ? 'Sign Up' : 'Sign In'}
+                    </button>
+                </p>
+            )}
         </div>
       </div>
 
