@@ -82,6 +82,7 @@ public class SecurityConfig {
                 auth.requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/public/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/users/*/profile").permitAll()
                     .anyRequest().authenticated()
             );
         

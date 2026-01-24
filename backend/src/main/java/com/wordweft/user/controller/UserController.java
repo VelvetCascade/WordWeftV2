@@ -5,32 +5,32 @@ import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.dto.AuthDtos.*;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
+import com.wordweft.user.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
-    UserRepository userRepository;
-    
-    @Autowired
-    PasswordEncoder passwordEncoder;
+    @Autowired UserRepository userRepository;
+    @Autowired UserService userService;
+    @Autowired PasswordEncoder passwordEncoder;
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Optional<User> user = userRepository.findById(userDetails.getId());
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
+    
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<?> getPublicProfile(@PathVariable String id) {
+        return ResponseEntity.ok(userService.getPublicProfile(id));
     }
     
     @PatchMapping("/me")
@@ -45,7 +45,7 @@ public class UserController {
         if (request.getWebsite() != null) user.setWebsite(request.getWebsite());
         
         userRepository.save(user);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userService.enrichUser(user));
     }
     
     @PutMapping("/me/password")

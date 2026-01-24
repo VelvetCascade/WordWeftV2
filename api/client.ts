@@ -39,7 +39,7 @@ export async function login(email: string, password_used: string): Promise<User 
     
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
-        return mapBackendUserToFrontend(data);
+        return await getMe();
     }
     return null;
 }
@@ -87,39 +87,11 @@ export async function getMe(): Promise<User | null> {
     if (!token) return null;
 
     try {
-        // We now need to fetch user + their library/written books which we bundled in a backend helper
-        // But for simplicity, we call `users/me` and the backend controller should return the enriched object.
-        // I modified ReadingController.enrichUser to handle this logic, but UserController needs to do it too.
-        // Since I can't edit UserController in this turn without exceeding file limits easily, 
-        // I will assume UserController returns the base user and we fetch library separately or backend handles it.
-        // Actually, the previous turn UserController just returned the user doc. 
-        // Let's assume for now user data is enough, library is fetched on profile page?
-        // No, the types expect Library in User.
-        // HACK: I will fetch library separately here and merge.
-        
         const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
         const backendUser = await handleResponse(response);
-        
-        // Fetch extended data
-        const libResponse = await fetch(`${API_BASE_URL}/reading/progress`, { headers: getHeaders() }); // Just to check auth validity mostly
-        
-        // In a real app, `users/me` should return everything. 
-        // For this step, we rely on backend `enrichUser` logic if implemented, or map what we have.
-        // I added `enrichUser` in ReadingController, but `users/me` is in UserController.
-        // I'll stick to basic mapping and let the UI load library items via the API below if needed, 
-        // BUT the frontend type `User` has `library`. 
-        // So I'll do a second fetch to get the library if not present.
-        
-        const user = mapBackendUserToFrontend(backendUser);
-        
-        // Fetch real library
-        // Note: The backend logic for library is in `enrichUser`. 
-        // Since I cannot update UserController easily right now, I will return empty library here 
-        // and let ProfilePage fetch data if I had an endpoint.
-        // WAIT: The previous `client.ts` had `mockLibrary`.
-        // I will return the user as is.
-        return user;
+        return mapBackendUserToFrontend(backendUser);
     } catch (e) {
+        console.error("Session invalid", e);
         localStorage.removeItem(JWT_KEY);
         return null;
     }
@@ -169,13 +141,9 @@ export async function getBookById(id: string): Promise<Book | null> {
 }
 
 export async function getAuthorById(id: string): Promise<Author | null> {
-    // Reusing user endpoint or specific author endpoint. 
-    // Since backend doesn't have public /users/{id}, we use books/author/{id} which returns books, 
-    // but we need author profile.
-    // I'll cheat and fetch books by author, then pick the author object from the first book.
-    const books = await getBooksByAuthor(id);
-    if (books.length > 0) return books[0].author;
-    return null;
+    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`);
+    if (!response.ok) return null;
+    return await handleResponse(response);
 }
 
 export async function getBooksByAuthor(authorId: string, excludeBookId?: string): Promise<Book[]> {
@@ -201,7 +169,6 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
 
 export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, contentHeight: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
-    // Calculate simple progress for the chapter
     let currentChapterProgress = contentHeight <= 0 ? 100 : Math.min(100, (scrollPosition / contentHeight) * 100);
     
     await fetch(`${API_BASE_URL}/reading/progress`, {
@@ -233,8 +200,7 @@ export async function toggleBookInLibrary(userId: string, book: Book): Promise<U
         headers: getHeaders(),
         body: JSON.stringify({ bookId: book.id })
     });
-    const user = mapBackendUserToFrontend(await handleResponse(response));
-    return user;
+    return mapBackendUserToFrontend(await handleResponse(response));
 }
 
 export async function removeBookFromLibrary(userId: string, bookId: string): Promise<User> {
@@ -304,7 +270,6 @@ export async function deleteReview(userId: string, bookId: string): Promise<Revi
     return await handleResponse(response);
 }
 
-// Mapper
 function mapBackendUserToFrontend(backendData: any): User {
     let safeJoinDate = backendData.joinDate;
     if (Array.isArray(safeJoinDate)) {
@@ -323,7 +288,7 @@ function mapBackendUserToFrontend(backendData: any): User {
         website: backendData.website,
         joinDate: safeJoinDate,
         stats: backendData.stats || { booksRead: 0, chaptersRead: 0, favoriteGenres: [] },
-        following: [], // Not implemented backend yet
+        following: [],
         library: backendData.library || [],
         writtenBooks: backendData.writtenBooks || []
     };

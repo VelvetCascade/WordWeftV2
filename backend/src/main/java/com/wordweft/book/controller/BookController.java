@@ -6,8 +6,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.security.services.UserDetailsImpl;
-import com.wordweft.user.model.User;
-import com.wordweft.user.repository.UserRepository;
+import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -25,7 +23,7 @@ public class BookController {
 
     @Autowired BookService bookService;
     @Autowired BookRepository bookRepository;
-    @Autowired UserRepository userRepository;
+    @Autowired UserService userService;
 
     @GetMapping
     public ResponseEntity<?> getBooks(@RequestParam(required = false) List<String> genres,
@@ -57,10 +55,12 @@ public class BookController {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         book.setAuthorId(userDetails.getId());
         book.setPublicationStatus("draft");
+        if(book.getCoverUrl() == null || book.getCoverUrl().isEmpty()){
+            book.setCoverUrl("https://picsum.photos/seed/" + System.currentTimeMillis() + "/400/600");
+        }
         bookRepository.save(book);
         
-        // Return Updated User to refresh frontend state
-        return ResponseEntity.ok(userRepository.findById(userDetails.getId()).get());
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
     
     @PatchMapping("/{bookId}/chapters/{chapterId}")
@@ -89,7 +89,7 @@ public class BookController {
         chapter.updateWordCount();
         
         bookRepository.save(book);
-        return ResponseEntity.ok(userRepository.findById(userDetails.getId()).get());
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
     
     @PatchMapping("/{bookId}/status")
@@ -108,7 +108,7 @@ public class BookController {
         }
         
         bookRepository.save(book);
-        return ResponseEntity.ok(userRepository.findById(userDetails.getId()).get());
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
     
     @PatchMapping("/{bookId}/chapters/{chapterId}/status")
@@ -124,6 +124,6 @@ public class BookController {
         chapter.setStatus("published".equals(chapter.getStatus()) ? "draft" : "published");
         
         bookRepository.save(book);
-        return ResponseEntity.ok(userRepository.findById(userDetails.getId()).get());
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
 }
