@@ -6,6 +6,7 @@ export interface Author {
   name: string;
   avatarUrl: string;
   bio: string;
+  followersCount?: number;
 }
 
 export interface Review {
@@ -62,9 +63,12 @@ export interface User {
   stats: {
     booksRead: number;
     chaptersRead: number;
+    minutesRead: number;
     favoriteGenres: string[];
   };
+  socialLinks?: Record<string, string>;
   following: Author[];
+  followers: Author[];
   library: Shelf[];
   writtenBooks?: Book[];
 }

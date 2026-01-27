@@ -18,7 +18,7 @@ import { EditProfilePage } from './pages/EditProfilePage';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
 
-export type Page = 
+export type Page =
   | { name: 'home' }
   | { name: 'category'; genre: string | null }
   | { name: 'book-details'; bookId: string }
@@ -39,7 +39,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
-  
+
   // Check for existing session on initial load
   useEffect(() => {
     const checkSession = async () => {
@@ -57,15 +57,15 @@ const App: React.FC = () => {
     setIsAuthenticated(true);
     setCurrentUser(user);
     const targetPage = intendedPage || { name: 'home' };
-    
+
     if (targetPage.name === 'book-details') {
       window.location.hash = `/book/${targetPage.bookId}`;
     } else if (targetPage.name === 'author') {
       window.location.hash = `/author/${targetPage.authorId}`;
-    } else if(targetPage.name !== 'home' && targetPage.name !== 'auth') {
-       window.location.hash = `/${targetPage.name}`;
+    } else if (targetPage.name !== 'home' && targetPage.name !== 'auth') {
+      window.location.hash = `/${targetPage.name}`;
     } else {
-       window.location.hash = '/';
+      window.location.hash = '/';
     }
 
     setIntendedPage(null);
@@ -85,11 +85,11 @@ const App: React.FC = () => {
       window.location.hash = '/profile';
     }
   };
-  
+
   const handleChangePassword = async (oldPassword_unused: string, newPassword_unused: string) => {
-      if (!currentUser) throw new Error("Not logged in");
-      const updatedUser = await api.changePassword(currentUser.id, oldPassword_unused, newPassword_unused);
-      setCurrentUser(updatedUser);
+    if (!currentUser) throw new Error("Not logged in");
+    const updatedUser = await api.changePassword(currentUser.id, oldPassword_unused, newPassword_unused);
+    setCurrentUser(updatedUser);
   };
 
 
@@ -138,7 +138,7 @@ const App: React.FC = () => {
       } else {
         targetPage = { name: 'home' };
       }
-      
+
       const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
@@ -146,7 +146,7 @@ const App: React.FC = () => {
         window.location.hash = '/auth'; // This re-triggers the hashchange event
         return; // Stop processing to avoid rendering the protected page
       }
-      
+
       window.scrollTo(0, 0);
       setPage(targetPage);
     };
@@ -160,9 +160,9 @@ const App: React.FC = () => {
 
   const renderPage = () => {
     if (!isInitialAuthCheckDone) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>; 
+      return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
-    
+
     if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {
       return null;
     }
@@ -177,7 +177,7 @@ const App: React.FC = () => {
       case 'reader':
         return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
       case 'writer-dashboard':
-        return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser}/>;
+        return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'writer-create-book':
         return <CreateBookPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'writer-manage-book':
@@ -191,19 +191,19 @@ const App: React.FC = () => {
       case 'auth':
         return <AuthPage onLogin={handleLogin} />;
       case 'author':
-        return <AuthorPage authorId={page.authorId} />;
+        return <AuthorPage authorId={page.authorId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       default:
         return <HomePage />;
     }
   };
-  
+
   const isWriterPage = page.name.startsWith('writer-');
   const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && !isWriterPage;
 
   return (
     <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
       {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />}
-      
+
       {isWriterPage ? (
         <WriterLayout>
           {renderPage()}

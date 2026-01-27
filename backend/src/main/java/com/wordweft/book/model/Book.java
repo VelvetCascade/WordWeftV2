@@ -29,6 +29,6 @@ public class Book {
     private String publicationStatus = "draft"; // "draft" or "published"
     private LocalDate publishedDate;
     private boolean isMature = false;
-    
+
     // For search/sort performance, we might index these fields
 }
