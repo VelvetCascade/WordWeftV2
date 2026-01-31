@@ -110,31 +110,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; 
                                 </div>
                             )}
 
-                            {/* Social Links */}
-                            {author.socialLinks && Object.keys(author.socialLinks).length > 0 && (
-                                <div className="flex items-center justify-center md:justify-start gap-4 mt-4">
-                                    {author.socialLinks.twitter && (
-                                        <a href={author.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1DA1F2] transition-colors">
-                                            <TwitterIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {author.socialLinks.instagram && (
-                                        <a href={author.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#E1306C] transition-colors">
-                                            <InstagramIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {author.socialLinks.facebook && (
-                                        <a href={author.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1877F2] transition-colors">
-                                            <FacebookIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {author.socialLinks.threads && (
-                                        <a href={author.socialLinks.threads} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                                            <ThreadsIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                </div>
-                            )}
+
 
                             {!isMe && (
                                 <button

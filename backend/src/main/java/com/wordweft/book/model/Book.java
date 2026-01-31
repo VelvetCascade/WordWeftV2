@@ -20,6 +20,7 @@ public class Book {
     private String coverUrl;
     private Double rating = 0.0;
     private Integer reviewsCount = 0;
+    private Integer commentCount = 0;
     private List<String> genres = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
     private String summary;

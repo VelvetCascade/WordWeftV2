@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Book, BookProgress } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, ChatBubbleIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
+import { CommentModal } from '../components/CommentModal';
+import { CommentList } from '../components/CommentList';
+import type { Comment } from '../types';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 
@@ -26,6 +29,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   const [isTocVisible, setIsTocVisible] = useState(false);
   const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
 
+  // Comment System
+  const [chapterComments, setChapterComments] = useState<Comment[]>([]);
+  const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
+  const [hoveredParagraphIndex, setHoveredParagraphIndex] = useState<number | null>(null);
+
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -47,6 +55,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       setIsLoading(false);
     });
   }, [bookId]);
+
+  useEffect(() => {
+    if (chapter) {
+      api.getComments(chapter.id).then(setChapterComments);
+    }
+  }, [chapter?.id]);
 
   useEffect(() => {
     if (globalTheme === 'dark') {
@@ -277,17 +291,71 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         </div>
       </header>
 
-      <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-32">
+      <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-8">
         <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
         <div
           className="prose prose-lg lg:prose-xl dark:prose-invert"
           style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
         >
-          {chapter.content.split('\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
+          {chapter.content.split('\n').map((paragraph, index) => {
+            const paragraphComments = chapterComments.filter(c => c.paragraphIndex === index);
+            const count = paragraphComments.length;
+
+            return (
+              <div
+                key={index}
+                className="relative group mb-4"
+                onMouseEnter={() => setHoveredParagraphIndex(index)}
+                onMouseLeave={() => setHoveredParagraphIndex(null)}
+              >
+                <p>{paragraph}</p>
+
+                {/* Inline Comment Indicator */}
+                <button
+                  onClick={() => setActiveParagraphIndex(index)}
+                  className={`absolute -right-12 top-0 p-1.5 rounded-full transition-all duration-200 ${count > 0
+                    ? 'bg-accent/10 text-accent opacity-100'
+                    : hoveredParagraphIndex === index
+                      ? 'bg-gray-100 dark:bg-dark-surface-alt text-gray-400 opacity-100'
+                      : 'opacity-0'
+                    }`}
+                  title={count > 0 ? `${count} comments` : "Add comment"}
+                >
+                  {count > 0 ? (
+                    <span className="font-sans text-xs font-bold flex items-center justify-center w-5 h-5">{count}</span>
+                  ) : (
+                    <ChatBubbleIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </main>
+
+      {/* Chapter Comments Section */}
+      {book && chapter && (
+        <CommentList
+          bookId={book.id}
+          chapterId={chapter.id}
+          comments={chapterComments}
+          currentUser={currentUser}
+          onCommentAdded={newComment => setChapterComments(prev => [...prev, newComment])}
+        />
+      )}
+
+      {/* Inline Comment Modal */}
+      {activeParagraphIndex !== null && book && chapter && (
+        <CommentModal
+          bookId={book.id}
+          chapterId={chapter.id}
+          paragraphIndex={activeParagraphIndex}
+          comments={chapterComments.filter(c => c.paragraphIndex === activeParagraphIndex)}
+          onClose={() => setActiveParagraphIndex(null)}
+          onCommentAdded={newComment => setChapterComments(prev => [...prev, newComment])}
+          currentUser={currentUser}
+        />
+      )}
 
       {resumeData && (
         <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-sm animate-slide-in-bottom">

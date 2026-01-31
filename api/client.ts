@@ -312,6 +312,22 @@ export async function deleteReview(userId: string, bookId: string): Promise<Revi
     return await handleResponse(response);
 }
 
+// --- Comment API ---
+
+export async function getComments(chapterId: string): Promise<Comment[]> {
+    const response = await fetch(`${API_BASE_URL}/comments/chapter/${chapterId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function addComment(bookId: string, chapterId: string, content: string, paragraphIndex?: number): Promise<Comment> {
+    const response = await fetch(`${API_BASE_URL}/comments`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ bookId, chapterId, content, paragraphIndex })
+    });
+    return await handleResponse(response);
+}
+
 function mapBackendUserToFrontend(backendData: any): User {
     let safeJoinDate = backendData.joinDate;
     if (Array.isArray(safeJoinDate)) {
