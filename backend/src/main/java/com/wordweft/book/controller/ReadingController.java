@@ -1,4 +1,3 @@
-
 package com.wordweft.book.controller;
 
 import com.wordweft.book.model.*;
@@ -18,71 +17,104 @@ import java.util.*;
 @RequestMapping("/api")
 public class ReadingController {
 
-    @Autowired ReadingProgressRepository progressRepository;
-    @Autowired LibraryRepository libraryRepository;
-    @Autowired UserService userService;
+    @Autowired
+    ReadingProgressRepository progressRepository;
+    @Autowired
+    LibraryRepository libraryRepository;
+    @Autowired
+    UserService userService;
+    @Autowired
+    BookRepository bookRepository;
 
     @GetMapping("/reading/progress/{bookId}")
     public ResponseEntity<?> getProgress(@PathVariable String bookId) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         return ResponseEntity.ok(progressRepository.findByUserIdAndBookId(userDetails.getId(), bookId).orElse(null));
     }
-    
+
     @GetMapping("/reading/progress")
     public ResponseEntity<?> getAllProgress() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         List<ReadingProgress> list = progressRepository.findByUserId(userDetails.getId());
         Map<String, ReadingProgress> map = new HashMap<>();
         list.forEach(p -> map.put(p.getBookId(), p));
         return ResponseEntity.ok(map);
     }
-    
+
     @PostMapping("/reading/progress")
     public ResponseEntity<?> saveProgress(@RequestBody Map<String, Object> payload) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         String bookId = (String) payload.get("bookId");
-        
+
         ReadingProgress progress = progressRepository.findByUserIdAndBookId(userDetails.getId(), bookId)
                 .orElse(new ReadingProgress());
-        
+
         progress.setUserId(userDetails.getId());
         progress.setBookId(bookId);
         progress.setLastReadChapterIndex((Integer) payload.get("chapterIndex"));
         progress.setLastReadScrollPosition((Integer) payload.get("scrollPosition"));
-        
+
+        // Ensure chapters map is initialized
+        if (progress.getChapters() == null) {
+            progress.setChapters(new HashMap<>());
+        }
+
         // Update chapter progress
         Map<String, Object> chapterData = (Map<String, Object>) payload.get("chapterData");
         String chapterId = (String) chapterData.get("id");
         int pVal = (Integer) chapterData.get("progress");
         int sVal = (Integer) chapterData.get("scroll");
-        
+
         ReadingProgress.ChapterProgressItem item = new ReadingProgress.ChapterProgressItem();
         item.setProgress(pVal);
         item.setScrollPosition(sVal);
-        
+
         progress.getChapters().put(chapterId, item);
-        
-        // Simplified overall calc
-        progress.setOverallProgress(Math.min(100, progress.getOverallProgress() + 1)); 
-        
+
+        // Calculate overall progress based on total chapters
+        Book book = bookRepository.findById(bookId).orElse(null);
+        if (book != null && book.getChapters() != null && !book.getChapters().isEmpty()) {
+            int totalChapters = book.getChapters().size();
+            double sumProgress = 0;
+
+            for (ReadingProgress.ChapterProgressItem chItem : progress.getChapters().values()) {
+                sumProgress += chItem.getProgress();
+            }
+
+            // Average progress across ALL chapters (unstarted chapters count as 0)
+            int overall = 0;
+            if (totalChapters > 0) {
+                overall = (int) Math.round(sumProgress / totalChapters);
+            }
+            progress.setOverallProgress(Math.min(100, Math.max(0, overall)));
+        } else {
+            // Fallback if book not found or no chapters, assume 0
+            progress.setOverallProgress(0);
+        }
+
         progressRepository.save(progress);
         return ResponseEntity.ok().build();
     }
-    
+
     @DeleteMapping("/reading/progress/{bookId}")
     public ResponseEntity<?> clearProgress(@PathVariable String bookId) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         progressRepository.deleteByUserIdAndBookId(userDetails.getId(), bookId);
         return ResponseEntity.ok().build();
     }
-    
+
     // Library
-    
+
     @PostMapping("/library/toggle")
     public ResponseEntity<?> toggleLibrary(@RequestBody Map<String, String> payload) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         String bookId = payload.get("bookId");
-        
+
         Optional<LibraryEntry> existing = libraryRepository.findByUserIdAndBookId(userDetails.getId(), bookId);
         if (existing.isPresent()) {
             libraryRepository.delete(existing.get());
@@ -93,13 +125,14 @@ public class ReadingController {
             entry.setAddedDate(LocalDate.now());
             libraryRepository.save(entry);
         }
-        
+
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
-    
+
     @DeleteMapping("/library/{bookId}")
     public ResponseEntity<?> removeFromLibrary(@PathVariable String bookId) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         libraryRepository.deleteByUserIdAndBookId(userDetails.getId(), bookId);
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }

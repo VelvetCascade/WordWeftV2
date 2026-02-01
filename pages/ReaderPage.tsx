@@ -72,7 +72,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
   const handleSaveProgress = () => {
     if (!currentUser || !book) return;
-    const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
+    // Improved height calculation: max of body or document element to be safe across browsers
+    const totalHeight = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight,
+      document.body.clientHeight,
+      document.documentElement.clientHeight
+    );
+    const contentHeight = totalHeight - window.innerHeight;
     api.saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
   };
 
@@ -124,17 +133,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       }
     }
 
-    window.addEventListener('scroll', saveThrottled);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('scroll', saveThrottled);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      handleSaveProgress(); // Save one last time on unmount
-    };
     window.addEventListener('scroll', saveThrottled);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
