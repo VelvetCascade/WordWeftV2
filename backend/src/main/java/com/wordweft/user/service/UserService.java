@@ -73,7 +73,8 @@ public class UserService {
         shelfObj.put("name", "My List");
         
         List<Map<String, Object>> books = entries.stream().map(e -> {
-            Map<String, Object> b = bookService.getBookById(e.getBookId());
+            // Pass false to avoid incrementing view count when just listing library
+            Map<String, Object> b = bookService.getBookById(e.getBookId(), false);
             if (b != null) {
                 b.put("addedDate", e.getAddedDate());
             }
