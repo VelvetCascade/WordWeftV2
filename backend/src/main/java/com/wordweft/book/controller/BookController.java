@@ -13,7 +13,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -26,14 +25,6 @@ public class BookController {
     @Autowired BookRepository bookRepository;
     @Autowired UserService userService;
 
-    private String getCurrentUserId() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof UserDetailsImpl) {
-            return ((UserDetailsImpl) principal).getId();
-        }
-        throw new RuntimeException("User not authenticated");
-    }
-
     @GetMapping
     public ResponseEntity<?> getBooks(@RequestParam(required = false) List<String> genres,
                                       @RequestParam(defaultValue = "Recent") String sortBy) {
@@ -42,8 +33,7 @@ public class BookController {
     
     @GetMapping("/{id}")
     public ResponseEntity<?> getBookById(@PathVariable String id) {
-        // Increment view count for normal page loads
-        Map<String, Object> book = bookService.getBookById(id, true);
+        Map<String, Object> book = bookService.getBookById(id);
         if (book == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(book);
     }
@@ -56,41 +46,6 @@ public class BookController {
     @GetMapping("/genres")
     public ResponseEntity<?> getGenres() {
         return ResponseEntity.ok(bookService.getAllGenres());
-    }
-    
-    // --- Stats Interaction ---
-    
-    @PostMapping("/{bookId}/chapters/{chapterId}/like")
-    public ResponseEntity<?> toggleChapterLike(@PathVariable String bookId, @PathVariable String chapterId) {
-        String userId = getCurrentUserId();
-        Book book = bookRepository.findById(bookId).orElseThrow();
-        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
-        
-        if (chapter.getLikes() == null) {
-            chapter.setLikes(new HashSet<>());
-        }
-
-        if (chapter.getLikes().contains(userId)) {
-            chapter.getLikes().remove(userId);
-        } else {
-            chapter.getLikes().add(userId);
-        }
-        
-        bookRepository.save(book);
-        
-        // Do NOT increment view count when toggling a like
-        return ResponseEntity.ok(bookService.getBookById(bookId, false));
-    }
-    
-    @PostMapping("/{bookId}/chapters/{chapterId}/view")
-    public ResponseEntity<?> incrementChapterView(@PathVariable String bookId, @PathVariable String chapterId) {
-        Book book = bookRepository.findById(bookId).orElseThrow();
-        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
-        
-        chapter.setViewCount(chapter.getViewCount() + 1);
-        bookRepository.save(book);
-        
-        return ResponseEntity.ok().build();
     }
     
     // --- Writer Endpoints ---

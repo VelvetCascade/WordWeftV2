@@ -1,8 +1,6 @@
 
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author } from '../types';
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
-
-// const API_BASE_URL = 'http://localhost:8080/api';
 const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
 const JWT_KEY = 'wordweft_jwt';
 
@@ -119,34 +117,6 @@ export async function changePassword(userId: string, oldPassword_unused: string,
     return (await getMe())!;
 }
 
-// --- Follow API ---
-
-export async function followUser(userId: string): Promise<Author> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/follow`, {
-        method: 'POST',
-        headers: getHeaders()
-    });
-    return await handleResponse(response);
-}
-
-export async function unfollowUser(userId: string): Promise<Author> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/unfollow`, {
-        method: 'POST',
-        headers: getHeaders()
-    });
-    return await handleResponse(response);
-}
-
-export async function getUserFollowers(userId: string): Promise<Author[]> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/followers`, { headers: getHeaders() });
-    return await handleResponse(response);
-}
-
-export async function getUserFollowing(userId: string): Promise<Author[]> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/following`, { headers: getHeaders() });
-    return await handleResponse(response);
-}
-
 // --- Content API ---
 
 export async function getGenres(): Promise<string[]> {
@@ -159,7 +129,7 @@ export async function getBooks(filters: { genres?: string[], sortBy?: 'Recent' |
     if (filters.genres && filters.genres.length > 0) {
         url += `&genres=${filters.genres.join(',')}`;
     }
-    const response = await fetch(url, { headers: getHeaders() });
+    const response = await fetch(url);
     const books = await handleResponse(response);
     if (filters.limit) return books.slice(0, filters.limit);
     return books;
@@ -172,41 +142,18 @@ export async function getBookById(id: string): Promise<Book | null> {
 }
 
 export async function getAuthorById(id: string): Promise<Author | null> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`, { headers: getHeaders() });
+    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`);
     if (!response.ok) return null;
     return await handleResponse(response);
 }
 
 export async function getBooksByAuthor(authorId: string, excludeBookId?: string): Promise<Book[]> {
-    const response = await fetch(`${API_BASE_URL}/books/author/${authorId}`, { headers: getHeaders() });
+    const response = await fetch(`${API_BASE_URL}/books/author/${authorId}`);
     let books = await handleResponse(response);
     if (excludeBookId) {
         books = books.filter((b: Book) => b.id !== excludeBookId);
     }
     return books;
-}
-
-export async function toggleBookLike(bookId: string): Promise<Book> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/like`, {
-        method: 'POST',
-        headers: getHeaders()
-    });
-    return await handleResponse(response);
-}
-
-export async function toggleChapterLike(bookId: string, chapterId: string): Promise<Book> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/like`, {
-        method: 'POST',
-        headers: getHeaders()
-    });
-    return await handleResponse(response);
-}
-
-export async function recordChapterView(bookId: string, chapterId: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/view`, {
-        method: 'POST',
-        headers: getHeaders()
-    });
 }
 
 // --- Library & Progress API ---
@@ -221,8 +168,9 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
     return await handleResponse(response);
 }
 
-export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, progressPercentage: number): Promise<void> {
+export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, contentHeight: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
+    let currentChapterProgress = contentHeight <= 0 ? 100 : Math.min(100, (scrollPosition / contentHeight) * 100);
     
     await fetch(`${API_BASE_URL}/reading/progress`, {
         method: 'POST',
@@ -233,7 +181,7 @@ export async function saveReadingProgress(userId: string, book: Book, chapterInd
             scrollPosition,
             chapterData: {
                 id: chapterId,
-                progress: Math.round(progressPercentage),
+                progress: Math.round(currentChapterProgress),
                 scroll: Math.round(scrollPosition)
             }
         })
@@ -328,35 +276,10 @@ export async function submitReview(userId: string, bookId: string, rating: numbe
     return await handleResponse(response);
 }
 
-export async function replyToReview(userId: string, bookId: string, reviewId: string, content: string): Promise<Review[]> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/reviews/${reviewId}/reply`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ content })
-    });
-    return await handleResponse(response);
-}
-
 export async function deleteReview(userId: string, bookId: string): Promise<Review[]> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/reviews`, {
         method: 'DELETE',
         headers: getHeaders()
-    });
-    return await handleResponse(response);
-}
-
-// --- Comments API ---
-
-export async function getChapterComments(bookId: string, chapterId: string): Promise<Comment[]> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`);
-    return await handleResponse(response);
-}
-
-export async function addChapterComment(bookId: string, chapterId: string, paragraphIndex: number | null, content: string, parentId: string | null = null): Promise<Comment> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ paragraphIndex, content, parentId })
     });
     return await handleResponse(response);
 }
@@ -378,18 +301,8 @@ function mapBackendUserToFrontend(backendData: any): User {
         location: backendData.location,
         website: backendData.website,
         joinDate: safeJoinDate,
-        stats: backendData.stats || { 
-            booksRead: 0, 
-            chaptersRead: 0, 
-            totalWordsRead: 0, 
-            readingTimeMinutes: 0, 
-            readerLevel: 'Novice' 
-        },
-        socials: backendData.socials || {},
-        favoriteGenres: backendData.favoriteGenres || [],
-        following: backendData.following || [], // Should be list of IDs
-        followersCount: backendData.followersCount || 0,
-        followingCount: backendData.followingCount || 0,
+        stats: backendData.stats || { booksRead: 0, chaptersRead: 0, favoriteGenres: [] },
+        following: [],
         library: backendData.library || [],
         writtenBooks: backendData.writtenBooks || []
     };

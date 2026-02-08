@@ -6,20 +6,6 @@ export interface Author {
   name: string;
   avatarUrl: string;
   bio: string;
-  followersCount?: number;
-  followingCount?: number;
-  isFollowing?: boolean;
-}
-
-export interface ReviewReply {
-    id: string;
-    content: string;
-    timestamp: string;
-    user: {
-        id: string;
-        name: string;
-        avatarUrl: string;
-    };
 }
 
 export interface Review {
@@ -35,23 +21,6 @@ export interface Review {
   comment: string;
   date: string;
   sentiment: 'positive' | 'neutral' | 'negative';
-  replies: ReviewReply[];
-}
-
-export interface Comment {
-    id: string;
-    bookId: string;
-    chapterId: string;
-    paragraphIndex: number | null;
-    parentId: string | null;
-    content: string;
-    createdAt: string;
-    userId: string;
-    user: {
-        id: string;
-        name: string;
-        avatarUrl: string;
-    };
 }
 
 export interface Chapter {
@@ -60,11 +29,6 @@ export interface Chapter {
   wordCount: number;
   content: string;
   status: 'draft' | 'published';
-  // Stats
-  viewCount: number;
-  likesCount: number;
-  commentCount: number;
-  isLiked: boolean;
 }
 
 export interface Book {
@@ -74,11 +38,6 @@ export interface Book {
   coverUrl: string;
   rating: number;
   reviewsCount: number;
-  // Stats
-  viewCount: number;
-  likesCount: number;
-  isLiked: boolean;
-  
   genres: string[];
   tags: string[];
   summary: string;
@@ -88,20 +47,6 @@ export interface Book {
   publishedDate?: string;
   isMature: boolean;
   description: string;
-}
-
-export interface UserStats {
-    booksRead: number;
-    chaptersRead: number;
-    totalWordsRead: number;
-    readingTimeMinutes: number; // Calculated on backend or frontend
-    readerLevel: string; // e.g. "Novice", "Scholar"
-}
-
-export interface UserSocials {
-    twitter?: string;
-    instagram?: string;
-    threads?: string;
 }
 
 export interface User {
@@ -114,14 +59,12 @@ export interface User {
   location?: string;
   website?: string;
   joinDate: string;
-  
-  stats: UserStats;
-  socials: UserSocials;
-  favoriteGenres: string[];
-  
-  following: string[]; // List of IDs the user follows
-  followersCount?: number;
-  followingCount?: number;
+  stats: {
+    booksRead: number;
+    chaptersRead: number;
+    favoriteGenres: string[];
+  };
+  following: Author[];
   library: Shelf[];
   writtenBooks?: Book[];
 }

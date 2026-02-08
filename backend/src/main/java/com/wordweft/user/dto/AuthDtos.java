@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 public class AuthDtos {
 
@@ -60,8 +59,6 @@ public class AuthDtos {
         private String bio;
         private String location;
         private String website;
-        private Map<String, String> socials;
-        private List<String> favoriteGenres;
     }
     
     @Data

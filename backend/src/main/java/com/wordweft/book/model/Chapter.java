@@ -3,8 +3,6 @@ package com.wordweft.book.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -13,13 +11,8 @@ public class Chapter {
     private String id = UUID.randomUUID().toString();
     private String title;
     private int wordCount;
-    private String content; 
+    private String content; // Storing content here for simplicity, in a real app this might be separate
     private String status = "draft"; // "draft" or "published"
-    
-    // Stats
-    private int viewCount = 0;
-    private int commentCount = 0;
-    private Set<String> likes = new HashSet<>(); // Set of User IDs
     
     public void updateWordCount() {
         if (content != null) {
