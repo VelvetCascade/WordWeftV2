@@ -41,13 +41,23 @@ public class BookService {
         }
         
         // Sorting logic
+        // Calculate aggregate likes for sorting purposes
+        Map<String, Integer> bookLikesMap = new HashMap<>();
+        for (Book b : books) {
+            int totalLikes = b.getChapters().stream().mapToInt(c -> c.getLikes().size()).sum();
+            bookLikesMap.put(b.getId(), totalLikes);
+        }
+
         if ("Rating".equals(sortBy)) {
             books.sort((a, b) -> Double.compare(b.getRating(), a.getRating()));
         } else if ("Popular".equals(sortBy)) {
-            // Sort by popularity score (views + likes + reviews)
+            // Sort by popularity score (views + total chapter likes * 2 + reviews)
             books.sort((a, b) -> {
-                int scoreA = (a.getViewCount() / 10) + (a.getLikes().size() * 2) + a.getReviewsCount();
-                int scoreB = (b.getViewCount() / 10) + (b.getLikes().size() * 2) + b.getReviewsCount();
+                int likesA = bookLikesMap.getOrDefault(a.getId(), 0);
+                int likesB = bookLikesMap.getOrDefault(b.getId(), 0);
+                
+                int scoreA = (a.getViewCount() / 10) + (likesA * 2) + a.getReviewsCount();
+                int scoreB = (b.getViewCount() / 10) + (likesB * 2) + b.getReviewsCount();
                 return Integer.compare(scoreB, scoreA);
             });
         } else {
@@ -63,14 +73,16 @@ public class BookService {
         return books.stream().map(b -> enrichBook(b, currentUserId)).collect(Collectors.toList());
     }
     
-    public Map<String, Object> getBookById(String id) {
+    public Map<String, Object> getBookById(String id, boolean incrementView) {
         String currentUserId = getCurrentUserId();
-        // Increment view count when fetching single book details
         Optional<Book> bookOpt = bookRepository.findById(id);
+        
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
-            book.setViewCount((book.getViewCount() == null ? 0 : book.getViewCount()) + 1);
-            bookRepository.save(book);
+            if (incrementView) {
+                book.setViewCount((book.getViewCount() == null ? 0 : book.getViewCount()) + 1);
+                bookRepository.save(book);
+            }
             return enrichBook(book, currentUserId);
         }
         return null;
@@ -94,8 +106,17 @@ public class BookService {
         
         // Book Stats
         map.put("viewCount", book.getViewCount() == null ? 0 : book.getViewCount());
-        map.put("likesCount", book.getLikes().size());
-        map.put("isLiked", currentUserId != null && book.getLikes().contains(currentUserId));
+        
+        // AGGREGATE LIKES: Sum of all chapter likes
+        int totalChapterLikes = book.getChapters().stream()
+                                    .mapToInt(c -> c.getLikes() != null ? c.getLikes().size() : 0)
+                                    .sum();
+        map.put("likesCount", totalChapterLikes);
+        
+        // isLiked for Book is essentially if the user has liked ANY chapter (optional interpretation)
+        // or we just return false because book-level liking is disabled.
+        // Let's return false to disable the book-level heart highlight effectively.
+        map.put("isLiked", false); 
         
         map.put("genres", book.getGenres());
         map.put("tags", book.getTags());
@@ -108,14 +129,14 @@ public class BookService {
             cMap.put("id", ch.getId());
             cMap.put("title", ch.getTitle());
             cMap.put("wordCount", ch.getWordCount());
-            cMap.put("content", ch.getContent()); // In real app, might omit content for list view
+            cMap.put("content", ch.getContent()); 
             cMap.put("status", ch.getStatus());
             
             // Chapter Stats
             cMap.put("viewCount", ch.getViewCount());
             cMap.put("commentCount", ch.getCommentCount());
-            cMap.put("likesCount", ch.getLikes().size());
-            cMap.put("isLiked", currentUserId != null && ch.getLikes().contains(currentUserId));
+            cMap.put("likesCount", ch.getLikes() != null ? ch.getLikes().size() : 0);
+            cMap.put("isLiked", currentUserId != null && ch.getLikes() != null && ch.getLikes().contains(currentUserId));
             
             return cMap;
         }).collect(Collectors.toList());

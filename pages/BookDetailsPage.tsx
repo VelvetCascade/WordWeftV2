@@ -34,7 +34,7 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                             <button 
                                 onClick={(e) => { e.stopPropagation(); onToggleLike(chapter.id); }}
                                 className={`flex items-center gap-1 hover:text-danger transition-colors ${chapter.isLiked ? 'text-danger' : ''}`}
-                                title="Like Chapter"
+                                title={chapter.isLiked ? "Unlike Chapter" : "Like Chapter"}
                             >
                                 {chapter.isLiked ? <HeartIconSolid className="w-3.5 h-3.5" /> : <HeartIcon className="w-3.5 h-3.5" />} 
                                 {chapter.likesCount}
@@ -307,30 +307,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
       setAllReviews(updatedReviews);
   };
 
-  const handleToggleBookLike = async () => {
-      if (!currentUser || !book) {
-          window.location.hash = '/auth';
-          return;
-      }
-      // Optimistic update
-      const prevIsLiked = book.isLiked;
-      const prevCount = book.likesCount;
-      
-      setBook({ 
-          ...book, 
-          isLiked: !prevIsLiked, 
-          likesCount: prevIsLiked ? prevCount - 1 : prevCount + 1 
-      });
-      
-      try {
-          const updatedBook = await api.toggleBookLike(book.id);
-          setBook(updatedBook);
-      } catch (e) {
-          // Revert on error
-          setBook({ ...book, isLiked: prevIsLiked, likesCount: prevCount });
-      }
-  };
-
   const handleToggleChapterLike = async (chapterId: string) => {
       if (!currentUser || !book) {
           window.location.hash = '/auth';
@@ -351,13 +327,20 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
           likesCount: prevIsLiked ? prevCount - 1 : prevCount + 1
       };
       
-      setBook({ ...book, chapters: newChapters });
+      // Update book level likes count locally
+      const bookLikesAdjustment = prevIsLiked ? -1 : 1;
+      setBook({ 
+          ...book, 
+          chapters: newChapters,
+          likesCount: book.likesCount + bookLikesAdjustment
+      });
       
       try {
           const updatedBook = await api.toggleChapterLike(book.id, chapterId);
           setBook(updatedBook);
       } catch (e) {
-          // Revert is complex without deep clone, simplest to fetch book again or ignore for now as it's low stakes
+          // Revert on error
+          console.error("Failed to like chapter", e);
       }
   };
 
@@ -419,14 +402,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
                 <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
 
-                <button 
-                    onClick={handleToggleBookLike}
-                    className={`flex items-center gap-2 transition-colors hover:text-danger ${book.isLiked ? 'text-danger' : ''}`}
-                    title="Likes"
-                >
-                    {book.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}
+                {/* Aggregated Likes Display (Non-interactive at book level) */}
+                <div className="flex items-center gap-2" title="Total Likes (across all chapters)">
+                    <HeartIcon className="w-5 h-5" />
                     <span className="font-sans font-medium">{book.likesCount.toLocaleString()}</span>
-                </button>
+                </div>
 
                 <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
 

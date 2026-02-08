@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +42,8 @@ public class BookController {
     
     @GetMapping("/{id}")
     public ResponseEntity<?> getBookById(@PathVariable String id) {
-        Map<String, Object> book = bookService.getBookById(id);
+        // Increment view count for normal page loads
+        Map<String, Object> book = bookService.getBookById(id, true);
         if (book == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(book);
     }
@@ -58,27 +60,16 @@ public class BookController {
     
     // --- Stats Interaction ---
     
-    @PostMapping("/{id}/like")
-    public ResponseEntity<?> toggleBookLike(@PathVariable String id) {
-        String userId = getCurrentUserId();
-        Book book = bookRepository.findById(id).orElseThrow();
-        
-        if (book.getLikes().contains(userId)) {
-            book.getLikes().remove(userId);
-        } else {
-            book.getLikes().add(userId);
-        }
-        
-        bookRepository.save(book);
-        return ResponseEntity.ok(bookService.getBookById(id));
-    }
-    
     @PostMapping("/{bookId}/chapters/{chapterId}/like")
     public ResponseEntity<?> toggleChapterLike(@PathVariable String bookId, @PathVariable String chapterId) {
         String userId = getCurrentUserId();
         Book book = bookRepository.findById(bookId).orElseThrow();
         Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
         
+        if (chapter.getLikes() == null) {
+            chapter.setLikes(new HashSet<>());
+        }
+
         if (chapter.getLikes().contains(userId)) {
             chapter.getLikes().remove(userId);
         } else {
@@ -86,7 +77,9 @@ public class BookController {
         }
         
         bookRepository.save(book);
-        return ResponseEntity.ok(bookService.getBookById(bookId));
+        
+        // Do NOT increment view count when toggling a like
+        return ResponseEntity.ok(bookService.getBookById(bookId, false));
     }
     
     @PostMapping("/{bookId}/chapters/{chapterId}/view")
