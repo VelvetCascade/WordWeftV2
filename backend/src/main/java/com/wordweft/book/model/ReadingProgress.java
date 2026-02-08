@@ -6,8 +6,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -21,9 +24,13 @@ public class ReadingProgress {
     private int overallProgress; // 0-100
     private int lastReadChapterIndex;
     private int lastReadScrollPosition;
+    private LocalDateTime lastReadTimestamp = LocalDateTime.now();
     
-    // Map<ChapterId, ChapterProgress>
+    // Map<ChapterId, ChapterProgressItem>
     private Map<String, ChapterProgressItem> chapters = new HashMap<>();
+    
+    // Set of chapter IDs that have been fully read and counted towards user stats
+    private Set<String> completedChapterIds = new HashSet<>();
 
     @Data
     @NoArgsConstructor
