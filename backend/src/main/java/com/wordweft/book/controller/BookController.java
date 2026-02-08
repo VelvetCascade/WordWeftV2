@@ -25,6 +25,14 @@ public class BookController {
     @Autowired BookRepository bookRepository;
     @Autowired UserService userService;
 
+    private String getCurrentUserId() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetailsImpl) {
+            return ((UserDetailsImpl) principal).getId();
+        }
+        throw new RuntimeException("User not authenticated");
+    }
+
     @GetMapping
     public ResponseEntity<?> getBooks(@RequestParam(required = false) List<String> genres,
                                       @RequestParam(defaultValue = "Recent") String sortBy) {
@@ -46,6 +54,50 @@ public class BookController {
     @GetMapping("/genres")
     public ResponseEntity<?> getGenres() {
         return ResponseEntity.ok(bookService.getAllGenres());
+    }
+    
+    // --- Stats Interaction ---
+    
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> toggleBookLike(@PathVariable String id) {
+        String userId = getCurrentUserId();
+        Book book = bookRepository.findById(id).orElseThrow();
+        
+        if (book.getLikes().contains(userId)) {
+            book.getLikes().remove(userId);
+        } else {
+            book.getLikes().add(userId);
+        }
+        
+        bookRepository.save(book);
+        return ResponseEntity.ok(bookService.getBookById(id));
+    }
+    
+    @PostMapping("/{bookId}/chapters/{chapterId}/like")
+    public ResponseEntity<?> toggleChapterLike(@PathVariable String bookId, @PathVariable String chapterId) {
+        String userId = getCurrentUserId();
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
+        
+        if (chapter.getLikes().contains(userId)) {
+            chapter.getLikes().remove(userId);
+        } else {
+            chapter.getLikes().add(userId);
+        }
+        
+        bookRepository.save(book);
+        return ResponseEntity.ok(bookService.getBookById(bookId));
+    }
+    
+    @PostMapping("/{bookId}/chapters/{chapterId}/view")
+    public ResponseEntity<?> incrementChapterView(@PathVariable String bookId, @PathVariable String chapterId) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
+        
+        chapter.setViewCount(chapter.getViewCount() + 1);
+        bookRepository.save(book);
+        
+        return ResponseEntity.ok().build();
     }
     
     // --- Writer Endpoints ---

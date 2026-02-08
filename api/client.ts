@@ -157,7 +157,7 @@ export async function getBooks(filters: { genres?: string[], sortBy?: 'Recent' |
     if (filters.genres && filters.genres.length > 0) {
         url += `&genres=${filters.genres.join(',')}`;
     }
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: getHeaders() });
     const books = await handleResponse(response);
     if (filters.limit) return books.slice(0, filters.limit);
     return books;
@@ -176,12 +176,35 @@ export async function getAuthorById(id: string): Promise<Author | null> {
 }
 
 export async function getBooksByAuthor(authorId: string, excludeBookId?: string): Promise<Book[]> {
-    const response = await fetch(`${API_BASE_URL}/books/author/${authorId}`);
+    const response = await fetch(`${API_BASE_URL}/books/author/${authorId}`, { headers: getHeaders() });
     let books = await handleResponse(response);
     if (excludeBookId) {
         books = books.filter((b: Book) => b.id !== excludeBookId);
     }
     return books;
+}
+
+export async function toggleBookLike(bookId: string): Promise<Book> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/like`, {
+        method: 'POST',
+        headers: getHeaders()
+    });
+    return await handleResponse(response);
+}
+
+export async function toggleChapterLike(bookId: string, chapterId: string): Promise<Book> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/like`, {
+        method: 'POST',
+        headers: getHeaders()
+    });
+    return await handleResponse(response);
+}
+
+export async function recordChapterView(bookId: string, chapterId: string): Promise<void> {
+    await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/view`, {
+        method: 'POST',
+        headers: getHeaders()
+    });
 }
 
 // --- Library & Progress API ---

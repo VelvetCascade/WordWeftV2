@@ -1,7 +1,10 @@
 
 package com.wordweft.book.controller;
 
+import com.wordweft.book.model.Book;
+import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.Comment;
+import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.CommentRepository;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
@@ -24,6 +27,7 @@ public class CommentController {
 
     @Autowired CommentRepository commentRepository;
     @Autowired UserRepository userRepository;
+    @Autowired BookRepository bookRepository;
 
     @GetMapping("/{bookId}/chapters/{chapterId}/comments")
     public ResponseEntity<?> getComments(@PathVariable String bookId, @PathVariable String chapterId) {
@@ -39,9 +43,14 @@ public class CommentController {
         comment.setBookId(bookId);
         comment.setChapterId(chapterId);
         comment.setCreatedAt(LocalDateTime.now());
-        // parentId is set from RequestBody if present
         
         commentRepository.save(comment);
+        
+        // Increment chapter comment count
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
+        chapter.setCommentCount(chapter.getCommentCount() + 1);
+        bookRepository.save(book);
         
         return ResponseEntity.ok(enrichComment(comment));
     }

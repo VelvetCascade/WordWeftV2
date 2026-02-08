@@ -60,6 +60,11 @@ export interface Chapter {
   wordCount: number;
   content: string;
   status: 'draft' | 'published';
+  // Stats
+  viewCount: number;
+  likesCount: number;
+  commentCount: number;
+  isLiked: boolean;
 }
 
 export interface Book {
@@ -69,6 +74,11 @@ export interface Book {
   coverUrl: string;
   rating: number;
   reviewsCount: number;
+  // Stats
+  viewCount: number;
+  likesCount: number;
+  isLiked: boolean;
+  
   genres: string[];
   tags: string[];
   summary: string;

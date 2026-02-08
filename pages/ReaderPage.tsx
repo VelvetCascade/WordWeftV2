@@ -215,6 +215,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   const contentRef = useRef<HTMLDivElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
   const saveProgressTimeoutRef = useRef<number | null>(null);
+  const hasRecordedView = useRef<string | null>(null);
   
   const { theme: globalTheme } = useTheme();
 
@@ -235,10 +236,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     });
   }, [bookId]);
 
-  // 2. Fetch Comments
+  // 2. Fetch Comments & Record View
   useEffect(() => {
       if(book && chapter) {
           api.getChapterComments(bookId, chapter.id).then(setComments);
+          
+          // Record view if not already recorded for this chapter in this session
+          if (hasRecordedView.current !== chapter.id) {
+              api.recordChapterView(bookId, chapter.id);
+              hasRecordedView.current = chapter.id;
+          }
       }
   }, [bookId, chapter]);
 
