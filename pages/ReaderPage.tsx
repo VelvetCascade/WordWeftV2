@@ -258,25 +258,24 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;
       const fullHeight = document.documentElement.scrollHeight;
+      const maxScroll = fullHeight - windowHeight;
       
-      // Calculate how much text is remaining below the fold
-      const remainingHeight = fullHeight - (scrollTop + windowHeight);
-      
-      // We consider 100% if the user is near the bottom (within 100px)
-      let contentHeight = fullHeight - windowHeight;
-      if (contentHeight <= 0) contentHeight = 1; // Prevent division by zero
+      let percentage = 0;
+      if (maxScroll > 0) {
+          percentage = (scrollTop / maxScroll) * 100;
+      } else {
+          percentage = 100; // Content fits in screen, so it's fully read
+      }
 
-      const isNearBottom = remainingHeight < 150;
-      
-      // Determine content height for API (legacy support mostly, logic moved to backend calculation usually, but we send raw data)
-      // Note: Passing raw height is risky if font size changes, but we send percentage mostly.
+      // Ensure percentage is between 0 and 100
+      percentage = Math.min(100, Math.max(0, percentage));
       
       api.saveReadingProgress(
           currentUser.id, 
           book, 
           currentChapterIndex, 
           scrollTop, 
-          isNearBottom ? 0 : contentHeight // If near bottom, act as if 0 height remaining
+          percentage
       );
   }, [currentUser, book, currentChapterIndex, chapter]);
 
@@ -298,7 +297,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     };
     
-    // Tiny delay to allow DOM to render
+    // Tiny delay to allow DOM to render and images to load slightly
     setTimeout(restorePosition, 100);
   }, [bookId, chapter, currentUser]);
 

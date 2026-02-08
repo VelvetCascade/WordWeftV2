@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
 
@@ -336,7 +336,10 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(book.rating) ? 'text-amber-600' : 'text-gray-300 dark:text-gray-600'}`} />)}
                 </div>
                 <span className="font-sans font-semibold dark:text-dark-text-body">{book.rating}</span>
-                <span className="text-gray-500 dark:text-gray-400">({allReviews.length} reviews)</span>
+                <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <ChatBubbleLeftIcon className="w-4 h-4" />
+                    <span>({allReviews.length} reviews)</span>
+                </div>
             </div>
             <div className="flex flex-wrap gap-2 mb-6">
               {book.genres.map(g => <span key={g} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full">{g}</span>)}

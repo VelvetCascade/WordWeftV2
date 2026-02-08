@@ -196,9 +196,8 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
     return await handleResponse(response);
 }
 
-export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, contentHeight: number): Promise<void> {
+export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, progressPercentage: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
-    let currentChapterProgress = contentHeight <= 0 ? 100 : Math.min(100, (scrollPosition / contentHeight) * 100);
     
     await fetch(`${API_BASE_URL}/reading/progress`, {
         method: 'POST',
@@ -209,7 +208,7 @@ export async function saveReadingProgress(userId: string, book: Book, chapterInd
             scrollPosition,
             chapterData: {
                 id: chapterId,
-                progress: Math.round(currentChapterProgress),
+                progress: Math.round(progressPercentage),
                 scroll: Math.round(scrollPosition)
             }
         })
