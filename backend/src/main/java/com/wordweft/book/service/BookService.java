@@ -40,24 +40,31 @@ public class BookService {
                     .collect(Collectors.toList());
         }
         
-        // Sorting logic
-        // Calculate aggregate likes for sorting purposes
+        // Pre-calculate aggregates for sorting to avoid repeated stream operations during sort
         Map<String, Integer> bookLikesMap = new HashMap<>();
+        Map<String, Integer> bookViewsMap = new HashMap<>();
+
         for (Book b : books) {
             int totalLikes = b.getChapters().stream().mapToInt(c -> c.getLikes().size()).sum();
             bookLikesMap.put(b.getId(), totalLikes);
+            
+            int totalViews = b.getChapters().stream().mapToInt(Chapter::getViewCount).sum();
+            bookViewsMap.put(b.getId(), totalViews);
         }
 
         if ("Rating".equals(sortBy)) {
             books.sort((a, b) -> Double.compare(b.getRating(), a.getRating()));
         } else if ("Popular".equals(sortBy)) {
-            // Sort by popularity score (views + total chapter likes * 2 + reviews)
+            // Sort by popularity score (aggregated views + total chapter likes * 2 + reviews)
             books.sort((a, b) -> {
                 int likesA = bookLikesMap.getOrDefault(a.getId(), 0);
                 int likesB = bookLikesMap.getOrDefault(b.getId(), 0);
                 
-                int scoreA = (a.getViewCount() / 10) + (likesA * 2) + a.getReviewsCount();
-                int scoreB = (b.getViewCount() / 10) + (likesB * 2) + b.getReviewsCount();
+                int viewsA = bookViewsMap.getOrDefault(a.getId(), 0);
+                int viewsB = bookViewsMap.getOrDefault(b.getId(), 0);
+                
+                int scoreA = (viewsA / 10) + (likesA * 2) + a.getReviewsCount();
+                int scoreB = (viewsB / 10) + (likesB * 2) + b.getReviewsCount();
                 return Integer.compare(scoreB, scoreA);
             });
         } else {
@@ -80,6 +87,8 @@ public class BookService {
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
             if (incrementView) {
+                // We still track page loads in the DB field for analytics, 
+                // but the displayed viewCount will be the aggregate of chapters.
                 book.setViewCount((book.getViewCount() == null ? 0 : book.getViewCount()) + 1);
                 bookRepository.save(book);
             }
@@ -104,8 +113,11 @@ public class BookService {
         map.put("rating", book.getRating());
         map.put("reviewsCount", book.getReviewsCount());
         
-        // Book Stats
-        map.put("viewCount", book.getViewCount() == null ? 0 : book.getViewCount());
+        // AGGREGATE VIEWS: Sum of all chapter views
+        int totalChapterViews = book.getChapters().stream()
+                                    .mapToInt(Chapter::getViewCount)
+                                    .sum();
+        map.put("viewCount", totalChapterViews);
         
         // AGGREGATE LIKES: Sum of all chapter likes
         int totalChapterLikes = book.getChapters().stream()
@@ -115,7 +127,6 @@ public class BookService {
         
         // isLiked for Book is essentially if the user has liked ANY chapter (optional interpretation)
         // or we just return false because book-level liking is disabled.
-        // Let's return false to disable the book-level heart highlight effectively.
         map.put("isLiked", false); 
         
         map.put("genres", book.getGenres());
