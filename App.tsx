@@ -21,15 +21,15 @@ import * as api from './api/client';
 export type Page = 
   | { name: 'home' }
   | { name: 'category'; genre: string | null }
-  | { name: 'book-details'; bookId: number }
-  | { name: 'reader'; bookId: number; chapterIndex: number }
+  | { name: 'book-details'; bookId: string }
+  | { name: 'reader'; bookId: string; chapterIndex: number }
   | { name: 'writer-dashboard' }
   | { name: 'writer-create-book' }
-  | { name: 'writer-manage-book'; bookId: number }
-  | { name: 'writer-edit-chapter'; bookId: number, chapterId: number | 'new' }
+  | { name: 'writer-manage-book'; bookId: string }
+  | { name: 'writer-edit-chapter'; bookId: string, chapterId: string | 'new' }
   | { name: 'profile' }
   | { name: 'auth' }
-  | { name: 'author'; authorId: number }
+  | { name: 'author'; authorId: string }
   | { name: 'edit-profile' };
 
 
@@ -102,26 +102,26 @@ const App: React.FC = () => {
       let targetPage: Page;
 
       if (hash.startsWith('book/')) {
-        const bookId = parseInt(hash.split('/')[1], 10);
+        const bookId = hash.split('/')[1];
         targetPage = bookId ? { name: 'book-details', bookId } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
-        const authorId = parseInt(hash.split('/')[1], 10);
+        const authorId = hash.split('/')[1];
         targetPage = authorId ? { name: 'author', authorId } : { name: 'home' };
       } else if (hash.startsWith('read/book/')) {
         const parts = hash.split('/');
-        const bookId = parseInt(parts[2], 10);
+        const bookId = parts[2];
         const chapterIndex = parseInt(parts[4], 10) || 0;
         targetPage = bookId ? { name: 'reader', bookId, chapterIndex: chapterIndex } : { name: 'home' };
       } else if (hash.startsWith('write/book/create')) {
         targetPage = { name: 'writer-create-book' };
       } else if (hash.startsWith('write/book/')) {
         const parts = hash.split('/');
-        const bookId = parseInt(parts[2], 10);
+        const bookId = parts[2];
         if (parts[3] === 'manage') {
           targetPage = { name: 'writer-manage-book', bookId };
         } else if (parts[3] === 'chapter' && parts[5] === 'edit') {
-          const chapterId = parts[4] === 'new' ? 'new' : parseInt(parts[4], 10);
-          targetPage = { name: 'writer-edit-chapter', bookId, chapterId };
+          const chapterId = parts[4];
+          targetPage = { name: 'writer-edit-chapter', bookId, chapterId: chapterId === 'new' ? 'new' : chapterId };
         } else {
           targetPage = { name: 'writer-dashboard' };
         }
@@ -160,7 +160,7 @@ const App: React.FC = () => {
 
   const renderPage = () => {
     if (!isInitialAuthCheckDone) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>; // Or a proper loader
+        return <div className="min-h-screen flex items-center justify-center">Loading...</div>; 
     }
     
     if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {

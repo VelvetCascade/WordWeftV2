@@ -1,15 +1,38 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User } from '../types';
-import { ArrowLeftIcon, EyeIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, EyeIcon, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
 interface ChapterEditorPageProps {
   currentUser: User;
-  bookId: number;
-  chapterId: number | 'new';
+  bookId: string;
+  chapterId: string | 'new';
   onUserUpdate: (user: User) => void;
 }
+
+const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string }> = ({ isOpen, onClose, title, content }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-dark-surface w-full max-w-3xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-dark-surface-alt hover:bg-gray-200 transition-colors z-10">
+                    <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                </button>
+                <div className="overflow-y-auto p-8 md:p-12">
+                    <div className="max-w-prose mx-auto">
+                        <h1 className="text-4xl font-serif font-bold mb-8 leading-snug text-text-rich dark:text-dark-text-rich">{title || 'Untitled Chapter'}</h1>
+                        <div className="prose prose-lg lg:prose-xl dark:prose-invert font-serif text-text-body dark:text-dark-text-body">
+                            {content.split('\n').map((paragraph, index) => (
+                                <p key={index} className="mb-4">{paragraph}</p>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
   const [chapterId, setChapterId] = useState(initialChapterId);
@@ -21,6 +44,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
   const [title, setTitle] = useState(chapter?.title || '');
   const [content, setContent] = useState(chapter?.content || '');
   const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const saveTimeoutRef = useRef<number | null>(null);
   
@@ -117,7 +141,11 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
-                     <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Preview (coming soon)">
+                     <button 
+                        onClick={() => setIsPreviewOpen(true)}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" 
+                        title="Preview"
+                     >
                         <EyeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                     </button>
                     <button 
@@ -149,6 +177,13 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         <footer className="flex-shrink-0 container mx-auto px-4 sm:px-6 h-8 flex items-center justify-center">
              <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">{wordCount.toLocaleString()} words</p>
         </footer>
+        
+        <PreviewModal 
+            isOpen={isPreviewOpen} 
+            onClose={() => setIsPreviewOpen(false)} 
+            title={title} 
+            content={content} 
+        />
     </div>
   );
 };

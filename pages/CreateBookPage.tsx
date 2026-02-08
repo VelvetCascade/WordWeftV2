@@ -14,7 +14,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const [description, setDescription] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [isMature, setIsMature] = useState(false);
-    const [coverUrl, setCoverUrl] = useState('https://picsum.photos/seed/newbook/400/600');
+    const [coverUrl, setCoverUrl] = useState('');
     const [allGenres, setAllGenres] = useState<string[]>([]);
     const [isLoadingGenres, setIsLoadingGenres] = useState(true);
 
@@ -38,7 +38,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
             title,
             description,
             summary: description.substring(0, 150) + '...',
-            coverUrl,
+            coverUrl: coverUrl || 'https://picsum.photos/seed/newbook/400/600',
             genres: selectedGenres,
             tags: selectedGenres,
             isMature,
@@ -80,14 +80,25 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} required rows={5} className="w-full p-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich" placeholder="A short, compelling summary of your story."></textarea>
                     </div>
                     <div>
-                        <label className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-2">Cover Image</label>
-                        <div className="w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex items-center justify-center text-center text-gray-500 dark:text-gray-400 hover:border-accent hover:text-accent cursor-pointer transition-colors">
-                           <div>
-                                <PhotoIcon className="w-10 h-10 mx-auto mb-2"/>
-                                <p>Feature coming soon!</p>
-                                <p className="text-xs">A default image will be used.</p>
-                           </div>
+                        <label htmlFor="coverUrl" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Cover Image URL</label>
+                        <div className="flex gap-4 items-start">
+                            <input 
+                                type="url" 
+                                id="coverUrl" 
+                                value={coverUrl} 
+                                onChange={e => setCoverUrl(e.target.value)} 
+                                className="flex-1 h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich" 
+                                placeholder="https://example.com/cover.jpg"
+                            />
+                            <div className="w-16 h-24 bg-gray-100 dark:bg-dark-surface-alt rounded-lg border dark:border-dark-border flex items-center justify-center overflow-hidden flex-shrink-0">
+                                {coverUrl ? (
+                                    <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')} />
+                                ) : (
+                                    <PhotoIcon className="w-6 h-6 text-gray-400" />
+                                )}
+                            </div>
                         </div>
+                        <p className="text-xs text-gray-500 mt-1">Leave empty for a random default cover.</p>
                     </div>
                      <div>
                         <label className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-2">Genres</label>

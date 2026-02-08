@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { User, Shelf, LibraryBook, BookProgress } from '../types';
+import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress } from '../types';
 import { Footer } from '../components/Footer';
 import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
-const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: number) => void, onRestart: (bookId: number) => void }> = ({ book, onRemove, onRestart }) => {
+const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
     
     const isCompleted = book.progress >= 100;
 
@@ -85,8 +85,8 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) => {
-    const [activeShelfId, setActiveShelfId] = useState<'all' | number>('all');
-    const [allProgress, setAllProgress] = useState<Record<number, BookProgress>>({});
+    const [activeShelfId, setActiveShelfId] = useState<'all' | string>('all');
+    const [allProgress, setAllProgress] = useState<Record<string, BookProgress>>({});
 
     useEffect(() => {
         api.getAllReadingProgress(user.id).then(setAllProgress);
@@ -104,8 +104,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
 
     const chaptersReadCount = useMemo(() => {
         let count = 0;
-        Object.values(allProgress).forEach(bookProgress => {
-            Object.values(bookProgress.chapters).forEach(chapter => {
+        Object.values(allProgress).forEach((bookProgress: BookProgress) => {
+            Object.values(bookProgress.chapters).forEach((chapter: ChapterProgress) => {
                 if (chapter.progress >= 100) count++;
             });
         });
@@ -117,7 +117,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         const toRead: LibraryBook[] = [];
         const completed: LibraryBook[] = [];
 
-        const allBooksMap = new Map<number, LibraryBook>();
+        const allBooksMap = new Map<string, LibraryBook>();
         userLibraryWithProgress.forEach(shelf => {
             shelf.books.forEach(book => allBooksMap.set(book.id, book));
         });
@@ -129,14 +129,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         });
 
         return [
-            { id: 1, name: 'Reading', books: reading },
-            { id: 2, name: 'To Read', books: toRead },
-            { id: 3, name: 'Completed', books: completed },
+            { id: '1', name: 'Reading', books: reading },
+            { id: '2', name: 'To Read', books: toRead },
+            { id: '3', name: 'Completed', books: completed },
         ];
     }, [userLibraryWithProgress]);
     
     const allBooks = useMemo(() => {
-       const books = new Map<number, LibraryBook>();
+       const books = new Map<string, LibraryBook>();
         dynamicShelves.forEach(shelf => {
             shelf.books.forEach(book => {
                 books.set(book.id, book);
@@ -162,7 +162,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         </button>
     );
 
-    const handleRemoveBook = async (bookId: number) => {
+    const handleRemoveBook = async (bookId: string) => {
         const updatedUser = await api.removeBookFromLibrary(user.id, bookId);
         onUserUpdate(updatedUser);
         const newProgress = { ...allProgress };
@@ -170,7 +170,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         setAllProgress(newProgress);
     };
 
-    const handleRestartBook = async (bookId: number) => {
+    const handleRestartBook = async (bookId: string) => {
         await api.clearReadingProgress(user.id, bookId);
         const newProgress = { ...allProgress };
         delete newProgress[bookId];
@@ -191,7 +191,25 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                         <img src={user.avatarUrl} alt={user.name} className="w-32 h-32 rounded-full object-cover ring-4 ring-white dark:ring-dark-surface shadow-lg" />
                         <div className="flex-1 text-center md:text-left">
                             <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">{user.name}</h1>
-                            <p className="text-text-body dark:text-dark-text-body mt-1">Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
+                            {user.bio && <p className="text-text-body dark:text-dark-text-body mt-2 max-w-xl italic">{user.bio}</p>}
+                            
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
+                                <p>Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                {user.location && (
+                                    <>
+                                        <span>•</span>
+                                        <p>{user.location}</p>
+                                    </>
+                                )}
+                                {user.website && (
+                                    <>
+                                        <span>•</span>
+                                        <a href={user.website.startsWith('http') ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                                            {user.website}
+                                        </a>
+                                    </>
+                                )}
+                            </div>
                         </div>
                         <button 
                             onClick={() => { window.location.hash = '/edit-profile'; }}

@@ -62,7 +62,7 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
 
 
 interface BookDetailsPageProps {
-  bookId: number;
+  bookId: string;
   currentUser: User | null;
   onUserUpdate: (user: User) => void;
 }
