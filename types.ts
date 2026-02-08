@@ -6,6 +6,9 @@ export interface Author {
   name: string;
   avatarUrl: string;
   bio: string;
+  followersCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
 }
 
 export interface ReviewReply {
@@ -92,7 +95,9 @@ export interface User {
     chaptersRead: number;
     favoriteGenres: string[];
   };
-  following: Author[];
+  following: string[]; // List of IDs the user follows
+  followersCount?: number;
+  followingCount?: number;
   library: Shelf[];
   writtenBooks?: Book[];
 }

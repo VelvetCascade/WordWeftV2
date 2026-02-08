@@ -117,6 +117,34 @@ export async function changePassword(userId: string, oldPassword_unused: string,
     return (await getMe())!;
 }
 
+// --- Follow API ---
+
+export async function followUser(userId: string): Promise<Author> {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/follow`, {
+        method: 'POST',
+        headers: getHeaders()
+    });
+    return await handleResponse(response);
+}
+
+export async function unfollowUser(userId: string): Promise<Author> {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/unfollow`, {
+        method: 'POST',
+        headers: getHeaders()
+    });
+    return await handleResponse(response);
+}
+
+export async function getUserFollowers(userId: string): Promise<Author[]> {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/followers`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getUserFollowing(userId: string): Promise<Author[]> {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/following`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
 // --- Content API ---
 
 export async function getGenres(): Promise<string[]> {
@@ -142,7 +170,7 @@ export async function getBookById(id: string): Promise<Book | null> {
 }
 
 export async function getAuthorById(id: string): Promise<Author | null> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`);
+    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`, { headers: getHeaders() });
     if (!response.ok) return null;
     return await handleResponse(response);
 }
@@ -327,7 +355,9 @@ function mapBackendUserToFrontend(backendData: any): User {
         website: backendData.website,
         joinDate: safeJoinDate,
         stats: backendData.stats || { booksRead: 0, chaptersRead: 0, favoriteGenres: [] },
-        following: [],
+        following: backendData.following || [], // Should be list of IDs
+        followersCount: backendData.followersCount || 0,
+        followingCount: backendData.followingCount || 0,
         library: backendData.library || [],
         writtenBooks: backendData.writtenBooks || []
     };

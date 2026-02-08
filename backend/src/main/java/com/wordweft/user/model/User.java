@@ -43,6 +43,10 @@ public class User {
     // For future role-based access control (Reader, Author, Admin)
     private Set<String> roles = new HashSet<>();
     
+    // Social Graph (Storing User IDs)
+    private Set<String> followers = new HashSet<>();
+    private Set<String> following = new HashSet<>();
+    
     // We will store minimal stats here, but heavy stats should be aggregated in real-time
     private UserStats stats;
 

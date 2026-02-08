@@ -44,10 +44,20 @@ const CommentItem: React.FC<{
             
             <div className={`bg-gray-50 dark:bg-dark-surface-alt p-3 rounded-xl border border-transparent ${isReplying ? 'border-accent/50' : ''}`}>
                 <div className="flex items-start gap-2 mb-1">
-                    <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-6 h-6 rounded-full flex-shrink-0"/>
+                    <img 
+                        src={comment.user.avatarUrl} 
+                        alt={comment.user.name} 
+                        className="w-6 h-6 rounded-full flex-shrink-0 cursor-pointer"
+                        onClick={() => window.location.hash = `/author/${comment.user.id}`}
+                    />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                            <span className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich truncate">{comment.user.name}</span>
+                            <span 
+                                className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich truncate cursor-pointer hover:text-accent"
+                                onClick={() => window.location.hash = `/author/${comment.user.id}`}
+                            >
+                                {comment.user.name}
+                            </span>
                             <span className="text-[10px] text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm text-text-body dark:text-dark-text-body mt-1 break-words">{comment.content}</p>
@@ -437,10 +447,20 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                       return (
                           <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors" onClick={() => openCommentDrawer(comment.paragraphIndex)}>
                               <div className="flex items-start gap-4">
-                                  <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-10 h-10 rounded-full flex-shrink-0" />
+                                  <img 
+                                    src={comment.user.avatarUrl} 
+                                    alt={comment.user.name} 
+                                    className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer"
+                                    onClick={(e) => { e.stopPropagation(); window.location.hash = `/author/${comment.user.id}`; }}
+                                  />
                                   <div className="flex-1">
                                       <div className="flex items-baseline justify-between">
-                                          <h4 className="font-sans font-bold text-text-rich dark:text-dark-text-rich">{comment.user.name}</h4>
+                                          <h4 
+                                            className="font-sans font-bold text-text-rich dark:text-dark-text-rich hover:text-accent cursor-pointer"
+                                            onClick={(e) => { e.stopPropagation(); window.location.hash = `/author/${comment.user.id}`; }}
+                                          >
+                                            {comment.user.name}
+                                          </h4>
                                           <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                       </div>
                                       

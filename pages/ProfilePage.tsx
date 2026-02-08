@@ -4,6 +4,7 @@ import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress } from '..
 import { Footer } from '../components/Footer';
 import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { ConnectionsModal } from '../components/ConnectionsModal';
 
 const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
     
@@ -19,7 +20,7 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
     return (
         <div className="group" title={cardTooltip}>
             <div className="relative">
-                 <div className="cursor-pointer">
+                 <div className="cursor-pointer" onClick={() => window.location.hash = `/read/book/${book.id}/chapter/0`}>
                     <img 
                         src={book.coverUrl} 
                         alt={book.title} 
@@ -71,8 +72,11 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
     );
 };
 
-const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string }> = ({ icon, value, label }) => (
-    <div className="bg-background dark:bg-dark-surface-alt p-6 rounded-2xl">
+const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string, onClick?: () => void }> = ({ icon, value, label, onClick }) => (
+    <div 
+        className={`bg-background dark:bg-dark-surface-alt p-6 rounded-2xl ${onClick ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors' : ''}`}
+        onClick={onClick}
+    >
         <div className="text-accent mb-2">{icon}</div>
         <p className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich">{value}</p>
         <p className="text-sm text-text-body dark:text-dark-text-body">{label}</p>
@@ -87,6 +91,9 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) => {
     const [activeShelfId, setActiveShelfId] = useState<'all' | string>('all');
     const [allProgress, setAllProgress] = useState<Record<string, BookProgress>>({});
+    
+    // Connections Modal State
+    const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
 
     useEffect(() => {
         api.getAllReadingProgress(user.id).then(setAllProgress);
@@ -218,11 +225,21 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                             <Cog6ToothIcon className="w-5 h-5"/> Edit Profile
                         </button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-12">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-12">
                        <StatCard icon={<BookOpenIcon className="w-7 h-7" />} value={allBooks.filter(b => b.progress === 100).length} label="Books Read" />
                        <StatCard icon={<ChartPieIcon className="w-7 h-7" />} value={chaptersReadCount} label="Chapters Read" />
-                       <StatCard icon={<StarIcon className="w-7 h-7" />} value={user.stats.favoriteGenres[0] || 'N/A'} label="Favorite Genre" />
-                       <StatCard icon={<UserGroupIcon className="w-7 h-7" />} value={user.following.length} label="Authors Followed" />
+                       <StatCard 
+                            icon={<UserGroupIcon className="w-7 h-7" />} 
+                            value={user.followersCount || 0} 
+                            label="Followers" 
+                            onClick={() => setConnectionModalType('followers')} 
+                        />
+                       <StatCard 
+                            icon={<UserGroupIcon className="w-7 h-7" />} 
+                            value={user.followingCount || 0} 
+                            label="Following" 
+                            onClick={() => setConnectionModalType('following')}
+                        />
                     </div>
                 </div>
             </div>
@@ -264,6 +281,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                     </main>
                 </div>
             </div>
+            
+            <ConnectionsModal 
+                isOpen={!!connectionModalType}
+                onClose={() => setConnectionModalType(null)}
+                title={connectionModalType === 'followers' ? 'Followers' : 'Following'}
+                userId={user.id}
+                type={connectionModalType || 'followers'}
+            />
+            
             <Footer />
         </div>
     );

@@ -77,10 +77,20 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
     return (
         <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
             <div className="flex items-start gap-4">
-                <img src={review.user.avatarUrl} alt={review.user.name} className="w-12 h-12 rounded-full"/>
+                <img 
+                    src={review.user.avatarUrl} 
+                    alt={review.user.name} 
+                    className="w-12 h-12 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => window.location.hash = `/author/${review.user.id}`}
+                />
                 <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
-                        <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{review.user.name}</h4>
+                        <h4 
+                            className="font-sans font-semibold text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent transition-colors"
+                            onClick={() => window.location.hash = `/author/${review.user.id}`}
+                        >
+                            {review.user.name}
+                        </h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 sm:mt-0">
                             Posted on {new Date(review.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
@@ -140,8 +150,18 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                             {review.replies.map(reply => (
                                 <div key={reply.id} className="bg-gray-50 dark:bg-dark-surface-alt p-4 rounded-xl">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <img src={reply.user.avatarUrl} alt={reply.user.name} className="w-6 h-6 rounded-full"/>
-                                        <span className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich">{reply.user.name}</span>
+                                        <img 
+                                            src={reply.user.avatarUrl} 
+                                            alt={reply.user.name} 
+                                            className="w-6 h-6 rounded-full cursor-pointer hover:opacity-80"
+                                            onClick={() => window.location.hash = `/author/${reply.user.id}`}
+                                        />
+                                        <span 
+                                            className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent"
+                                            onClick={() => window.location.hash = `/author/${reply.user.id}`}
+                                        >
+                                            {reply.user.name}
+                                        </span>
                                         <span className="text-[10px] text-gray-400">{new Date(reply.timestamp).toLocaleDateString()}</span>
                                     </div>
                                     <p className="text-sm text-text-body dark:text-dark-text-body">{reply.content}</p>
