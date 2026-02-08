@@ -8,7 +8,9 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +28,9 @@ public class ReadingProgress {
     
     // Map<ChapterId, ChapterProgressItem>
     private Map<String, ChapterProgressItem> chapters = new HashMap<>();
+    
+    // Set of chapter IDs that have been fully read and counted towards user stats
+    private Set<String> completedChapterIds = new HashSet<>();
 
     @Data
     @NoArgsConstructor

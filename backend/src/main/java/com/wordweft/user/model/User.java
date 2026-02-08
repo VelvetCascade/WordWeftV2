@@ -8,7 +8,11 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -47,7 +51,11 @@ public class User {
     private Set<String> followers = new HashSet<>();
     private Set<String> following = new HashSet<>();
     
-    // We will store minimal stats here, but heavy stats should be aggregated in real-time
+    // Extended Profile
+    private Map<String, String> socials = new HashMap<>(); // twitter, instagram, threads
+    private List<String> favoriteGenres = new ArrayList<>();
+    
+    // Stats
     private UserStats stats;
 
     public User(String username, String email, String password) {
@@ -64,7 +72,7 @@ public class User {
     public static class UserStats {
         private int booksRead = 0;
         private int chaptersRead = 0;
-        // Simplified for storage; complex analytics will be computed elsewhere
+        private long totalWordsRead = 0; // New field
         private Set<String> favoriteGenres = new HashSet<>();
     }
 }

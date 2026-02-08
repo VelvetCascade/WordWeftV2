@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { User } from '../types';
-import { ArrowLeftIcon, CheckCircleIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, XMarkIcon, PlusIcon } from '../components/icons/Icons';
+import * as api from '../api/client';
 
 interface EditProfilePageProps {
   user: User;
@@ -48,6 +49,16 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [location, setLocation] = useState(user.location || '');
   const [website, setWebsite] = useState(user.website || '');
   
+  // Socials
+  const [twitter, setTwitter] = useState(user.socials?.twitter || '');
+  const [instagram, setInstagram] = useState(user.socials?.instagram || '');
+  const [threads, setThreads] = useState(user.socials?.threads || '');
+  const [socialErrors, setSocialErrors] = useState<{twitter?: string, instagram?: string, threads?: string}>({});
+
+  // Genres
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(user.favoriteGenres || []);
+  const [allGenres, setAllGenres] = useState<string[]>([]);
+  
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -55,10 +66,66 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
 
+  useEffect(() => {
+      api.getGenres().then(setAllGenres);
+  }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  const validateUrl = (url: string, type: 'twitter' | 'instagram' | 'threads') => {
+      if (!url) return '';
+      const patterns = {
+          twitter: /^https?:\/\/(www\.)?(twitter|x)\.com\/[a-zA-Z0-9_]{1,15}\/?$/,
+          instagram: /^https?:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
+          threads: /^https?:\/\/(www\.)?threads\.net\/@[a-zA-Z0-9_.]+\/?$/
+      };
+      
+      return patterns[type].test(url) ? '' : `Invalid ${type} URL format`;
+  };
+
+  const handleSocialChange = (val: string, type: 'twitter' | 'instagram' | 'threads') => {
+      if(type === 'twitter') setTwitter(val);
+      if(type === 'instagram') setInstagram(val);
+      if(type === 'threads') setThreads(val);
+      
+      setSocialErrors(prev => ({
+          ...prev,
+          [type]: validateUrl(val, type)
+      }));
+  };
+  
+  const toggleGenre = (genre: string) => {
+      if (selectedGenres.includes(genre)) {
+          setSelectedGenres(prev => prev.filter(g => g !== genre));
+      } else {
+          if (selectedGenres.length >= 5) {
+              alert("You can only select up to 5 favorite genres.");
+              return;
+          }
+          setSelectedGenres(prev => [...prev, genre]);
+      }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateProfile({ name, avatarUrl, bio, location, website });
+    
+    // Check validation before submitting
+    const twErr = validateUrl(twitter, 'twitter');
+    const igErr = validateUrl(instagram, 'instagram');
+    const thErr = validateUrl(threads, 'threads');
+    
+    if (twErr || igErr || thErr) {
+        setSocialErrors({ twitter: twErr, instagram: igErr, threads: thErr });
+        return;
+    }
+
+    await onUpdateProfile({ 
+        name, 
+        avatarUrl, 
+        bio, 
+        location, 
+        website,
+        socials: { twitter, instagram, threads },
+        favoriteGenres: selectedGenres
+    });
   };
 
   const validatePassword = (pw: string) => {
@@ -125,7 +192,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl border dark:border-dark-border">
           <form onSubmit={handleSave} className="space-y-6">
             <div className="flex items-center gap-6">
-              <img src={avatarUrl || `https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar preview" className="w-24 h-24 rounded-full object-cover" />
+              <img src={avatarUrl || `https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar preview" className="w-24 h-24 rounded-full object-cover ring-2 ring-gray-100 dark:ring-dark-border" />
               <div className="flex-1">
                 <label htmlFor="avatarUrl" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
                   Avatar URL
@@ -199,6 +266,76 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 </div>
             </div>
             
+            {/* Socials Section */}
+            <div>
+                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 mt-4">Social Media Links</h3>
+                 <div className="space-y-4">
+                     <div className="relative">
+                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                             <TwitterIcon className="w-5 h-5 text-gray-400" />
+                         </div>
+                         <input
+                            type="url"
+                            value={twitter}
+                            onChange={(e) => handleSocialChange(e.target.value, 'twitter')}
+                            placeholder="https://x.com/username"
+                            className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.twitter ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
+                        />
+                        {socialErrors.twitter && <p className="text-xs text-danger mt-1">{socialErrors.twitter}</p>}
+                     </div>
+                     
+                     <div className="relative">
+                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                             <InstagramIcon className="w-5 h-5 text-gray-400" />
+                         </div>
+                         <input
+                            type="url"
+                            value={instagram}
+                            onChange={(e) => handleSocialChange(e.target.value, 'instagram')}
+                            placeholder="https://instagram.com/username"
+                            className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.instagram ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
+                        />
+                        {socialErrors.instagram && <p className="text-xs text-danger mt-1">{socialErrors.instagram}</p>}
+                     </div>
+                     
+                     <div className="relative">
+                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                             <ThreadsIcon className="w-5 h-5 text-gray-400" />
+                         </div>
+                         <input
+                            type="url"
+                            value={threads}
+                            onChange={(e) => handleSocialChange(e.target.value, 'threads')}
+                            placeholder="https://threads.net/@username"
+                            className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.threads ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
+                        />
+                        {socialErrors.threads && <p className="text-xs text-danger mt-1">{socialErrors.threads}</p>}
+                     </div>
+                 </div>
+            </div>
+
+            {/* Favorite Genres */}
+            <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 mt-4">Favorite Genres (Max 5)</h3>
+                <div className="flex flex-wrap gap-2">
+                    {allGenres.map(genre => (
+                        <button
+                            key={genre}
+                            type="button"
+                            onClick={() => toggleGenre(genre)}
+                            className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-all ${
+                                selectedGenres.includes(genre) 
+                                ? 'bg-primary text-white shadow-md' 
+                                : 'bg-gray-100 dark:bg-dark-surface-alt text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border'
+                            }`}
+                        >
+                            {genre}
+                            {selectedGenres.includes(genre) && <span className="ml-1.5">×</span>}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
                 Email
@@ -222,7 +359,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               </button>
               <button 
                 type="submit" 
-                className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors"
+                disabled={!!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
+                className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save Changes
               </button>

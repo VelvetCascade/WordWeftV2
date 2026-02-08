@@ -90,6 +90,20 @@ export interface Book {
   description: string;
 }
 
+export interface UserStats {
+    booksRead: number;
+    chaptersRead: number;
+    totalWordsRead: number;
+    readingTimeMinutes: number; // Calculated on backend or frontend
+    readerLevel: string; // e.g. "Novice", "Scholar"
+}
+
+export interface UserSocials {
+    twitter?: string;
+    instagram?: string;
+    threads?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -100,11 +114,11 @@ export interface User {
   location?: string;
   website?: string;
   joinDate: string;
-  stats: {
-    booksRead: number;
-    chaptersRead: number;
-    favoriteGenres: string[];
-  };
+  
+  stats: UserStats;
+  socials: UserSocials;
+  favoriteGenres: string[];
+  
   following: string[]; // List of IDs the user follows
   followersCount?: number;
   followingCount?: number;

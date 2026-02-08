@@ -1,4 +1,5 @@
 
+
 import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -376,7 +377,15 @@ function mapBackendUserToFrontend(backendData: any): User {
         location: backendData.location,
         website: backendData.website,
         joinDate: safeJoinDate,
-        stats: backendData.stats || { booksRead: 0, chaptersRead: 0, favoriteGenres: [] },
+        stats: backendData.stats || { 
+            booksRead: 0, 
+            chaptersRead: 0, 
+            totalWordsRead: 0, 
+            readingTimeMinutes: 0, 
+            readerLevel: 'Novice' 
+        },
+        socials: backendData.socials || {},
+        favoriteGenres: backendData.favoriteGenres || [],
         following: backendData.following || [], // Should be list of IDs
         followersCount: backendData.followersCount || 0,
         followingCount: backendData.followingCount || 0,

@@ -53,6 +53,8 @@ public class UserController {
         if (request.getBio() != null) user.setBio(request.getBio());
         if (request.getLocation() != null) user.setLocation(request.getLocation());
         if (request.getWebsite() != null) user.setWebsite(request.getWebsite());
+        if (request.getSocials() != null) user.setSocials(request.getSocials());
+        if (request.getFavoriteGenres() != null) user.setFavoriteGenres(request.getFavoriteGenres());
         
         userRepository.save(user);
         return ResponseEntity.ok(userService.enrichUser(user, userId));
