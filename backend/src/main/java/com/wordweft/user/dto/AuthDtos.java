@@ -26,17 +26,17 @@ public class AuthDtos {
         @NotBlank
         @Size(min = 3, max = 20)
         private String username;
-
+    
         @NotBlank
         @Size(max = 50)
         @Email
         private String email;
-
+        
         @NotBlank
         @Size(min = 8, max = 40)
         private String password;
     }
-
+    
     @Data
     @AllArgsConstructor
     public static class JwtResponse {
@@ -51,17 +51,16 @@ public class AuthDtos {
         private String website;
         private List<String> roles;
     }
-
+    
     @Data
     public static class UpdateProfileRequest {
-        private String name;
+        private String name; 
         private String avatarUrl;
         private String bio;
         private String location;
         private String website;
-        private java.util.Map<String, String> socialLinks;
     }
-
+    
     @Data
     public static class ChangePasswordRequest {
         @NotBlank
@@ -70,14 +69,14 @@ public class AuthDtos {
         @Size(min = 8)
         private String newPassword;
     }
-
+    
     @Data
     public static class ForgotPasswordRequest {
         @NotBlank
         @Email
         private String email;
     }
-
+    
     @Data
     public static class ResetPasswordRequest {
         @NotBlank
@@ -85,11 +84,5 @@ public class AuthDtos {
         @NotBlank
         @Size(min = 8)
         private String newPassword;
-    }
-
-    @Data
-    public static class ReadingTimeRequest {
-        @NotBlank
-        private long minutes;
     }
 }

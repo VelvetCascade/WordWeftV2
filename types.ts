@@ -6,8 +6,6 @@ export interface Author {
   name: string;
   avatarUrl: string;
   bio: string;
-  followersCount?: number;
-  socialLinks?: Record<string, string>;
 }
 
 export interface Review {
@@ -25,15 +23,27 @@ export interface Review {
   sentiment: 'positive' | 'neutral' | 'negative';
 }
 
+export interface Comment {
+    id: string;
+    bookId: string;
+    chapterId: string;
+    paragraphIndex: number | null;
+    content: string;
+    createdAt: string;
+    userId: string;
+    user: {
+        id: string;
+        name: string;
+        avatarUrl: string;
+    };
+}
+
 export interface Chapter {
   id: string;
   title: string;
   wordCount: number;
   content: string;
   status: 'draft' | 'published';
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
 }
 
 export interface Book {
@@ -52,9 +62,6 @@ export interface Book {
   publishedDate?: string;
   isMature: boolean;
   description: string;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
 }
 
 export interface User {
@@ -70,12 +77,9 @@ export interface User {
   stats: {
     booksRead: number;
     chaptersRead: number;
-    minutesRead: number;
     favoriteGenres: string[];
   };
-  socialLinks?: Record<string, string>;
   following: Author[];
-  followers: Author[];
   library: Shelf[];
   writtenBooks?: Book[];
 }
@@ -106,16 +110,4 @@ export interface BookProgress {
   lastReadChapterIndex: number;
   lastReadScrollPosition: number;
   chapters: { [chapterId: string]: ChapterProgress };
-}
-
-export interface Comment {
-  id: string;
-  content: string;
-  userId: string;
-  bookId: string;
-  chapterId: string;
-  paragraphIndex?: number; // Null for chapter comments
-  userName?: string;
-  userAvatar?: string;
-  createdAt: string;
 }

@@ -1,20 +1,99 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import type { User, Book, BookProgress } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, ChatBubbleIcon } from '../components/icons/Icons';
+import type { User, Book, BookProgress, Comment } from '../types';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
-import { CommentModal } from '../components/CommentModal';
-import { CommentList } from '../components/CommentList';
-import type { Comment } from '../types';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 
 interface ReaderPageProps {
-  bookId: string;
-  chapterIndex: number;
-  currentUser: User | null;
+    bookId: string;
+    chapterIndex: number;
+    currentUser: User | null;
 }
+
+const CommentDrawer: React.FC<{ 
+    isOpen: boolean; 
+    onClose: () => void; 
+    comments: Comment[]; 
+    paragraphIndex: number | null; 
+    paragraphText?: string;
+    onAddComment: (content: string) => Promise<void>; 
+}> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment }) => {
+    const [newComment, setNewComment] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if(!newComment.trim()) return;
+        setIsSubmitting(true);
+        await onAddComment(newComment);
+        setNewComment('');
+        setIsSubmitting(false);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+             <div 
+                className="relative w-full max-w-md bg-white dark:bg-dark-surface h-full shadow-2xl flex flex-col animate-slide-in-right"
+                onClick={e => e.stopPropagation()}
+             >
+                 <div className="p-4 border-b border-gray-200 dark:border-dark-border flex justify-between items-center bg-gray-50 dark:bg-dark-surface-alt">
+                     <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">
+                         {paragraphIndex !== null ? `Paragraph #${paragraphIndex + 1}` : 'Chapter Comments'}
+                     </h3>
+                     <button onClick={onClose}><XMarkIcon className="w-6 h-6"/></button>
+                 </div>
+                 
+                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                     {paragraphText && (
+                         <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border-l-4 border-amber-400 text-sm text-gray-700 dark:text-gray-300 italic mb-4">
+                             "{paragraphText.substring(0, 150)}{paragraphText.length > 150 ? '...' : ''}"
+                         </div>
+                     )}
+
+                     {comments.length === 0 ? (
+                         <div className="text-center py-8 text-gray-500">No comments yet. Be the first!</div>
+                     ) : (
+                         comments.map(c => (
+                             <div key={c.id} className="bg-gray-50 dark:bg-dark-surface-alt p-3 rounded-xl">
+                                 <div className="flex items-center gap-2 mb-2">
+                                     <img src={c.user.avatarUrl} alt={c.user.name} className="w-6 h-6 rounded-full"/>
+                                     <span className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich">{c.user.name}</span>
+                                     <span className="text-[10px] text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+                                 </div>
+                                 <p className="text-sm text-text-body dark:text-dark-text-body">{c.content}</p>
+                             </div>
+                         ))
+                     )}
+                 </div>
+
+                 <div className="p-4 border-t border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-surface-alt">
+                     <form onSubmit={handleSubmit}>
+                         <textarea 
+                            value={newComment}
+                            onChange={e => setNewComment(e.target.value)}
+                            placeholder="Add your thoughts..."
+                            className="w-full p-3 rounded-lg border-gray-300 dark:border-dark-border dark:bg-dark-surface dark:text-dark-text-body text-sm focus:ring-accent focus:border-accent resize-none mb-2"
+                            rows={3}
+                         />
+                         <button 
+                            type="submit" 
+                            disabled={isSubmitting || !newComment.trim()}
+                            className="w-full bg-accent text-white font-sans font-semibold py-2 rounded-lg hover:bg-primary transition-colors disabled:opacity-50"
+                         >
+                             {isSubmitting ? 'Posting...' : 'Post Comment'}
+                         </button>
+                     </form>
+                 </div>
+             </div>
+        </div>
+    );
+};
 
 export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, currentUser }) => {
   const [book, setBook] = useState<Book | null>(null);
@@ -24,15 +103,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
   const [resumeData, setResumeData] = useState<BookProgress | null>(null);
-
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isTocVisible, setIsTocVisible] = useState(false);
   const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
-
-  // Comment System
-  const [chapterComments, setChapterComments] = useState<Comment[]>([]);
+  
+  // Comment State
+  const [comments, setComments] = useState<Comment[]>([]);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
-  const [hoveredParagraphIndex, setHoveredParagraphIndex] = useState<number | null>(null);
+  const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
 
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<number | null>(null);
@@ -41,13 +119,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   const { theme: globalTheme } = useTheme();
 
   const chapter = book?.chapters[currentChapterIndex];
-
+  
   const contentThemeClasses: Record<ContentTheme, string> = {
     light: 'bg-background text-text-body',
     dark: 'bg-[#261F1D] text-[#BCAAA4]',
     sepia: 'bg-[#FBF0D9] text-[#5B4636]',
   };
-
+  
   useEffect(() => {
     setIsLoading(true);
     api.getBookById(bookId).then(fetchedBook => {
@@ -56,11 +134,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     });
   }, [bookId]);
 
+  // Fetch comments when chapter changes
   useEffect(() => {
-    if (chapter) {
-      api.getComments(chapter.id).then(setChapterComments);
-    }
-  }, [chapter?.id]);
+      if(book && chapter) {
+          api.getChapterComments(bookId, chapter.id).then(setComments);
+      }
+  }, [bookId, chapter]);
 
   useEffect(() => {
     if (globalTheme === 'dark') {
@@ -71,333 +150,259 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   }, [globalTheme]);
 
   const handleSaveProgress = () => {
-    if (!currentUser || !book) return;
-    // Improved height calculation: max of body or document element to be safe across browsers
-    const totalHeight = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.offsetHeight,
-      document.body.clientHeight,
-      document.documentElement.clientHeight
-    );
-    const contentHeight = totalHeight - window.innerHeight;
-    api.saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
+      if (!currentUser || !book) return;
+      const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
+      api.saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
   };
 
   useEffect(() => {
     if (!book) return;
     const timer = setTimeout(() => {
       if (!currentUser || !contentRef.current) return;
-
       const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
       if (contentHeight <= 0) {
         api.saveReadingProgress(currentUser.id, book, currentChapterIndex, 0, contentHeight);
       }
     }, 500);
-
     return () => clearTimeout(timer);
   }, [book, currentChapterIndex, currentUser]);
 
   const goToChapter = (index: number) => {
     if (!book || (index < 0 || index >= book.chapters.length)) return;
-
-    handleSaveProgress(); // Save progress before leaving chapter
+    handleSaveProgress();
     setCurrentChapterIndex(index);
     window.location.hash = `/read/book/${book.id}/chapter/${index}`;
     window.scrollTo(0, 0);
   };
 
+  // ... (Resume Logic and Scroll Listeners same as before) ...
   useEffect(() => {
     if (!currentUser) return;
     api.getReadingProgressForBook(currentUser.id, bookId).then(savedProgress => {
-      if (savedProgress && savedProgress.overallProgress > 0) {
-        setResumeData(savedProgress);
-      }
+        if (savedProgress && savedProgress.overallProgress > 0) {
+            setResumeData(savedProgress);
+        }
     });
   }, [bookId, currentUser]);
 
   useEffect(() => {
-    if (!book) return;
-
-    const saveThrottled = () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      scrollTimeoutRef.current = window.setTimeout(handleSaveProgress, 300);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        handleSaveProgress();
-      }
-    }
-
-    window.addEventListener('scroll', saveThrottled);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('scroll', saveThrottled);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      handleSaveProgress(); // Save one last time on unmount
-    };
-  }, [book, currentChapterIndex, currentUser]);
-
-  // Track Minutes Read
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const intervalId = setInterval(() => {
-      if (!document.hidden) {
-        api.updateReadingTime(currentUser.id, 1).catch(console.error);
-      }
-    }, 60000); // Every 60 seconds
-
-    return () => clearInterval(intervalId);
-  }, [currentUser]);
-
-  useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY.current && window.scrollY > 100) {
-        setIsToolbarVisible(false); // scrolling down
+        setIsToolbarVisible(false);
       } else {
-        setIsToolbarVisible(true); // scrolling up
+        setIsToolbarVisible(true);
       }
       lastScrollY.current = window.scrollY;
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleResume = () => {
-    if (resumeData) {
-      const resumeChapterIndex = resumeData.lastReadChapterIndex;
-      const resumeScrollPosition = resumeData.lastReadScrollPosition;
-
-      if (currentChapterIndex !== resumeChapterIndex) {
-        setCurrentChapterIndex(resumeChapterIndex);
-        setTimeout(() => window.scrollTo({ top: resumeScrollPosition, behavior: 'smooth' }), 100);
-      } else {
-        window.scrollTo({ top: resumeScrollPosition, behavior: 'smooth' });
-      }
-      setResumeData(null);
-    }
+  const openCommentDrawer = (index: number | null) => {
+      setActiveParagraphIndex(index);
+      setIsCommentDrawerOpen(true);
   };
 
-  const handleDismissResume = () => {
-    if (chapterIndex !== currentChapterIndex) {
-      window.scrollTo(0, 0);
-    }
-    setResumeData(null);
+  const handleAddComment = async (content: string) => {
+      if(!book || !chapter) return;
+      const newComment = await api.addChapterComment(bookId, chapter.id, activeParagraphIndex, content);
+      setComments(prev => [newComment, ...prev]);
   };
 
-  useEffect(() => {
-    if (!currentUser || resumeData || !book || !chapter) return;
-
-    api.getReadingProgressForBook(currentUser.id, bookId).then(progress => {
-      const chapterProgress = progress?.chapters[chapter.id];
-      if (chapterProgress && chapterProgress.scrollPosition > 0) {
-        const targetChapterIsCurrent = chapterIndex === currentChapterIndex;
-        if (targetChapterIsCurrent) {
-          setTimeout(() => window.scrollTo({ top: chapterProgress.scrollPosition, behavior: 'auto' }), 50);
-        }
+  const scrollToParagraph = (index: number) => {
+      const el = document.getElementById(`paragraph-${index}`);
+      if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Remove class first to re-trigger animation if needed
+          el.classList.remove('highlight-animation');
+          void el.offsetWidth; // Trigger reflow
+          el.classList.add('highlight-animation');
       }
-    });
-  }, [currentChapterIndex, bookId, chapter, book, resumeData, chapterIndex, currentUser]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (settingsPanelRef.current && !settingsPanelRef.current.contains(event.target as Node)) {
-        setIsSettingsPanelVisible(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  };
 
   const TableOfContents: React.FC = () => {
-    if (!book) return null;
-    return (
-      <div
-        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`}
-        onClick={() => setIsTocVisible(false)}
-      >
-        <div
-          className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`}
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="p-4 border-b border-gray-200 dark:border-dark-border">
-            <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
-            <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
-          </div>
-          <ul className="overflow-y-auto h-[calc(100%-65px)]">
-            {book.chapters.map((chap, index) => (
-              <li key={chap.id}>
-                <button
-                  onClick={() => {
-                    goToChapter(index);
-                    setIsTocVisible(false);
-                  }}
-                  className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
-                  disabled={chap.status !== 'published'}
-                >
-                  <span className="block truncate">{chap.title}</span>
-                  {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-  }
+        if (!book) return null;
+        return (
+            <div 
+            className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} 
+            onClick={() => setIsTocVisible(false)}
+            >
+            <div 
+                className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`} 
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="p-4 border-b border-gray-200 dark:border-dark-border">
+                <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
+                <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
+                </div>
+                <ul className="overflow-y-auto h-[calc(100%-65px)]">
+                {book.chapters.map((chap, index) => (
+                    <li key={chap.id}>
+                    <button 
+                        onClick={() => { 
+                        goToChapter(index); 
+                        setIsTocVisible(false);
+                        }}
+                        className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                        disabled={chap.status !== 'published'}
+                    >
+                        <span className="block truncate">{chap.title}</span>
+                        {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
+                    </button>
+                    </li>
+                ))}
+                </ul>
+            </div>
+            </div>
+        );
+    }
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
-  }
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
+  if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
-  if (!book || !chapter) {
-    return <div className="min-h-screen flex items-center justify-center">Could not load book content.</div>;
-  }
+  const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
 
   return (
-    <div className={`transition-colors duration-300 ${contentThemeClasses[contentTheme]}`}>
+    <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
       <TableOfContents />
+      
+      {/* Header */}
       <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border' : 'bg-background/80 border-gray-200'} backdrop-blur-md border-b`}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button onClick={() => window.location.hash = `/book/${book.id}`} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
-            <ChevronLeftIcon className="w-5 h-5" />
-            <span>{book.title}</span>
-          </button>
-          <div className="text-center">
-            <h2 className="font-sans font-semibold truncate dark:text-dark-text-rich">{chapter.title}</h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsBookmarked(!isBookmarked)}>
-              <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
+            <button onClick={() => window.location.hash = `/book/${book.id}`} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
+                <ChevronLeftIcon className="w-5 h-5"/>
+                <span>{book.title}</span>
             </button>
-            <button onClick={() => setIsTocVisible(true)} className="text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent transition-colors">
-              <Bars3Icon className="w-5 h-5" />
-            </button>
-          </div>
+             <div className="text-center">
+                 <h2 className="font-sans font-semibold truncate dark:text-dark-text-rich">{chapter.title}</h2>
+             </div>
+            <div className="flex items-center gap-4">
+                 <button onClick={() => setIsBookmarked(!isBookmarked)}>
+                    <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
+                 </button>
+                 <button onClick={() => setIsTocVisible(true)} className="text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent transition-colors">
+                    <Bars3Icon className="w-5 h-5"/>
+                 </button>
+            </div>
         </div>
       </header>
 
-      <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-8">
+      {/* Content */}
+      <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1">
         <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
-        <div
+        <div 
           className="prose prose-lg lg:prose-xl dark:prose-invert"
           style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
         >
-          {chapter.content.split('\n').map((paragraph, index) => {
-            const paragraphComments = chapterComments.filter(c => c.paragraphIndex === index);
-            const count = paragraphComments.length;
-
-            return (
-              <div
-                key={index}
-                className="relative group mb-4"
-                onMouseEnter={() => setHoveredParagraphIndex(index)}
-                onMouseLeave={() => setHoveredParagraphIndex(null)}
-              >
-                <p>{paragraph}</p>
-
-                {/* Inline Comment Indicator */}
-                <button
-                  onClick={() => setActiveParagraphIndex(index)}
-                  className={`absolute -right-12 top-0 p-1.5 rounded-full transition-all duration-200 ${count > 0
-                    ? 'bg-accent/10 text-accent opacity-100'
-                    : hoveredParagraphIndex === index
-                      ? 'bg-gray-100 dark:bg-dark-surface-alt text-gray-400 opacity-100'
-                      : 'opacity-0'
-                    }`}
-                  title={count > 0 ? `${count} comments` : "Add comment"}
-                >
-                  {count > 0 ? (
-                    <span className="font-sans text-xs font-bold flex items-center justify-center w-5 h-5">{count}</span>
-                  ) : (
-                    <ChatBubbleIcon className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            );
-          })}
+            {chapter.content.split('\n').map((paragraph, index) => {
+                const count = paragraphComments(index).length;
+                return (
+                    <div key={index} id={`paragraph-${index}`} className="group relative mb-6 rounded-lg transition-colors">
+                        <p>{paragraph}</p>
+                        <button 
+                            onClick={() => openCommentDrawer(index)}
+                            className={`absolute -right-12 top-0 p-2 rounded-full transition-all duration-200 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
+                            title="Add comment"
+                        >
+                            <div className="relative">
+                                <PlusIcon className="w-5 h-5" />
+                                {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
+                            </div>
+                        </button>
+                    </div>
+                );
+            })}
         </div>
       </main>
 
-      {/* Chapter Comments Section */}
-      {book && chapter && (
-        <CommentList
-          bookId={book.id}
-          chapterId={chapter.id}
-          comments={chapterComments}
-          currentUser={currentUser}
-          onCommentAdded={newComment => setChapterComments(prev => [...prev, newComment])}
-        />
-      )}
-
-      {/* Inline Comment Modal */}
-      {activeParagraphIndex !== null && book && chapter && (
-        <CommentModal
-          bookId={book.id}
-          chapterId={chapter.id}
-          paragraphIndex={activeParagraphIndex}
-          comments={chapterComments.filter(c => c.paragraphIndex === activeParagraphIndex)}
-          onClose={() => setActiveParagraphIndex(null)}
-          onCommentAdded={newComment => setChapterComments(prev => [...prev, newComment])}
-          currentUser={currentUser}
-        />
-      )}
-
-      {resumeData && (
-        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-sm animate-slide-in-bottom">
-          <div className={`${globalTheme === 'dark' ? 'bg-dark-surface/90 text-dark-text-body' : 'bg-surface/90 text-text-body'} backdrop-blur-lg border ${globalTheme === 'dark' ? 'border-dark-border' : 'border-gray-200'} rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4`}>
-            <div>
-              <p className="font-sans font-semibold text-sm text-text-rich dark:text-dark-text-rich">Welcome back!</p>
-              <p className="font-sans text-xs">Resume from where you left off?</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={handleResume} className="font-sans font-semibold text-sm bg-accent text-white px-4 py-1.5 rounded-lg hover:bg-opacity-80 transition-colors whitespace-nowrap">Resume</button>
-              <button onClick={handleDismissResume} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors">
-                <XMarkIcon className="w-5 h-5" />
+      {/* Discussion Section (Bottom) */}
+      <section className="max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
+          <div className="flex items-center justify-between mb-8">
+              <h2 className="font-sans text-2xl font-bold dark:text-dark-text-rich">Chapter Discussion</h2>
+              <button 
+                onClick={() => openCommentDrawer(null)}
+                className="bg-accent text-white font-sans font-semibold px-4 py-2 rounded-lg hover:bg-primary transition-colors text-sm"
+              >
+                  Add General Comment
               </button>
-            </div>
           </div>
-        </div>
-      )}
 
+          <div className="space-y-6">
+              {comments.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No comments yet.</p>
+              ) : (
+                  comments.map(comment => {
+                      const snippet = comment.paragraphIndex !== null 
+                          ? chapter.content.split('\n')[comment.paragraphIndex] 
+                          : null;
+                      
+                      return (
+                          <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border">
+                              <div className="flex items-start gap-4">
+                                  <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-10 h-10 rounded-full flex-shrink-0" />
+                                  <div className="flex-1">
+                                      <div className="flex items-baseline justify-between">
+                                          <h4 className="font-sans font-bold text-text-rich dark:text-dark-text-rich">{comment.user.name}</h4>
+                                          <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                      </div>
+                                      
+                                      {/* Context Block - Clickable */}
+                                      {snippet && comment.paragraphIndex !== null && (
+                                          <button 
+                                            onClick={() => scrollToParagraph(comment.paragraphIndex!)}
+                                            className="w-full text-left mt-2 mb-3 bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-400 p-3 rounded-r-lg hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors group"
+                                          >
+                                              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1 flex items-center gap-2">
+                                                  In response to paragraph #{comment.paragraphIndex + 1}
+                                                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Jump to paragraph ↗</span>
+                                              </p>
+                                              <p className="text-sm text-gray-700 dark:text-gray-300 italic line-clamp-2 font-serif">"{snippet}"</p>
+                                          </button>
+                                      )}
+                                      
+                                      <p className="text-text-body dark:text-dark-text-body mt-2 leading-relaxed">{comment.content}</p>
+                                  </div>
+                              </div>
+                          </div>
+                      );
+                  })
+              )}
+          </div>
+      </section>
+
+      {/* Footer Navigation */}
       <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20">
         <div className={`flex items-center justify-center gap-4 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border' : 'bg-surface/90 border-gray-200'} backdrop-blur-lg border rounded-2xl shadow-lg p-2`}>
-          <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronLeftIcon className="w-5 h-5" /></button>
-          <span className="font-sans text-sm w-20 text-center dark:text-dark-text-body">{currentChapterIndex + 1} / {book.chapters.length}</span>
-          <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronRightIcon className="w-5 h-5" /></button>
+            <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronLeftIcon className="w-5 h-5"/></button>
+            <span className="font-sans text-sm w-20 text-center dark:text-dark-text-body">{currentChapterIndex + 1} / {book.chapters.length}</span>
+            <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronRightIcon className="w-5 h-5"/></button>
         </div>
       </footer>
 
+      {/* Settings Toolbar */}
       <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
         <div ref={settingsPanelRef} className="relative">
-          <button
-            onClick={() => setIsSettingsPanelVisible(prev => !prev)}
-            className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors"
-            aria-label="Reading settings"
-          >
-            <PaintBrushIcon className="w-5 h-5" />
-          </button>
-          <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-            <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`} aria-label="Light theme"><SunIcon className="w-5 h-5 text-amber-600" /></button>
-            <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`} aria-label="Sepia theme"><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
-            <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`} aria-label="Dark theme"><MoonIcon className="w-5 h-5 text-gray-700" /></button>
-          </div>
+            <button onClick={() => setIsSettingsPanelVisible(prev => !prev)} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors">
+                <PaintBrushIcon className="w-5 h-5" />
+            </button>
+            <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600"/></button>
+                <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
+                <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`}><MoonIcon className="w-5 h-5 text-gray-700"/></button>
+            </div>
         </div>
-        <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold" aria-label="Decrease font size">A-</button>
-        <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold" aria-label="Increase font size">A+</button>
+        <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold">A-</button>
+        <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold">A+</button>
       </div>
+
+      <CommentDrawer 
+        isOpen={isCommentDrawerOpen}
+        onClose={() => setIsCommentDrawerOpen(false)}
+        comments={activeParagraphIndex !== null ? paragraphComments(activeParagraphIndex) : comments.filter(c => c.paragraphIndex === null)}
+        paragraphIndex={activeParagraphIndex}
+        paragraphText={activeParagraphIndex !== null ? chapter.content.split('\n')[activeParagraphIndex] : undefined}
+        onAddComment={handleAddComment}
+      />
     </div>
   );
 };

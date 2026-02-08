@@ -1,7 +1,6 @@
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
 
-// const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
 const API_BASE_URL = 'http://localhost:8080/api';
 const JWT_KEY = 'wordweft_jwt';
 
@@ -36,26 +35,15 @@ export async function login(email: string, password_used: string): Promise<User 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: password_used })
     });
-
+    
     const data = await handleResponse(response);
-
+    
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
         return await getMe();
     }
     return null;
 }
-
-export const updateReadingTime = async (userId: string, minutes: number): Promise<number> => {
-    // In a real app we'd use the userId, but the endpoint currently assumes current user from context/header
-    const response = await fetch(`${API_BASE_URL}/users/me/reading-time`, {
-        method: 'POST',
-        headers: getHeaders(), // Use getHeaders for consistency
-        body: JSON.stringify({ minutes })
-    });
-    if (!response.ok) throw new Error('Failed to update reading time');
-    return response.json();
-};
 
 export async function signup(username: string, email: string, password: string): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
@@ -65,7 +53,7 @@ export async function signup(username: string, email: string, password: string):
     });
 
     const data = await handleResponse(response);
-
+    
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
         return mapBackendUserToFrontend(data);
@@ -129,22 +117,6 @@ export async function changePassword(userId: string, oldPassword_unused: string,
     return (await getMe())!;
 }
 
-export async function followUser(userId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/follow`, {
-        method: 'POST',
-        headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to follow user');
-}
-
-export async function unfollowUser(userId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/follow`, {
-        method: 'DELETE',
-        headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to unfollow user');
-}
-
 // --- Content API ---
 
 export async function getGenres(): Promise<string[]> {
@@ -198,24 +170,8 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
 
 export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, contentHeight: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
-
-    // Calculate progress with a minimum floor if scrolled significantly
-    let calculatedProgress = 0;
-    if (contentHeight > 0) {
-        calculatedProgress = (scrollPosition / contentHeight) * 100;
-
-        // If user has scrolled at least a bit (e.g., > 100px) but progress is < 1%, round up to 1% to show they started.
-        if (scrollPosition > 100 && calculatedProgress < 1) {
-            calculatedProgress = 1;
-        }
-    } else {
-        // Fallback or full progress if content height is invalid (unlikely but possible)
-        calculatedProgress = 100;
-    }
-
-    // Ensure bounds
-    let finalProgress = Math.min(100, Math.max(0, calculatedProgress));
-
+    let currentChapterProgress = contentHeight <= 0 ? 100 : Math.min(100, (scrollPosition / contentHeight) * 100);
+    
     await fetch(`${API_BASE_URL}/reading/progress`, {
         method: 'POST',
         headers: getHeaders(),
@@ -225,7 +181,7 @@ export async function saveReadingProgress(userId: string, book: Book, chapterInd
             scrollPosition,
             chapterData: {
                 id: chapterId,
-                progress: Math.round(finalProgress),
+                progress: Math.round(currentChapterProgress),
                 scroll: Math.round(scrollPosition)
             }
         })
@@ -328,18 +284,18 @@ export async function deleteReview(userId: string, bookId: string): Promise<Revi
     return await handleResponse(response);
 }
 
-// --- Comment API ---
+// --- Comments API ---
 
-export async function getComments(chapterId: string): Promise<Comment[]> {
-    const response = await fetch(`${API_BASE_URL}/comments/chapter/${chapterId}`, { headers: getHeaders() });
+export async function getChapterComments(bookId: string, chapterId: string): Promise<Comment[]> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`);
     return await handleResponse(response);
 }
 
-export async function addComment(bookId: string, chapterId: string, content: string, paragraphIndex?: number): Promise<Comment> {
-    const response = await fetch(`${API_BASE_URL}/comments`, {
+export async function addChapterComment(bookId: string, chapterId: string, paragraphIndex: number | null, content: string): Promise<Comment> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ bookId, chapterId, content, paragraphIndex })
+        body: JSON.stringify({ paragraphIndex, content })
     });
     return await handleResponse(response);
 }
@@ -362,10 +318,8 @@ function mapBackendUserToFrontend(backendData: any): User {
         website: backendData.website,
         joinDate: safeJoinDate,
         stats: backendData.stats || { booksRead: 0, chaptersRead: 0, favoriteGenres: [] },
-        following: backendData.following || [],
-        followers: backendData.followers || [],
+        following: [],
         library: backendData.library || [],
-        writtenBooks: backendData.writtenBooks || [],
-        socialLinks: backendData.socialLinks || {}
+        writtenBooks: backendData.writtenBooks || []
     };
 }

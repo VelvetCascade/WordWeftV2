@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress, Author } from '../types';
+import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress } from '../types';
 import { Footer } from '../components/Footer';
-import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon, ClockIcon, TwitterIcon, InstagramIcon, FacebookIcon, ThreadsIcon } from '../components/icons/Icons';
+import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
 const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
-
+    
     const isCompleted = book.progress >= 100;
 
     const publishedChaptersCount = useMemo(() => book.chapters.filter(c => c.status === 'published').length, [book.chapters]);
@@ -19,10 +19,10 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
     return (
         <div className="group" title={cardTooltip}>
             <div className="relative">
-                <div className="cursor-pointer">
-                    <img
-                        src={book.coverUrl}
-                        alt={book.title}
+                 <div className="cursor-pointer">
+                    <img 
+                        src={book.coverUrl} 
+                        alt={book.title} 
                         className="w-full h-auto object-cover rounded-lg shadow-soft group-hover:shadow-lifted transition-all duration-300 transform group-hover:-translate-y-1"
                     />
                     {isCompleted && (
@@ -32,124 +32,52 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
                     )}
                 </div>
                 <div className="absolute top-1.5 right-1.5 flex flex-col gap-1.5">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onRemove(book.id); }}
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onRemove(book.id); }} 
                         className="p-1.5 bg-black/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger backdrop-blur-sm"
                         aria-label="Remove from library"
                     >
                         <XMarkIcon className="w-4 h-4" />
                     </button>
-                    {book.progress > 0 && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onRestart(book.id); }}
+                     {book.progress > 0 && (
+                         <button 
+                            onClick={(e) => { e.stopPropagation(); onRestart(book.id); }} 
                             className="p-1.5 bg-black/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent backdrop-blur-sm"
                             aria-label="Restart reading progress"
                         >
                             <ArrowPathIcon className="w-4 h-4" />
                         </button>
-                    )}
+                     )}
                 </div>
             </div>
             <div className="mt-3 cursor-pointer">
-                <h3 className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich truncate">{book.title}</h3>
-                <p className="text-xs text-text-body dark:text-dark-text-body truncate">{book.author.name}</p>
-                {!isCompleted ? (
+                 <h3 className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich truncate">{book.title}</h3>
+                 <p className="text-xs text-text-body dark:text-dark-text-body truncate">{book.author.name}</p>
+                 {!isCompleted ? (
                     <>
                         <div className="w-full bg-gray-200 dark:bg-dark-border rounded-full h-1.5 mt-2 overflow-hidden">
                             <div className="bg-accent h-1.5" style={{ width: `${book.progress}%`, transition: 'width 0.5s ease-in-out' }}></div>
                         </div>
                         <p className="text-right text-xs text-gray-500 dark:text-gray-400 mt-1">{book.progress}%</p>
                     </>
-                ) : (
+                 ) : (
                     <div className="flex items-center gap-1.5 mt-2 text-success">
                         <CheckCircleIcon className="w-4 h-4" />
                         <p className="font-sans font-bold text-xs">Completed</p>
                     </div>
-                )}
+                 )}
             </div>
         </div>
     );
 };
 
-const SocialLink: React.FC<{ href: string, icon: React.ComponentType<any>, hoverClass: string, platform: string }> = ({ href, icon: Icon, hoverClass, platform }) => {
-    const handle = useMemo(() => {
-        try {
-            const urlObj = new URL(href.startsWith('http') ? href : `https://${href}`);
-            const parts = urlObj.pathname.split('/').filter(Boolean);
-            let id = parts[parts.length - 1] || href;
-            if (platform === 'threads' && !id.startsWith('@')) id = '@' + id;
-            if (['twitter', 'instagram', 'threads'].includes(platform)) {
-                return id.startsWith('@') ? id : `@${id}`;
-            }
-            return id;
-        } catch (e) { return href; }
-    }, [href, platform]);
-
-    return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border text-gray-500 transition-all duration-200 ${hoverClass} hover:border-current hover:bg-white dark:hover:bg-dark-surface`}>
-            <Icon className="w-4 h-4 flex-shrink-0" />
-            <span className="text-xs font-semibold">{handle}</span>
-        </a>
-    );
-};
-
-const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string, onClick?: () => void }> = ({ icon, value, label, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`bg-background dark:bg-dark-surface-alt p-6 rounded-2xl ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-    >
+const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string }> = ({ icon, value, label }) => (
+    <div className="bg-background dark:bg-dark-surface-alt p-6 rounded-2xl">
         <div className="text-accent mb-2">{icon}</div>
         <p className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich">{value}</p>
         <p className="text-sm text-text-body dark:text-dark-text-body">{label}</p>
     </div>
 );
-
-interface FollowModalProps {
-    title: string;
-    users: Author[];
-    onClose: () => void;
-}
-
-const FollowListModal: React.FC<FollowModalProps> = ({ title, users, onClose }) => {
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                <div className="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
-                    <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">{title}</h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        <XMarkIcon className="w-5 h-5 text-gray-500" />
-                    </button>
-                </div>
-                <div className="overflow-y-auto max-h-[60vh] p-2">
-                    {users.length > 0 ? (
-                        <div className="space-y-1">
-                            {users.map(user => (
-                                <a
-                                    key={user.id}
-                                    href={`#/author/${user.id}`}
-                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors group"
-                                >
-                                    <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich truncate">{user.name}</p>
-                                        <p className="text-xs text-text-body dark:text-dark-text-body truncate">{user.bio}</p>
-                                    </div>
-                                    <div className="text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-dark-border px-2 py-1 rounded-full">
-                                        {user.followersCount !== undefined ? `${user.followersCount} followers` : 'User'}
-                                    </div>
-                                </a>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="p-8 text-center text-gray-500 text-sm">
-                            No users found.
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
 
 interface ProfilePageProps {
     user: User;
@@ -159,16 +87,11 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) => {
     const [activeShelfId, setActiveShelfId] = useState<'all' | string>('all');
     const [allProgress, setAllProgress] = useState<Record<string, BookProgress>>({});
-    const [modalState, setModalState] = useState<{ isOpen: boolean; type: 'following' | 'followers' }>({ isOpen: false, type: 'following' });
 
     useEffect(() => {
-        // Refresh user data to get latest stats
-        api.getMe().then(freshUser => {
-            if (freshUser) onUserUpdate(freshUser);
-        });
         api.getAllReadingProgress(user.id).then(setAllProgress);
     }, [user.id]);
-
+    
     const userLibraryWithProgress = useMemo(() => {
         return user.library.map(shelf => ({
             ...shelf,
@@ -211,27 +134,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
             { id: '3', name: 'Completed', books: completed },
         ];
     }, [userLibraryWithProgress]);
-
+    
     const allBooks = useMemo(() => {
-        const books = new Map<string, LibraryBook>();
+       const books = new Map<string, LibraryBook>();
         dynamicShelves.forEach(shelf => {
             shelf.books.forEach(book => {
                 books.set(book.id, book);
             });
         });
-        return Array.from(books.values()).sort((a, b) => a.title.localeCompare(b.title));
+        return Array.from(books.values()).sort((a,b) => a.title.localeCompare(b.title));
     }, [dynamicShelves]);
 
-    const booksToDisplay = activeShelfId === 'all'
-        ? allBooks
+    const booksToDisplay = activeShelfId === 'all' 
+        ? allBooks 
         : dynamicShelves.find(s => s.id === activeShelfId)?.books ?? [];
-
-    const activeShelfName = activeShelfId === 'all'
-        ? 'All Books'
+    
+    const activeShelfName = activeShelfId === 'all' 
+        ? 'All Books' 
         : dynamicShelves.find(s => s.id === activeShelfId)?.name;
 
     const ShelfLink: React.FC<{ name: string; isActive: boolean; onClick: () => void }> = ({ name, isActive, onClick }) => (
-        <button
+        <button 
             onClick={onClick}
             className={`w-full text-left font-sans font-medium px-4 py-2 rounded-lg transition-colors ${isActive ? 'bg-accent/10 text-accent' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
         >
@@ -262,13 +185,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
 
     return (
         <div>
-            {modalState.isOpen && (
-                <FollowListModal
-                    title={modalState.type === 'following' ? 'Following' : 'Followers'}
-                    users={modalState.type === 'following' ? user.following : user.followers}
-                    onClose={() => setModalState({ ...modalState, isOpen: false })}
-                />
-            )}
             <div className="bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border">
                 <div className="container mx-auto px-6 py-12">
                     <div className="flex flex-col md:flex-row items-center gap-8">
@@ -276,7 +192,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                         <div className="flex-1 text-center md:text-left">
                             <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">{user.name}</h1>
                             {user.bio && <p className="text-text-body dark:text-dark-text-body mt-2 max-w-xl italic">{user.bio}</p>}
-
+                            
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
                                 <p>Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                 {user.location && (
@@ -294,73 +210,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                     </>
                                 )}
                             </div>
-
-                            {/* Social Links */}
-                            {user.socialLinks && Object.keys(user.socialLinks).length > 0 && (
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-4">
-                                    {user.socialLinks.twitter && (
-                                        <SocialLink
-                                            href={user.socialLinks.twitter}
-                                            icon={TwitterIcon}
-                                            hoverClass="hover:text-[#1DA1F2]"
-                                            platform="twitter"
-                                        />
-                                    )}
-                                    {user.socialLinks.instagram && (
-                                        <SocialLink
-                                            href={user.socialLinks.instagram}
-                                            icon={InstagramIcon}
-                                            hoverClass="hover:text-[#E1306C]"
-                                            platform="instagram"
-                                        />
-                                    )}
-                                    {user.socialLinks.facebook && (
-                                        <SocialLink
-                                            href={user.socialLinks.facebook}
-                                            icon={FacebookIcon}
-                                            hoverClass="hover:text-[#1877F2]"
-                                            platform="facebook"
-                                        />
-                                    )}
-                                    {user.socialLinks.threads && (
-                                        <SocialLink
-                                            href={user.socialLinks.threads}
-                                            icon={ThreadsIcon}
-                                            hoverClass="hover:text-black dark:hover:text-white"
-                                            platform="threads"
-                                        />
-                                    )}
-                                </div>
-                            )}
                         </div>
-                        <button
+                        <button 
                             onClick={() => { window.location.hash = '/edit-profile'; }}
                             className="bg-gray-100 dark:bg-dark-surface-alt font-sans font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors"
                         >
-                            <Cog6ToothIcon className="w-5 h-5" /> Edit Profile
+                            <Cog6ToothIcon className="w-5 h-5"/> Edit Profile
                         </button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-12">
-                        <StatCard icon={<BookOpenIcon className="w-7 h-7" />} value={allBooks.filter(b => b.progress === 100).length} label="Books Read" />
-                        <StatCard icon={<ChartPieIcon className="w-7 h-7" />} value={chaptersReadCount} label="Chapters Read" />
-                        <StatCard icon={<ClockIcon className="w-7 h-7" />} value={(user.stats?.minutesRead || 0) > 60 ? `${((user.stats?.minutesRead || 0) / 60).toFixed(1)}h` : `${user.stats?.minutesRead || 0}m`} label="Time Spent" />
-                        <StatCard icon={<StarIcon className="w-7 h-7" />} value={user.stats?.favoriteGenres?.[0] || 'N/A'} label="Favorite Genre" />
-                        <StatCard
-                            icon={<UserGroupIcon className="w-7 h-7" />}
-                            value={user.following?.length || 0}
-                            label="Following"
-                            onClick={() => setModalState({ isOpen: true, type: 'following' })}
-                        />
-                        <StatCard
-                            icon={<UserGroupIcon className="w-7 h-7" />}
-                            value={user.followers?.length || 0}
-                            label="Followers"
-                            onClick={() => setModalState({ isOpen: true, type: 'followers' })}
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-12">
+                       <StatCard icon={<BookOpenIcon className="w-7 h-7" />} value={allBooks.filter(b => b.progress === 100).length} label="Books Read" />
+                       <StatCard icon={<ChartPieIcon className="w-7 h-7" />} value={chaptersReadCount} label="Chapters Read" />
+                       <StatCard icon={<StarIcon className="w-7 h-7" />} value={user.stats.favoriteGenres[0] || 'N/A'} label="Favorite Genre" />
+                       <StatCard icon={<UserGroupIcon className="w-7 h-7" />} value={user.following.length} label="Authors Followed" />
                     </div>
                 </div>
             </div>
-
+            
             <div className="container mx-auto px-6 py-12">
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
                     <aside className="lg:w-64 flex-shrink-0">
@@ -368,12 +234,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                         <nav className="space-y-1">
                             <ShelfLink name="All Books" isActive={activeShelfId === 'all'} onClick={() => setActiveShelfId('all')} />
                             <div className="h-px bg-gray-200 dark:bg-dark-border my-2"></div>
-                            {dynamicShelves.map(shelf => (
-                                <ShelfLink key={shelf.id} name={shelf.name} isActive={activeShelfId === shelf.id} onClick={() => setActiveShelfId(shelf.id)} />
-                            ))}
+                             {dynamicShelves.map(shelf => (
+                                 <ShelfLink key={shelf.id} name={shelf.name} isActive={activeShelfId === shelf.id} onClick={() => setActiveShelfId(shelf.id)} />
+                             ))}
                         </nav>
                         <button className="w-full mt-4 flex items-center justify-center gap-2 text-sm font-sans font-semibold text-accent bg-accent/10 px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors">
-                            <PlusIcon className="w-4 h-4" /> New Shelf
+                           <PlusIcon className="w-4 h-4" /> New Shelf
                         </button>
                     </aside>
 

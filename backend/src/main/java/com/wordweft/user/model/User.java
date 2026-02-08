@@ -27,31 +27,23 @@ public class User {
     private String password;
 
     private String avatarUrl;
-
+    
     private String bio;
-
+    
     private String location;
-
+    
     private String website;
 
     private LocalDate joinDate;
-
+    
     // Password Reset
     private String resetPasswordToken;
     private Instant resetPasswordTokenExpiry;
-
+    
     // For future role-based access control (Reader, Author, Admin)
     private Set<String> roles = new HashSet<>();
-
-    // Social
-    private Set<String> following = new HashSet<>();
-    private Set<String> followers = new HashSet<>();
-
-    // Platform -> URL (e.g., "twitter" -> "https://x.com/user")
-    private java.util.Map<String, String> socialLinks = new java.util.HashMap<>();
-
-    // We will store minimal stats here, but heavy stats should be aggregated in
-    // real-time
+    
+    // We will store minimal stats here, but heavy stats should be aggregated in real-time
     private UserStats stats;
 
     public User(String username, String email, String password) {
@@ -68,7 +60,6 @@ public class User {
     public static class UserStats {
         private int booksRead = 0;
         private int chaptersRead = 0;
-        private long minutesRead = 0;
         // Simplified for storage; complex analytics will be computed elsewhere
         private Set<String> favoriteGenres = new HashSet<>();
     }

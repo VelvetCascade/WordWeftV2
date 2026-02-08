@@ -13,10 +13,7 @@ public class Chapter {
     private int wordCount;
     private String content; // Storing content here for simplicity, in a real app this might be separate
     private String status = "draft"; // "draft" or "published"
-    private int viewCount = 0;
-    private int likeCount = 0;
-    private int commentCount = 0;
-
+    
     public void updateWordCount() {
         if (content != null) {
             this.wordCount = content.split("\\s+").length;
