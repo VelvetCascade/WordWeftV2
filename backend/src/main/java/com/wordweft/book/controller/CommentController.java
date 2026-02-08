@@ -39,6 +39,7 @@ public class CommentController {
         comment.setBookId(bookId);
         comment.setChapterId(chapterId);
         comment.setCreatedAt(LocalDateTime.now());
+        // parentId is set from RequestBody if present
         
         commentRepository.save(comment);
         
@@ -51,6 +52,7 @@ public class CommentController {
         map.put("bookId", comment.getBookId());
         map.put("chapterId", comment.getChapterId());
         map.put("paragraphIndex", comment.getParagraphIndex());
+        map.put("parentId", comment.getParentId());
         map.put("content", comment.getContent());
         map.put("createdAt", comment.getCreatedAt());
         map.put("userId", comment.getUserId());

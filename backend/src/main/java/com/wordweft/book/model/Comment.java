@@ -16,6 +16,7 @@ public class Comment {
     private String userId;
     private String bookId;
     private String chapterId;
+    private String parentId; // null for top-level comments
     private Integer paragraphIndex; // null if it's a general chapter comment
     private String content;
     private LocalDateTime createdAt = LocalDateTime.now();

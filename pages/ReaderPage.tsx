@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Book, BookProgress, Comment } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 
@@ -13,24 +13,118 @@ interface ReaderPageProps {
     currentUser: User | null;
 }
 
+const CommentItem: React.FC<{ 
+    comment: Comment; 
+    allComments: Comment[]; 
+    onReply: (parentId: string, content: string) => Promise<void>; 
+    depth: number 
+}> = ({ comment, allComments, onReply, depth }) => {
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyContent, setReplyContent] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const replies = allComments.filter(c => c.parentId === comment.id).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    const handleSubmitReply = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if(!replyContent.trim()) return;
+        setIsSubmitting(true);
+        await onReply(comment.id, replyContent);
+        setReplyContent('');
+        setIsReplying(false);
+        setIsSubmitting(false);
+    };
+
+    return (
+        <div className={`relative ${depth > 0 ? 'ml-6 mt-3' : 'mt-4'}`}>
+            {/* Connector line for nested comments */}
+            {depth > 0 && (
+                <div className="absolute -left-4 top-4 w-4 h-[1px] bg-gray-300 dark:bg-dark-border"></div>
+            )}
+            
+            <div className={`bg-gray-50 dark:bg-dark-surface-alt p-3 rounded-xl border border-transparent ${isReplying ? 'border-accent/50' : ''}`}>
+                <div className="flex items-start gap-2 mb-1">
+                    <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-6 h-6 rounded-full flex-shrink-0"/>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                            <span className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich truncate">{comment.user.name}</span>
+                            <span className="text-[10px] text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-sm text-text-body dark:text-dark-text-body mt-1 break-words">{comment.content}</p>
+                    </div>
+                </div>
+                
+                <div className="flex justify-end mt-2">
+                    <button 
+                        onClick={() => setIsReplying(!isReplying)} 
+                        className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent flex items-center gap-1"
+                    >
+                        <ArrowUturnLeftIcon className="w-3 h-3"/> Reply
+                    </button>
+                </div>
+
+                {isReplying && (
+                    <form onSubmit={handleSubmitReply} className="mt-3 animate-slide-in-bottom">
+                         <textarea 
+                            value={replyContent}
+                            onChange={e => setReplyContent(e.target.value)}
+                            placeholder={`Replying to ${comment.user.name}...`}
+                            className="w-full p-2 text-xs rounded-lg border-gray-300 dark:border-dark-border dark:bg-dark-surface dark:text-dark-text-body focus:ring-accent focus:border-accent resize-none mb-2"
+                            rows={2}
+                            autoFocus
+                         />
+                         <div className="flex justify-end gap-2">
+                             <button type="button" onClick={() => setIsReplying(false)} className="text-xs px-3 py-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-dark-border rounded">Cancel</button>
+                             <button 
+                                type="submit" 
+                                disabled={isSubmitting || !replyContent.trim()}
+                                className="text-xs bg-accent text-white px-3 py-1 rounded font-semibold hover:bg-primary transition-colors disabled:opacity-50"
+                             >
+                                 Reply
+                             </button>
+                         </div>
+                    </form>
+                )}
+            </div>
+
+            {/* Recursively render replies */}
+            <div className="border-l-2 border-gray-100 dark:border-dark-border/50 ml-2 pl-0">
+                {replies.map(reply => (
+                    <CommentItem 
+                        key={reply.id} 
+                        comment={reply} 
+                        allComments={allComments} 
+                        onReply={onReply} 
+                        depth={depth + 1} 
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
+
+
 const CommentDrawer: React.FC<{ 
     isOpen: boolean; 
     onClose: () => void; 
     comments: Comment[]; 
     paragraphIndex: number | null; 
     paragraphText?: string;
-    onAddComment: (content: string) => Promise<void>; 
+    onAddComment: (content: string, parentId?: string | null) => Promise<void>; 
 }> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment }) => {
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!isOpen) return null;
+    
+    // Only show top-level comments (parentId is null) initially, children handled recursively
+    const topLevelComments = comments.filter(c => !c.parentId);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if(!newComment.trim()) return;
         setIsSubmitting(true);
-        await onAddComment(newComment);
+        await onAddComment(newComment, null);
         setNewComment('');
         setIsSubmitting(false);
     };
@@ -49,25 +143,24 @@ const CommentDrawer: React.FC<{
                      <button onClick={onClose}><XMarkIcon className="w-6 h-6"/></button>
                  </div>
                  
-                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                      {paragraphText && (
-                         <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border-l-4 border-amber-400 text-sm text-gray-700 dark:text-gray-300 italic mb-4">
+                         <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border-l-4 border-amber-400 text-sm text-gray-700 dark:text-gray-300 italic mb-6">
                              "{paragraphText.substring(0, 150)}{paragraphText.length > 150 ? '...' : ''}"
                          </div>
                      )}
 
-                     {comments.length === 0 ? (
+                     {topLevelComments.length === 0 ? (
                          <div className="text-center py-8 text-gray-500">No comments yet. Be the first!</div>
                      ) : (
-                         comments.map(c => (
-                             <div key={c.id} className="bg-gray-50 dark:bg-dark-surface-alt p-3 rounded-xl">
-                                 <div className="flex items-center gap-2 mb-2">
-                                     <img src={c.user.avatarUrl} alt={c.user.name} className="w-6 h-6 rounded-full"/>
-                                     <span className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich">{c.user.name}</span>
-                                     <span className="text-[10px] text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
-                                 </div>
-                                 <p className="text-sm text-text-body dark:text-dark-text-body">{c.content}</p>
-                             </div>
+                         topLevelComments.map(c => (
+                             <CommentItem 
+                                key={c.id} 
+                                comment={c} 
+                                allComments={comments} 
+                                onReply={async (parentId, content) => await onAddComment(content, parentId)}
+                                depth={0}
+                             />
                          ))
                      )}
                  </div>
@@ -77,7 +170,7 @@ const CommentDrawer: React.FC<{
                          <textarea 
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
-                            placeholder="Add your thoughts..."
+                            placeholder="Start a new discussion..."
                             className="w-full p-3 rounded-lg border-gray-300 dark:border-dark-border dark:bg-dark-surface dark:text-dark-text-body text-sm focus:ring-accent focus:border-accent resize-none mb-2"
                             rows={3}
                          />
@@ -203,9 +296,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       setIsCommentDrawerOpen(true);
   };
 
-  const handleAddComment = async (content: string) => {
+  const handleAddComment = async (content: string, parentId: string | null = null) => {
       if(!book || !chapter) return;
-      const newComment = await api.addChapterComment(bookId, chapter.id, activeParagraphIndex, content);
+      const newComment = await api.addChapterComment(bookId, chapter.id, activeParagraphIndex, content, parentId);
       setComments(prev => [newComment, ...prev]);
   };
 
@@ -261,6 +354,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
   const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
+  // Also only count top level comments for the badge
+  const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
 
   return (
     <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
@@ -295,7 +390,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
           style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
         >
             {chapter.content.split('\n').map((paragraph, index) => {
-                const count = paragraphComments(index).length;
+                const count = paragraphCommentCount(index);
                 return (
                     <div key={index} id={`paragraph-${index}`} className="group relative mb-6 rounded-lg transition-colors">
                         <p>{paragraph}</p>
@@ -328,16 +423,19 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
           </div>
 
           <div className="space-y-6">
-              {comments.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">No comments yet.</p>
+              {comments.filter(c => !c.parentId && c.paragraphIndex === null).length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No general comments yet.</p>
               ) : (
-                  comments.map(comment => {
+                  // We reuse the logic but display it slightly differently in the main flow (for general comments)
+                  // Or we can just use the drawer for consistency? 
+                  // Let's stick to showing top-level general comments here, and allow opening drawer for full thread
+                  comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
                       const snippet = comment.paragraphIndex !== null 
                           ? chapter.content.split('\n')[comment.paragraphIndex] 
                           : null;
                       
                       return (
-                          <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border">
+                          <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors" onClick={() => openCommentDrawer(comment.paragraphIndex)}>
                               <div className="flex items-start gap-4">
                                   <img src={comment.user.avatarUrl} alt={comment.user.name} className="w-10 h-10 rounded-full flex-shrink-0" />
                                   <div className="flex-1">
@@ -349,7 +447,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                       {/* Context Block - Clickable */}
                                       {snippet && comment.paragraphIndex !== null && (
                                           <button 
-                                            onClick={() => scrollToParagraph(comment.paragraphIndex!)}
+                                            onClick={(e) => { e.stopPropagation(); scrollToParagraph(comment.paragraphIndex!); }}
                                             className="w-full text-left mt-2 mb-3 bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-400 p-3 rounded-r-lg hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors group"
                                           >
                                               <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1 flex items-center gap-2">
@@ -361,12 +459,23 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                       )}
                                       
                                       <p className="text-text-body dark:text-dark-text-body mt-2 leading-relaxed">{comment.content}</p>
+                                      
+                                      {/* Reply Count */}
+                                      {comments.filter(r => r.parentId === comment.id).length > 0 && (
+                                          <div className="mt-3 text-xs text-accent font-semibold flex items-center gap-1">
+                                              <ArrowUturnLeftIcon className="w-3 h-3"/>
+                                              {comments.filter(r => r.parentId === comment.id).length} Replies
+                                          </div>
+                                      )}
                                   </div>
                               </div>
                           </div>
                       );
                   })
               )}
+               {comments.filter(c => !c.parentId).length > 3 && (
+                   <button onClick={() => openCommentDrawer(null)} className="w-full py-3 text-center text-accent font-sans font-semibold hover:underline">View All Discussions</button>
+               )}
           </div>
       </section>
 

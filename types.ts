@@ -8,6 +8,17 @@ export interface Author {
   bio: string;
 }
 
+export interface ReviewReply {
+    id: string;
+    content: string;
+    timestamp: string;
+    user: {
+        id: string;
+        name: string;
+        avatarUrl: string;
+    };
+}
+
 export interface Review {
   id: string;
   bookId: string;
@@ -21,6 +32,7 @@ export interface Review {
   comment: string;
   date: string;
   sentiment: 'positive' | 'neutral' | 'negative';
+  replies: ReviewReply[];
 }
 
 export interface Comment {
@@ -28,6 +40,7 @@ export interface Comment {
     bookId: string;
     chapterId: string;
     paragraphIndex: number | null;
+    parentId: string | null;
     content: string;
     createdAt: string;
     userId: string;

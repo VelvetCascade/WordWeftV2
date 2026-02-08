@@ -276,6 +276,15 @@ export async function submitReview(userId: string, bookId: string, rating: numbe
     return await handleResponse(response);
 }
 
+export async function replyToReview(userId: string, bookId: string, reviewId: string, content: string): Promise<Review[]> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/reviews/${reviewId}/reply`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ content })
+    });
+    return await handleResponse(response);
+}
+
 export async function deleteReview(userId: string, bookId: string): Promise<Review[]> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/reviews`, {
         method: 'DELETE',
@@ -291,11 +300,11 @@ export async function getChapterComments(bookId: string, chapterId: string): Pro
     return await handleResponse(response);
 }
 
-export async function addChapterComment(bookId: string, chapterId: string, paragraphIndex: number | null, content: string): Promise<Comment> {
+export async function addChapterComment(bookId: string, chapterId: string, paragraphIndex: number | null, content: string, parentId: string | null = null): Promise<Comment> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ paragraphIndex, content })
+        body: JSON.stringify({ paragraphIndex, content, parentId })
     });
     return await handleResponse(response);
 }

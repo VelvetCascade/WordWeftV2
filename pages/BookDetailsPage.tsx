@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
 
@@ -60,6 +60,100 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
     );
 };
 
+const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: (reviewId: string, content: string) => Promise<void> }> = ({ review, currentUser, onReply }) => {
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyContent, setReplyContent] = useState('');
+    const [areRepliesExpanded, setAreRepliesExpanded] = useState(false);
+    
+    const handleSubmitReply = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if(!replyContent.trim()) return;
+        await onReply(review.id, replyContent);
+        setReplyContent('');
+        setIsReplying(false);
+        setAreRepliesExpanded(true); // Auto expand to see new reply
+    };
+
+    return (
+        <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
+            <div className="flex items-start gap-4">
+                <img src={review.user.avatarUrl} alt={review.user.name} className="w-12 h-12 rounded-full"/>
+                <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
+                        <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{review.user.name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 sm:mt-0">
+                            Posted on {new Date(review.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
+                    <div className="flex items-center mb-2">
+                        {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-4 h-4 ${i < review.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
+                    </div>
+                    <p className="text-text-body dark:text-dark-text-body whitespace-pre-wrap">{review.comment}</p>
+                    
+                    {/* Action Bar */}
+                    <div className="flex items-center gap-4 mt-4">
+                        {currentUser && (
+                             <button 
+                                onClick={() => setIsReplying(!isReplying)}
+                                className="text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent flex items-center gap-1 transition-colors"
+                             >
+                                <ArrowUturnLeftIcon className="w-4 h-4" /> Reply
+                            </button>
+                        )}
+                        
+                        {review.replies && review.replies.length > 0 && (
+                            <button 
+                                onClick={() => setAreRepliesExpanded(!areRepliesExpanded)}
+                                className="text-sm font-semibold text-accent hover:underline transition-colors"
+                            >
+                                {areRepliesExpanded ? 'Hide Replies' : `View ${review.replies.length} Replies`}
+                            </button>
+                        )}
+                    </div>
+                    
+                    {/* Reply Input */}
+                    {isReplying && (
+                        <form onSubmit={handleSubmitReply} className="mt-4 animate-slide-in-bottom">
+                            <div className="flex gap-3">
+                                <img src={currentUser!.avatarUrl} alt={currentUser!.name} className="w-8 h-8 rounded-full hidden sm:block" />
+                                <div className="flex-1">
+                                    <textarea 
+                                        value={replyContent}
+                                        onChange={e => setReplyContent(e.target.value)}
+                                        placeholder="Write a reply..."
+                                        className="w-full p-3 rounded-xl border border-gray-300 dark:border-dark-border dark:bg-dark-surface-alt dark:text-dark-text-body focus:ring-2 focus:ring-accent text-sm resize-none"
+                                        rows={2}
+                                        autoFocus
+                                    />
+                                    <div className="flex justify-end gap-2 mt-2">
+                                        <button type="button" onClick={() => setIsReplying(false)} className="px-3 py-1.5 text-sm font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg">Cancel</button>
+                                        <button type="submit" disabled={!replyContent.trim()} className="px-3 py-1.5 text-sm font-semibold text-white bg-accent rounded-lg hover:bg-primary disabled:opacity-50">Post Reply</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+
+                    {/* Replies List */}
+                    {areRepliesExpanded && review.replies && (
+                        <div className="mt-4 space-y-4 pl-4 sm:pl-8 border-l-2 border-gray-100 dark:border-dark-border/50">
+                            {review.replies.map(reply => (
+                                <div key={reply.id} className="bg-gray-50 dark:bg-dark-surface-alt p-4 rounded-xl">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <img src={reply.user.avatarUrl} alt={reply.user.name} className="w-6 h-6 rounded-full"/>
+                                        <span className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich">{reply.user.name}</span>
+                                        <span className="text-[10px] text-gray-400">{new Date(reply.timestamp).toLocaleDateString()}</span>
+                                    </div>
+                                    <p className="text-sm text-text-body dark:text-dark-text-body">{reply.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
 
 interface BookDetailsPageProps {
   bookId: string;
@@ -172,6 +266,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         setUserRating(0);
         setUserComment('');
     }
+  };
+
+  const handleReplyToReview = async (reviewId: string, content: string) => {
+      if(!currentUser) return;
+      const updatedReviews = await api.replyToReview(currentUser.id, bookId, reviewId, content);
+      setAllReviews(updatedReviews);
   };
 
   if (isLoading) {
@@ -311,23 +411,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             {/* Other Reviews */}
             <div className="space-y-6">
                 {allReviews.filter(review => review.userId !== currentUser?.id).map(review => (
-                    <div key={review.id} className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
-                        <div className="flex items-start gap-4">
-                            <img src={review.user.avatarUrl} alt={review.user.name} className="w-12 h-12 rounded-full"/>
-                            <div className="flex-1">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
-                                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{review.user.name}</h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 sm:mt-0">
-                                      Posted on {new Date(review.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                    </p>
-                                </div>
-                                 <div className="flex items-center mb-2">
-                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-4 h-4 ${i < review.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
-                                </div>
-                                <p className="text-text-body dark:text-dark-text-body whitespace-pre-wrap">{review.comment}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <ReviewItem 
+                        key={review.id} 
+                        review={review} 
+                        currentUser={currentUser} 
+                        onReply={handleReplyToReview} 
+                    />
                 ))}
             </div>
         </section>
