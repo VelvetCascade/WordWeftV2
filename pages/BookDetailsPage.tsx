@@ -8,8 +8,8 @@ import * as api from '../api/client';
 
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number }> = ({ chapter, index, onRead, progress }) => {
-    const isCompleted = progress >= 100;
-    const isInProgress = progress > 0 && progress < 100;
+    const isCompleted = progress >= 90; // Threshold for visual completion check
+    const isInProgress = progress > 0 && progress < 90;
 
     return (
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group">
@@ -18,9 +18,9 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                 <div className="flex-1 min-w-0">
                     <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich truncate">{chapter.title}</h4>
                     <div className="flex items-center gap-2 mt-1">
-                        <div className="w-24 bg-gray-200 dark:bg-dark-border rounded-full h-1.5">
+                        <div className="w-24 bg-gray-200 dark:bg-dark-border rounded-full h-1.5 overflow-hidden">
                             <div 
-                                className={`h-1.5 rounded-full ${isCompleted ? 'bg-success' : 'bg-amber-500'}`} 
+                                className={`h-1.5 rounded-full transition-all duration-500 ${isCompleted ? 'bg-success' : 'bg-amber-500'}`} 
                                 style={{ width: `${progress}%`}}
                             ></div>
                         </div>
@@ -39,6 +39,7 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
     );
 };
 
+// ... (StarRatingInput and ReviewItem components remain unchanged) ...
 const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void; hoverRating: number; setHoverRating: (r: number) => void; }> = ({ rating, setRating, hoverRating, setHoverRating }) => {
     return (
         <div className="flex items-center" onMouseLeave={() => setHoverRating(0)}>
@@ -71,7 +72,7 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
         await onReply(review.id, replyContent);
         setReplyContent('');
         setIsReplying(false);
-        setAreRepliesExpanded(true); // Auto expand to see new reply
+        setAreRepliesExpanded(true); 
     };
 
     return (
@@ -100,7 +101,6 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                     </div>
                     <p className="text-text-body dark:text-dark-text-body whitespace-pre-wrap">{review.comment}</p>
                     
-                    {/* Action Bar */}
                     <div className="flex items-center gap-4 mt-4">
                         {currentUser && (
                              <button 
@@ -121,7 +121,6 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                         )}
                     </div>
                     
-                    {/* Reply Input */}
                     {isReplying && (
                         <form onSubmit={handleSubmitReply} className="mt-4 animate-slide-in-bottom">
                             <div className="flex gap-3">
@@ -144,7 +143,6 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                         </form>
                     )}
 
-                    {/* Replies List */}
                     {areRepliesExpanded && review.replies && (
                         <div className="mt-4 space-y-4 pl-4 sm:pl-8 border-l-2 border-gray-100 dark:border-dark-border/50">
                             {review.replies.map(reply => (
@@ -189,7 +187,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
   
-  // Review State
   const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -225,7 +222,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
       setUserComment(currentUserReview.comment);
       setIsEditingReview(false);
     } else {
-      // Reset form if user has no review
       setUserRating(0);
       setUserComment('');
     }
@@ -260,6 +256,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
   
   const handleReadClick = () => {
     if (!book) return;
+    // Smart Resume: If we have a lastReadChapterIndex, use it.
     const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
     window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
   };
@@ -302,6 +299,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     return <div className="min-h-screen flex items-center justify-center">Book not found.</div>;
   }
 
+  // Calculate button text based on progress
+  const hasStartedReading = readingProgress && readingProgress.overallProgress > 0 || (readingProgress && Object.keys(readingProgress.chapters).length > 0);
+  const mainButtonText = hasStartedReading 
+    ? `Continue Reading (Ch. ${readingProgress.lastReadChapterIndex + 1})`
+    : 'Read from Start';
+
   return (
     <div className="bg-white dark:bg-dark-surface">
       {/* Sticky Header */}
@@ -341,7 +344,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed mb-8">{book.summary}</p>
             <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={handleReadClick} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-opacity-80 transition-all hover:scale-105 duration-300 shadow-lg">
-                    {readingProgress && readingProgress.overallProgress > 0 ? 'Continue Reading' : 'Read from Start'}
+                    {mainButtonText}
                 </button>
                 <button 
                   onClick={handleToggleLibrary}

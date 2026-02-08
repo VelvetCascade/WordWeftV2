@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User, Book, BookProgress, Comment } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -13,6 +13,7 @@ interface ReaderPageProps {
     currentUser: User | null;
 }
 
+// ... (Comment Components remain exactly the same, omitting for brevity to focus on logic changes, but assume they are here) ...
 const CommentItem: React.FC<{ 
     comment: Comment; 
     allComments: Comment[]; 
@@ -37,7 +38,6 @@ const CommentItem: React.FC<{
 
     return (
         <div className={`relative ${depth > 0 ? 'ml-6 mt-3' : 'mt-4'}`}>
-            {/* Connector line for nested comments */}
             {depth > 0 && (
                 <div className="absolute -left-4 top-4 w-4 h-[1px] bg-gray-300 dark:bg-dark-border"></div>
             )}
@@ -97,7 +97,6 @@ const CommentItem: React.FC<{
                 )}
             </div>
 
-            {/* Recursively render replies */}
             <div className="border-l-2 border-gray-100 dark:border-dark-border/50 ml-2 pl-0">
                 {replies.map(reply => (
                     <CommentItem 
@@ -113,7 +112,6 @@ const CommentItem: React.FC<{
     );
 };
 
-
 const CommentDrawer: React.FC<{ 
     isOpen: boolean; 
     onClose: () => void; 
@@ -127,7 +125,6 @@ const CommentDrawer: React.FC<{
 
     if (!isOpen) return null;
     
-    // Only show top-level comments (parentId is null) initially, children handled recursively
     const topLevelComments = comments.filter(c => !c.parentId);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -205,20 +202,20 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   const [fontSize, setFontSize] = useState(18);
   const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
-  const [resumeData, setResumeData] = useState<BookProgress | null>(null);
+  
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isTocVisible, setIsTocVisible] = useState(false);
   const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
   
-  // Comment State
   const [comments, setComments] = useState<Comment[]>([]);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
 
   const lastScrollY = useRef(0);
-  const scrollTimeoutRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
+  const saveProgressTimeoutRef = useRef<number | null>(null);
+  
   const { theme: globalTheme } = useTheme();
 
   const chapter = book?.chapters[currentChapterIndex];
@@ -229,6 +226,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     sepia: 'bg-[#FBF0D9] text-[#5B4636]',
   };
   
+  // 1. Initial Load
   useEffect(() => {
     setIsLoading(true);
     api.getBookById(bookId).then(fetchedBook => {
@@ -237,13 +235,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     });
   }, [bookId]);
 
-  // Fetch comments when chapter changes
+  // 2. Fetch Comments
   useEffect(() => {
       if(book && chapter) {
           api.getChapterComments(bookId, chapter.id).then(setComments);
       }
   }, [bookId, chapter]);
 
+  // 3. Theme Sync
   useEffect(() => {
     if (globalTheme === 'dark') {
       setContentTheme('dark');
@@ -252,54 +251,99 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     }
   }, [globalTheme]);
 
-  const handleSaveProgress = () => {
-      if (!currentUser || !book) return;
-      const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
-      api.saveReadingProgress(currentUser.id, book, currentChapterIndex, window.scrollY, contentHeight);
-  };
+  // 4. Progress Saving Logic
+  const saveProgress = useCallback(() => {
+      if (!currentUser || !book || !chapter) return;
+      
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const fullHeight = document.documentElement.scrollHeight;
+      
+      // Calculate how much text is remaining below the fold
+      const remainingHeight = fullHeight - (scrollTop + windowHeight);
+      
+      // We consider 100% if the user is near the bottom (within 100px)
+      let contentHeight = fullHeight - windowHeight;
+      if (contentHeight <= 0) contentHeight = 1; // Prevent division by zero
 
+      const isNearBottom = remainingHeight < 150;
+      
+      // Determine content height for API (legacy support mostly, logic moved to backend calculation usually, but we send raw data)
+      // Note: Passing raw height is risky if font size changes, but we send percentage mostly.
+      
+      api.saveReadingProgress(
+          currentUser.id, 
+          book, 
+          currentChapterIndex, 
+          scrollTop, 
+          isNearBottom ? 0 : contentHeight // If near bottom, act as if 0 height remaining
+      );
+  }, [currentUser, book, currentChapterIndex, chapter]);
+
+  // 5. Restore Progress Position on Load/Chapter Change
   useEffect(() => {
-    if (!book) return;
-    const timer = setTimeout(() => {
-      if (!currentUser || !contentRef.current) return;
-      const contentHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (contentHeight <= 0) {
-        api.saveReadingProgress(currentUser.id, book, currentChapterIndex, 0, contentHeight);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [book, currentChapterIndex, currentUser]);
-
-  const goToChapter = (index: number) => {
-    if (!book || (index < 0 || index >= book.chapters.length)) return;
-    handleSaveProgress();
-    setCurrentChapterIndex(index);
-    window.location.hash = `/read/book/${book.id}/chapter/${index}`;
-    window.scrollTo(0, 0);
-  };
-
-  // ... (Resume Logic and Scroll Listeners same as before) ...
-  useEffect(() => {
-    if (!currentUser) return;
-    api.getReadingProgressForBook(currentUser.id, bookId).then(savedProgress => {
-        if (savedProgress && savedProgress.overallProgress > 0) {
-            setResumeData(savedProgress);
+    if (!currentUser || !chapter) return;
+    
+    const restorePosition = async () => {
+        const savedProgress = await api.getReadingProgressForBook(currentUser.id, bookId);
+        if (savedProgress && savedProgress.chapters[chapter.id]) {
+            const savedScroll = savedProgress.chapters[chapter.id].scrollPosition;
+            if(savedScroll > 0) {
+                window.scrollTo({ top: savedScroll, behavior: 'instant' });
+            } else {
+                window.scrollTo(0, 0);
+            }
+        } else {
+            window.scrollTo(0, 0);
         }
-    });
-  }, [bookId, currentUser]);
+    };
+    
+    // Tiny delay to allow DOM to render
+    setTimeout(restorePosition, 100);
+  }, [bookId, chapter, currentUser]);
 
+
+  // 6. Scroll Handler (Visibility & Progress Throttling)
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > lastScrollY.current && window.scrollY > 100) {
+      const currentScrollY = window.scrollY;
+      
+      // Toolbar Visibility
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsToolbarVisible(false);
       } else {
         setIsToolbarVisible(true);
       }
-      lastScrollY.current = window.scrollY;
+      lastScrollY.current = currentScrollY;
+
+      // Throttle Progress Saving (Save every 2 seconds max while scrolling)
+      if (saveProgressTimeoutRef.current === null) {
+          saveProgressTimeoutRef.current = window.setTimeout(() => {
+              saveProgress();
+              saveProgressTimeoutRef.current = null;
+          }, 2000);
+      }
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    
+    // Cleanup: Save immediately on unmount/chapter change and clear timeout
+    return () => {
+        window.removeEventListener('scroll', handleScroll);
+        if (saveProgressTimeoutRef.current) {
+            clearTimeout(saveProgressTimeoutRef.current);
+        }
+        saveProgress(); // Ensure final position is saved
+    };
+  }, [saveProgress]);
+
+
+  const goToChapter = (index: number) => {
+    if (!book || (index < 0 || index >= book.chapters.length)) return;
+    saveProgress(); // Save before leaving
+    setCurrentChapterIndex(index);
+    window.location.hash = `/read/book/${book.id}/chapter/${index}`;
+  };
 
   const openCommentDrawer = (index: number | null) => {
       setActiveParagraphIndex(index);
@@ -316,9 +360,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       const el = document.getElementById(`paragraph-${index}`);
       if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Remove class first to re-trigger animation if needed
           el.classList.remove('highlight-animation');
-          void el.offsetWidth; // Trigger reflow
+          void el.offsetWidth; 
           el.classList.add('highlight-animation');
       }
   };
@@ -364,7 +407,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
   if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
   const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
-  // Also only count top level comments for the badge
   const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
 
   return (
@@ -374,7 +416,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       {/* Header */}
       <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border' : 'bg-background/80 border-gray-200'} backdrop-blur-md border-b`}>
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-            <button onClick={() => window.location.hash = `/book/${book.id}`} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
+            <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
                 <ChevronLeftIcon className="w-5 h-5"/>
                 <span>{book.title}</span>
             </button>
@@ -423,7 +465,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       {/* Discussion Section (Bottom) */}
       <section className="max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
           <div className="flex items-center justify-between mb-8">
-              <h2 className="font-sans text-2xl font-bold dark:text-dark-text-rich">Chapter Discussion</h2>
+              <h2 className="font-sans text-2xl font-bold dark:text-dark-text-rich">
+                  Chapter Discussion <span className="text-base font-normal text-gray-500">({comments.length})</span>
+              </h2>
               <button 
                 onClick={() => openCommentDrawer(null)}
                 className="bg-accent text-white font-sans font-semibold px-4 py-2 rounded-lg hover:bg-primary transition-colors text-sm"
@@ -436,9 +480,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
               {comments.filter(c => !c.parentId && c.paragraphIndex === null).length === 0 ? (
                   <p className="text-center text-gray-500 py-8">No general comments yet.</p>
               ) : (
-                  // We reuse the logic but display it slightly differently in the main flow (for general comments)
-                  // Or we can just use the drawer for consistency? 
-                  // Let's stick to showing top-level general comments here, and allow opening drawer for full thread
                   comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
                       const snippet = comment.paragraphIndex !== null 
                           ? chapter.content.split('\n')[comment.paragraphIndex] 
@@ -464,7 +505,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                           <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                       </div>
                                       
-                                      {/* Context Block - Clickable */}
                                       {snippet && comment.paragraphIndex !== null && (
                                           <button 
                                             onClick={(e) => { e.stopPropagation(); scrollToParagraph(comment.paragraphIndex!); }}
@@ -480,7 +520,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                       
                                       <p className="text-text-body dark:text-dark-text-body mt-2 leading-relaxed">{comment.content}</p>
                                       
-                                      {/* Reply Count */}
                                       {comments.filter(r => r.parentId === comment.id).length > 0 && (
                                           <div className="mt-3 text-xs text-accent font-semibold flex items-center gap-1">
                                               <ArrowUturnLeftIcon className="w-3 h-3"/>
