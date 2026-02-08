@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User, Book, BookProgress, Comment } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 
@@ -372,6 +372,43 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
       }
   };
 
+  const handleToggleLike = async () => {
+      if (!currentUser || !book || !chapter) {
+           if(!currentUser) window.location.hash = '/auth';
+           return;
+      }
+      
+      const prevIsLiked = chapter.isLiked;
+      const prevLikes = chapter.likesCount;
+      
+      // Optimistic Update
+      const updatedChapters = book.chapters.map(c => 
+          c.id === chapter.id 
+              ? { ...c, isLiked: !prevIsLiked, likesCount: prevIsLiked ? prevLikes - 1 : prevLikes + 1 }
+              : c
+      );
+      
+      const likeDiff = prevIsLiked ? -1 : 1;
+      
+      setBook({ 
+          ...book, 
+          chapters: updatedChapters,
+          likesCount: book.likesCount + likeDiff
+      });
+
+      try {
+          await api.toggleChapterLike(book.id, chapter.id);
+      } catch (e) {
+          console.error(e);
+          // Revert on error
+          setBook({ 
+            ...book, 
+            chapters: book.chapters, 
+            likesCount: book.likesCount
+          });
+      }
+  };
+
   const TableOfContents: React.FC = () => {
         if (!book) return null;
         return (
@@ -430,6 +467,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                  <h2 className="font-sans font-semibold truncate dark:text-dark-text-rich">{chapter.title}</h2>
              </div>
             <div className="flex items-center gap-4">
+                 <button 
+                    onClick={handleToggleLike}
+                    className={`transition-colors duration-200 ${chapter.isLiked ? 'text-danger scale-110' : 'text-gray-400 dark:text-gray-500 hover:text-danger'}`}
+                    title={chapter.isLiked ? "Unlike" : "Like"}
+                 >
+                    {chapter.isLiked ? <HeartIconSolid className="w-6 h-6" /> : <HeartIcon className="w-6 h-6" />}
+                 </button>
                  <button onClick={() => setIsBookmarked(!isBookmarked)}>
                     <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
                  </button>
@@ -465,6 +509,25 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                     </div>
                 );
             })}
+        </div>
+
+        {/* Post-Chapter Engagement */}
+        <div className="mt-16 mb-8 flex flex-col items-center">
+            <div className="h-px w-24 bg-gray-300 dark:bg-dark-border mb-8"></div>
+            <button 
+                onClick={handleToggleLike}
+                className={`group flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${
+                    chapter.isLiked 
+                    ? 'bg-danger text-white ring-4 ring-danger/20' 
+                    : 'bg-white dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:border-danger hover:text-danger'
+                }`}
+            >
+                {chapter.isLiked ? <HeartIconSolid className="w-6 h-6 animate-pulse" /> : <HeartIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />}
+                <span className="font-sans font-bold text-lg">{chapter.isLiked ? 'Liked' : 'Like this Chapter'}</span>
+                <span className={`text-sm font-medium ml-1 ${chapter.isLiked ? 'text-white/90' : 'text-gray-400 group-hover:text-danger/60'}`}>
+                    {chapter.likesCount}
+                </span>
+            </button>
         </div>
       </main>
 
