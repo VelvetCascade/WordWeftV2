@@ -1,4 +1,5 @@
-package com.wordweft.comment.model;
+
+package com.wordweft.book.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,17 +13,11 @@ import java.time.LocalDateTime;
 public class Comment {
     @Id
     private String id;
-    private String content;
     private String userId;
     private String bookId;
     private String chapterId;
-
-    // Nullable: if null, it's a chapter-level comment.
-    // If set, it's an inline comment on that paragraph index.
-    private Integer paragraphIndex;
-
+    private String parentId; // null for top-level comments
+    private Integer paragraphIndex; // null if it's a general chapter comment
+    private String content;
     private LocalDateTime createdAt = LocalDateTime.now();
-
-    // Optional: for future threading
-    // private String parentCommentId;
 }

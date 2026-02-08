@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import type { Author, Book, User } from '../types';
+import type { Author, Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { TwitterIcon, InstagramIcon, FacebookIcon, ThreadsIcon } from '../components/icons/Icons';
+import { UserGroupIcon, PlusIcon, CheckCircleIcon } from '../components/icons/Icons';
+import { ConnectionsModal } from '../components/ConnectionsModal';
 import * as api from '../api/client';
 
-export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; onUserUpdate: (user: User) => void }> = ({ authorId, currentUser, onUserUpdate }) => {
+export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
     const [author, setAuthor] = useState<Author | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isFollowing, setIsFollowing] = useState(false);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
+    const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
 
     useEffect(() => {
         setIsLoading(true);
@@ -25,40 +26,32 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; 
         });
     }, [authorId]);
 
-    useEffect(() => {
-        if (currentUser && authorId) {
-            setIsFollowing(currentUser.following.some(u => u.id === authorId));
-        }
-    }, [currentUser, authorId]);
-
     const handleFollowToggle = async () => {
-        if (!currentUser) {
-            window.location.hash = '/auth';
-            return;
-        }
-        if (isFollowLoading) return;
-
+        if (!author) return;
+        
+        // Optimistic UI update
+        const prevAuthor = { ...author };
+        const isNowFollowing = !author.isFollowing;
+        setAuthor({
+            ...author,
+            isFollowing: isNowFollowing,
+            followersCount: (author.followersCount || 0) + (isNowFollowing ? 1 : -1)
+        });
+        
         setIsFollowLoading(true);
         try {
-            if (isFollowing) {
-                await api.unfollowUser(authorId);
-                // Update local user state
-                const newFollowing = currentUser.following.filter(u => u.id !== authorId);
-                const updatedUser = { ...currentUser, following: newFollowing };
-                onUserUpdate(updatedUser);
+            if (prevAuthor.isFollowing) {
+                await api.unfollowUser(author.id);
             } else {
-                await api.followUser(authorId);
-                // Optimistically add author to following list (we need full author object ideally, but basic info is enough)
-                if (author) {
-                    const newFollowing = [...currentUser.following, author];
-                    const updatedUser = { ...currentUser, following: newFollowing };
-                    onUserUpdate(updatedUser);
-                }
+                await api.followUser(author.id);
             }
-            // Toggle local state
-            setIsFollowing(!isFollowing);
         } catch (error) {
-            console.error("Failed to toggle follow", error);
+            // Revert on failure
+            setAuthor(prevAuthor);
+            // Optionally redirect to login if 401, but api client handles some of that
+            if(!localStorage.getItem('wordweft_jwt')) {
+                window.location.hash = '/auth';
+            }
         } finally {
             setIsFollowLoading(false);
         }
@@ -72,8 +65,6 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; 
         return <div className="min-h-screen flex items-center justify-center">Author not found.</div>;
     }
 
-    const isMe = currentUser?.id === authorId;
-
     return (
         <div>
             <div className="bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border">
@@ -81,53 +72,51 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; 
                     <div className="flex flex-col md:flex-row items-center gap-8">
                         <img src={author.avatarUrl} alt={author.name} className="w-32 h-32 rounded-full object-cover ring-4 ring-white dark:ring-dark-surface shadow-lg" />
                         <div className="flex-1 text-center md:text-left">
-                            <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">{author.name}</h1>
-                            <p className="text-text-body dark:text-dark-text-body mt-2 max-w-2xl">{author.bio}</p>
-
-                            {/* Social Links */}
-                            {author.socialLinks && Object.keys(author.socialLinks).length > 0 && (
-                                <div className="flex items-center justify-center md:justify-start gap-4 mt-4">
-                                    {author.socialLinks.twitter && (
-                                        <a href={author.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1DA1F2] transition-colors">
-                                            <TwitterIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {author.socialLinks.instagram && (
-                                        <a href={author.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#E1306C] transition-colors">
-                                            <InstagramIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {author.socialLinks.facebook && (
-                                        <a href={author.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1877F2] transition-colors">
-                                            <FacebookIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                    {author.socialLinks.threads && (
-                                        <a href={author.socialLinks.threads} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                                            <ThreadsIcon className="w-5 h-5" />
-                                        </a>
-                                    )}
-                                </div>
-                            )}
-
-
-
-                            {!isMe && (
-                                <button
+                            <div className="flex flex-col md:flex-row items-center gap-4 mb-2">
+                                <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">{author.name}</h1>
+                                <button 
                                     onClick={handleFollowToggle}
                                     disabled={isFollowLoading}
-                                    className={`mt-6 px-6 py-2.5 rounded-full font-sans font-bold text-sm transition-all shadow-soft hover:shadow-lifted active:scale-95 ${isFollowing
-                                        ? 'bg-gray-100 dark:bg-dark-border text-text-body dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-surface-alt'
-                                        : 'bg-accent text-white hover:bg-accent-hover'
-                                        } ${isFollowLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`px-6 py-2 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95 ${
+                                        author.isFollowing 
+                                        ? 'bg-gray-100 dark:bg-dark-border text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:bg-gray-200 dark:hover:bg-dark-surface'
+                                        : 'bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl'
+                                    }`}
                                 >
-                                    {isFollowing ? 'Unfollow' : 'Follow'}
+                                    {author.isFollowing ? (
+                                        <>
+                                            <CheckCircleIcon className="w-4 h-4" /> Following
+                                        </>
+                                    ) : (
+                                        <>
+                                            <PlusIcon className="w-4 h-4" /> Follow
+                                        </>
+                                    )}
                                 </button>
-                            )}
+                            </div>
+                            <p className="text-text-body dark:text-dark-text-body max-w-2xl">{author.bio}</p>
+                            
+                            <div className="flex items-center justify-center md:justify-start gap-6 mt-6">
+                                <button 
+                                    onClick={() => setConnectionModalType('followers')}
+                                    className="flex items-center gap-2 group"
+                                >
+                                    <span className="font-bold text-lg text-text-rich dark:text-dark-text-rich group-hover:text-accent transition-colors">{author.followersCount || 0}</span>
+                                    <span className="text-sm text-gray-500 group-hover:text-accent transition-colors">Followers</span>
+                                </button>
+                                <button 
+                                    onClick={() => setConnectionModalType('following')}
+                                    className="flex items-center gap-2 group"
+                                >
+                                    <span className="font-bold text-lg text-text-rich dark:text-dark-text-rich group-hover:text-accent transition-colors">{author.followingCount || 0}</span>
+                                    <span className="text-sm text-gray-500 group-hover:text-accent transition-colors">Following</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
             <div className="container mx-auto px-6 py-12">
                 <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">
                     Books by {author.name}
@@ -135,7 +124,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; 
                 {authorBooks.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
                         {authorBooks.map(book => (
-                            <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
+                            <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`}/>
                         ))}
                     </div>
                 ) : (
@@ -144,6 +133,15 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser: User | null; 
                     </div>
                 )}
             </div>
+            
+            <ConnectionsModal 
+                isOpen={!!connectionModalType}
+                onClose={() => setConnectionModalType(null)}
+                title={connectionModalType === 'followers' ? 'Followers' : 'Following'}
+                userId={author.id}
+                type={connectionModalType || 'followers'}
+            />
+            
             <Footer />
         </div>
     );
