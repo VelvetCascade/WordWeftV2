@@ -198,7 +198,23 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
 
 export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, contentHeight: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
-    let currentChapterProgress = contentHeight <= 0 ? 100 : Math.min(100, (scrollPosition / contentHeight) * 100);
+
+    // Calculate progress with a minimum floor if scrolled significantly
+    let calculatedProgress = 0;
+    if (contentHeight > 0) {
+        calculatedProgress = (scrollPosition / contentHeight) * 100;
+
+        // If user has scrolled at least a bit (e.g., > 100px) but progress is < 1%, round up to 1% to show they started.
+        if (scrollPosition > 100 && calculatedProgress < 1) {
+            calculatedProgress = 1;
+        }
+    } else {
+        // Fallback or full progress if content height is invalid (unlikely but possible)
+        calculatedProgress = 100;
+    }
+
+    // Ensure bounds
+    let finalProgress = Math.min(100, Math.max(0, calculatedProgress));
 
     await fetch(`${API_BASE_URL}/reading/progress`, {
         method: 'POST',
@@ -209,7 +225,7 @@ export async function saveReadingProgress(userId: string, book: Book, chapterInd
             scrollPosition,
             chapterData: {
                 id: chapterId,
-                progress: Math.round(currentChapterProgress),
+                progress: Math.round(finalProgress),
                 scroll: Math.round(scrollPosition)
             }
         })
