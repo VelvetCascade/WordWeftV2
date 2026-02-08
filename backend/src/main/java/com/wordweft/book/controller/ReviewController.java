@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +45,24 @@ public class ReviewController {
         review.setSentiment("positive"); // Mock sentiment analysis
         
         reviewRepository.save(review);
-        
-        // Update Book stats
         updateBookStats(bookId);
+        
+        return getReviews(bookId);
+    }
+    
+    @PostMapping("/{bookId}/reviews/{reviewId}/reply")
+    public ResponseEntity<?> addReply(@PathVariable String bookId, @PathVariable String reviewId, @RequestBody Map<String, String> payload) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
+        
+        Review.Reply reply = new Review.Reply();
+        reply.setUserId(userDetails.getId());
+        reply.setContent(payload.get("content"));
+        reply.setTimestamp(LocalDateTime.now());
+        
+        review.getReplies().add(reply);
+        reviewRepository.save(review);
         
         return getReviews(bookId);
     }
@@ -64,7 +80,6 @@ public class ReviewController {
         Book book = bookRepository.findById(bookId).orElseThrow();
         book.setReviewsCount(reviews.size());
         double avg = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
-        // Round to 1 decimal
         book.setRating(Math.round(avg * 10.0) / 10.0);
         bookRepository.save(book);
     }
@@ -80,12 +95,29 @@ public class ReviewController {
         map.put("userId", review.getUserId());
         
         User user = userRepository.findById(review.getUserId()).orElse(new User());
+        map.put("user", getUserSummary(user));
+        
+        // Enrich Replies
+        List<Map<String, Object>> enrichedReplies = review.getReplies().stream().map(reply -> {
+            Map<String, Object> rMap = new HashMap<>();
+            rMap.put("id", reply.getId());
+            rMap.put("content", reply.getContent());
+            rMap.put("timestamp", reply.getTimestamp());
+            User replyUser = userRepository.findById(reply.getUserId()).orElse(new User());
+            rMap.put("user", getUserSummary(replyUser));
+            return rMap;
+        }).collect(Collectors.toList());
+        
+        map.put("replies", enrichedReplies);
+        
+        return map;
+    }
+    
+    private Map<String, String> getUserSummary(User user) {
         Map<String, String> userMap = new HashMap<>();
         userMap.put("id", user.getId());
         userMap.put("name", user.getUsername());
         userMap.put("avatarUrl", user.getAvatarUrl());
-        map.put("user", userMap);
-        
-        return map;
+        return userMap;
     }
 }

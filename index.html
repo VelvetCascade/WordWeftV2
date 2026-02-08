@@ -61,12 +61,17 @@
               'slide-in-bottom': {
                 '0%': { transform: 'translateY(100%)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              'highlight-fade': {
+                '0%': { backgroundColor: 'rgba(255, 193, 7, 0.4)' },
+                '100%': { backgroundColor: 'transparent' },
               }
             },
             animation: {
               'gradient-shift': 'gradient-shift 10s ease infinite',
               'ripple': 'ripple 0.6s linear',
               'slide-in-bottom': 'slide-in-bottom 0.3s ease-out forwards',
+              'highlight': 'highlight-fade 2s ease-out forwards',
             }
           }
         }
@@ -76,6 +81,9 @@
       .bg-animated-gradient {
         background: linear-gradient(-45deg, #5D4037, #795548, #8D6E63, #5D4037);
         background-size: 400% 400%;
+      }
+      .highlight-animation {
+        animation: highlight-fade 2s ease-out forwards;
       }
     </style>
   <script type="importmap">
