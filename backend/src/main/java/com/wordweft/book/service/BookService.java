@@ -5,9 +5,7 @@ import com.wordweft.book.model.*;
 import com.wordweft.book.repository.*;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
-import com.wordweft.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,18 +17,6 @@ public class BookService {
     @Autowired UserRepository userRepository;
     @Autowired ReviewRepository reviewRepository;
 
-    private String getCurrentUserId() {
-        try {
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (principal instanceof UserDetailsImpl) {
-                return ((UserDetailsImpl) principal).getId();
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
-    }
-
     public List<Map<String, Object>> getAllBooks(List<String> genres, String sortBy) {
         List<Book> books = bookRepository.findByPublicationStatus("published");
         
@@ -40,33 +26,11 @@ public class BookService {
                     .collect(Collectors.toList());
         }
         
-        // Pre-calculate aggregates for sorting to avoid repeated stream operations during sort
-        Map<String, Integer> bookLikesMap = new HashMap<>();
-        Map<String, Integer> bookViewsMap = new HashMap<>();
-
-        for (Book b : books) {
-            int totalLikes = b.getChapters().stream().mapToInt(c -> c.getLikes().size()).sum();
-            bookLikesMap.put(b.getId(), totalLikes);
-            
-            int totalViews = b.getChapters().stream().mapToInt(Chapter::getViewCount).sum();
-            bookViewsMap.put(b.getId(), totalViews);
-        }
-
+        // Sorting logic
         if ("Rating".equals(sortBy)) {
             books.sort((a, b) -> Double.compare(b.getRating(), a.getRating()));
         } else if ("Popular".equals(sortBy)) {
-            // Sort by popularity score (aggregated views + total chapter likes * 2 + reviews)
-            books.sort((a, b) -> {
-                int likesA = bookLikesMap.getOrDefault(a.getId(), 0);
-                int likesB = bookLikesMap.getOrDefault(b.getId(), 0);
-                
-                int viewsA = bookViewsMap.getOrDefault(a.getId(), 0);
-                int viewsB = bookViewsMap.getOrDefault(b.getId(), 0);
-                
-                int scoreA = (viewsA / 10) + (likesA * 2) + a.getReviewsCount();
-                int scoreB = (viewsB / 10) + (likesB * 2) + b.getReviewsCount();
-                return Integer.compare(scoreB, scoreA);
-            });
+            books.sort((a, b) -> Integer.compare(b.getReviewsCount(), a.getReviewsCount()));
         } else {
             // Recent
             books.sort((a, b) -> {
@@ -76,84 +40,34 @@ public class BookService {
             });
         }
         
-        String currentUserId = getCurrentUserId();
-        return books.stream().map(b -> enrichBook(b, currentUserId)).collect(Collectors.toList());
+        return books.stream().map(this::enrichBook).collect(Collectors.toList());
     }
     
-    public Map<String, Object> getBookById(String id, boolean incrementView) {
-        String currentUserId = getCurrentUserId();
-        Optional<Book> bookOpt = bookRepository.findById(id);
-        
-        if (bookOpt.isPresent()) {
-            Book book = bookOpt.get();
-            if (incrementView) {
-                // We still track page loads in the DB field for analytics, 
-                // but the displayed viewCount will be the aggregate of chapters.
-                book.setViewCount((book.getViewCount() == null ? 0 : book.getViewCount()) + 1);
-                bookRepository.save(book);
-            }
-            return enrichBook(book, currentUserId);
-        }
-        return null;
+    public Map<String, Object> getBookById(String id) {
+        return bookRepository.findById(id).map(this::enrichBook).orElse(null);
     }
     
     public List<Map<String, Object>> getBooksByAuthor(String authorId) {
-        String currentUserId = getCurrentUserId();
         return bookRepository.findByAuthorId(authorId).stream()
                 .filter(b -> "published".equals(b.getPublicationStatus()))
-                .map(b -> enrichBook(b, currentUserId))
+                .map(this::enrichBook)
                 .collect(Collectors.toList());
     }
     
-    private Map<String, Object> enrichBook(Book book, String currentUserId) {
+    // Helper to add Author object to Book response
+    private Map<String, Object> enrichBook(Book book) {
         Map<String, Object> map = new HashMap<>();
+        // Copy book fields
         map.put("id", book.getId());
         map.put("title", book.getTitle());
         map.put("coverUrl", book.getCoverUrl());
         map.put("rating", book.getRating());
         map.put("reviewsCount", book.getReviewsCount());
-        
-        // AGGREGATE VIEWS: Sum of all chapter views
-        int totalChapterViews = book.getChapters().stream()
-                                    .mapToInt(Chapter::getViewCount)
-                                    .sum();
-        map.put("viewCount", totalChapterViews);
-        
-        // AGGREGATE LIKES: Sum of all chapter likes
-        int totalChapterLikes = book.getChapters().stream()
-                                    .mapToInt(c -> c.getLikes() != null ? c.getLikes().size() : 0)
-                                    .sum();
-        map.put("likesCount", totalChapterLikes);
-        
-        // isLiked for Book is essentially if the user has liked ANY chapter (optional interpretation)
-        // or we just return false because book-level liking is disabled.
-        map.put("isLiked", false); 
-        
         map.put("genres", book.getGenres());
         map.put("tags", book.getTags());
         map.put("summary", book.getSummary());
         map.put("description", book.getDescription());
-        
-        // Enrich Chapters
-        List<Map<String, Object>> enrichedChapters = book.getChapters().stream().map(ch -> {
-            Map<String, Object> cMap = new HashMap<>();
-            cMap.put("id", ch.getId());
-            cMap.put("title", ch.getTitle());
-            cMap.put("wordCount", ch.getWordCount());
-            cMap.put("content", ch.getContent()); 
-            cMap.put("status", ch.getStatus());
-            
-            // Chapter Stats
-            cMap.put("viewCount", ch.getViewCount());
-            cMap.put("commentCount", ch.getCommentCount());
-            cMap.put("likesCount", ch.getLikes() != null ? ch.getLikes().size() : 0);
-            cMap.put("isLiked", currentUserId != null && ch.getLikes() != null && ch.getLikes().contains(currentUserId));
-            
-            return cMap;
-        }).collect(Collectors.toList());
-        
-        map.put("chapters", enrichedChapters);
-        
+        map.put("chapters", book.getChapters());
         map.put("readingStatus", book.getReadingStatus());
         map.put("publicationStatus", book.getPublicationStatus());
         map.put("publishedDate", book.getPublishedDate());
@@ -163,7 +77,7 @@ public class BookService {
         User author = userRepository.findById(book.getAuthorId()).orElse(new User());
         Map<String, Object> authorMap = new HashMap<>();
         authorMap.put("id", author.getId());
-        authorMap.put("name", author.getUsername()); 
+        authorMap.put("name", author.getUsername()); // Or display name
         authorMap.put("avatarUrl", author.getAvatarUrl());
         authorMap.put("bio", author.getBio());
         

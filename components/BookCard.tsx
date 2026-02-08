@@ -1,7 +1,7 @@
 
 import React from 'react';
 import type { Book } from '../types';
-import { StarIcon, ChatBubbleLeftIcon } from './icons/Icons';
+import { StarIcon } from './icons/Icons';
 
 interface BookCardProps {
   book: Book;
@@ -27,15 +27,9 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       <div className="mt-3">
         <h3 className="font-sans font-bold text-md text-text-rich dark:text-dark-text-rich truncate">{book.title}</h3>
         <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.author.name}</p>
-        <div className="flex items-center mt-1 gap-3">
-          <div className="flex items-center text-amber-600">
-            <StarIcon className="w-4 h-4" />
-            <span className="text-xs font-semibold ml-1">{book.rating}</span>
-          </div>
-          <div className="flex items-center text-gray-500 dark:text-gray-400">
-            <ChatBubbleLeftIcon className="w-4 h-4" />
-            <span className="text-xs font-semibold ml-1">{book.reviewsCount}</span>
-          </div>
+        <div className="flex items-center mt-1">
+          <StarIcon className="w-4 h-4 text-amber-600" />
+          <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">{book.rating}</span>
         </div>
       </div>
     </div>

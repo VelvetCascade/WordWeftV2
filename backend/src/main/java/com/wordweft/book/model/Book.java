@@ -7,9 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -22,11 +20,6 @@ public class Book {
     private String coverUrl;
     private Double rating = 0.0;
     private Integer reviewsCount = 0;
-    
-    // Stats
-    private Integer viewCount = 0;
-    private Set<String> likes = new HashSet<>(); // Set of User IDs who liked the book
-    
     private List<String> genres = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
     private String summary;
@@ -36,4 +29,6 @@ public class Book {
     private String publicationStatus = "draft"; // "draft" or "published"
     private LocalDate publishedDate;
     private boolean isMature = false;
+    
+    // For search/sort performance, we might index these fields
 }
