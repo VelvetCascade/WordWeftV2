@@ -21,9 +21,12 @@ public class Shelf {
 
     private LocalDate createdDate = LocalDate.now();
 
+    private String visibility = "PRIVATE"; // PUBLIC, PRIVATE
+
     public Shelf(String userId, String name) {
         this.userId = userId;
         this.name = name;
         this.createdDate = LocalDate.now();
+        this.visibility = "PRIVATE";
     }
 }

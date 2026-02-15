@@ -264,14 +264,34 @@ export async function removeBookFromLibrary(userId: string, bookId: string): Pro
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function createShelf(userId: string, name: string): Promise<User> {
+export const createShelf = async (userId: string, name: string, visibility: 'PUBLIC' | 'PRIVATE' = 'PRIVATE'): Promise<User> => {
     const response = await fetch(`${API_BASE_URL}/library/shelves`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, visibility }),
     });
-    return mapBackendUserToFrontend(await handleResponse(response));
-}
+    if (!response.ok) throw new Error('Failed to create shelf');
+    return response.json();
+};
+
+export const toggleShelfVisibility = async (shelfId: string, visibility: 'PUBLIC' | 'PRIVATE'): Promise<User> => {
+    const response = await fetch(`${API_BASE_URL}/library/shelves/${shelfId}/visibility`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ visibility }),
+    });
+    if (!response.ok) throw new Error('Failed to update shelf visibility');
+    return response.json();
+};
+
+export const deleteShelf = async (shelfId: string): Promise<User> => {
+    const response = await fetch(`${API_BASE_URL}/library/shelves/${shelfId}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete shelf');
+    return mapBackendUserToFrontend(await response.json());
+};
 
 export async function updateBookShelves(userId: string, bookId: string, shelfIds: string[]): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/library/books/${bookId}/shelves`, {
