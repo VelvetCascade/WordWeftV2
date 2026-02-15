@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BookOpenIcon, ChartPieIcon, Cog6ToothIcon, ArrowUturnLeftIcon, Bars3Icon, XMarkIcon } from './icons/Icons';
+import { BookOpenIcon, ChartPieIcon, Cog6ToothIcon, ArrowUturnLeftIcon, Bars3Icon, XMarkIcon, ChartBarIcon } from './icons/Icons';
 
 interface WriterLayoutProps {
   children: React.ReactNode;
@@ -63,6 +63,7 @@ export const WriterLayout: React.FC<WriterLayoutProps> = ({ children }) => {
             </div>
             <nav className="space-y-2">
                 <SidebarLink href="#/write" icon={BookOpenIcon} label="My Books" isActive={isActive('#/write')} onClick={() => setIsSidebarOpen(false)} />
+                <SidebarLink href="#/write/ice" icon={ChartBarIcon} label="ICE Workspace" isActive={isActive('write/ice')} onClick={() => setIsSidebarOpen(false)} />
                 <SidebarLink href="#/analytics" icon={ChartPieIcon} label="Analytics" isActive={isActive('analytics')} onClick={() => setIsSidebarOpen(false)}/>
                 <SidebarLink href="#/settings" icon={Cog6ToothIcon} label="Settings" isActive={isActive('settings')} onClick={() => setIsSidebarOpen(false)}/>
             </nav>

@@ -15,6 +15,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
 import { EditProfilePage } from './pages/EditProfilePage';
+import { ICEWorkspacePage } from './pages/ICEWorkspacePage';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
 
@@ -30,7 +31,8 @@ export type Page =
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; authorId: string }
-  | { name: 'edit-profile' };
+  | { name: 'edit-profile' }
+  | { name: 'writer-ice-workspace' };
 
 
 const App: React.FC = () => {
@@ -112,6 +114,8 @@ const App: React.FC = () => {
         const bookId = parts[2];
         const chapterIndex = parseInt(parts[4], 10) || 0;
         targetPage = bookId ? { name: 'reader', bookId, chapterIndex: chapterIndex } : { name: 'home' };
+      } else if (hash.startsWith('write/ice')) {
+        targetPage = { name: 'writer-ice-workspace' };
       } else if (hash.startsWith('write/book/create')) {
         targetPage = { name: 'writer-create-book' };
       } else if (hash.startsWith('write/book/')) {
@@ -139,7 +143,7 @@ const App: React.FC = () => {
         targetPage = { name: 'home' };
       }
       
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-ice-workspace', 'profile', 'edit-profile'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
@@ -190,6 +194,8 @@ const App: React.FC = () => {
         return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'auth':
         return <AuthPage onLogin={handleLogin} />;
+      case 'writer-ice-workspace':
+        return <ICEWorkspacePage currentUser={currentUser!} />;
       case 'author':
         return <AuthorPage authorId={page.authorId} />;
       default:

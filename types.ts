@@ -153,3 +153,80 @@ export interface BookProgress {
   lastReadScrollPosition: number;
   chapters: { [chapterId: string]: ChapterProgress };
 }
+
+// --- WordWeft ICE (Integrated Creative Environment) Types ---
+
+export type StoryEntityType = 'character' | 'location' | 'faction' | 'artifact' | 'theme';
+
+export interface StoryBibleEntity {
+  id: string;
+  projectId: string;
+  type: StoryEntityType;
+  name: string;
+  summary: string;
+  aliases: string[];
+  traits: string[];
+  goals: string[];
+  timelineAnchorIds: string[];
+  relationshipIds: string[];
+  metadata: Record<string, string | number | boolean>;
+}
+
+export interface StoryRelationship {
+  id: string;
+  sourceEntityId: string;
+  targetEntityId: string;
+  relationType: 'ally' | 'enemy' | 'mentor' | 'family' | 'romance' | 'unknown';
+  notes: string;
+  intensity: number;
+}
+
+export interface StoryTimelineEvent {
+  id: string;
+  label: string;
+  summary: string;
+  chapterIds: string[];
+  sequence: number;
+}
+
+export interface ManuscriptMention {
+  id: string;
+  chapterId: string;
+  entityId: string;
+  startOffset: number;
+  endOffset: number;
+  confidence: number;
+  contextSnippet: string;
+}
+
+export interface NarrativeSignalPoint {
+  chapterId: string;
+  label: string;
+  value: number;
+}
+
+export interface FeedbackInsight {
+  id: string;
+  source: 'beta-reader' | 'editor' | 'ai';
+  chapterId: string;
+  thread: string;
+  severity: 'low' | 'medium' | 'high';
+  summary: string;
+  recommendation: string;
+}
+
+
+export interface IceWorkspace {
+  id: string;
+  ownerUserId: string;
+  bookId: string;
+  writingMode: 'creation' | 'analysis';
+  manuscriptText: string;
+  entities: StoryBibleEntity[];
+  relationships: StoryRelationship[];
+  timelineEvents: StoryTimelineEvent[];
+  narrativeSignals: NarrativeSignalPoint[];
+  feedbackInsights: FeedbackInsight[];
+  mentions: ManuscriptMention[];
+  updatedAt: string;
+}
