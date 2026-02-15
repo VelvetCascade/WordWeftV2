@@ -1,9 +1,8 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, IceWorkspace, StoryBibleEntity, FeedbackInsight } from '../types';
 
-//const API_BASE_URL = 'http://localhost:8080/api';
- const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080/api';
 const JWT_KEY = 'wordweft_jwt';
 
 // --- Helper Functions ---
@@ -411,4 +410,44 @@ function mapBackendUserToFrontend(backendData: any): User {
         library: backendData.library || [],
         writtenBooks: backendData.writtenBooks || []
     };
+}
+
+
+// --- ICE Workspace API ---
+
+export async function getIceWorkspace(bookId: string): Promise<IceWorkspace> {
+    const response = await fetch(`${API_BASE_URL}/ice/workspace/${bookId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function updateIceManuscript(bookId: string, manuscriptText: string, writingMode: 'creation' | 'analysis'): Promise<IceWorkspace> {
+    const response = await fetch(`${API_BASE_URL}/ice/workspace/${bookId}/manuscript`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ manuscriptText, writingMode })
+    });
+    return await handleResponse(response);
+}
+
+export async function addIceEntity(bookId: string, entity: Partial<StoryBibleEntity>): Promise<IceWorkspace> {
+    const response = await fetch(`${API_BASE_URL}/ice/workspace/${bookId}/entities`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(entity)
+    });
+    return await handleResponse(response);
+}
+
+export async function addIceFeedback(bookId: string, insight: Partial<FeedbackInsight>): Promise<IceWorkspace> {
+    const response = await fetch(`${API_BASE_URL}/ice/workspace/${bookId}/feedback`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(insight)
+    });
+    return await handleResponse(response);
+}
+
+export async function exportIceWorkspace(bookId: string, format: 'epub' | 'pdf'): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/ice/workspace/${bookId}/export/${format}`, { headers: getHeaders() });
+    return await response.text();
 }
