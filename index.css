@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.mention {
+    background-color: rgba(141, 110, 99, 0.2);
+    color: #8D6E63;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+[contenteditable]:empty:before {
+    content: attr(data-placeholder);
+    color: #9CA3AF;
+    pointer-events: none;
+    display: block;
+}

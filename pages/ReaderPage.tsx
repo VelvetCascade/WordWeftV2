@@ -4,6 +4,8 @@ import type { User, Book, BookProgress, Comment } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
+import { CharacterPreview } from '../components/CharacterPreview';
+import type { Character } from '../types';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 
@@ -211,6 +213,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
 
+    // Character Mention State
+    const [characters, setCharacters] = useState<Character[]>([]);
+    const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
+
     const lastScrollY = useRef(0);
     const contentRef = useRef<HTMLDivElement>(null);
     const settingsPanelRef = useRef<HTMLDivElement>(null);
@@ -236,6 +242,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             setBook(fetchedBook);
             setIsLoading(false);
         });
+        api.getCharactersByBookId(bookId).then(setCharacters);
     }, [bookId]);
 
     // 2. Fetch Comments & Record View
@@ -509,9 +516,32 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 >
                     {chapter.content.split('\n').map((paragraph, index) => {
                         const count = paragraphCommentCount(index);
+
+                        // Parse mentions: @[Name](id)
+                        const parts = paragraph.split(/(@\[.*?\]\(.*?\))/g);
+
                         return (
                             <div key={index} id={`paragraph-${index}`} className="group relative mb-6 rounded-lg transition-colors">
-                                <p>{paragraph}</p>
+                                <p>
+                                    {parts.map((part, i) => {
+                                        const match = part.match(/@\[(.*?)\]\((.*?)\)/);
+                                        if (match) {
+                                            const [_, name, id] = match;
+                                            const character = characters.find(c => c.id === id);
+                                            return (
+                                                <span
+                                                    key={i}
+                                                    onClick={() => character && setViewingCharacter(character)}
+                                                    className={`font-semibold cursor-pointer border-b-2 border-accent/30 hover:bg-accent/10 hover:border-accent transition-colors ${!character ? 'text-gray-500 line-through decoration-2' : 'text-accent'}`}
+                                                    title={character ? "View Character" : "Character not found"}
+                                                >
+                                                    {name}
+                                                </span>
+                                            );
+                                        }
+                                        return part;
+                                    })}
+                                </p>
                                 <button
                                     onClick={() => openCommentDrawer(index)}
                                     className={`absolute -right-12 top-0 p-2 rounded-full transition-all duration-200 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
@@ -654,6 +684,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 paragraphIndex={activeParagraphIndex}
                 paragraphText={activeParagraphIndex !== null ? chapter.content.split('\n')[activeParagraphIndex] : undefined}
                 onAddComment={handleAddComment}
+            />
+
+            <CharacterPreview
+                character={viewingCharacter}
+                isOpen={!!viewingCharacter}
+                onClose={() => setViewingCharacter(null)}
             />
         </div>
     );

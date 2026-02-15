@@ -1,9 +1,9 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note } from '../types';
 
-//const API_BASE_URL = 'http://localhost:8080/api';
- const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
+const API_BASE_URL = 'http://localhost:8080/api';
+//  const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
 const JWT_KEY = 'wordweft_jwt';
 
 // --- Helper Functions ---
@@ -379,6 +379,114 @@ export async function addChapterComment(bookId: string, chapterId: string, parag
     return await handleResponse(response);
 }
 
+
+// --- Character API ---
+
+export async function getCharactersByBookId(bookId: string): Promise<Character[]> {
+    const response = await fetch(`${API_BASE_URL}/characters/book/${bookId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function createCharacter(character: any): Promise<Character> {
+    const response = await fetch(`${API_BASE_URL}/characters`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(character)
+    });
+    return await handleResponse(response);
+}
+
+export async function updateCharacter(id: string, character: any): Promise<Character> {
+    const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(character)
+    });
+    return await handleResponse(response);
+}
+
+export async function deleteCharacter(id: string): Promise<void> {
+    await fetch(`${API_BASE_URL}/characters/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+}
+
+// --- Scene API ---
+
+export async function getScenesByBookId(bookId: string): Promise<Scene[]> {
+    const response = await fetch(`${API_BASE_URL}/scenes/book/${bookId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getScenesByChapterId(chapterId: string): Promise<Scene[]> {
+    const response = await fetch(`${API_BASE_URL}/scenes/chapter/${chapterId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function createScene(scene: any): Promise<Scene> {
+    const response = await fetch(`${API_BASE_URL}/scenes`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(scene)
+    });
+    return await handleResponse(response);
+}
+
+export async function updateScene(id: string, scene: any): Promise<Scene> {
+    const response = await fetch(`${API_BASE_URL}/scenes/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(scene)
+    });
+    return await handleResponse(response);
+}
+
+export async function deleteScene(id: string): Promise<void> {
+    await fetch(`${API_BASE_URL}/scenes/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+}
+
+// --- Note API ---
+
+export async function getNotesByBookId(bookId: string): Promise<Note[]> {
+    const response = await fetch(`${API_BASE_URL}/notes/book/${bookId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getNotesByChapterId(chapterId: string): Promise<Note[]> {
+    const response = await fetch(`${API_BASE_URL}/notes/chapter/${chapterId}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function createNote(note: any): Promise<Note> {
+    const response = await fetch(`${API_BASE_URL}/notes`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(note)
+    });
+    return await handleResponse(response);
+}
+
+export async function updateNote(id: string, note: any): Promise<Note> {
+    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(note)
+    });
+    return await handleResponse(response);
+}
+
+export async function deleteNote(id: string): Promise<void> {
+    await fetch(`${API_BASE_URL}/notes/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+}
+
+
 function mapBackendUserToFrontend(backendData: any): User {
     let safeJoinDate = backendData.joinDate;
     if (Array.isArray(safeJoinDate)) {
@@ -412,3 +520,4 @@ function mapBackendUserToFrontend(backendData: any): User {
         writtenBooks: backendData.writtenBooks || []
     };
 }
+
