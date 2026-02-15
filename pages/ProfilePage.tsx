@@ -3,11 +3,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress, Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon, LockClosedIcon, GlobeAltIcon, PlusCircleIcon, TrashIcon } from '../components/icons/Icons';
+import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { ConnectionsModal } from '../components/ConnectionsModal';
 
-const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void, onAddToShelf: (book: LibraryBook) => void }> = ({ book, onRemove, onRestart, onAddToShelf }) => {
+const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
 
     const isCompleted = book.progress >= 100;
 
@@ -49,16 +49,7 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
                         >
                             <ArrowPathIcon className="w-4 h-4" />
                         </button>
-
                     )}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onAddToShelf(book); }}
-                        className="p-1.5 bg-black/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-success backdrop-blur-sm"
-                        title="Add to custom shelf"
-                        aria-label="Add to custom shelf"
-                    >
-                        <PlusCircleIcon className="w-4 h-4" />
-                    </button>
                 </div>
             </div>
             <div className="mt-3 cursor-pointer">
@@ -77,104 +68,6 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
                         <p className="font-sans font-bold text-xs">Completed</p>
                     </div>
                 )}
-            </div>
-        </div>
-    );
-};
-
-const AddToShelfModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    book: LibraryBook | null;
-    customShelves: Shelf[];
-    onSave: (shelfIds: string[]) => void;
-}> = ({ isOpen, onClose, book, customShelves, onSave }) => {
-    const [selectedShelves, setSelectedShelves] = useState<Set<string>>(new Set());
-
-    const [initialShelves, setInitialShelves] = useState<Set<string>>(new Set());
-
-    useEffect(() => {
-        if (book && book.shelfIds) {
-            const shelves = new Set(book.shelfIds);
-            setSelectedShelves(shelves);
-            setInitialShelves(shelves);
-        } else {
-            setSelectedShelves(new Set());
-            setInitialShelves(new Set());
-        }
-    }, [book, isOpen]);
-
-    const toggleShelf = (shelfId: string) => {
-        const newSet = new Set(selectedShelves);
-        if (newSet.has(shelfId)) {
-            newSet.delete(shelfId);
-        } else {
-            newSet.add(shelfId);
-        }
-        setSelectedShelves(newSet);
-    };
-
-    if (!isOpen || !book) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl w-full max-w-md shadow-xl animate-scale-in">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Add to Shelf</h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        <XMarkIcon className="w-6 h-6 text-gray-500" />
-                    </button>
-                </div>
-
-                <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">Select shelves for <span className="font-bold">{book.title}</span>:</p>
-
-                <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
-                    {customShelves.length === 0 ? (
-                        <p className="text-sm text-gray-400 italic">No custom shelves created yet.</p>
-                    ) : (
-                        customShelves.filter(shelf => !initialShelves.has(shelf.id)).map(shelf => {
-                            const isAlreadyInShelf = initialShelves.has(shelf.id);
-                            return (
-                                <label
-                                    key={shelf.id}
-                                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors border border-transparent 
-                                        hover:bg-gray-50 dark:hover:bg-dark-surface-alt cursor-pointer hover:border-gray-200 dark:hover:border-dark-border
-                                        ${isAlreadyInShelf ? 'bg-accent/5 dark:bg-accent/10 border-accent/20' : ''}
-                                    `}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedShelves.has(shelf.id)}
-                                        onChange={() => toggleShelf(shelf.id)}
-                                        className="w-5 h-5 rounded text-accent focus:ring-accent bg-gray-100 dark:bg-dark-surface border-gray-300 dark:border-dark-border"
-                                    />
-                                    <span className={`font-medium ${isAlreadyInShelf ? 'text-text-rich dark:text-dark-text-rich' : 'text-text-rich dark:text-dark-text-rich'}`}>
-                                        {shelf.name}
-                                    </span>
-                                    {isAlreadyInShelf && <span className="text-xs text-accent font-medium ml-auto">Previously added</span>}
-                                    {!isAlreadyInShelf && shelf.visibility === 'PRIVATE' && <LockClosedIcon className="w-3 h-3 text-gray-400" />}
-                                    {!isAlreadyInShelf && shelf.visibility === 'PUBLIC' && <GlobeAltIcon className="w-3 h-3 text-gray-400" />}
-                                </label>
-                            );
-                        })
-                    )}
-                </div>
-
-                <div className="flex justify-end gap-3">
-                    <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => {
-                            // Merge hidden (initial) shelves with current selection to ensure they aren't lost
-                            const mergedShelves = new Set<string>([...initialShelves, ...selectedShelves]);
-                            onSave(Array.from(mergedShelves));
-                        }}
-                        className="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-accent hover:bg-accent/90 transition-colors shadow-lg hover:shadow-xl"
-                    >
-                        Save Changes
-                    </button>
-                </div>
             </div>
         </div>
     );
@@ -211,7 +104,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
     // Create Shelf State
     const [isCreateShelfModalOpen, setIsCreateShelfModalOpen] = useState(false);
     const [newShelfName, setNewShelfName] = useState('');
-    const [newShelfVisibility, setNewShelfVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
     const [isCreatingShelf, setIsCreatingShelf] = useState(false);
 
     const [writtenBooks, setWrittenBooks] = useState<Book[]>([]);
@@ -245,16 +137,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         return user.library.filter(s => s.id !== 'all' && s.id !== '1' && s.name !== 'My List');
     }, [user.library]);
 
-    const defaultShelves = useMemo(() => {
-        const SYSTEM_IDS = ['reading', 'toread', 'completed'];
-        return dynamicShelves.filter(s => SYSTEM_IDS.includes(s.id) || s.type === 'default');
-    }, [dynamicShelves]);
-
-    const customShelves = useMemo(() => {
-        const SYSTEM_IDS = ['reading', 'toread', 'completed'];
-        return dynamicShelves.filter(s => !SYSTEM_IDS.includes(s.id) && s.type !== 'default');
-    }, [dynamicShelves]);
-
     const allBooks = useMemo(() => {
         const books = new Map<string, LibraryBook>();
         dynamicShelves.forEach(shelf => {
@@ -271,44 +153,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         return dynamicShelves.find(s => s.id === activeShelfId)?.books ?? [];
     }, [activeShelfId, allBooks, writtenBooks, dynamicShelves]);
 
-    const activeShelf = useMemo(() => dynamicShelves.find(s => s.id === activeShelfId), [dynamicShelves, activeShelfId]);
-
     const activeShelfName = useMemo(() => {
         if (activeShelfId === 'all') return 'All Books';
         if (activeShelfId === 'published') return 'Published Works';
-        return activeShelf?.name;
-    }, [activeShelfId, activeShelf]);
+        return dynamicShelves.find(s => s.id === activeShelfId)?.name;
+    }, [activeShelfId, dynamicShelves]);
 
-    const [selectedBookForShelf, setSelectedBookForShelf] = useState<LibraryBook | null>(null);
-    const [isAddToShelfModalOpen, setIsAddToShelfModalOpen] = useState(false);
-
-    const handleAddToShelfClick = (book: LibraryBook) => {
-        setSelectedBookForShelf(book);
-        setIsAddToShelfModalOpen(true);
-    };
-
-    const handleSaveShelves = async (shelfIds: string[]) => {
-        if (!selectedBookForShelf) return;
-        try {
-            const updatedUser = await api.updateBookShelves(user.id, selectedBookForShelf.id, shelfIds);
-            onUserUpdate(updatedUser);
-            setIsAddToShelfModalOpen(false);
-            setSelectedBookForShelf(null);
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const ShelfLink: React.FC<{ name: string; count: number; isActive: boolean; onClick: () => void; isCustom?: boolean; visibility?: 'PUBLIC' | 'PRIVATE' }> = ({ name, count, isActive, onClick, isCustom, visibility }) => (
+    const ShelfLink: React.FC<{ name: string; count: number; isActive: boolean; onClick: () => void }> = ({ name, count, isActive, onClick }) => (
         <button
             onClick={onClick}
             className={`w-full flex justify-between items-center font-sans font-medium px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-accent text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
         >
-            <div className="flex items-center gap-2">
-                <span>{name}</span>
-                {isCustom && visibility === 'PRIVATE' && <LockClosedIcon className={`w-3 h-3 ${isActive ? 'text-white/80' : 'text-gray-400'}`} />}
-                {isCustom && visibility === 'PUBLIC' && <GlobeAltIcon className={`w-3 h-3 ${isActive ? 'text-white/80' : 'text-gray-400'}`} />}
-            </div>
+            <span>{name}</span>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-gray-200 dark:bg-dark-border'}`}>{count}</span>
         </button>
     );
@@ -317,42 +173,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         if (!newShelfName.trim()) return;
         setIsCreatingShelf(true);
         try {
-            const updatedUser = await api.createShelf(user.id, newShelfName, newShelfVisibility);
+            const updatedUser = await api.createShelf(user.id, newShelfName);
             onUserUpdate(updatedUser);
             setIsCreateShelfModalOpen(false);
             setNewShelfName('');
-            setNewShelfVisibility('PRIVATE');
         } catch (error) {
             console.error("Failed to create shelf", error);
+            // Optionally set error state
         } finally {
             setIsCreatingShelf(false);
-        }
-    };
-
-    const handleToggleVisibility = async (shelfId: string, currentVisibility: 'PUBLIC' | 'PRIVATE') => {
-        const newVisibility = currentVisibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC';
-        try {
-            // Optimistic update
-            const updatedShelves = user.library.map(s =>
-                s.id === shelfId ? { ...s, visibility: newVisibility } : s
-            );
-            //We rely on onUserUpdate from API response to set state generally, but for immediate feel we could assume success.
-            //However, let's just wait for API.
-            const updatedUser = await api.toggleShelfVisibility(shelfId, newVisibility);
-            onUserUpdate(updatedUser);
-        } catch (error) {
-            console.error("Failed to toggle visibility", error);
-        }
-    }
-
-    const handleDeleteShelf = async (shelfId: string, shelfName: string) => {
-        if (!window.confirm(`Are you sure you want to delete the shelf "${shelfName}"? Books in this shelf will not be removed from your library.`)) return;
-        try {
-            const updatedUser = await api.deleteShelf(shelfId);
-            onUserUpdate(updatedUser);
-            setActiveShelfId('all');
-        } catch (error) {
-            console.error("Failed to delete shelf", error);
         }
     };
 
@@ -489,45 +318,19 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
                     {/* Sidebar Navigation */}
                     <aside className="lg:w-72 flex-shrink-0">
-                        <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-6 px-2">Library</h2>
+                        <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-6 px-2">Library Shelves</h2>
                         <nav className="space-y-2">
                             <ShelfLink name="All Books" count={allBooks.length} isActive={activeShelfId === 'all'} onClick={() => setActiveShelfId('all')} />
-                            {defaultShelves.map(shelf => (
+                            {dynamicShelves.map(shelf => (
                                 <ShelfLink key={shelf.id} name={shelf.name} count={shelf.books.length} isActive={activeShelfId === shelf.id} onClick={() => setActiveShelfId(shelf.id)} />
                             ))}
+                            {writtenBooks.length > 0 && (
+                                <div className="pt-4 mt-4 border-t border-gray-200 dark:border-dark-border">
+                                    <h3 className="font-sans text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-2">Written By You</h3>
+                                    <ShelfLink name="Published Works" count={writtenBooks.length} isActive={activeShelfId === 'published'} onClick={() => setActiveShelfId('published')} />
+                                </div>
+                            )}
                         </nav>
-
-                        <div className="pt-6 mt-6 border-t border-gray-200 dark:border-dark-border">
-                            <div className="flex items-center justify-between px-2 mb-4">
-                                <h3 className="font-sans text-xs font-bold text-gray-500 uppercase tracking-wider">Custom Shelves</h3>
-                                <button onClick={() => setIsCreateShelfModalOpen(true)} className="text-accent hover:text-accent/80 transition-colors p-1 rounded-full hover:bg-accent/10">
-                                    <PlusIcon className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <nav className="space-y-2">
-                                {customShelves.map(shelf => (
-                                    <ShelfLink
-                                        key={shelf.id}
-                                        name={shelf.name}
-                                        count={shelf.books.length}
-                                        isActive={activeShelfId === shelf.id}
-                                        onClick={() => setActiveShelfId(shelf.id)}
-                                        isCustom={true}
-                                        visibility={shelf.visibility}
-                                    />
-                                ))}
-                                {customShelves.length === 0 && (
-                                    <p className="px-2 text-sm text-gray-400 italic">No custom shelves yet.</p>
-                                )}
-                            </nav>
-                        </div>
-                        {writtenBooks.length > 0 && (
-                            <div className="pt-4 mt-4 border-t border-gray-200 dark:border-dark-border">
-                                <h3 className="font-sans text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-2">Written By You</h3>
-                                <ShelfLink name="Published Works" count={writtenBooks.length} isActive={activeShelfId === 'published'} onClick={() => setActiveShelfId('published')} />
-                            </div>
-                        )}
-
                         <button
                             onClick={() => setIsCreateShelfModalOpen(true)}
                             className="w-full mt-6 flex items-center justify-center gap-2 text-sm font-sans font-bold text-accent bg-accent/10 px-4 py-3 rounded-xl hover:bg-accent/20 transition-colors border border-accent/20"
@@ -539,31 +342,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                     {/* Content Area */}
                     <main className="flex-1">
                         <div className="flex justify-between items-center mb-8">
-                            <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich flex items-center gap-3">
+                            <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">
                                 {activeShelfName}
-                                {activeShelf && !['all', 'reading', 'toread', 'completed'].includes(activeShelf.id) && activeShelf.type !== 'default' && (
-                                    <span className="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-dark-surface-alt rounded-md text-gray-500 flex items-center gap-1">
-                                        {activeShelf.visibility === 'PUBLIC' ? <GlobeAltIcon className="w-3 h-3" /> : <LockClosedIcon className="w-3 h-3" />}
-                                        {activeShelf.visibility || 'PRIVATE'}
-                                    </span>
-                                )}
                             </h2>
-                            {activeShelf && !['all', 'reading', 'toread', 'completed'].includes(activeShelf.id) && activeShelf.type !== 'default' && (
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleToggleVisibility(activeShelf.id, activeShelf.visibility || 'PRIVATE')}
-                                        className="text-sm font-medium text-accent hover:underline flex items-center gap-1.5 bg-accent/5 px-3 py-1.5 rounded-lg hover:bg-accent/10 transition-colors"
-                                    >
-                                        {activeShelf.visibility === 'PUBLIC' ? 'Make Private' : 'Make Public'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteShelf(activeShelf.id, activeShelf.name)}
-                                        className="text-sm font-medium text-danger hover:text-white flex items-center gap-1.5 bg-danger/10 px-3 py-1.5 rounded-lg hover:bg-danger transition-colors"
-                                    >
-                                        <TrashIcon className="w-4 h-4" /> Delete
-                                    </button>
-                                </div>
-                            )}
+                            {/* Potential Sort/Filter controls here */}
                         </div>
 
                         {booksToDisplay.length > 0 ? (
@@ -573,12 +355,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                         {activeShelfId === 'published' ? (
                                             <BookCard book={book as Book} onClick={() => window.location.hash = `/book/${book.id}`} />
                                         ) : (
-                                            <LibraryBookCard
-                                                book={book as LibraryBook}
-                                                onRemove={handleRemoveBook}
-                                                onRestart={handleRestartBook}
-                                                onAddToShelf={handleAddToShelfClick}
-                                            />
+                                            <LibraryBookCard book={book as LibraryBook} onRemove={handleRemoveBook} onRestart={handleRestartBook} />
                                         )}
                                     </div>
                                 ))}
@@ -603,78 +380,50 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
             />
 
             {/* Create Shelf Modal */}
-            {
-                isCreateShelfModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Create New Shelf</h3>
-                                <button onClick={() => setIsCreateShelfModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                                    <XMarkIcon className="w-6 h-6" />
-                                </button>
+            {isCreateShelfModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Create New Shelf</h3>
+                            <button onClick={() => setIsCreateShelfModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Shelf Name</label>
+                                <input
+                                    type="text"
+                                    value={newShelfName}
+                                    onChange={(e) => setNewShelfName(e.target.value)}
+                                    placeholder="e.g. My Favorites, Must Read"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-dark-surface-alt border-2 border-transparent focus:border-accent focus:bg-white dark:focus:bg-dark-surface outline-none transition-all font-sans text-text-rich dark:text-dark-text-rich"
+                                    autoFocus
+                                />
                             </div>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Shelf Name</label>
-                                    <input
-                                        type="text"
-                                        value={newShelfName}
-                                        onChange={(e) => setNewShelfName(e.target.value)}
-                                        placeholder="e.g. My Favorites, Must Read"
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-dark-surface-alt border-2 border-transparent focus:border-accent focus:bg-white dark:focus:bg-dark-surface outline-none transition-all font-sans text-text-rich dark:text-dark-text-rich"
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visibility</label>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => setNewShelfVisibility('PRIVATE')}
-                                            className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${newShelfVisibility === 'PRIVATE' ? 'border-accent bg-accent/5 text-accent font-bold' : 'border-gray-200 dark:border-dark-surface-alt text-gray-500 hover:border-gray-300'}`}
-                                        >
-                                            <LockClosedIcon className="w-4 h-4" /> Private
-                                        </button>
-                                        <button
-                                            onClick={() => setNewShelfVisibility('PUBLIC')}
-                                            className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${newShelfVisibility === 'PUBLIC' ? 'border-accent bg-accent/5 text-accent font-bold' : 'border-gray-200 dark:border-dark-surface-alt text-gray-500 hover:border-gray-300'}`}
-                                        >
-                                            <GlobeAltIcon className="w-4 h-4" /> Public
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        onClick={() => setIsCreateShelfModalOpen(false)}
-                                        className="flex-1 py-3 font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-surface-alt hover:bg-gray-200 dark:hover:bg-dark-border rounded-xl transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleCreateShelf}
-                                        disabled={!newShelfName.trim() || isCreatingShelf}
-                                        className="flex-1 py-3 font-bold text-white bg-accent hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors shadow-lg shadow-accent/20"
-                                    >
-                                        {isCreatingShelf ? 'Creating...' : 'Create Shelf'}
-                                    </button>
-                                </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setIsCreateShelfModalOpen(false)}
+                                    className="flex-1 py-3 font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-dark-surface-alt hover:bg-gray-200 dark:hover:bg-dark-border rounded-xl transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCreateShelf}
+                                    disabled={!newShelfName.trim() || isCreatingShelf}
+                                    className="flex-1 py-3 font-bold text-white bg-accent hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors shadow-lg shadow-accent/20"
+                                >
+                                    {isCreatingShelf ? 'Creating...' : 'Create Shelf'}
+                                </button>
                             </div>
                         </div>
                     </div>
-                )
-            }
-
-            <AddToShelfModal
-                isOpen={isAddToShelfModalOpen}
-                onClose={() => setIsAddToShelfModalOpen(false)}
-                book={selectedBookForShelf}
-                customShelves={customShelves}
-                onSave={handleSaveShelves}
-            />
+                </div>
+            )}
 
             <Footer />
-        </div >
+        </div>
     );
 };
