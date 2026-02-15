@@ -99,8 +99,8 @@ public class BookService {
     
     public List<Map<String, Object>> getBooksByAuthor(String authorId) {
         String currentUserId = getCurrentUserId();
-        return bookRepository.findByAuthorId(authorId).stream()
-                .filter(b -> "published".equals(b.getPublicationStatus()))
+        // Use repository method for efficient filtering
+        return bookRepository.findByAuthorIdAndPublicationStatus(authorId, "published").stream()
                 .map(b -> enrichBook(b, currentUserId))
                 .collect(Collectors.toList());
     }
