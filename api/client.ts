@@ -2,8 +2,8 @@
 
 import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
 
-const API_BASE_URL = 'http://localhost:8080/api';
-// const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
+//const API_BASE_URL = 'http://localhost:8080/api';
+ const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
 const JWT_KEY = 'wordweft_jwt';
 
 // --- Helper Functions ---
@@ -37,9 +37,9 @@ export async function login(email: string, password_used: string): Promise<User 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: password_used })
     });
-    
+
     const data = await handleResponse(response);
-    
+
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
         return await getMe();
@@ -55,7 +55,7 @@ export async function signup(username: string, email: string, password: string):
     });
 
     const data = await handleResponse(response);
-    
+
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
         return mapBackendUserToFrontend(data);
@@ -223,7 +223,7 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
 
 export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, progressPercentage: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
-    
+
     await fetch(`${API_BASE_URL}/reading/progress`, {
         method: 'POST',
         headers: getHeaders(),
@@ -260,6 +260,24 @@ export async function removeBookFromLibrary(userId: string, bookId: string): Pro
     const response = await fetch(`${API_BASE_URL}/library/${bookId}`, {
         method: 'DELETE',
         headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function createShelf(userId: string, name: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/library/shelves`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ name })
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function updateBookShelves(userId: string, bookId: string, shelfIds: string[]): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/library/books/${bookId}/shelves`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ shelfIds })
     });
     return mapBackendUserToFrontend(await handleResponse(response));
 }

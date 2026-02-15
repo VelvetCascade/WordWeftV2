@@ -7,6 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -17,6 +19,11 @@ public class LibraryEntry {
     private String id;
     private String userId;
     private String bookId;
+    @Deprecated
     private String shelfName = "My List"; // Default shelf
+
+    // Store IDs of shelves this book belongs to
+    private Set<String> shelfIds = new HashSet<>();
+
     private LocalDate addedDate;
 }
