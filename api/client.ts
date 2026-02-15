@@ -2,8 +2,8 @@
 
 import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note } from '../types';
 
-const API_BASE_URL = 'http://localhost:8080/api';
-//  const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
+// const API_BASE_URL = 'http://localhost:8080/api';
+ const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
 const JWT_KEY = 'wordweft_jwt';
 
 // --- Helper Functions ---
