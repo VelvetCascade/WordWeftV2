@@ -223,11 +223,15 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
 
             {/* Content Area */}
             <div className="container mx-auto max-w-4xl px-4 md:px-6 py-8">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-6 gap-3 flex-wrap">
                     <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Table of Contents</h2>
-                    <span className="text-sm text-gray-500 font-medium">
-                        {publishedChapterCount} / {book.chapters.length} Published
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => window.location.hash = `/write/book/${bookId}/structure`} className="text-xs px-3 py-1.5 rounded bg-gray-100 dark:bg-dark-surface-alt">Structural Deck</button>
+                        <button onClick={() => window.location.hash = `/write/book/${bookId}/export`} className="text-xs px-3 py-1.5 rounded bg-gray-100 dark:bg-dark-surface-alt">Publisher Preview</button>
+                        <span className="text-sm text-gray-500 font-medium">
+                            {publishedChapterCount} / {book.chapters.length} Published
+                        </span>
+                    </div>
                 </div>
 
                  <div className="space-y-3">

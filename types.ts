@@ -54,12 +54,28 @@ export interface Comment {
     };
 }
 
+export type StoryElementCategory = 'CHARACTER' | 'LOCATION' | 'ITEM';
+
+export interface StoryElement {
+  id: string;
+  name: string;
+  category: StoryElementCategory;
+  description: string;
+  imageUrl?: string;
+  bookId: string;
+}
+
 export interface Chapter {
   id: string;
   title: string;
   wordCount: number;
   content: string;
+  contentJson?: string;
   status: 'draft' | 'published';
+  workflowStatus?: 'Draft' | 'Edit' | 'Done';
+  povCharacter?: string;
+  sortOrder?: number;
+  scrapyardSnippets?: string[];
   // Stats
   viewCount: number;
   likesCount: number;

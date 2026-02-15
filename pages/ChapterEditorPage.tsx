@@ -1,8 +1,13 @@
-
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import type { User } from '../types';
-import { ArrowLeftIcon, EyeIcon, XMarkIcon } from '../components/icons/Icons';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { User, StoryElement } from '../types';
+import { ArrowLeftIcon, EyeIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import Mention from '@tiptap/extension-mention';
+import suggestion from '@tiptap/suggestion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChapterEditorPageProps {
   currentUser: User;
@@ -11,179 +16,206 @@ interface ChapterEditorPageProps {
   onUserUpdate: (user: User) => void;
 }
 
-const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string }> = ({ isOpen, onClose, title, content }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-dark-surface w-full max-w-3xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-dark-surface-alt hover:bg-gray-200 transition-colors z-10">
-                    <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-                </button>
-                <div className="overflow-y-auto p-8 md:p-12">
-                    <div className="max-w-prose mx-auto">
-                        <h1 className="text-4xl font-serif font-bold mb-8 leading-snug text-text-rich dark:text-dark-text-rich">{title || 'Untitled Chapter'}</h1>
-                        <div className="prose prose-lg lg:prose-xl dark:prose-invert font-serif text-text-body dark:text-dark-text-body">
-                            {content.split('\n').map((paragraph, index) => (
-                                <p key={index} className="mb-4">{paragraph}</p>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+const toPlainText = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+const applySmartFormatting = (text: string): string => {
+  return text
+    .replace(/\.\.\./g, '…')
+    .replace(/--/g, '—')
+    .replace(/"([^\"]+)"/g, '“$1”');
 };
 
 export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
   const [chapterId, setChapterId] = useState(initialChapterId);
-  const isNewChapter = chapterId === 'new';
-  
   const book = currentUser.writtenBooks?.find(b => b.id === bookId);
-  const chapter = isNewChapter ? null : book?.chapters.find(c => c.id === chapterId);
-  
+  const chapter = chapterId === 'new' ? null : book?.chapters.find(c => c.id === chapterId);
   const [title, setTitle] = useState(chapter?.title || '');
-  const [content, setContent] = useState(chapter?.content || '');
   const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [isZenMode, setIsZenMode] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
+  const [isScrapyardOpen, setIsScrapyardOpen] = useState(false);
+  const [contextElement, setContextElement] = useState<StoryElement | null>(null);
+  const [storyElements, setStoryElements] = useState<StoryElement[]>([]);
   const saveTimeoutRef = useRef<number | null>(null);
-  
-  const wordCount = useMemo(() => content.split(/\s+/).filter(Boolean).length, [content]);
 
   useEffect(() => {
-    return () => {
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
+    api.getStoryElements(bookId).then(setStoryElements).catch(() => setStoryElements([]));
+  }, [bookId]);
+
+  const mentionExt = Mention.configure({
+    HTMLAttributes: { class: 'text-accent font-semibold' },
+    suggestion: {
+      ...suggestion,
+      items: async ({ query }) => {
+        const list = await api.getStoryElements(bookId, query);
+        return list.slice(0, 8).map(item => ({ id: item.id, label: item.name }));
+      },
+      render: () => {
+        let el: HTMLDivElement;
+        return {
+          onStart: props => {
+            el = document.createElement('div');
+            el.className = 'bg-white border rounded-lg shadow-xl p-2 text-sm';
+            el.innerHTML = props.items.map((i: any) => `<div class="px-2 py-1">${i.label}</div>`).join('');
+            document.body.appendChild(el);
+          },
+          onUpdate: props => {
+            el.innerHTML = props.items.map((i: any) => `<div class="px-2 py-1">${i.label}</div>`).join('');
+          },
+          onExit: () => {
+            if (el) el.remove();
+          }
+        };
+      }
+    }
+  });
+
+  const editor = useEditor({
+    extensions: [StarterKit, Placeholder.configure({ placeholder: 'Start writing your chapter...' }), mentionExt],
+    content: chapter?.contentJson || chapter?.content || '',
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      const plain = toPlainText(html);
+      const smart = applySmartFormatting(plain);
+      if (smart !== plain) {
+        editor.commands.setContent(`<p>${smart}</p>`, false);
+      }
+      debouncedSave('draft', editor.getHTML());
+    },
+    onSelectionUpdate: async ({ editor }) => {
+      const pos = editor.state.selection.$from.pos;
+      const coords = editor.view.coordsAtPos(pos);
+      const viewportCenter = window.innerHeight / 2;
+      window.scrollBy({ top: coords.top - viewportCenter, behavior: 'smooth' });
+
+      const selected = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, ' ').trim();
+      const word = selected || editor.state.doc.textBetween(Math.max(1, pos - 15), pos + 1, ' ').split(/\s+/).pop() || '';
+      if (word.length > 2) {
+        const match = await api.lookupStoryElement(bookId, word.replace(/[^a-zA-Z]/g, ''));
+        setContextElement(match);
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (!editor) return;
+    const onKey = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Delete') {
+        e.preventDefault();
+        const { from, to } = editor.state.selection;
+        const snippet = editor.state.doc.textBetween(from, to, ' ').trim();
+        if (!snippet) return;
+        editor.commands.deleteSelection();
+        await api.addScrapyardSnippet(bookId, chapterId === 'new' ? 'new' : chapterId, snippet).catch(() => undefined);
+        setIsScrapyardOpen(true);
+      }
     };
-  }, []);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editor, bookId, chapterId]);
 
-  const handleSave = async (status: 'draft' | 'published', currentContent: string, currentTitle: string) => {
+  const scrapyard = chapter?.scrapyardSnippets || [];
+
+  const handleSave = async (status: 'draft' | 'published', htmlContent: string) => {
+    if (!editor) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    if (!currentTitle && !currentContent) return; // Don't save empty chapters
-
     setSaveState('saving');
-    
     try {
-        const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: currentTitle, content: currentContent }, status);
-        onUserUpdate(updatedUser);
-
-        // If it was a new chapter, find its newly created ID and update state
-        if (chapterId === 'new') {
-            const newChapter = updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === currentTitle);
-            if (newChapter) {
-                setChapterId(newChapter.id);
-            }
-        }
-        
-        setSaveState('saved');
-
-        if (status === 'published') {
-            window.location.hash = `/write/book/${bookId}/manage`;
-        }
-    } catch (error) {
-        console.error("Failed to save chapter:", error);
-        setSaveState('unsaved');
+      const payload = {
+        title,
+        content: toPlainText(htmlContent),
+        contentJson: htmlContent,
+        povCharacter: chapter?.povCharacter || '',
+        workflowStatus: chapter?.workflowStatus || 'Draft'
+      };
+      const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, payload, status);
+      onUserUpdate(updatedUser);
+      if (chapterId === 'new') {
+        const created = updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === title);
+        if (created) setChapterId(created.id);
+      }
+      setSaveState('saved');
+      if (status === 'published') window.location.hash = `/write/book/${bookId}/manage`;
+    } catch {
+      setSaveState('unsaved');
     }
   };
 
-  const debouncedSave = (status: 'draft' | 'published', newContent: string, newTitle: string) => {
+  const debouncedSave = (status: 'draft' | 'published', htmlContent: string) => {
     setSaveState('unsaved');
-    if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = window.setTimeout(() => {
-        handleSave(status, newContent, newTitle);
-    }, 2000);
-  }
-
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    debouncedSave('draft', newContent, title);
-  };
-  
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle);
-    debouncedSave('draft', content, newTitle);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = window.setTimeout(() => handleSave(status, htmlContent), 1500);
   };
 
-  const getSaveText = () => {
-    switch(saveState) {
-        case 'saving': return 'Saving...';
-        case 'saved': return '✓ Saved';
-        case 'unsaved': return '...';
-    }
-  };
-  
-  if (!book) return <div className="p-8">Book not found.</div>;
+  const wordCount = useMemo(() => toPlainText(editor?.getHTML() || '').split(/\s+/).filter(Boolean).length, [editor?.state]);
+
+  if (!book || !editor) return <div className="p-8">Loading editor...</div>;
+
+  const canvas = (
+    <div className="flex flex-col h-screen bg-[#f7f6f3] dark:bg-dark-background">
+      <header className="h-14 border-b bg-white/90 px-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button onClick={() => (window.location.hash = `/write/book/${bookId}/manage`)}><ArrowLeftIcon className="w-5 h-5" /></button>
+          <input value={title} onChange={e => setTitle(e.target.value)} className="font-bold bg-transparent outline-none" placeholder="Chapter title" />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setIsZenMode(v => !v)} className="px-3 py-1 rounded bg-gray-100">Zen</button>
+          <button onClick={() => setIsScrapyardOpen(v => !v)} className="px-3 py-1 rounded bg-gray-100">Scrapyard</button>
+          <button onClick={() => setIsPreviewOpen(v => !v)}><EyeIcon className="w-5 h-5" /></button>
+          <button onClick={() => handleSave('published', editor.getHTML())} className="px-3 py-1 rounded bg-accent text-white">Publish</button>
+        </div>
+      </header>
+
+      <div className="flex-1 flex overflow-hidden">
+        <main className="flex-1 overflow-y-auto px-4 py-8">
+          <div className="mx-auto max-w-3xl min-h-full bg-white rounded-2xl p-8 shadow-sm">
+            <EditorContent editor={editor} className="prose prose-lg max-w-none focus:outline-none" />
+          </div>
+        </main>
+        <aside className="w-80 border-l bg-white p-4 overflow-y-auto">
+          <h3 className="font-bold mb-3">Story Bible</h3>
+          {contextElement ? (
+            <div className="border rounded-xl p-3">
+              <p className="text-xs text-gray-500">{contextElement.category}</p>
+              <p className="font-semibold">{contextElement.name}</p>
+              <p className="text-sm mt-1">{contextElement.description}</p>
+            </div>
+          ) : <p className="text-sm text-gray-500">Select a name to load context.</p>}
+          <div className="mt-4 space-y-2">
+            {storyElements.map(el => <div key={el.id} className="text-sm border rounded px-2 py-1">{el.name}</div>)}
+          </div>
+        </aside>
+      </div>
+
+      <footer className="h-8 text-xs text-center text-gray-500">{wordCount} words · {saveState}</footer>
+
+      <AnimatePresence>
+        {isScrapyardOpen && (
+          <motion.div initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }} className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-xl p-4 max-h-52 overflow-y-auto">
+            <p className="font-semibold mb-2">Scrapyard</p>
+            <div className="flex flex-wrap gap-2">
+              {scrapyard.map((s, i) => (
+                <span key={i} draggable onDragStart={e => e.dataTransfer.setData('text/plain', s)} className="px-2 py-1 bg-gray-100 rounded text-sm cursor-grab">{s}</span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {isPreviewOpen && <div className="fixed inset-0 bg-black/60 z-50" onClick={() => setIsPreviewOpen(false)} />}
+    </div>
+  );
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-dark-surface">
-        <header className="flex-shrink-0 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b dark:border-dark-border z-10">
-            <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                    <button 
-                        onClick={() => window.location.hash = `/write/book/${bookId}/manage`} 
-                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors flex-shrink-0"
-                    >
-                        <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <div className="min-w-0">
-                        <p className="text-xs text-text-body dark:text-dark-text-body truncate">{book.title}</p>
-                        <input 
-                            type="text"
-                            value={title}
-                            onChange={e => handleTitleChange(e.target.value)}
-                            placeholder="Chapter Title"
-                            className="font-sans font-bold text-md bg-transparent border-none focus:ring-0 p-0 w-full dark:text-dark-text-rich"
-                        />
-                    </div>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
-                     <button 
-                        onClick={() => setIsPreviewOpen(true)}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" 
-                        title="Preview"
-                     >
-                        <EyeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
-                    </button>
-                    <button 
-                        onClick={() => handleSave('draft', content, title)}
-                        className="hidden sm:inline-block bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-border transition-colors text-sm"
-                    >
-                        Save Draft
-                    </button>
-                    <button 
-                         onClick={() => handleSave('published', content, title)}
-                        className="bg-accent text-white font-sans font-semibold px-3 sm:px-4 py-2 rounded-lg hover:bg-primary transition-colors text-sm"
-                    >
-                        Publish
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto">
-            <div className="container mx-auto px-4 sm:px-6 py-8 h-full">
-                <textarea 
-                    value={content}
-                    onChange={e => handleContentChange(e.target.value)}
-                    className="w-full h-full max-w-prose mx-auto bg-transparent font-serif text-lg leading-relaxed focus:outline-none resize-none dark:text-dark-text-body"
-                    placeholder="Start writing your chapter..."
-                />
-            </div>
-        </main>
-        <footer className="flex-shrink-0 container mx-auto px-4 sm:px-6 h-8 flex items-center justify-center">
-             <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">{wordCount.toLocaleString()} words</p>
-        </footer>
-        
-        <PreviewModal 
-            isOpen={isPreviewOpen} 
-            onClose={() => setIsPreviewOpen(false)} 
-            title={title} 
-            content={content} 
-        />
-    </div>
+    <>
+      {canvas}
+      <AnimatePresence>
+        {isZenMode && (
+          <motion.div className="fixed inset-0 z-[80]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {canvas}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
