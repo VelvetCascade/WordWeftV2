@@ -88,25 +88,13 @@ public class UserService {
         }
         map.put("stats", stats);
 
-        boolean isOwner = user.getId().equals(currentViewerId);
-
         // Populate Written Books
         List<Book> written = bookRepository.findByAuthorId(user.getId());
-        if (!isOwner) {
-            written = written.stream()
-                    .filter(b -> "published".equals(b.getPublicationStatus()))
-                    .collect(Collectors.toList());
-        }
         map.put("writtenBooks", written);
 
         // Populate Library
         List<LibraryEntry> entries = libraryRepository.findByUserId(user.getId());
         List<com.wordweft.book.model.Shelf> customShelves = shelfRepository.findByUserId(user.getId());
-        if (!isOwner) {
-            customShelves = customShelves.stream()
-                    .filter(s -> "PUBLIC".equals(s.getVisibility()))
-                    .collect(Collectors.toList());
-        }
 
         // Fetch all reading progress
         List<com.wordweft.book.model.ReadingProgress> progressList = readingProgressRepository
@@ -115,6 +103,19 @@ public class UserService {
                 .collect(Collectors.toMap(com.wordweft.book.model.ReadingProgress::getBookId, p -> p));
 
         List<Map<String, Object>> shelves = new ArrayList<>();
+
+        // 1. Default "All Books" Shelf (conceptually "My List" or "All")
+        // We can keep the existing behavior or just have "All Books" be implicit in
+        // frontend.
+        // Let's model it as a shelf for consistency.
+        Map<String, Object> allBooksShelf = new HashMap<>();
+        allBooksShelf.put("id", "all");
+        allBooksShelf.put("name", "All Books");
+
+        List<Map<String, Object>> allBooks = new ArrayList<>();
+        List<Map<String, Object>> readingBooks = new ArrayList<>();
+        List<Map<String, Object>> toReadBooks = new ArrayList<>();
+        List<Map<String, Object>> completedBooks = new ArrayList<>();
 
         // Map to hold books for efficient lookup and shelf assignment
         Map<String, Map<String, Object>> bookMap = new HashMap<>();
@@ -128,22 +129,10 @@ public class UserService {
                 com.wordweft.book.model.ReadingProgress p = progressMap.get(e.getBookId());
                 int progress = p != null ? p.getOverallProgress() : 0;
                 b.put("progress", progress);
-                b.put("shelfIds", e.getShelfIds());
 
-                bookMap.put(e.getBookId(), b);
-            }
-        }
-
-        // Default shelves are only visible to the profile owner
-        if (isOwner) {
-            List<Map<String, Object>> allBooks = new ArrayList<>();
-            List<Map<String, Object>> readingBooks = new ArrayList<>();
-            List<Map<String, Object>> toReadBooks = new ArrayList<>();
-            List<Map<String, Object>> completedBooks = new ArrayList<>();
-
-            for (Map<String, Object> b : bookMap.values()) {
-                int progress = (int) b.get("progress");
                 allBooks.add(b);
+                bookMap.put(e.getBookId(), b);
+
                 if (progress >= 100) {
                     completedBooks.add(b);
                 } else if (progress > 0) {
@@ -152,43 +141,34 @@ public class UserService {
                     toReadBooks.add(b);
                 }
             }
-
-            Map<String, Object> allBooksShelf = new HashMap<>();
-            allBooksShelf.put("id", "all");
-            allBooksShelf.put("name", "All Books");
-            allBooksShelf.put("type", "default");
-            allBooksShelf.put("books", allBooks);
-            shelves.add(allBooksShelf);
-
-            Map<String, Object> readingShelf = new HashMap<>();
-            readingShelf.put("id", "reading");
-            readingShelf.put("name", "Reading");
-            readingShelf.put("type", "default");
-            readingShelf.put("books", readingBooks);
-            shelves.add(readingShelf);
-
-            Map<String, Object> toReadShelf = new HashMap<>();
-            toReadShelf.put("id", "toread");
-            toReadShelf.put("name", "To Read");
-            toReadShelf.put("type", "default");
-            toReadShelf.put("books", toReadBooks);
-            shelves.add(toReadShelf);
-
-            Map<String, Object> completedShelf = new HashMap<>();
-            completedShelf.put("id", "completed");
-            completedShelf.put("name", "Completed");
-            completedShelf.put("type", "default");
-            completedShelf.put("books", completedBooks);
-            shelves.add(completedShelf);
         }
+        allBooksShelf.put("books", allBooks);
+        shelves.add(allBooksShelf);
+
+        // Add System Shelves
+        Map<String, Object> readingShelf = new HashMap<>();
+        readingShelf.put("id", "reading");
+        readingShelf.put("name", "Reading");
+        readingShelf.put("books", readingBooks);
+        shelves.add(readingShelf);
+
+        Map<String, Object> toReadShelf = new HashMap<>();
+        toReadShelf.put("id", "toread");
+        toReadShelf.put("name", "To Read");
+        toReadShelf.put("books", toReadBooks);
+        shelves.add(toReadShelf);
+
+        Map<String, Object> completedShelf = new HashMap<>();
+        completedShelf.put("id", "completed");
+        completedShelf.put("name", "Completed");
+        completedShelf.put("books", completedBooks);
+        shelves.add(completedShelf);
 
         // Add Custom Shelves
         for (com.wordweft.book.model.Shelf s : customShelves) {
             Map<String, Object> shelfMap = new HashMap<>();
             shelfMap.put("id", s.getId());
             shelfMap.put("name", s.getName());
-            shelfMap.put("type", "custom");
-            shelfMap.put("visibility", s.getVisibility());
 
             List<Map<String, Object>> shelfBooks = new ArrayList<>();
             // LibraryEntry now has shelfIds

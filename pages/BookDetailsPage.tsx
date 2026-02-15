@@ -218,7 +218,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     // Manage Shelves State
     const [isManageShelvesModalOpen, setIsManageShelvesModalOpen] = useState(false);
     const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set());
-    const [initialShelfIds, setInitialShelfIds] = useState<Set<string>>(new Set()); // Track existing shelves that are hidden
     const [isSavingShelves, setIsSavingShelves] = useState(false);
 
     const openManageShelvesModal = () => {
@@ -230,7 +229,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             }
         });
         setSelectedShelfIds(currentShelfIds);
-        setInitialShelfIds(currentShelfIds);
         setIsManageShelvesModalOpen(true);
     };
 
@@ -238,9 +236,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser) return;
         setIsSavingShelves(true);
         try {
-            // Merge hidden (initial) shelves with selected shelves
-            const mergedShelves = new Set<string>([...initialShelfIds, ...selectedShelfIds]);
-            const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(mergedShelves));
+            const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(selectedShelfIds));
             onUserUpdate(updatedUser);
             setIsManageShelvesModalOpen(false);
         } catch (e) {
@@ -600,7 +596,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </div>
 
                         <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2">
-                            {currentUser?.library.filter(s => s.id !== 'all' && s.type !== 'default' && s.id !== 'reading' && s.id !== 'toread' && s.id !== 'completed' && !s.books.some(b => b.id === bookId)).map(shelf => (
+                            {currentUser?.library.filter(s => s.id !== 'all').map(shelf => (
                                 <label key={shelf.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-surface-alt cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-dark-border">
                                     <input
                                         type="checkbox"
