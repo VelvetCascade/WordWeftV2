@@ -135,14 +135,21 @@ public class BookService {
         map.put("description", book.getDescription());
         
         // Enrich Chapters
-        List<Map<String, Object>> enrichedChapters = book.getChapters().stream().map(ch -> {
+        List<Map<String, Object>> enrichedChapters = book.getChapters().stream()
+                .sorted(Comparator.comparing(ch -> ch.getSortOrder() == null ? Integer.MAX_VALUE : ch.getSortOrder()))
+                .map(ch -> {
             Map<String, Object> cMap = new HashMap<>();
             cMap.put("id", ch.getId());
             cMap.put("title", ch.getTitle());
             cMap.put("wordCount", ch.getWordCount());
-            cMap.put("content", ch.getContent()); 
+            cMap.put("content", ch.getContent());
+            cMap.put("contentJson", ch.getContentJson());
             cMap.put("status", ch.getStatus());
-            
+            cMap.put("workflowStatus", ch.getWorkflowStatus());
+            cMap.put("povCharacter", ch.getPovCharacter());
+            cMap.put("sortOrder", ch.getSortOrder());
+            cMap.put("scrapyardSnippets", ch.getScrapyardSnippets());
+
             // Chapter Stats
             cMap.put("viewCount", ch.getViewCount());
             cMap.put("commentCount", ch.getCommentCount());

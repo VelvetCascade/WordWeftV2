@@ -133,43 +133,85 @@ public class BookController {
     public ResponseEntity<?> saveChapter(@PathVariable String bookId, @PathVariable String chapterId, @RequestBody Map<String, Object> payload) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Book book = bookRepository.findById(bookId).orElseThrow();
-        
+
         if (!book.getAuthorId().equals(userDetails.getId())) {
             return ResponseEntity.status(403).body("Not authorized to edit this book");
         }
-        
+
         Chapter chapter;
         boolean isNew = "new".equals(chapterId);
-        
+
         if (isNew) {
             chapter = new Chapter();
+            chapter.setSortOrder(book.getChapters().size());
             book.getChapters().add(chapter);
         } else {
             chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
         }
-        
-        Map<String, String> data = (Map<String, String>) payload.get("data");
+
+        Map<String, Object> data = (Map<String, Object>) payload.get("data");
         String status = (String) payload.get("status");
-        
-        chapter.setTitle(data.get("title"));
-        chapter.setContent(data.get("content"));
+
+        chapter.setTitle((String) data.getOrDefault("title", chapter.getTitle()));
+        chapter.setContent((String) data.getOrDefault("content", chapter.getContent()));
+        chapter.setContentJson((String) data.getOrDefault("contentJson", chapter.getContentJson()));
+        chapter.setPovCharacter((String) data.getOrDefault("povCharacter", chapter.getPovCharacter()));
+        chapter.setWorkflowStatus((String) data.getOrDefault("workflowStatus", chapter.getWorkflowStatus()));
         chapter.updateWordCount();
-        
-        // If changing to published
+
         if ("published".equals(status) && !"published".equals(chapter.getStatus())) {
             chapter.setStatus("published");
-            // If the book is already public, bump the published date so it appears as "Updated"
             if ("published".equals(book.getPublicationStatus())) {
                 book.setPublishedDate(LocalDate.now());
             }
         } else if ("draft".equals(status)) {
             chapter.setStatus("draft");
         }
-        
+
         bookRepository.save(book);
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
-    
+
+    @PatchMapping("/{bookId}/chapters/reorder")
+    public ResponseEntity<?> reorderChapters(@PathVariable String bookId, @RequestBody Map<String, List<String>> payload) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        if (!book.getAuthorId().equals(userDetails.getId())) {
+            return ResponseEntity.status(403).body("Not authorized");
+        }
+
+        List<String> orderedIds = payload.get("chapterIds");
+        if (orderedIds == null || orderedIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("chapterIds required");
+        }
+
+        for (int i = 0; i < orderedIds.size(); i++) {
+            String id = orderedIds.get(i);
+            book.getChapters().stream().filter(c -> c.getId().equals(id)).findFirst().ifPresent(c -> c.setSortOrder(i));
+        }
+
+        bookRepository.save(book);
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
+
+    @PostMapping("/{bookId}/chapters/{chapterId}/scrapyard")
+    public ResponseEntity<?> addScrapyardSnippet(@PathVariable String bookId, @PathVariable String chapterId, @RequestBody Map<String, String> payload) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        if (!book.getAuthorId().equals(userDetails.getId())) {
+            return ResponseEntity.status(403).body("Not authorized");
+        }
+
+        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
+        String snippet = payload.get("snippet");
+        if (snippet == null || snippet.isBlank()) {
+            return ResponseEntity.badRequest().body("snippet required");
+        }
+        chapter.getScrapyardSnippets().add(0, snippet);
+        bookRepository.save(book);
+        return ResponseEntity.ok(chapter.getScrapyardSnippets());
+    }
+
     @PatchMapping("/{bookId}/status")
     public ResponseEntity<?> updateBookStatus(@PathVariable String bookId, @RequestBody Map<String, String> payload) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

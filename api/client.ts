@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, StoryElement } from '../types';
 
 //const API_BASE_URL = 'http://localhost:8080/api';
  const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
@@ -310,6 +310,46 @@ export async function saveChapter(userId: string, bookId: string, chapterId: any
     });
     return mapBackendUserToFrontend(await handleResponse(response));
 }
+
+export async function reorderChapters(bookId: string, chapterIds: string[]): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/reorder`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ chapterIds })
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function addScrapyardSnippet(bookId: string, chapterId: string, snippet: string): Promise<string[]> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/scrapyard`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ snippet })
+    });
+    return await handleResponse(response);
+}
+
+export async function getStoryElements(bookId: string, query = ''): Promise<StoryElement[]> {
+    const url = `${API_BASE_URL}/books/${bookId}/story-elements${query ? `?q=${encodeURIComponent(query)}` : ''}`;
+    const response = await fetch(url, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function lookupStoryElement(bookId: string, name: string): Promise<StoryElement | null> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/story-elements/lookup?name=${encodeURIComponent(name)}`, { headers: getHeaders() });
+    if (!response.ok) return null;
+    return await handleResponse(response);
+}
+
+export async function createStoryElement(bookId: string, payload: Partial<StoryElement>): Promise<StoryElement> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/story-elements`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(payload)
+    });
+    return await handleResponse(response);
+}
+
 
 export async function setBookStatus(userId: string, bookId: string, status: 'draft' | 'published'): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/status`, {

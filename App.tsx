@@ -11,6 +11,8 @@ import { WriterDashboardPage } from './pages/WriterDashboardPage';
 import { CreateBookPage } from './pages/CreateBookPage';
 import { ManageChaptersPage } from './pages/ManageChaptersPage';
 import { ChapterEditorPage } from './pages/ChapterEditorPage';
+import { StructureView } from './pages/StructureView';
+import { ExportPreview } from './pages/ExportPreview';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
@@ -27,6 +29,8 @@ export type Page =
   | { name: 'writer-create-book' }
   | { name: 'writer-manage-book'; bookId: string }
   | { name: 'writer-edit-chapter'; bookId: string, chapterId: string | 'new' }
+  | { name: 'writer-structure'; bookId: string }
+  | { name: 'writer-export-preview'; bookId: string }
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; authorId: string }
@@ -119,6 +123,10 @@ const App: React.FC = () => {
         const bookId = parts[2];
         if (parts[3] === 'manage') {
           targetPage = { name: 'writer-manage-book', bookId };
+        } else if (parts[3] === 'structure') {
+          targetPage = { name: 'writer-structure', bookId };
+        } else if (parts[3] === 'export') {
+          targetPage = { name: 'writer-export-preview', bookId };
         } else if (parts[3] === 'chapter' && parts[5] === 'edit') {
           const chapterId = parts[4];
           targetPage = { name: 'writer-edit-chapter', bookId, chapterId: chapterId === 'new' ? 'new' : chapterId };
@@ -139,7 +147,7 @@ const App: React.FC = () => {
         targetPage = { name: 'home' };
       }
       
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-structure', 'writer-export-preview', 'profile', 'edit-profile'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
@@ -184,6 +192,10 @@ const App: React.FC = () => {
         return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUserUpdate={setCurrentUser} />;
       case 'writer-edit-chapter':
         return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
+      case 'writer-structure':
+        return <StructureView currentUser={currentUser!} bookId={page.bookId} onUserUpdate={setCurrentUser} />;
+      case 'writer-export-preview':
+        return <ExportPreview currentUser={currentUser!} bookId={page.bookId} />;
       case 'profile':
         return <ProfilePage user={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'edit-profile':
