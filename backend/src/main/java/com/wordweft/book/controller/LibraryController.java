@@ -40,7 +40,12 @@ public class LibraryController {
             return ResponseEntity.badRequest().body("Shelf name is required");
         }
 
+        String visibility = payload.getOrDefault("visibility", "PRIVATE"); // Default to PRIVATE
+
         Shelf shelf = new Shelf(userId, name.trim());
+        if (visibility != null && (visibility.equals("PUBLIC") || visibility.equals("PRIVATE"))) {
+            shelf.setVisibility(visibility);
+        }
         shelfRepository.save(shelf);
 
         // Return updated user profile which includes the new shelf structure
@@ -51,6 +56,29 @@ public class LibraryController {
     public ResponseEntity<?> getUserShelves() {
         String userId = getCurrentUserId();
         return ResponseEntity.ok(shelfRepository.findByUserId(userId));
+    }
+
+    @PutMapping("/shelves/{shelfId}/visibility")
+    public ResponseEntity<?> toggleShelfVisibility(@PathVariable String shelfId,
+            @RequestBody Map<String, String> payload) {
+        String userId = getCurrentUserId();
+        String visibility = payload.get("visibility");
+
+        if (visibility == null || (!visibility.equals("PUBLIC") && !visibility.equals("PRIVATE"))) {
+            return ResponseEntity.badRequest().body("Invalid visibility. Must be PUBLIC or PRIVATE");
+        }
+
+        Shelf shelf = shelfRepository.findById(shelfId)
+                .orElseThrow(() -> new RuntimeException("Shelf not found"));
+
+        if (!shelf.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).body("Not authorized to update this shelf");
+        }
+
+        shelf.setVisibility(visibility);
+        shelfRepository.save(shelf);
+
+        return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 
     @Autowired
@@ -114,6 +142,29 @@ public class LibraryController {
     public ResponseEntity<?> removeFromLibrary(@PathVariable String bookId) {
         String userId = getCurrentUserId();
         libraryRepository.deleteByUserIdAndBookId(userId, bookId);
+        return ResponseEntity.ok(userService.getUserProfile(userId));
+    }
+
+    @DeleteMapping("/shelves/{shelfId}")
+    public ResponseEntity<?> deleteShelf(@PathVariable String shelfId) {
+        String userId = getCurrentUserId();
+
+        com.wordweft.book.model.Shelf shelf = shelfRepository.findById(shelfId)
+                .orElseThrow(() -> new RuntimeException("Shelf not found"));
+
+        if (!shelf.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).body("Not authorized to delete this shelf");
+        }
+
+        // Remove shelf reference from all library entries
+        java.util.List<com.wordweft.book.model.LibraryEntry> entries = libraryRepository.findByUserId(userId);
+        for (com.wordweft.book.model.LibraryEntry entry : entries) {
+            if (entry.getShelfIds() != null && entry.getShelfIds().remove(shelfId)) {
+                libraryRepository.save(entry);
+            }
+        }
+
+        shelfRepository.deleteById(shelfId);
         return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 }
