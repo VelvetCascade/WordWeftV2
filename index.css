@@ -2,15 +2,728 @@
 @tailwind components;
 @tailwind utilities;
 
-.mention {
-    background-color: rgba(141, 110, 99, 0.2);
-    color: #8D6E63;
-    padding: 2px 6px;
-    border-radius: 9999px;
-    font-weight: 500;
-    display: inline-block;
+/* ─── Rich Text Editor ─────────────────────────────────────────────── */
+
+/* Wrapper */
+.rte-wrapper {
+    border: 1px solid #D7CCC8;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(93, 64, 55, 0.06);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.rte-wrapper:focus-within {
+    border-color: #8D6E63;
+    box-shadow: 0 0 0 3px rgba(141, 110, 99, 0.15);
+}
+
+/* Toolbar */
+.rte-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #EFEBE9;
+    background: #FBF9F6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.rte-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #795548;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.rte-toolbar-btn:hover:not(:disabled) {
+    background: #EFEBE9;
+    color: #5D4037;
+}
+
+.rte-toolbar-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.rte-toolbar-btn-active,
+.rte-toolbar-btn-active:hover {
+    background: #8D6E63;
+    color: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(93, 64, 55, 0.25);
+}
+
+.rte-toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: #D7CCC8;
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+/* Editor content area */
+.rte-editor-area {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ─── BubbleMenu ───────────────────────────────────────────────────── */
+.rte-bubble-menu {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 8px;
+    background: #3E2723;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.rte-bubble-menu button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #EFEBE9;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+
+.rte-bubble-menu button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+}
+
+.rte-bubble-menu button.is-active {
+    background: #8D6E63;
+    color: #FFFFFF;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Shared Prose Styles — used in editor (.rte-content),
+   preview modal, and reader page (.ww-prose)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.rte-content,
+.ww-prose {
+    font-family: 'Literata', serif;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #4E342E;
+    outline: none;
+}
+
+/* Editor-only spacing */
+.rte-content {
+    padding: 24px 32px;
+    min-height: 500px;
+}
+
+.rte-content:focus {
+    outline: none;
+}
+
+/* Placeholder (editor only) */
+.rte-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #BCAAA4;
+    pointer-events: none;
+    height: 0;
+    font-style: italic;
+}
+
+/* Paragraphs */
+.rte-content p,
+.ww-prose p {
+    margin-bottom: 0.75em;
+}
+
+/* Headings */
+.rte-content h1,
+.ww-prose h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: 2em;
+    font-weight: 800;
+    color: #3E2723;
+    margin: 1.5em 0 0.6em;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+.rte-content h2,
+.ww-prose h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #4E342E;
+    margin: 1.4em 0 0.5em;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.rte-content h3,
+.ww-prose h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.25em;
+    font-weight: 600;
+    color: #5D4037;
+    margin: 1.2em 0 0.4em;
+    line-height: 1.4;
+}
+
+/* Bold, Italic */
+.rte-content strong,
+.ww-prose strong {
+    font-weight: 700;
+    color: #3E2723;
+}
+
+.rte-content em,
+.ww-prose em {
+    font-style: italic;
+}
+
+/* Inline Code */
+.rte-content code,
+.ww-prose code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    background: #EFEBE9;
+    color: #5D4037;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #D7CCC8;
+}
+
+/* Code Block */
+.rte-content pre,
+.ww-prose pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    background: #3E2723;
+    color: #EFEBE9;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin: 1.5em 0;
+    overflow-x: auto;
+    line-height: 1.6;
+}
+
+.rte-content pre code,
+.ww-prose pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    font-size: 1em;
+}
+
+/* Blockquote */
+.rte-content blockquote,
+.ww-prose blockquote {
+    border-left: 4px solid #8D6E63;
+    padding: 12px 20px;
+    margin: 1.5em 0;
+    background: rgba(141, 110, 99, 0.06);
+    border-radius: 0 8px 8px 0;
+    color: #5D4037;
+    font-style: italic;
+}
+
+.rte-content blockquote p,
+.ww-prose blockquote p {
+    margin-bottom: 0;
+}
+
+/* Lists */
+.rte-content ul,
+.ww-prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin: 0.75em 0;
+}
+
+.rte-content ol,
+.ww-prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin: 0.75em 0;
+}
+
+.rte-content li,
+.ww-prose li {
+    margin-bottom: 0.25em;
+}
+
+.rte-content li p,
+.ww-prose li p {
+    margin-bottom: 0;
+}
+
+/* Horizontal Rule */
+.rte-content hr,
+.ww-prose hr {
+    border: none;
+    border-top: 2px solid #D7CCC8;
+    margin: 2em 0;
+}
+
+/* Links */
+.rte-link,
+.rte-content a,
+.ww-prose a {
+    color: #8D6E63;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.15s, text-decoration-color 0.15s;
+}
+
+.rte-link:hover,
+.rte-content a:hover,
+.ww-prose a:hover {
+    color: #5D4037;
+    text-decoration-style: solid;
+}
+
+/* Images */
+.rte-content img,
+.ww-prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 1.5em 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.rte-content img.ProseMirror-selectednode {
+    outline: 3px solid #8D6E63;
+    outline-offset: 2px;
+}
+
+/* Tables */
+.rte-content table,
+.ww-prose table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.rte-content th,
+.rte-content td,
+.ww-prose th,
+.ww-prose td {
+    border: 1px solid #D7CCC8;
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.95em;
+    position: relative;
+}
+
+.rte-content th,
+.ww-prose th {
+    background: #EFEBE9;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: #5D4037;
+}
+
+.rte-content td,
+.ww-prose td {
+    background: #FFFFFF;
+}
+
+.rte-content .selectedCell::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(141, 110, 99, 0.12);
+    pointer-events: none;
+}
+
+/* Mentions */
+.mention {
+    background-color: rgba(141, 110, 99, 0.15);
+    color: #8D6E63;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: inline-block;
+    cursor: default;
+    transition: background-color 0.15s;
+}
+
+.mention:hover {
+    background-color: rgba(141, 110, 99, 0.25);
+}
+
+/* Collapsible Details Block */
+.rte-content details,
+.ww-prose details {
+    border: 1px solid #D7CCC8;
+    border-radius: 12px;
+    padding: 0;
+    margin: 1.5em 0;
+    overflow: hidden;
+    background: rgba(251, 249, 246, 0.5);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rte-content details[open],
+.ww-prose details[open] {
+    box-shadow: 0 2px 8px rgba(93, 64, 55, 0.06);
+}
+
+.rte-content details summary,
+.ww-prose details summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95em;
+    color: #5D4037;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    background: rgba(239, 235, 233, 0.4);
+    transition: background 0.15s, color 0.15s;
+}
+
+.rte-content details summary::-webkit-details-marker,
+.ww-prose details summary::-webkit-details-marker {
+    display: none;
+}
+
+.rte-content details summary::before,
+.ww-prose details summary::before {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 6px solid #8D6E63;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.rte-content details[open]>summary::before,
+.ww-prose details[open]>summary::before {
+    transform: rotate(90deg);
+}
+
+.rte-content details summary:hover,
+.ww-prose details summary:hover {
+    background: rgba(239, 235, 233, 0.7);
+    color: #3E2723;
+}
+
+.rte-content details [data-details-content],
+.ww-prose details [data-details-content],
+.rte-content details> :not(summary),
+.ww-prose details> :not(summary) {
+    padding: 12px 16px;
+    border-top: 1px solid #EFEBE9;
+}
+
+/* ─── Spoiler / Hidden Text ─────────────────────────────────────── */
+/* Editor: clean pill indicator so writer sees what's marked as hidden */
+.rte-content .spoiler-text {
+    background: rgba(141, 110, 99, 0.08);
+    padding: 2px 6px;
+    border-radius: 6px;
+    border-left: 3px solid rgba(141, 110, 99, 0.35);
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+}
+
+.rte-content .spoiler-text:hover {
+    background: rgba(141, 110, 99, 0.12);
+    border-left-color: rgba(141, 110, 99, 0.5);
+}
+
+/* Reader / Preview: blurred text with click-to-reveal */
+.ww-prose .spoiler-text {
+    position: relative;
+    color: transparent;
+    text-shadow: 0 0 12px rgba(78, 52, 46, 0.7);
+    background: rgba(141, 110, 99, 0.08);
+    padding: 2px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    display: inline-block;
+    border: 1px solid rgba(141, 110, 99, 0.15);
+}
+
+/* Subtle pulsing hint so readers know it's interactive */
+.ww-prose .spoiler-text::after {
+    content: 'tap to reveal';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8D6E63;
+    text-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.ww-prose .spoiler-text:hover::after {
+    opacity: 1;
+}
+
+/* Revealed state */
+.ww-prose .spoiler-text.revealed {
+    color: inherit;
+    text-shadow: none;
+    background: rgba(141, 110, 99, 0.04);
+    border-color: rgba(141, 110, 99, 0.08);
+    cursor: default;
+    user-select: text;
+}
+
+.ww-prose .spoiler-text.revealed::after {
+    display: none;
+}
+
+/* Gapcursor */
+.ProseMirror-gapcursor {
+    position: relative;
+}
+
+.ProseMirror-gapcursor::after {
+    border-top: 1px solid #8D6E63;
+}
+
+/* ─── Dark Mode ────────────────────────────────────────────────────── */
+.dark .rte-wrapper {
+    background: #3E2723;
+    border-color: #5D4037;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dark .rte-wrapper:focus-within {
+    border-color: #8D6E63;
+    box-shadow: 0 0 0 3px rgba(141, 110, 99, 0.2);
+}
+
+.dark .rte-toolbar {
+    background: #4E342E;
+    border-bottom-color: #5D4037;
+}
+
+.dark .rte-toolbar-btn {
+    color: #BCAAA4;
+}
+
+.dark .rte-toolbar-btn:hover:not(:disabled) {
+    background: #5D4037;
+    color: #EFEBE9;
+}
+
+.dark .rte-toolbar-btn-active,
+.dark .rte-toolbar-btn-active:hover {
+    background: #8D6E63;
+    color: #FFFFFF;
+}
+
+.dark .rte-toolbar-divider {
+    background: #5D4037;
+}
+
+.dark .rte-content,
+.dark .ww-prose {
+    color: #EFEBE9;
+}
+
+.dark .rte-content p.is-editor-empty:first-child::before {
+    color: #795548;
+}
+
+.dark .rte-content h1,
+.dark .ww-prose h1 {
+    color: #EFEBE9;
+}
+
+.dark .rte-content h2,
+.dark .ww-prose h2 {
+    color: #D7CCC8;
+}
+
+.dark .rte-content h3,
+.dark .ww-prose h3 {
+    color: #BCAAA4;
+}
+
+.dark .rte-content strong,
+.dark .ww-prose strong {
+    color: #EFEBE9;
+}
+
+.dark .rte-content code,
+.dark .ww-prose code {
+    background: #4E342E;
+    color: #EFEBE9;
+    border-color: #5D4037;
+}
+
+.dark .rte-content pre,
+.dark .ww-prose pre {
+    background: #261F1D;
+    color: #EFEBE9;
+}
+
+.dark .rte-content blockquote,
+.dark .ww-prose blockquote {
+    border-left-color: #8D6E63;
+    background: rgba(141, 110, 99, 0.08);
+    color: #BCAAA4;
+}
+
+.dark .rte-content hr,
+.dark .ww-prose hr {
+    border-top-color: #5D4037;
+}
+
+.dark .rte-content th,
+.dark .ww-prose th {
+    background: #4E342E;
+    color: #EFEBE9;
+    border-color: #5D4037;
+}
+
+.dark .rte-content td,
+.dark .ww-prose td {
+    background: #3E2723;
+    border-color: #5D4037;
+    color: #EFEBE9;
+}
+
+.dark .rte-link,
+.dark .rte-content a,
+.dark .ww-prose a {
+    color: #BCAAA4;
+}
+
+.dark .rte-link:hover,
+.dark .rte-content a:hover,
+.dark .ww-prose a:hover {
+    color: #EFEBE9;
+}
+
+.dark .rte-content img,
+.dark .ww-prose img {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .mention {
+    background-color: rgba(141, 110, 99, 0.2);
+    color: #BCAAA4;
+}
+
+.dark .mention:hover {
+    background-color: rgba(141, 110, 99, 0.35);
+}
+
+.dark .rte-content details,
+.dark .ww-prose details {
+    border-color: #5D4037;
+    background: rgba(62, 39, 35, 0.5);
+}
+
+.dark .rte-content details[open],
+.dark .ww-prose details[open] {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dark .rte-content details summary,
+.dark .ww-prose details summary {
+    color: #EFEBE9;
+    background: rgba(93, 64, 55, 0.3);
+}
+
+.dark .rte-content details summary::before,
+.dark .ww-prose details summary::before {
+    border-left-color: #BCAAA4;
+}
+
+.dark .rte-content details summary:hover,
+.dark .ww-prose details summary:hover {
+    background: rgba(93, 64, 55, 0.5);
+}
+
+.dark .rte-content details [data-details-content],
+.dark .ww-prose details [data-details-content],
+.dark .rte-content details> :not(summary),
+.dark .ww-prose details> :not(summary) {
+    border-top-color: #5D4037;
+}
+
+/* Dark Spoiler - Editor */
+.dark .rte-content .spoiler-text {
+    background: rgba(188, 170, 164, 0.1);
+    border-left-color: rgba(188, 170, 164, 0.3);
+}
+
+.dark .rte-content .spoiler-text:hover {
+    background: rgba(188, 170, 164, 0.15);
+    border-left-color: rgba(188, 170, 164, 0.45);
+}
+
+.dark .ww-prose .spoiler-text {
+    text-shadow: 0 0 12px rgba(239, 235, 233, 0.5);
+    background: rgba(93, 64, 55, 0.3);
+    border-color: rgba(93, 64, 55, 0.4);
+}
+
+.dark .ww-prose .spoiler-text::after {
+    color: #BCAAA4;
+}
+
+.dark .ww-prose .spoiler-text.revealed {
+    background: rgba(93, 64, 55, 0.1);
+    border-color: rgba(93, 64, 55, 0.15);
+}
+
+/* Editor placeholder fallback */
 [contenteditable]:empty:before {
     content: attr(data-placeholder);
     color: #9CA3AF;

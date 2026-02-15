@@ -487,6 +487,21 @@ export async function deleteNote(id: string): Promise<void> {
 }
 
 
+
+// --- File API ---
+
+export async function uploadFile(formData: FormData): Promise<{ filename: string, url: string }> {
+    const response = await fetch(`${API_BASE_URL}/files/upload`, {
+        method: 'POST',
+        headers: {
+            'Authorization': getHeaders()['Authorization']
+            // Content-Type is set automatically by fetch when using FormData
+        },
+        body: formData
+    });
+    return await handleResponse(response);
+}
+
 function mapBackendUserToFrontend(backendData: any): User {
     let safeJoinDate = backendData.joinDate;
     if (Array.isArray(safeJoinDate)) {

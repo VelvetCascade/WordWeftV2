@@ -5,6 +5,8 @@ import * as api from '../api/client';
 import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { SpoilerReveal } from '../components/SpoilerReveal';
+import parse, { domToReact } from 'html-react-parser';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -15,6 +17,51 @@ interface ChapterEditorPageProps {
 
 const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string; characters: Character[]; onCharacterClick: (char: Character) => void }> = ({ isOpen, onClose, title, content, characters, onCharacterClick }) => {
     if (!isOpen) return null;
+
+    const options = {
+        replace: (domNode: any) => {
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-type'] === 'mention') {
+                const id = domNode.attribs['data-id'];
+                const label = domNode.attribs['data-label'];
+                const character = characters.find(c => c.id === id);
+                return (
+                    <span
+                        onClick={() => character && onCharacterClick(character)}
+                        className={`font-semibold cursor-pointer transition-all duration-200 ${!character ? 'text-gray-400 line-through decoration-1' : 'text-accent hover:text-primary hover:underline underline-offset-2 decoration-accent/40'}`}
+                        title={character ? `View ${label || character.name}` : "Character not found"}
+                    >
+                        {label || (character ? character.name : 'Unknown')}
+                    </span>
+                );
+            }
+            // Fallback for older format or other mentions
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs.class === 'mention') {
+                const id = domNode.attribs['data-id'];
+                // Try to get label from children
+                // Often text is inside
+                // This handles TipTap output: <span class="mention" data-id="...">@Name</span>
+                // But TipTap renderLabel I set creates text node inside.
+                // So we can let default render handle children, or wrap it.
+                // Actually, if we just want click handler:
+                const character = characters.find(c => c.id === id);
+                return (
+                    <span
+                        onClick={() => character && onCharacterClick(character)}
+                        className={`font-semibold cursor-pointer text-accent hover:text-primary hover:underline underline-offset-2 decoration-accent/40 transition-all duration-200`}
+                    >
+                        {domToReact(domNode.children, options)}
+                    </span>
+                )
+            }
+            // Handle Spoiler / Hidden Text
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
+                return (
+                    <SpoilerReveal>{domToReact(domNode.children, options)}</SpoilerReveal>
+                );
+            }
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-dark-surface w-full max-w-3xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
@@ -24,32 +71,8 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
                 <div className="overflow-y-auto p-8 md:p-12">
                     <div className="max-w-prose mx-auto">
                         <h1 className="text-4xl font-serif font-bold mb-8 leading-snug text-text-rich dark:text-dark-text-rich">{title || 'Untitled Chapter'}</h1>
-                        <div className="prose prose-lg lg:prose-xl dark:prose-invert font-serif text-text-body dark:text-dark-text-body whitespace-pre-wrap">
-                            {content.split('\n').map((paragraph, index) => {
-                                const parts = paragraph.split(/(@\[.*?\]\(.*?\))/g);
-                                return (
-                                    <p key={index} className="mb-4">
-                                        {parts.map((part, i) => {
-                                            const match = part.match(/@\[(.*?)\]\((.*?)\)/);
-                                            if (match) {
-                                                const [_, name, id] = match;
-                                                const character = characters.find(c => c.id === id);
-                                                return (
-                                                    <span
-                                                        key={i}
-                                                        onClick={() => character && onCharacterClick(character)}
-                                                        className={`font-semibold cursor-pointer border-b-2 border-accent/30 hover:bg-accent/10 hover:border-accent transition-colors ${!character ? 'text-gray-500 line-through decoration-2' : 'text-accent'}`}
-                                                        title={character ? "View Character" : "Character not found"}
-                                                    >
-                                                        {name}
-                                                    </span>
-                                                );
-                                            }
-                                            return part;
-                                        })}
-                                    </p>
-                                );
-                            })}
+                        <div className="ww-prose font-serif text-text-body dark:text-dark-text-body">
+                            {parse(content, options)}
                         </div>
                     </div>
                 </div>
@@ -73,15 +96,15 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     // Mention System State
     const [characters, setCharacters] = useState<Character[]>([]);
-    const [showMentions, setShowMentions] = useState(false);
     const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
-    const [mentionQuery, setMentionQuery] = useState('');
-    const [cursorPosition, setCursorPosition] = useState(0);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const saveTimeoutRef = useRef<number | null>(null);
 
-    const wordCount = useMemo(() => content.split(/\s+/).filter(Boolean).length, [content]);
+    const wordCount = useMemo(() => {
+        // Strip HTML tags for word count
+        const text = content.replace(/<[^>]*>/g, ' ');
+        return text.split(/\s+/).filter(Boolean).length;
+    }, [content]);
 
     useEffect(() => {
         api.getCharactersByBookId(bookId).then(setCharacters);
@@ -131,22 +154,6 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             handleSave(status, newContent, newTitle);
         }, 2000);
     }
-
-    const insertMention = (char: Character) => {
-        // RTE specific insertion logic
-        const mention = `@[${char.name}](${char.id}) `;
-        const queryToReplace = `@${mentionQuery}`;
-        const lastIndex = content.lastIndexOf(queryToReplace);
-
-        if (lastIndex !== -1) {
-            const newContent = content.substring(0, lastIndex) + mention + content.substring(lastIndex + queryToReplace.length);
-            setContent(newContent);
-            debouncedSave('draft', newContent, title);
-        }
-
-        setShowMentions(false);
-        setMentionQuery('');
-    };
 
     const handleTitleChange = (newTitle: string) => {
         setTitle(newTitle);
@@ -229,41 +236,8 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 debouncedSave('draft', newContent, title);
                                 setSaveState('saving');
                             }}
-                            placeholder="Start writing your chapter..."
                             characters={characters}
-                            onMentionQuery={(query, rect) => {
-                                setMentionQuery(query);
-                                setShowMentions(true);
-                            }}
-                            onMentionClose={() => setShowMentions(false)}
                         />
-
-                        {/* Mention Suggestions */}
-                        {showMentions && (
-                            <div className="absolute top-20 left-1/2 -translate-x-1/2 w-64 bg-white dark:bg-dark-surface shadow-xl rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden z-50 animate-fade-in-up">
-                                <div className="p-2 bg-gray-50 dark:bg-dark-surface-alt text-xs font-bold text-gray-500 uppercase tracking-wider border-b dark:border-dark-border">
-                                    Mention Character
-                                </div>
-                                <div className="max-h-48 overflow-y-auto">
-                                    {characters.filter(c => c.name.toLowerCase().includes(mentionQuery)).map(char => (
-                                        <button
-                                            key={char.id}
-                                            onClick={() => insertMention(char)}
-                                            className="w-full text-left p-3 hover:bg-accent/10 hover:text-accent transition-colors flex items-center gap-3 border-b border-gray-100 dark:border-dark-border/50 last:border-0"
-                                        >
-                                            <img src={char.imageUrl} alt={char.name} className="w-8 h-8 rounded-full object-cover" />
-                                            <div>
-                                                <div className="font-bold text-sm dark:text-dark-text-rich">{char.name}</div>
-                                                <div className="text-[10px] text-gray-500">{char.role}</div>
-                                            </div>
-                                        </button>
-                                    ))}
-                                    {characters.filter(c => c.name.toLowerCase().includes(mentionQuery)).length === 0 && (
-                                        <div className="p-4 text-center text-sm text-gray-400 italic">No matching characters</div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </main>
                 <footer className="flex-shrink-0 container mx-auto px-4 sm:px-6 h-8 flex items-center justify-center">
