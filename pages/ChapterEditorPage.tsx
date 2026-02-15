@@ -6,6 +6,7 @@ import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { SpoilerReveal } from '../components/SpoilerReveal';
+import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 
 interface ChapterEditorPageProps {
@@ -57,6 +58,15 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
             if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
                 return (
                     <SpoilerReveal>{domToReact(domNode.children, options)}</SpoilerReveal>
+                );
+            }
+            // Handle Footnotes
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-footnote']) {
+                return (
+                    <FootnoteTooltip
+                        index={parseInt(domNode.attribs['data-footnote-index'] || '1')}
+                        note={domNode.attribs['data-footnote']}
+                    />
                 );
             }
         }

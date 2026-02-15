@@ -16,6 +16,9 @@ import { Character } from '../types';
 import { MentionList } from './MentionList';
 import { Details, DetailsSummary, DetailsContent } from './extensions/DetailsExtension';
 import { Spoiler } from './extensions/SpoilerExtension';
+import { Footnote } from './extensions/FootnoteExtension';
+import { MoodBlock } from './extensions/MoodExtension';
+import { PullQuote, PullQuoteText, PullQuoteCite } from './extensions/PullQuoteExtension';
 import * as api from '../api/client';
 
 // ─── SVG Icon Components ───────────────────────────────────────────
@@ -48,6 +51,9 @@ const RedoIcon = () => <Icon><polyline points="23 4 23 10 17 10" /><path d="M20.
 const CodeBlockIcon = () => <Icon><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></Icon>;
 const DetailsIcon = () => <Icon><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 8l4 4-4 4" /></Icon>;
 const SpoilerIcon = () => <Icon><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /></Icon>;
+const FootnoteIcon = () => <Icon><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></Icon>;
+const MoodIcon = () => <Icon><circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></Icon>;
+const PullQuoteIcon = () => <Icon><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1" /><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1" /></Icon>;
 
 // ─── Toolbar Button ────────────────────────────────────────────────
 interface ToolbarButtonProps {
@@ -146,6 +152,38 @@ const MenuBar = ({ editor, addImage }: { editor: Editor | null; addImage: () => 
             <ToolbarButton onClick={() => (editor.chain().focus() as any).setDetails().run()} isActive={editor.isActive('details')} title="Collapsible Block">
                 <DetailsIcon />
             </ToolbarButton>
+            <ToolbarButton onClick={() => (editor.chain().focus() as any).insertPullQuote().run()} isActive={editor.isActive('pullQuote')} title="Pull Quote / Epigraph">
+                <PullQuoteIcon />
+            </ToolbarButton>
+
+            <Divider />
+
+            {/* Mood Atmosphere */}
+            <div className="relative group">
+                <ToolbarButton onClick={() => { }} isActive={editor.isActive('moodBlock')} title="Mood / Atmosphere">
+                    <MoodIcon />
+                </ToolbarButton>
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-dark-surface shadow-xl rounded-lg border border-gray-200 dark:border-dark-border p-1.5 hidden group-hover:flex flex-col gap-0.5 z-50 min-w-[140px]">
+                    {[
+                        { mood: 'romantic', emoji: '🌹', label: 'Romantic' },
+                        { mood: 'tense', emoji: '⚡', label: 'Tense' },
+                        { mood: 'melancholy', emoji: '🌧️', label: 'Melancholy' },
+                        { mood: 'triumphant', emoji: '🎉', label: 'Triumphant' },
+                        { mood: 'eerie', emoji: '👻', label: 'Eerie' },
+                        { mood: 'serene', emoji: '🍃', label: 'Serene' },
+                    ].map(({ mood, emoji, label }) => (
+                        <button
+                            key={mood}
+                            type="button"
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-left w-full"
+                            onClick={() => (editor.chain().focus() as any).insertMoodBlock(mood).run()}
+                        >
+                            <span>{emoji}</span>
+                            <span className="dark:text-dark-text-rich">{label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <Divider />
 
@@ -163,6 +201,12 @@ const MenuBar = ({ editor, addImage }: { editor: Editor | null; addImage: () => 
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Insert Table">
                 <TableIconSvg />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => {
+                const note = window.prompt('Enter footnote / author\'s note:');
+                if (note) (editor.chain().focus() as any).insertFootnote({ note }).run();
+            }} title="Add Footnote">
+                <FootnoteIcon />
             </ToolbarButton>
 
             <Divider />
@@ -312,6 +356,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             DetailsSummary,
             DetailsContent,
             Spoiler,
+            Footnote,
+            MoodBlock,
+            PullQuote,
+            PullQuoteText,
+            PullQuoteCite,
         ],
         content: value,
         editable: !readOnly,

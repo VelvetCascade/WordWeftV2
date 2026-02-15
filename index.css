@@ -533,6 +533,555 @@
     border-top: 1px solid #8D6E63;
 }
 
+/* ─── Footnote Markers ──────────────────────────────────────────── */
+.footnote-wrapper {
+    position: relative;
+    display: inline;
+}
+
+.footnote-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65em;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: rgba(141, 110, 99, 0.15);
+    color: #6D4C41;
+    vertical-align: super;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    line-height: 1;
+}
+
+.footnote-marker:hover,
+.footnote-marker.active {
+    background: #8D6E63;
+    color: white;
+    transform: scale(1.15);
+}
+
+.footnote-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+}
+
+.footnote-popup {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    width: 280px;
+    background: white;
+    border: 1px solid #D7CCC8;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(93, 64, 55, 0.15), 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    animation: footnoteIn 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.footnote-popup.above {
+    bottom: calc(100% + 8px);
+}
+
+.footnote-popup.below {
+    top: calc(100% + 8px);
+}
+
+.footnote-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(141, 110, 99, 0.06);
+    border-bottom: 1px solid #EFEBE9;
+}
+
+.footnote-popup-badge {
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8D6E63;
+}
+
+.footnote-popup-close {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: #A1887F;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.footnote-popup-close:hover {
+    background: rgba(141, 110, 99, 0.1);
+    color: #5D4037;
+}
+
+.footnote-popup-body {
+    padding: 12px 14px;
+    font-size: 0.88em;
+    line-height: 1.6;
+    color: #4E342E;
+}
+
+@keyframes footnoteIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+}
+
+/* ─── Mood / Atmosphere Blocks ──────────────────────────────────── */
+.mood-block {
+    position: relative;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin: 1.5em 0;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    border-left: 5px solid;
+    overflow: hidden;
+    z-index: 0;
+}
+
+/* Animated atmosphere layer (reader/preview) */
+.ww-prose .mood-block::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.85;
+}
+
+/* Editor: show mood label badge */
+.rte-content .mood-block::before {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 0.6em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 6px;
+    opacity: 0.9;
+    z-index: 2;
+}
+
+/* ── Romantic ── floating hearts + warm rose glow */
+.mood-romantic {
+    background: linear-gradient(135deg, rgba(233, 30, 99, 0.14) 0%, rgba(255, 205, 210, 0.22) 50%, rgba(244, 143, 177, 0.16) 100%);
+    border-left-color: #E91E63;
+    box-shadow: inset 0 0 60px rgba(233, 30, 99, 0.12), 0 0 35px rgba(233, 30, 99, 0.08);
+}
+
+.ww-prose .mood-romantic::after {
+    background:
+        radial-gradient(7px 7px at 8% 15%, rgba(233, 30, 99, 0.6) 50%, transparent 50%),
+        radial-gradient(9px 9px at 22% 70%, rgba(244, 143, 177, 0.55) 50%, transparent 50%),
+        radial-gradient(6px 6px at 42% 30%, rgba(255, 82, 82, 0.5) 50%, transparent 50%),
+        radial-gradient(11px 11px at 58% 85%, rgba(233, 30, 99, 0.4) 50%, transparent 50%),
+        radial-gradient(8px 8px at 75% 12%, rgba(244, 143, 177, 0.5) 50%, transparent 50%),
+        radial-gradient(7px 7px at 88% 50%, rgba(233, 30, 99, 0.45) 50%, transparent 50%),
+        radial-gradient(10px 10px at 50% 55%, rgba(255, 82, 82, 0.35) 50%, transparent 50%);
+    animation: moodFloat 6s ease-in-out infinite;
+}
+
+.ww-prose .mood-romantic::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at 30% 80%, rgba(233, 30, 99, 0.14) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 20%, rgba(244, 143, 177, 0.12) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.rte-content .mood-romantic::before {
+    content: '🌹 Romantic';
+    color: #E91E63;
+    background: rgba(233, 30, 99, 0.08);
+}
+
+/* ── Tense ── pulsing electric edges + danger glow */
+.mood-tense {
+    background: linear-gradient(135deg, rgba(255, 87, 34, 0.14) 0%, rgba(255, 138, 101, 0.18) 50%, rgba(255, 183, 77, 0.12) 100%);
+    border-left-color: #FF5722;
+    box-shadow: inset 0 0 60px rgba(255, 87, 34, 0.12), 0 0 35px rgba(255, 87, 34, 0.08);
+    animation: tensePulse 2.5s ease-in-out infinite;
+}
+
+.ww-prose .mood-tense::after {
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 87, 34, 0.22) 15%,
+            transparent 30%,
+            rgba(255, 152, 0, 0.18) 50%,
+            transparent 70%,
+            rgba(255, 87, 34, 0.2) 85%,
+            transparent 100%);
+    background-size: 200% 100%;
+    animation: tenseSweep 2s linear infinite;
+}
+
+.ww-prose .mood-tense::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 50px rgba(255, 87, 34, 0.18);
+    pointer-events: none;
+    z-index: -1;
+    animation: tenseVignette 3s ease-in-out infinite;
+}
+
+.rte-content .mood-tense::before {
+    content: '⚡ Tense';
+    color: #FF5722;
+    background: rgba(255, 87, 34, 0.08);
+}
+
+/* ── Melancholy ── falling rain streaks + misty overlay */
+.mood-melancholy {
+    background: linear-gradient(180deg, rgba(144, 164, 174, 0.18) 0%, rgba(176, 190, 197, 0.22) 50%, rgba(144, 164, 174, 0.14) 100%);
+    border-left-color: #607D8B;
+    box-shadow: inset 0 0 60px rgba(96, 125, 139, 0.12), 0 0 35px rgba(96, 125, 139, 0.08);
+}
+
+.ww-prose .mood-melancholy::after {
+    background: repeating-linear-gradient(180deg,
+            transparent,
+            transparent 5px,
+            rgba(144, 164, 174, 0.18) 5px,
+            rgba(144, 164, 174, 0.05) 9px);
+    background-size: 100% 14px;
+    animation: rainFall 1s linear infinite;
+}
+
+.ww-prose .mood-melancholy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(144, 164, 174, 0.15) 0%, transparent 25%, transparent 75%, rgba(144, 164, 174, 0.12) 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.rte-content .mood-melancholy::before {
+    content: '🌧️ Melancholy';
+    color: #607D8B;
+    background: rgba(96, 125, 139, 0.08);
+}
+
+/* ── Triumphant ── golden shimmer sweep + sparkle dots */
+.mood-triumphant {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.14) 0%, rgba(255, 215, 64, 0.22) 50%, rgba(255, 238, 88, 0.14) 100%);
+    border-left-color: #FFC107;
+    box-shadow: inset 0 0 60px rgba(255, 193, 7, 0.12), 0 0 35px rgba(255, 193, 7, 0.08);
+}
+
+.ww-prose .mood-triumphant::after {
+    background: linear-gradient(105deg,
+            transparent 0%,
+            transparent 28%,
+            rgba(255, 215, 64, 0.4) 42%,
+            rgba(255, 238, 88, 0.3) 50%,
+            rgba(255, 215, 64, 0.4) 58%,
+            transparent 72%,
+            transparent 100%);
+    background-size: 300% 100%;
+    animation: shimmerSweep 3s ease-in-out infinite;
+    opacity: 1;
+}
+
+.ww-prose .mood-triumphant::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(5px 5px at 12% 20%, rgba(255, 215, 64, 0.75) 50%, transparent 50%),
+        radial-gradient(4px 4px at 30% 80%, rgba(255, 238, 88, 0.65) 50%, transparent 50%),
+        radial-gradient(6px 6px at 50% 10%, rgba(255, 193, 7, 0.65) 50%, transparent 50%),
+        radial-gradient(4px 4px at 70% 65%, rgba(255, 215, 64, 0.6) 50%, transparent 50%),
+        radial-gradient(5px 5px at 88% 35%, rgba(255, 238, 88, 0.55) 50%, transparent 50%),
+        radial-gradient(3px 3px at 40% 45%, rgba(255, 193, 7, 0.5) 50%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    animation: sparkle 2.5s ease-in-out infinite;
+}
+
+.rte-content .mood-triumphant::before {
+    content: '🎉 Triumphant';
+    color: #F57F17;
+    background: rgba(255, 193, 7, 0.08);
+}
+
+/* ── Eerie ── drifting fog wisps + dark vignette */
+.mood-eerie {
+    background: linear-gradient(135deg, rgba(69, 39, 100, 0.15) 0%, rgba(149, 117, 205, 0.16) 50%, rgba(186, 104, 200, 0.1) 100%);
+    border-left-color: #7E57C2;
+    box-shadow: inset 0 0 80px rgba(69, 39, 100, 0.14), 0 0 35px rgba(126, 87, 194, 0.08);
+}
+
+.ww-prose .mood-eerie::after {
+    background:
+        radial-gradient(ellipse 90% 50% at 15% 45%, rgba(149, 117, 205, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 60% at 85% 55%, rgba(186, 104, 200, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 80%, rgba(69, 39, 100, 0.12) 0%, transparent 55%);
+    animation: fogDrift 7s ease-in-out infinite alternate;
+    opacity: 0.9;
+}
+
+.ww-prose .mood-eerie::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 70px rgba(30, 15, 40, 0.2);
+    pointer-events: none;
+    z-index: -1;
+    animation: eerieFlicker 5s ease-in-out infinite;
+}
+
+.rte-content .mood-eerie::before {
+    content: '👻 Eerie';
+    color: #7E57C2;
+    background: rgba(126, 87, 194, 0.08);
+}
+
+/* ── Serene ── gentle floating orbs + warm breeze */
+.mood-serene {
+    background: linear-gradient(135deg, rgba(102, 187, 106, 0.14) 0%, rgba(200, 230, 201, 0.22) 50%, rgba(129, 199, 132, 0.14) 100%);
+    border-left-color: #66BB6A;
+    box-shadow: inset 0 0 60px rgba(102, 187, 106, 0.1), 0 0 35px rgba(102, 187, 106, 0.07);
+}
+
+.ww-prose .mood-serene::after {
+    background:
+        radial-gradient(16px 16px at 12% 25%, rgba(129, 199, 132, 0.35) 50%, transparent 50%),
+        radial-gradient(20px 20px at 38% 75%, rgba(200, 230, 201, 0.28) 50%, transparent 50%),
+        radial-gradient(12px 12px at 62% 18%, rgba(165, 214, 167, 0.28) 50%, transparent 50%),
+        radial-gradient(18px 18px at 82% 58%, rgba(129, 199, 132, 0.22) 50%, transparent 50%),
+        radial-gradient(14px 14px at 50% 45%, rgba(200, 230, 201, 0.2) 50%, transparent 50%);
+    animation: sereneDrift 10s ease-in-out infinite;
+}
+
+.ww-prose .mood-serene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at 50% 100%, rgba(129, 199, 132, 0.12) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.rte-content .mood-serene::before {
+    content: '🍃 Serene';
+    color: #66BB6A;
+    background: rgba(102, 187, 106, 0.08);
+}
+
+/* ── Mood keyframe animations ── */
+@keyframes moodFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes tensePulse {
+
+    0%,
+    100% {
+        box-shadow: inset 0 0 60px rgba(255, 87, 34, 0.1), 0 0 30px rgba(255, 87, 34, 0.06);
+    }
+
+    50% {
+        box-shadow: inset 0 0 80px rgba(255, 87, 34, 0.18), 0 0 45px rgba(255, 87, 34, 0.1);
+    }
+}
+
+@keyframes tenseSweep {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes tenseVignette {
+
+    0%,
+    100% {
+        box-shadow: inset 0 0 40px rgba(255, 87, 34, 0.1);
+    }
+
+    50% {
+        box-shadow: inset 0 0 70px rgba(255, 87, 34, 0.22);
+    }
+}
+
+@keyframes rainFall {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 0 14px;
+    }
+}
+
+@keyframes shimmerSweep {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes sparkle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes fogDrift {
+    0% {
+        transform: translateX(-20px) scale(1);
+    }
+
+    100% {
+        transform: translateX(20px) scale(1.08);
+    }
+}
+
+@keyframes eerieFlicker {
+
+    0%,
+    90%,
+    100% {
+        opacity: 1;
+    }
+
+    92% {
+        opacity: 0.85;
+    }
+
+    94% {
+        opacity: 1;
+    }
+
+    96% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes sereneDrift {
+
+    0%,
+    100% {
+        transform: translateY(0) translateX(0);
+    }
+
+    33% {
+        transform: translateY(-4px) translateX(3px);
+    }
+
+    66% {
+        transform: translateY(2px) translateX(-3px);
+    }
+}
+
+/* ─── Pull Quote / Epigraph ─────────────────────────────────────── */
+.pull-quote {
+    position: relative;
+    text-align: center;
+    margin: 2.5em auto;
+    padding: 32px 40px 24px;
+    max-width: 600px;
+    border: none;
+    background: transparent;
+}
+
+.pull-quote::before {
+    content: '\201C';
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 5em;
+    line-height: 1;
+    color: rgba(141, 110, 99, 0.15);
+    pointer-events: none;
+}
+
+.pull-quote::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #8D6E63, transparent);
+    margin: 16px auto 0;
+}
+
+.pull-quote-text {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.35em;
+    font-style: italic;
+    line-height: 1.6;
+    color: #4E342E;
+    margin: 0;
+}
+
+.pull-quote-cite {
+    display: block;
+    margin-top: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8em;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #8D6E63;
+}
+
 /* ─── Dark Mode ────────────────────────────────────────────────────── */
 .dark .rte-wrapper {
     background: #3E2723;
@@ -721,6 +1270,94 @@
 .dark .ww-prose .spoiler-text.revealed {
     background: rgba(93, 64, 55, 0.1);
     border-color: rgba(93, 64, 55, 0.15);
+}
+
+/* Dark Footnotes */
+.dark .footnote-marker {
+    background: rgba(188, 170, 164, 0.2);
+    color: #BCAAA4;
+}
+
+.dark .footnote-marker:hover,
+.dark .footnote-marker.active {
+    background: #8D6E63;
+    color: white;
+}
+
+.dark .footnote-popup {
+    background: #3E2723;
+    border-color: #5D4037;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.dark .footnote-popup-header {
+    background: rgba(93, 64, 55, 0.3);
+    border-bottom-color: #5D4037;
+}
+
+.dark .footnote-popup-badge {
+    color: #BCAAA4;
+}
+
+.dark .footnote-popup-close {
+    color: #8D6E63;
+}
+
+.dark .footnote-popup-close:hover {
+    background: rgba(93, 64, 55, 0.3);
+    color: #EFEBE9;
+}
+
+.dark .footnote-popup-body {
+    color: #EFEBE9;
+}
+
+/* Dark Mood Blocks */
+.dark .mood-romantic {
+    background: linear-gradient(135deg, rgba(233, 30, 99, 0.12) 0%, rgba(244, 143, 177, 0.1) 100%);
+    box-shadow: inset 0 0 60px rgba(233, 30, 99, 0.1), 0 0 30px rgba(233, 30, 99, 0.07);
+}
+
+.dark .mood-tense {
+    background: linear-gradient(135deg, rgba(255, 87, 34, 0.12) 0%, rgba(255, 138, 101, 0.1) 100%);
+    box-shadow: inset 0 0 60px rgba(255, 87, 34, 0.1), 0 0 30px rgba(255, 87, 34, 0.07);
+}
+
+.dark .mood-melancholy {
+    background: linear-gradient(180deg, rgba(144, 164, 174, 0.12) 0%, rgba(176, 190, 197, 0.1) 100%);
+    box-shadow: inset 0 0 60px rgba(96, 125, 139, 0.1), 0 0 30px rgba(96, 125, 139, 0.07);
+}
+
+.dark .mood-triumphant {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.12) 0%, rgba(255, 215, 64, 0.1) 100%);
+    box-shadow: inset 0 0 60px rgba(255, 193, 7, 0.1), 0 0 30px rgba(255, 193, 7, 0.07);
+}
+
+.dark .mood-eerie {
+    background: linear-gradient(135deg, rgba(69, 39, 100, 0.15) 0%, rgba(149, 117, 205, 0.12) 100%);
+    box-shadow: inset 0 0 80px rgba(30, 15, 40, 0.18), 0 0 30px rgba(126, 87, 194, 0.07);
+}
+
+.dark .mood-serene {
+    background: linear-gradient(135deg, rgba(102, 187, 106, 0.12) 0%, rgba(129, 199, 132, 0.1) 100%);
+    box-shadow: inset 0 0 60px rgba(102, 187, 106, 0.08), 0 0 30px rgba(102, 187, 106, 0.06);
+}
+
+/* Dark Pull Quote */
+.dark .pull-quote::before {
+    color: rgba(188, 170, 164, 0.15);
+}
+
+.dark .pull-quote::after {
+    background: linear-gradient(90deg, transparent, #8D6E63, transparent);
+}
+
+.dark .pull-quote-text {
+    color: #EFEBE9;
+}
+
+.dark .pull-quote-cite {
+    color: #BCAAA4;
 }
 
 /* Editor placeholder fallback */

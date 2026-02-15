@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
+import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
@@ -492,6 +493,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
                 return (
                     <SpoilerReveal>{domToReact(domNode.children, parseOptions)}</SpoilerReveal>
+                );
+            }
+
+            // Handle Footnotes
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-footnote']) {
+                return (
+                    <FootnoteTooltip
+                        index={parseInt(domNode.attribs['data-footnote-index'] || '1')}
+                        note={domNode.attribs['data-footnote']}
+                    />
                 );
             }
 
