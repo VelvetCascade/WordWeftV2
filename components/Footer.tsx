@@ -19,6 +19,7 @@ export const Footer: React.FC = () => {
               <li><a href="#/" className="hover:text-accent transition-colors">Discover</a></li>
               <li><a href="#/write" className="hover:text-accent transition-colors">Write</a></li>
               <li><a href="#/category" className="hover:text-accent transition-colors">Genres</a></li>
+              <li><a href="#/features" className="hover:text-accent transition-colors">Features</a></li>
               <li><a href="#/feedback" className="hover:text-accent transition-colors">Feedback</a></li>
             </ul>
           </div>

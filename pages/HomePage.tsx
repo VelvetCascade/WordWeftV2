@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import type { Book, Author } from '../types';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import type { Book, Author, SearchBookResult, SearchAuthorResult } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
+import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
 
@@ -17,11 +17,11 @@ const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
     }, 5000);
     return () => clearInterval(timer);
   }, [books.length]);
-  
+
   const getCardStyle = (index: number) => {
     if (books.length === 0) return {};
     const offset = (index - currentIndex + books.length) % books.length;
-    
+
     if (offset === 0) { // Active
       return { transform: 'translateX(0) scale(1)', opacity: 1, zIndex: 3 };
     }
@@ -42,7 +42,7 @@ const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
   return (
     <div className="relative w-full h-64 md:h-96 flex items-center justify-center perspective-1000">
       {books.map((book, index) => (
-        <div 
+        <div
           key={book.id}
           className="absolute w-40 md:w-64 transition-transform duration-700 ease-in-out"
           style={getCardStyle(index)}
@@ -56,11 +56,279 @@ const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
 };
 
 
+// ─── Hero Search with Inline Autocomplete ─────────────────────
+
+interface HeroSearchProps {
+  onScrolledPast: (past: boolean) => void;
+}
+
+const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
+  const [query, setQuery] = useState('');
+  const [books, setBooks] = useState<SearchBookResult[]>([]);
+  const [authors, setAuthors] = useState<SearchAuthorResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const totalResults = books.length + authors.length;
+
+  // Intersection Observer for scroll-morph effect
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        onScrolledPast(!entry.isIntersecting);
+      },
+      { threshold: 0.1, rootMargin: '-60px 0px 0px 0px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onScrolledPast]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const fetchAutocomplete = useCallback(async (q: string) => {
+    if (q.trim().length < 2) {
+      setBooks([]);
+      setAuthors([]);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const result = await api.searchAutocomplete(q);
+      setBooks(result.books || []);
+      setAuthors(result.authors || []);
+    } catch (e) {
+      console.error('Autocomplete error:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    setSelectedIndex(-1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchAutocomplete(val), 300);
+  };
+
+  const navigateToBook = (bookId: string) => {
+    setIsFocused(false);
+    window.location.hash = `/book/${bookId}`;
+  };
+
+  const navigateToAuthor = (authorId: string) => {
+    setIsFocused(false);
+    window.location.hash = `/author/${authorId}`;
+  };
+
+  const navigateToFullSearch = () => {
+    if (query.trim().length >= 2) {
+      setIsFocused(false);
+      window.location.hash = `/search?q=${encodeURIComponent(query.trim())}`;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 1, totalResults - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 1, -1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0) {
+        if (selectedIndex < books.length) {
+          navigateToBook(books[selectedIndex].id);
+        } else {
+          navigateToAuthor(authors[selectedIndex - books.length].id);
+        }
+      } else {
+        navigateToFullSearch();
+      }
+    } else if (e.key === 'Escape') {
+      setIsFocused(false);
+      inputRef.current?.blur();
+    }
+  };
+
+  const showDropdown = isFocused && (totalResults > 0 || (query.trim().length >= 2 && !isLoading));
+
+  return (
+    <section className="hero-search-section" ref={containerRef}>
+      <div className="container mx-auto px-6">
+        <div className="hero-search-wrapper">
+          {/* Glow ring */}
+          <div className={`hero-search-glow ${isFocused ? 'hero-search-glow-active' : ''}`} />
+
+          {/* Input */}
+          <div className="hero-search-input-row">
+            <svg className="hero-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={handleInputChange}
+              onFocus={() => setIsFocused(true)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search for books, users, or genres..."
+              className="hero-search-input"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {query && (
+              <button className="hero-search-clear" onClick={() => { setQuery(''); setBooks([]); setAuthors([]); }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                </svg>
+              </button>
+            )}
+            {query.trim().length >= 2 && (
+              <button className="hero-search-submit" onClick={navigateToFullSearch}>
+                Search
+              </button>
+            )}
+          </div>
+
+          {/* Inline Autocomplete Dropdown */}
+          {showDropdown && (
+            <div className="hero-search-dropdown">
+              {isLoading && (
+                <div className="hero-search-loading">
+                  <div className="search-overlay-spinner" />
+                  <span>Searching...</span>
+                </div>
+              )}
+
+              {/* Books */}
+              {books.length > 0 && (
+                <div className="hero-search-group">
+                  <div className="hero-search-group-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg>
+                    Books
+                  </div>
+                  {books.map((book, i) => (
+                    <button
+                      key={book.id}
+                      className={`hero-search-item ${selectedIndex === i ? 'hero-search-item-active' : ''}`}
+                      onClick={() => navigateToBook(book.id)}
+                      onMouseEnter={() => setSelectedIndex(i)}
+                    >
+                      <img
+                        src={book.coverUrl || 'https://via.placeholder.com/40x56'}
+                        alt={book.title}
+                        className="hero-search-item-cover"
+                      />
+                      <div className="hero-search-item-info">
+                        <div className="hero-search-item-title">{book.title}</div>
+                        <div className="hero-search-item-meta">
+                          {book.author?.name && <span>by {book.author.name}</span>}
+                          {book.rating > 0 && (
+                            <span className="hero-search-item-rating">
+                              <StarIcon className="w-3 h-3" />
+                              {book.rating.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+                        {book.genres && book.genres.length > 0 && (
+                          <div className="hero-search-item-genres">
+                            {book.genres.slice(0, 3).map(g => (
+                              <span key={g} className="search-overlay-genre-pill">{g}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <svg className="hero-search-item-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Authors */}
+              {authors.length > 0 && (
+                <div className="hero-search-group">
+                  <div className="hero-search-group-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    Authors
+                  </div>
+                  {authors.map((author, i) => {
+                    const idx = books.length + i;
+                    return (
+                      <button
+                        key={author.id}
+                        className={`hero-search-item ${selectedIndex === idx ? 'hero-search-item-active' : ''}`}
+                        onClick={() => navigateToAuthor(author.id)}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                      >
+                        <img
+                          src={author.avatarUrl || 'https://via.placeholder.com/40'}
+                          alt={author.name}
+                          className="hero-search-item-avatar"
+                        />
+                        <div className="hero-search-item-info">
+                          <div className="hero-search-item-title">{author.name}</div>
+                          <div className="hero-search-item-meta">
+                            {author.bio && <span>{author.bio.length > 50 ? author.bio.slice(0, 50) + '…' : author.bio}</span>}
+                          </div>
+                          <div className="hero-search-item-meta">{author.followersCount} followers</div>
+                        </div>
+                        <svg className="hero-search-item-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* No results */}
+              {!isLoading && query.trim().length >= 2 && totalResults === 0 && (
+                <div className="hero-search-empty">
+                  <p>No results for "{query}"</p>
+                  <p className="hero-search-empty-hint">Try different keywords or check your spelling</p>
+                </div>
+              )}
+
+              {/* Footer */}
+              {totalResults > 0 && (
+                <button className="hero-search-footer" onClick={navigateToFullSearch}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+                  <span>See all results for <strong>"{query}"</strong></span>
+                  <kbd>↵</kbd>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
 export const HomePage: React.FC = () => {
-  const [searchValue, setSearchValue] = useState("");
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
   const [spotlightAuthor, setSpotlightAuthor] = useState<Author | null>(null);
+  const [heroSearchPast, setHeroSearchPast] = useState(false);
 
   useEffect(() => {
     api.getBooks({ sortBy: 'Popular', limit: 6 }).then(books => {
@@ -71,7 +339,12 @@ export const HomePage: React.FC = () => {
     });
     api.getGenres().then(setGenres);
   }, []);
-  
+
+  // Dispatch custom event so Navbar can react
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('heroSearchVisibility', { detail: { visible: !heroSearchPast } }));
+  }, [heroSearchPast]);
+
   return (
     <div className="overflow-x-hidden">
       {/* Hero Section */}
@@ -97,38 +370,24 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Search Bar */}
-      <section className="transform -translate-y-1/2 z-20 relative">
-        <div className="container mx-auto px-6">
-          <div className="relative max-w-2xl mx-auto">
-            <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input 
-              type="text" 
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search for books, authors, or genres..."
-              className="w-full h-16 pl-14 pr-12 rounded-3xl font-sans text-lg border-none shadow-lifted focus:ring-2 focus:ring-accent focus:shadow-glow transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich"
-            />
-            {searchValue && <XMarkIcon onClick={() => setSearchValue("")} className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 cursor-pointer hover:text-text-rich dark:hover:text-dark-text-rich" />}
-          </div>
-        </div>
-      </section>
+      {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
+      <HeroSearch onScrolledPast={setHeroSearchPast} />
 
       {/* Trending Books */}
       <section className="container mx-auto px-6 mb-24 -mt-8">
         <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Trending Books</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {trendingBooks.length > 0 
-           ? trendingBooks.map(book => (
-            <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
-          ))
-          : Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-dark-surface-alt rounded-xl"></div>
-              <div className="h-4 bg-gray-200 dark:bg-dark-surface-alt rounded mt-3 w-3/4"></div>
-              <div className="h-3 bg-gray-200 dark:bg-dark-surface-alt rounded mt-2 w-1/2"></div>
-            </div>
-           ))
+          {trendingBooks.length > 0
+            ? trendingBooks.map(book => (
+              <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
+            ))
+            : Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-dark-surface-alt rounded-xl"></div>
+                <div className="h-4 bg-gray-200 dark:bg-dark-surface-alt rounded mt-3 w-3/4"></div>
+                <div className="h-3 bg-gray-200 dark:bg-dark-surface-alt rounded mt-2 w-1/2"></div>
+              </div>
+            ))
           }
         </div>
       </section>

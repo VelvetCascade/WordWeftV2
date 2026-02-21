@@ -21,11 +21,14 @@ import { SafetyRulesPage } from './pages/SafetyRulesPage';
 import { ContactPage } from './pages/ContactPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
+import { FeaturesPage } from './pages/FeaturesPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
 import { NotificationBell } from './components/NotificationBell';
 import { NotificationToast } from './components/NotificationToast';
+import { WhatsNewPopup } from './components/WhatsNewPopup';
 import { FeedbackContext } from './contexts/FeedbackContext';
 import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
@@ -50,7 +53,9 @@ export type Page =
   | { name: 'safety' }
   | { name: 'contact' }
   | { name: 'feedback' }
-  | { name: 'notifications' };
+  | { name: 'notifications' }
+  | { name: 'search'; query: string }
+  | { name: 'features' };
 
 
 const App: React.FC = () => {
@@ -74,11 +79,13 @@ const App: React.FC = () => {
       case 'auth': window.location.hash = '/auth'; break;
       case 'edit-profile': window.location.hash = '/edit-profile'; break;
       case 'notifications': window.location.hash = '/notifications'; break;
+      case 'search': window.location.hash = `/search?q=${encodeURIComponent(target.query)}`; break;
       case 'terms': window.location.hash = '/terms'; break;
       case 'privacy': window.location.hash = '/privacy'; break;
       case 'safety': window.location.hash = '/safety'; break;
       case 'contact': window.location.hash = '/contact'; break;
       case 'feedback': window.location.hash = '/feedback'; break;
+      case 'features': window.location.hash = '/features'; break;
       default: window.location.hash = '/'; break;
     }
   };
@@ -190,10 +197,20 @@ const App: React.FC = () => {
         targetPage = { name: 'feedback' };
       } else if (hash.startsWith('notifications')) {
         targetPage = { name: 'notifications' };
+      } else if (hash.startsWith('search')) {
+        const searchParams = new URLSearchParams(hash.split('?')[1] || '');
+        targetPage = { name: 'search', query: searchParams.get('q') || '' };
       } else if (hash.startsWith('terms')) {
         targetPage = { name: 'terms' };
+      } else if (hash.startsWith('features')) {
+        targetPage = { name: 'features' };
       } else {
         targetPage = { name: 'home' };
+      }
+
+      // For logged-out users, the root landing page is the Features page
+      if (!isAuthenticated && targetPage.name === 'home') {
+        targetPage = { name: 'features' };
       }
 
       const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile', 'notifications'];
@@ -272,6 +289,10 @@ const App: React.FC = () => {
           onLoadMore={notif.loadMore}
           isLoading={notif.isLoading}
         />;
+      case 'search':
+        return <SearchResultsPage />;
+      case 'features':
+        return <FeaturesPage />;
       default:
         return <HomePage />;
     }
@@ -337,6 +358,7 @@ const App: React.FC = () => {
           onDismiss={notif.dismissToast}
           onNavigate={navigateTo}
         />
+        {isAuthenticated && <WhatsNewPopup />}
       </div>
     </FeedbackContext.Provider>
   );
