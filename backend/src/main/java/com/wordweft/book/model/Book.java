@@ -22,12 +22,16 @@ public class Book {
     private String coverUrl;
     private Double rating = 0.0;
     private Integer reviewsCount = 0;
-    
+
     // Stats
     private Integer viewCount = 0;
+    private Integer readCount = 0;
+    private Integer readCountLast7Days = 0;
+    private Integer viewCountLast7Days = 0;
     private Set<String> likes = new HashSet<>(); // Set of User IDs who liked the book
-    
+
     private List<String> genres = new ArrayList<>();
+    private String category; // Novel, Short Story, Poetry, etc.
     private List<String> tags = new ArrayList<>();
     private String summary;
     private String description;
@@ -35,5 +39,7 @@ public class Book {
     private String readingStatus = "Ongoing"; // "Completed" or "Ongoing" status of the book's creation
     private String publicationStatus = "draft"; // "draft" or "published"
     private LocalDate publishedDate;
+    private LocalDate lastUpdatedAt;
+    private LocalDate createdAt;
     private boolean isMature = false;
 }

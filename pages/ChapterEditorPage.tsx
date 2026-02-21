@@ -168,6 +168,12 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         }, 2000);
     }
 
+       const handleContentChange = (newContent: string) => {
+            setContent(newContent);
+            debouncedSave('draft', newContent, title);
+        };
+
+
     const handleTitleChange = (newTitle: string) => {
         setTitle(newTitle);
         debouncedSave('draft', content, newTitle);

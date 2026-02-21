@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Book, Author, SearchBookResult, SearchAuthorResult } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
+import { SortDropdown } from '../components/SortDropdown';
+import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 
@@ -327,18 +329,54 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
 export const HomePage: React.FC = () => {
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [books, setBooks] = useState<Book[]>([]);
+  const [rankedGenres, setRankedGenres] = useState<{ name: string; bookCount: number; readCount: number }[]>([]);
+  const [showAllGenres, setShowAllGenres] = useState(false);
   const [spotlightAuthor, setSpotlightAuthor] = useState<Author | null>(null);
   const [heroSearchPast, setHeroSearchPast] = useState(false);
+  const [sortMode, setSortMode] = useState<'most_read' | 'most_viewed' | 'recent_update' | 'new'>('most_read');
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
+  const [genreBooks, setGenreBooks] = useState<Record<string, Book[]>>({});
 
-  useEffect(() => {
-    api.getBooks({ sortBy: 'Popular', limit: 6 }).then(books => {
-      setTrendingBooks(books);
-      if (books.length > 0) {
-        setSpotlightAuthor(books[0].author);
+  const SORT_OPTIONS = [
+    { value: 'most_read', label: 'Most Read (7 days)' },
+    { value: 'most_viewed', label: 'Most Viewed (7 days)' },
+    { value: 'recent_update', label: 'Recently Updated' },
+    { value: 'new', label: 'Newly Added' },
+  ];
+
+  const fetchBooks = (sort: string, pageNum: number, append: boolean) => {
+    setIsLoading(true);
+    api.getBooks({ sort: sort as any, page: pageNum, size: 12 }).then(res => {
+      setBooks(prev => append ? [...prev, ...res.content] : res.content);
+      setHasMore(res.hasMore);
+      setIsLoading(false);
+      if (!append && res.content.length > 0) {
+        setSpotlightAuthor(res.content[0].author);
       }
     });
-    api.getGenres().then(setGenres);
+  };
+
+  useEffect(() => {
+    setPage(0);
+    fetchBooks(sortMode, 0, false);
+  }, [sortMode]);
+
+  useEffect(() => {
+    api.getGenresRanked().then(setRankedGenres);
+    api.getHomeGenres().then(setGenreBooks);
   }, []);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchBooks(sortMode, nextPage, true);
+  };
+
 
   // Dispatch custom event so Navbar can react
   useEffect(() => {
@@ -365,7 +403,7 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
           <div className="hidden md:block">
-            <HeroCarousel books={trendingBooks.slice(0, 5)} />
+            <HeroCarousel books={books.slice(0, 5)} />
           </div>
         </div>
       </section>
@@ -373,12 +411,19 @@ export const HomePage: React.FC = () => {
       {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
       <HeroSearch onScrolledPast={setHeroSearchPast} />
 
-      {/* Trending Books */}
+      {/* Explore Books */}
       <section className="container mx-auto px-6 mb-24 -mt-8">
-        <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Trending Books</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Explore Books</h2>
+          <SortDropdown
+            options={SORT_OPTIONS}
+            value={sortMode}
+            onChange={(v) => setSortMode(v as any)}
+          />
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {trendingBooks.length > 0
-            ? trendingBooks.map(book => (
+          {books.length > 0
+            ? books.map(book => (
               <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
             ))
             : Array.from({ length: 6 }).map((_, i) => (
@@ -390,23 +435,88 @@ export const HomePage: React.FC = () => {
             ))
           }
         </div>
+        {hasMore && (
+          <div className="text-center mt-8">
+            <button
+              onClick={handleLoadMore}
+              disabled={isLoading}
+              className="font-sans font-semibold text-sm bg-accent text-white px-6 py-3 rounded-xl hover:bg-primary transition-colors disabled:opacity-50"
+            >
+              {isLoading ? 'Loading...' : 'Load More'}
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Top Genres */}
-      <section className="container mx-auto px-6 mb-24">
-        <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Top Genres</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {genres.slice(0, 5).map(genre => (
-            <div key={genre} onClick={() => window.location.hash = '/category'} className="relative h-28 rounded-2xl p-4 flex items-end justify-start text-white font-sans font-bold text-xl cursor-pointer overflow-hidden group">
-              <div className="absolute inset-0 bg-primary dark:bg-dark-surface-alt group-hover:bg-animated-gradient group-hover:animate-gradient-shift transition-all duration-300"></div>
-              <div className="absolute inset-0 bg-black/30"></div>
-              <span className="relative z-10">{genre}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      {rankedGenres.length > 0 && (
+        <section className="container mx-auto px-6 mb-24">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Top Genres</h2>
+            {rankedGenres.length > 6 && (
+              <button
+                onClick={() => setShowAllGenres(prev => !prev)}
+                className="font-sans text-sm font-semibold text-accent hover:text-primary transition-colors"
+              >
+                {showAllGenres ? 'Show Less' : `View All (${rankedGenres.length})`}
+              </button>
+            )}
+          </div>
+          <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 ${showAllGenres ? 'max-h-[600px] overflow-y-auto pr-1' : ''}`}>
+            {(showAllGenres ? rankedGenres : rankedGenres.slice(0, 6)).map((genre, idx) => {
+              const gradients = [
+                'bg-gradient-to-br from-violet-600 to-purple-800',
+                'bg-gradient-to-br from-rose-500 to-pink-700',
+                'bg-gradient-to-br from-sky-500 to-blue-700',
+                'bg-gradient-to-br from-amber-500 to-orange-700',
+                'bg-gradient-to-br from-emerald-500 to-teal-700',
+                'bg-gradient-to-br from-indigo-500 to-blue-800',
+                'bg-gradient-to-br from-fuchsia-500 to-purple-700',
+                'bg-gradient-to-br from-cyan-500 to-teal-600',
+                'bg-gradient-to-br from-red-500 to-rose-700',
+                'bg-gradient-to-br from-lime-500 to-green-700',
+              ];
+              return (
+                <div
+                  key={genre.name}
+                  onClick={() => window.location.hash = `/genre/${encodeURIComponent(genre.name)}`}
+                  className="relative h-36 rounded-2xl p-5 flex flex-col justify-end text-white font-sans cursor-pointer overflow-hidden group transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg"
+                >
+                  <div className={`absolute inset-0 transition-all duration-500 ${gradients[idx % gradients.length]} group-hover:brightness-110`}></div>
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300"></div>
+                  <span className="absolute top-3 right-3 z-10 bg-white/20 backdrop-blur-sm text-[10px] font-bold px-2 py-0.5 rounded-full">{genre.bookCount} books</span>
+                  <span className="relative z-10 font-bold text-xl leading-tight">{genre.name}</span>
+                  <span className="relative z-10 text-xs font-medium text-white/70 mt-1 group-hover:text-white/90 transition-colors">Explore →</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-      {/* Author Spotlight */}
+      {/* Genre-wise Book Sections */}
+      {Object.keys(genreBooks).length > 0 && Object.entries(genreBooks).map(([genre, gBooks]) => (
+        <section key={genre} className="container mx-auto px-6 mb-16">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">{genre}</h2>
+            <a
+              href={`#/genre/${encodeURIComponent(genre)}`}
+              className="font-sans text-sm font-semibold text-accent hover:underline transition-colors"
+            >
+              View All →
+            </a>
+          </div>
+          <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            {gBooks.map(book => (
+              <div key={book.id} className="flex-shrink-0 w-40">
+                <BookCard book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {/* Author Spotlight - Hidden for now
       {spotlightAuthor && (
         <section className="bg-white dark:bg-dark-surface py-24">
           <div className="container mx-auto px-6">
@@ -421,6 +531,26 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
         </section>
+      )}
+      */}
+
+      {/* Personalized Modal */}
+      {showPersonalizedModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowPersonalizedModal(false)}>
+          <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
+            <div className="text-4xl mb-4">✨</div>
+            <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery Coming Soon</h3>
+            <p className="text-text-body dark:text-dark-text-body mb-6">
+              We are building a thoughtful recommendation system. For now, explore stories using transparent ranking and genre filters.
+            </p>
+            <button
+              onClick={() => setShowPersonalizedModal(false)}
+              className="bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-colors"
+            >
+              Back to Explore
+            </button>
+          </div>
+        </div>
       )}
 
       <Footer />

@@ -9,9 +9,10 @@ interface NavbarProps {
   isAuthenticated: boolean;
   onLogout: () => void;
   notificationBell?: React.ReactNode;
+  onForYouClick?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notificationBell }) => {
+export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notificationBell, onForYouClick }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -50,6 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   const desktopNavLinks = [
     { label: 'Home', action: () => { window.location.hash = '/'; } },
     { label: 'Genres', action: () => { window.location.hash = '/category'; } },
+    { label: 'For You', action: () => { if (onForYouClick) onForYouClick(); } },
     { label: 'Library', action: () => { window.location.hash = '/profile'; } },
     { label: 'Write', action: () => { window.location.hash = '/write'; } },
   ];

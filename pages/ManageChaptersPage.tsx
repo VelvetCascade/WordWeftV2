@@ -14,12 +14,21 @@ interface ManageChaptersPageProps {
 
 type Tab = 'chapters' | 'characters' | 'scenes' | 'notes';
 
+const BOOK_CATEGORIES = [
+    'Novel', 'Novella', 'Short Story', 'Poetry', 'Essay',
+    'Anthology', 'Memoir', 'Biography', 'Self-Help', 'Graphic Novel',
+    'Light Novel', 'Web Novel', 'Fan Fiction', 'Screenplay', 'Play',
+    'Journal', 'Guide', 'Other'
+];
+
 const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; onUpdate: (updates: Partial<Book>) => void }> = ({ isOpen, onClose, book, onUpdate }) => {
     const [title, setTitle] = useState(book.title);
     const [description, setDescription] = useState(book.description || '');
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
+    const [category, setCategory] = useState(book.category || '');
     const [genres, setGenres] = useState<string[]>(book.genres || []);
     const [allGenres, setAllGenres] = useState<string[]>([]);
+    const [genreSearch, setGenreSearch] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -34,6 +43,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             description,
             summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
             coverUrl,
+            category,
             genres
         });
         onClose();
@@ -44,6 +54,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     };
 
     if (!isOpen) return null;
+
+    const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -70,13 +82,43 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
                         </div>
                         <div>
+                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Category</label>
+                            <select
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat"
+                            >
+                                <option value="">Select a category...</option>
+                                {BOOK_CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
                             <label className="block text-sm font-bold mb-2 dark:text-dark-text-body">Genres</label>
-                            <div className="flex flex-wrap gap-2">
-                                {allGenres.map(g => (
-                                    <button key={g} type="button" onClick={() => toggleGenre(g)} className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${genres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt dark:text-dark-text-body'}`}>
+                            {genres.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-3">
+                                    {genres.map(g => (
+                                        <span key={g} onClick={() => toggleGenre(g)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors">
+                                            {g} <span className="text-white/70">×</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            <input
+                                type="text"
+                                placeholder="Search genres..."
+                                value={genreSearch}
+                                onChange={e => setGenreSearch(e.target.value)}
+                                className="w-full p-2 mb-2 rounded-lg border text-sm dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich focus:ring-1 focus:ring-accent focus:border-accent"
+                            />
+                            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+                                {filteredGenres.map(g => (
+                                    <button key={g} type="button" onClick={() => toggleGenre(g)} className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${genres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-border'}`}>
                                         {g}
                                     </button>
                                 ))}
+                                {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match your search.</p>}
                             </div>
                         </div>
                     </form>

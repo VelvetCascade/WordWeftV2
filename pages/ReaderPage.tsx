@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { User, Book, Comment, Character } from '../types';
+import type { User, Book, BookProgress, Comment, Character  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
@@ -458,7 +458,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         );
     }
 
-    // Rendering Helpers
+    if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
+    if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
+
     const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
     const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
 
