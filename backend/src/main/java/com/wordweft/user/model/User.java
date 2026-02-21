@@ -31,32 +31,42 @@ public class User {
     private String password;
 
     private String avatarUrl;
-    
+
     private String bio;
-    
+
     private String location;
-    
+
     private String website;
 
     private LocalDate joinDate;
-    
+
     // Password Reset
     private String resetPasswordToken;
     private Instant resetPasswordTokenExpiry;
-    
+
     // For future role-based access control (Reader, Author, Admin)
     private Set<String> roles = new HashSet<>();
-    
+
     // Social Graph (Storing User IDs)
     private Set<String> followers = new HashSet<>();
     private Set<String> following = new HashSet<>();
-    
+
     // Extended Profile
     private Map<String, String> socials = new HashMap<>(); // twitter, instagram, threads
     private List<String> favoriteGenres = new ArrayList<>();
-    
+
     // Stats
     private UserStats stats;
+
+    // Notification Preferences (defaults all enabled)
+    private Map<String, Boolean> notificationPreferences = new HashMap<>() {
+        {
+            put("follows", true);
+            put("comments", true);
+            put("storyUpdates", true);
+            put("systemAnnouncements", true);
+        }
+    };
 
     public User(String username, String email, String password) {
         this.username = username;
