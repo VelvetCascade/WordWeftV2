@@ -12,14 +12,14 @@ export interface Author {
 }
 
 export interface ReviewReply {
+  id: string;
+  content: string;
+  timestamp: string;
+  user: {
     id: string;
-    content: string;
-    timestamp: string;
-    user: {
-        id: string;
-        name: string;
-        avatarUrl: string;
-    };
+    name: string;
+    avatarUrl: string;
+  };
 }
 
 export interface Review {
@@ -39,19 +39,19 @@ export interface Review {
 }
 
 export interface Comment {
+  id: string;
+  bookId: string;
+  chapterId: string;
+  paragraphIndex: number | null;
+  parentId: string | null;
+  content: string;
+  createdAt: string;
+  userId: string;
+  user: {
     id: string;
-    bookId: string;
-    chapterId: string;
-    paragraphIndex: number | null;
-    parentId: string | null;
-    content: string;
-    createdAt: string;
-    userId: string;
-    user: {
-        id: string;
-        name: string;
-        avatarUrl: string;
-    };
+    name: string;
+    avatarUrl: string;
+  };
 }
 
 export interface Chapter {
@@ -78,7 +78,7 @@ export interface Book {
   viewCount: number;
   likesCount: number;
   isLiked: boolean;
-  
+
   genres: string[];
   tags: string[];
   summary: string;
@@ -91,17 +91,17 @@ export interface Book {
 }
 
 export interface UserStats {
-    booksRead: number;
-    chaptersRead: number;
-    totalWordsRead: number;
-    readingTimeMinutes: number; // Calculated on backend or frontend
-    readerLevel: string; // e.g. "Novice", "Scholar"
+  booksRead: number;
+  chaptersRead: number;
+  totalWordsRead: number;
+  readingTimeMinutes: number; // Calculated on backend or frontend
+  readerLevel: string; // e.g. "Novice", "Scholar"
 }
 
 export interface UserSocials {
-    twitter?: string;
-    instagram?: string;
-    threads?: string;
+  twitter?: string;
+  instagram?: string;
+  threads?: string;
 }
 
 export interface User {
@@ -114,11 +114,11 @@ export interface User {
   location?: string;
   website?: string;
   joinDate: string;
-  
+
   stats: UserStats;
   socials: UserSocials;
   favoriteGenres: string[];
-  
+
   following: string[]; // List of IDs the user follows
   followersCount?: number;
   followingCount?: number;
@@ -137,6 +137,35 @@ export interface LibraryBook extends Book {
   addedDate: string;
 }
 
+
+export interface Character {
+  id: string;
+  bookId: string;
+  name: string;
+  role: string;
+  description: string;
+  goal: string;
+  imageUrl: string;
+}
+
+export interface Scene {
+  id: string;
+  bookId: string;
+  title: string;
+  description: string;
+  setting: string;
+  time: string;
+  chapterId?: string; // Optional link to a chapter
+  characterIds: string[];
+}
+
+export interface Note {
+  id: string;
+  bookId: string;
+  chapterId?: string;
+  title: string;
+  content: string;
+}
 
 export type NavigateTo = (page: Page) => void;
 
