@@ -9,16 +9,6 @@ export interface Author {
   followersCount?: number;
   followingCount?: number;
   isFollowing?: boolean;
-
-  // Public Profile Fields
-  joinDate: string;
-  location?: string;
-  website?: string;
-  stats?: UserStats;
-  socials?: UserSocials;
-  favoriteGenres?: string[];
-  library: Shelf[];
-  writtenBooks: Book[];
 }
 
 export interface ReviewReply {
@@ -140,16 +130,42 @@ export interface Shelf {
   id: string;
   name: string;
   books: LibraryBook[];
-  type?: 'default' | 'custom';
-  visibility?: 'PUBLIC' | 'PRIVATE';
 }
 
 export interface LibraryBook extends Book {
   progress: number; // Percentage from 0 to 100
   addedDate: string;
-  shelfIds?: string[];
 }
 
+
+export interface Character {
+  id: string;
+  bookId: string;
+  name: string;
+  role: string;
+  description: string;
+  goal: string;
+  imageUrl: string;
+}
+
+export interface Scene {
+  id: string;
+  bookId: string;
+  title: string;
+  description: string;
+  setting: string;
+  time: string;
+  chapterId?: string; // Optional link to a chapter
+  characterIds: string[];
+}
+
+export interface Note {
+  id: string;
+  bookId: string;
+  chapterId?: string;
+  title: string;
+  content: string;
+}
 
 export type NavigateTo = (page: Page) => void;
 

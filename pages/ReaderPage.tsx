@@ -1,10 +1,13 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { User, Book, BookProgress, Comment } from '../types';
+import type { User, Book, Comment, Character } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 import { useFeedback } from '../contexts/FeedbackContext';
+import { CharacterPreview } from '../components/CharacterPreview';
+import { SpoilerReveal } from '../components/SpoilerReveal';
+import { FootnoteTooltip } from '../components/FootnoteTooltip';
+import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 
@@ -14,7 +17,6 @@ interface ReaderPageProps {
     currentUser: User | null;
 }
 
-// ... (Comment Components remain exactly the same, omitting for brevity to focus on logic changes, but assume they are here) ...
 const CommentItem: React.FC<{
     comment: Comment;
     allComments: Comment[];
@@ -212,6 +214,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
 
+    // Character Mention State
+    const [characters, setCharacters] = useState<Character[]>([]);
+    const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
+
     const lastScrollY = useRef(0);
     const contentRef = useRef<HTMLDivElement>(null);
     const settingsPanelRef = useRef<HTMLDivElement>(null);
@@ -231,7 +237,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         sepia: 'bg-[#FBF0D9] text-[#5B4636]',
     };
 
-    // 1. Initial Load
     useEffect(() => {
         setIsLoading(true);
         startReadingTimer();
@@ -239,15 +244,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             setBook(fetchedBook);
             setIsLoading(false);
         });
+        api.getCharactersByBookId(bookId).then(setCharacters);
         return () => { checkReadingDuration(); };
     }, [bookId]);
 
-    // 2. Fetch Comments & Record View
     useEffect(() => {
         if (book && chapter) {
             api.getChapterComments(bookId, chapter.id).then(setComments);
 
-            // Record view if not already recorded for this chapter in this session
             if (hasRecordedView.current !== chapter.id) {
                 api.recordChapterView(bookId, chapter.id);
                 hasRecordedView.current = chapter.id;
@@ -255,7 +259,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, [bookId, chapter]);
 
-    // 3. Theme Sync
     useEffect(() => {
         if (globalTheme === 'dark') {
             setContentTheme('dark');
@@ -264,12 +267,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, [globalTheme]);
 
-    // 4. Progress Saving Logic
     const saveProgress = useCallback(() => {
         if (!currentUser || !book || !chapter) return;
 
         const now = Date.now();
-        // Prevent generic double-saves (debouncing trailing calls from unmount)
         if (now - lastSaveTimeRef.current < 500) {
             return;
         }
@@ -284,10 +285,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         if (maxScroll > 0) {
             percentage = (scrollTop / maxScroll) * 100;
         } else {
-            percentage = 100; // Content fits in screen, so it's fully read
+            percentage = 100;
         }
 
-        // Ensure percentage is between 0 and 100
         percentage = Math.min(100, Math.max(0, percentage));
 
         if (percentage > maxPercentageRef.current) {
@@ -303,7 +303,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         );
     }, [currentUser, book, currentChapterIndex, chapter]);
 
-    // 5. Restore Progress Position on Load/Chapter Change
     useEffect(() => {
         if (!currentUser || !chapter) return;
 
@@ -324,17 +323,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             }
         };
 
-        // Tiny delay to allow DOM to render and images to load slightly
         setTimeout(restorePosition, 100);
     }, [bookId, chapter, currentUser]);
 
-
-    // 6. Scroll Handler (Visibility & Progress Throttling)
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
 
-            // Toolbar Visibility
             if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
                 setIsToolbarVisible(false);
             } else {
@@ -342,7 +337,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             }
             lastScrollY.current = currentScrollY;
 
-            // Throttle Progress Saving (Save every 2 seconds max while scrolling)
             if (saveProgressTimeoutRef.current === null) {
                 saveProgressTimeoutRef.current = window.setTimeout(() => {
                     saveProgress();
@@ -353,20 +347,19 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
         window.addEventListener('scroll', handleScroll, { passive: true });
 
-        // Cleanup: Save immediately on unmount/chapter change and clear timeout
         return () => {
             window.removeEventListener('scroll', handleScroll);
             if (saveProgressTimeoutRef.current) {
                 clearTimeout(saveProgressTimeoutRef.current);
             }
-            saveProgress(); // Ensure final position is saved
+            saveProgress();
         };
     }, [saveProgress]);
 
 
     const goToChapter = (index: number) => {
         if (!book || (index < 0 || index >= book.chapters.length)) return;
-        saveProgress(); // Save before leaving
+        saveProgress();
         setCurrentChapterIndex(index);
         window.location.hash = `/read/book/${book.id}/chapter/${index}`;
     };
@@ -402,7 +395,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         const prevIsLiked = chapter.isLiked;
         const prevLikes = chapter.likesCount;
 
-        // Optimistic Update
         const updatedChapters = book.chapters.map(c =>
             c.id === chapter.id
                 ? { ...c, isLiked: !prevIsLiked, likesCount: prevIsLiked ? prevLikes - 1 : prevLikes + 1 }
@@ -421,7 +413,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             await api.toggleChapterLike(book.id, chapter.id);
         } catch (e) {
             console.error(e);
-            // Revert on error
             setBook({
                 ...book,
                 chapters: book.chapters,
@@ -467,11 +458,92 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         );
     }
 
+    // Rendering Helpers
+    const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
+    const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
+
+    let blockIndex = 0;
+
+    const parseOptions = {
+        replace: (domNode: any) => {
+            // Handle Mentions
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-type'] === 'mention') {
+                const id = domNode.attribs['data-id'];
+                const label = domNode.attribs['data-label'];
+                const character = characters.find(c => c.id === id);
+                return (
+                    <span
+                        onClick={() => character && setViewingCharacter(character)}
+                        className={`font-semibold cursor-pointer transition-all duration-200 ${!character ? 'text-gray-400 line-through decoration-1' : 'text-accent hover:text-primary hover:underline underline-offset-2 decoration-accent/40'}`}
+                        title={character ? `View ${label || character.name}` : "Character not found"}
+                    >
+                        {label || (character ? character.name : 'Unknown')}
+                    </span>
+                );
+            }
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs.class === 'mention') {
+                const id = domNode.attribs['data-id'];
+                const character = characters.find(c => c.id === id);
+                return (
+                    <span
+                        onClick={() => character && setViewingCharacter(character)}
+                        className={`font-semibold cursor-pointer text-accent hover:text-primary hover:underline underline-offset-2 decoration-accent/40 transition-all duration-200`}
+                    >
+                        {domToReact(domNode.children, parseOptions)}
+                    </span>
+                )
+            }
+
+            // Handle Spoiler / Hidden Text
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
+                return (
+                    <SpoilerReveal>{domToReact(domNode.children, parseOptions)}</SpoilerReveal>
+                );
+            }
+
+            // Handle Footnotes
+            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-footnote']) {
+                return (
+                    <FootnoteTooltip
+                        index={parseInt(domNode.attribs['data-footnote-index'] || '1')}
+                        note={domNode.attribs['data-footnote']}
+                    />
+                );
+            }
+
+            // Handle Block Elements for Comments
+            if (domNode.type === 'tag' && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'pre'].includes(domNode.name)) {
+                const index = blockIndex++;
+                const count = paragraphCommentCount(index);
+
+                return (
+                    <div key={index} id={`paragraph-${index}`} className="group relative mb-6 rounded-lg transition-colors">
+                        {React.createElement(
+                            domNode.name,
+                            { ...domNode.attribs, className: `${domNode.attribs.className || ''} relative z-10` },
+                            domToReact(domNode.children, parseOptions)
+                        )}
+                        <button
+                            onClick={() => openCommentDrawer(index)}
+                            className={`absolute -right-4 md:-right-12 top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
+                            title="Add comment"
+                        >
+                            <div className="relative">
+                                <PlusIcon className="w-5 h-5" />
+                                {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
+                            </div>
+                        </button>
+                    </div>
+                );
+            }
+        }
+    };
+
     if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
     if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
-    const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
-    const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
+    // Reset block index
+    blockIndex = 0;
 
     return (
         <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
@@ -509,27 +581,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1">
                 <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
                 <div
-                    className="prose prose-lg lg:prose-xl dark:prose-invert"
+                    className="ww-prose"
                     style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
                 >
-                    {chapter.content.split('\n').map((paragraph, index) => {
-                        const count = paragraphCommentCount(index);
-                        return (
-                            <div key={index} id={`paragraph-${index}`} className="group relative mb-6 rounded-lg transition-colors">
-                                <p>{paragraph}</p>
-                                <button
-                                    onClick={() => openCommentDrawer(index)}
-                                    className={`absolute -right-12 top-0 p-2 rounded-full transition-all duration-200 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
-                                    title="Add comment"
-                                >
-                                    <div className="relative">
-                                        <PlusIcon className="w-5 h-5" />
-                                        {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
-                                    </div>
-                                </button>
-                            </div>
-                        );
-                    })}
+                    {parse(chapter.content, parseOptions)}
                 </div>
 
                 {/* Post-Chapter Engagement */}
@@ -570,9 +625,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         <p className="text-center text-gray-500 py-8">No general comments yet.</p>
                     ) : (
                         comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
-                            const snippet = comment.paragraphIndex !== null
-                                ? chapter.content.split('\n')[comment.paragraphIndex]
-                                : null;
+                            // Snippet logic is tricky with HTML. For now, we skip snippet for general display or strip tags if needed.
+                            // But here we are iterating generally.
 
                             return (
                                 <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors" onClick={() => openCommentDrawer(comment.paragraphIndex)}>
@@ -594,7 +648,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                                 <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                             </div>
 
-                                            {snippet && comment.paragraphIndex !== null && (
+                                            {comment.paragraphIndex !== null && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); scrollToParagraph(comment.paragraphIndex!); }}
                                                     className="w-full text-left mt-2 mb-3 bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-400 p-3 rounded-r-lg hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors group"
@@ -603,7 +657,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                                         In response to paragraph #{comment.paragraphIndex + 1}
                                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Jump to paragraph ↗</span>
                                                     </p>
-                                                    <p className="text-sm text-gray-700 dark:text-gray-300 italic line-clamp-2 font-serif">"{snippet}"</p>
+                                                    {/* Snippet display skipped for cleaner HTML handling for now, or could use stripTags */}
                                                 </button>
                                             )}
 
@@ -657,8 +711,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 onClose={() => setIsCommentDrawerOpen(false)}
                 comments={activeParagraphIndex !== null ? paragraphComments(activeParagraphIndex) : comments.filter(c => c.paragraphIndex === null)}
                 paragraphIndex={activeParagraphIndex}
-                paragraphText={activeParagraphIndex !== null ? chapter.content.split('\n')[activeParagraphIndex] : undefined}
+                paragraphText={activeParagraphIndex !== null && chapter.content ? 'Paragraph ' + (activeParagraphIndex + 1) : undefined}
                 onAddComment={handleAddComment}
+            />
+
+            <CharacterPreview
+                character={viewingCharacter}
+                isOpen={!!viewingCharacter}
+                onClose={() => setViewingCharacter(null)}
             />
         </div>
     );
