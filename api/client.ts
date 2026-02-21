@@ -81,6 +81,25 @@ export async function resetPassword(token: string, newPassword: string): Promise
     return await response.text();
 }
 
+export async function googleLogin(idToken: string): Promise<{ user: User; needsProfileCompletion: boolean } | null> {
+    const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+    });
+
+    const data = await handleResponse(response);
+
+    if (data && data.token) {
+        localStorage.setItem(JWT_KEY, data.token);
+        const user = await getMe();
+        if (user) {
+            return { user, needsProfileCompletion: !!data.needsProfileCompletion };
+        }
+    }
+    return null;
+}
+
 export async function logout(): Promise<void> {
     localStorage.removeItem(JWT_KEY);
 }

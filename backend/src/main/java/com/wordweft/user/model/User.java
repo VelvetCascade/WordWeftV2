@@ -30,6 +30,11 @@ public class User {
 
     private String password;
 
+    @Indexed(unique = true, sparse = true)
+    private String googleId;
+
+    private String authProvider = "LOCAL"; // LOCAL or GOOGLE
+
     private String avatarUrl;
 
     private String bio;
@@ -72,8 +77,22 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.authProvider = "LOCAL";
         this.joinDate = LocalDate.now();
         this.avatarUrl = "https://ui-avatars.com/api/?name=" + username + "&background=random";
+        this.stats = new UserStats();
+        this.roles.add("ROLE_USER");
+    }
+
+    // Constructor for Google OAuth users
+    public User(String username, String email, String googleId, String avatarUrl, String authProvider) {
+        this.username = username;
+        this.email = email;
+        this.googleId = googleId;
+        this.authProvider = authProvider;
+        this.avatarUrl = avatarUrl != null ? avatarUrl
+                : "https://ui-avatars.com/api/?name=" + username + "&background=random";
+        this.joinDate = LocalDate.now();
         this.stats = new UserStats();
         this.roles.add("ROLE_USER");
     }
