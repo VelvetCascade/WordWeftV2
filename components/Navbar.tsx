@@ -49,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
   const desktopNavLinks = [
     { label: 'Home', action: () => { window.location.hash = '/'; } },
+    { label: 'Features', action: () => { window.location.hash = '/features'; } },
     { label: 'Genres', action: () => { window.location.hash = '/category'; } },
     { label: 'Library', action: () => { window.location.hash = '/profile'; } },
     { label: 'Write', action: () => { window.location.hash = '/write'; } },

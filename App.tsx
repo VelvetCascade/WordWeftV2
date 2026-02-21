@@ -22,6 +22,7 @@ import { ContactPage } from './pages/ContactPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
+import { FeaturesPage } from './pages/FeaturesPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -52,7 +53,8 @@ export type Page =
   | { name: 'contact' }
   | { name: 'feedback' }
   | { name: 'notifications' }
-  | { name: 'search'; query: string };
+  | { name: 'search'; query: string }
+  | { name: 'features' };
 
 
 const App: React.FC = () => {
@@ -82,6 +84,7 @@ const App: React.FC = () => {
       case 'safety': window.location.hash = '/safety'; break;
       case 'contact': window.location.hash = '/contact'; break;
       case 'feedback': window.location.hash = '/feedback'; break;
+      case 'features': window.location.hash = '/features'; break;
       default: window.location.hash = '/'; break;
     }
   };
@@ -198,6 +201,8 @@ const App: React.FC = () => {
         targetPage = { name: 'search', query: searchParams.get('q') || '' };
       } else if (hash.startsWith('terms')) {
         targetPage = { name: 'terms' };
+      } else if (hash.startsWith('features')) {
+        targetPage = { name: 'features' };
       } else {
         targetPage = { name: 'home' };
       }
@@ -280,6 +285,8 @@ const App: React.FC = () => {
         />;
       case 'search':
         return <SearchResultsPage />;
+      case 'features':
+        return <FeaturesPage />;
       default:
         return <HomePage />;
     }
