@@ -1,14 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import type { User, Chapter, Book } from '../types';
-import { ArrowLeftIcon, PlusIcon, PencilIcon, CloudArrowUpIcon, CloudArrowDownIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { CharacterList } from '../components/CharacterList';
+import { SceneList } from '../components/SceneList';
+import { NoteList } from '../components/NoteList';
 
 interface ManageChaptersPageProps {
-  currentUser: User;
-  bookId: string;
-  onUserUpdate: (user: User) => void;
+    currentUser: User;
+    bookId: string;
+    onUserUpdate: (user: User) => void;
 }
+
+type Tab = 'chapters' | 'characters' | 'scenes' | 'notes';
 
 const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; onUpdate: (updates: Partial<Book>) => void }> = ({ isOpen, onClose, book, onUpdate }) => {
     const [title, setTitle] = useState(book.title);
@@ -18,23 +22,23 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [allGenres, setAllGenres] = useState<string[]>([]);
 
     useEffect(() => {
-        if(isOpen) {
-             api.getGenres().then(setAllGenres);
+        if (isOpen) {
+            api.getGenres().then(setAllGenres);
         }
     }, [isOpen]);
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        onUpdate({ 
-            title, 
-            description, 
-            summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''), 
-            coverUrl, 
-            genres 
+        onUpdate({
+            title,
+            description,
+            summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
+            coverUrl,
+            genres
         });
         onClose();
     };
-    
+
     const toggleGenre = (g: string) => {
         setGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
     };
@@ -46,7 +50,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             <div className="bg-white dark:bg-dark-surface w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-6 border-b dark:border-dark-border flex justify-between items-center">
                     <h3 className="text-xl font-bold dark:text-dark-text-rich">Edit Book Details</h3>
-                    <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-gray-500"/></button>
+                    <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-gray-500" /></button>
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <form id="edit-book-form" onSubmit={handleSave} className="space-y-4">
@@ -58,14 +62,14 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Cover URL</label>
                             <div className="flex gap-4">
                                 <input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} className="flex-1 p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
-                                <img src={coverUrl} className="w-12 h-16 object-cover rounded bg-gray-200" alt="Preview"/>
+                                <img src={coverUrl} className="w-12 h-16 object-cover rounded bg-gray-200" alt="Preview" />
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
                             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
                         </div>
-                         <div>
+                        <div>
                             <label className="block text-sm font-bold mb-2 dark:text-dark-text-body">Genres</label>
                             <div className="flex flex-wrap gap-2">
                                 {allGenres.map(g => (
@@ -93,7 +97,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             <div>
                 <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{chapter.title}</h4>
                 <div className="flex items-center gap-2 mt-1">
-                     <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
                         {chapter.status}
                     </span>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{chapter.wordCount.toLocaleString()} words</p>
@@ -101,13 +105,13 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             </div>
         </div>
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button 
+            <button
                 onClick={() => window.location.hash = `/write/book/${bookId}/chapter/${chapter.id}/edit`}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-text-body dark:text-dark-text-body"
             >
-                <PencilIcon className="w-4 h-4"/> Edit
+                <PencilIcon className="w-4 h-4" /> Edit
             </button>
-            <button 
+            <button
                 onClick={onPublishToggle}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${chapter.status === 'published' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
             >
@@ -121,9 +125,10 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
 export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentUser, bookId, onUserUpdate }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<Tab>('chapters');
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
-    
+
     // Derived state
     const publishedChapterCount = book?.chapters.filter(c => c.status === 'published').length || 0;
     const isBookPublished = book?.publicationStatus === 'published';
@@ -150,7 +155,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         const updatedUser = await api.updateBookDetails(currentUser.id, bookId, updates);
         onUserUpdate(updatedUser);
     };
-    
+
     if (!book) {
         return <div className="p-8">Book not found.</div>;
     }
@@ -161,23 +166,23 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             <div className="bg-white dark:bg-dark-surface border-b dark:border-dark-border pt-8 pb-12 px-6 shadow-sm">
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
-                         <button 
-                            onClick={() => window.location.hash = '/write'} 
+                        <button
+                            onClick={() => window.location.hash = '/write'}
                             className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors md:hidden"
                         >
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
-                        
+
                         <div className="relative group flex-shrink-0">
                             <img src={book.coverUrl} alt={book.title} className="w-32 h-48 object-cover rounded-xl shadow-lg" />
-                            <button 
+                            <button
                                 onClick={() => setIsEditModalOpen(true)}
                                 className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
                             >
                                 <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-full">Edit Cover</span>
                             </button>
                         </div>
-                        
+
                         <div className="flex-1 w-full">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div>
@@ -185,7 +190,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                         {book.title}
                                     </h1>
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                         {book.genres.map(g => (
+                                        {book.genres.map(g => (
                                             <span key={g} className="text-xs font-semibold bg-gray-100 dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
                                                 {g}
                                             </span>
@@ -197,23 +202,23 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                 </div>
                                 <div className="flex flex-col items-end gap-3">
                                     <div className={`px-3 py-1 rounded-full flex items-center gap-2 text-sm font-bold ${isBookPublished ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                                        {isBookPublished ? <CheckCircleIcon className="w-4 h-4"/> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"/>}
+                                        {isBookPublished ? <CheckCircleIcon className="w-4 h-4" /> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                                         {isBookPublished ? 'PUBLISHED' : 'DRAFT MODE'}
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={handleBookPublishToggle}
                                         className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${isBookPublished ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-success text-white hover:bg-opacity-90'}`}
                                     >
                                         {isBookPublished ? 'Unpublish Book' : 'Publish Book'}
                                     </button>
                                     <button onClick={() => setIsEditModalOpen(true)} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
-                                        <Cog6ToothIcon className="w-3 h-3"/> Edit Details
+                                        <Cog6ToothIcon className="w-3 h-3" /> Edit Details
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                     {errorMsg && (
+                    {errorMsg && (
                         <div className="mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium animate-slide-in-bottom">
                             {errorMsg}
                         </div>
@@ -223,47 +228,72 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
 
             {/* Content Area */}
             <div className="container mx-auto max-w-4xl px-4 md:px-6 py-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Table of Contents</h2>
-                    <span className="text-sm text-gray-500 font-medium">
-                        {publishedChapterCount} / {book.chapters.length} Published
-                    </span>
+
+                {/* Tabs */}
+                <div className="flex gap-6 border-b border-border dark:border-dark-border mb-8 overflow-x-auto">
+                    {(['chapters', 'characters', 'scenes', 'notes'] as Tab[]).map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`pb-3 px-2 font-medium transition-colors border-b-2 capitalize whitespace-nowrap ${activeTab === tab
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-text-muted hover:text-text-body dark:hover:text-dark-text-body'
+                                }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
                 </div>
 
-                 <div className="space-y-3">
-                    {book.chapters.length > 0 ? (
-                        book.chapters.map((chapter, i) => (
-                           <ChapterListItem 
-                                key={chapter.id} 
-                                chapter={chapter} 
-                                bookId={book.id}
-                                index={i} 
-                                onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
-                           />
-                        ))
-                    ) : (
-                         <div className="text-center py-16 border-2 border-dashed rounded-xl bg-white dark:bg-dark-surface dark:border-dark-border">
-                             <p className="text-gray-500 dark:text-gray-400 font-medium mb-2">No chapters yet</p>
-                             <p className="text-sm text-gray-400">Start writing your story to bring it to life.</p>
-                         </div>
-                    )}
-                </div>
+                {activeTab === 'chapters' && (
+                    <>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Table of Contents</h2>
+                            <span className="text-sm text-gray-500 font-medium">
+                                {publishedChapterCount} / {book.chapters.length} Published
+                            </span>
+                        </div>
+
+                        <div className="space-y-3">
+                            {book.chapters.length > 0 ? (
+                                book.chapters.map((chapter, i) => (
+                                    <ChapterListItem
+                                        key={chapter.id}
+                                        chapter={chapter}
+                                        bookId={book.id}
+                                        index={i}
+                                        onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center py-16 border-2 border-dashed rounded-xl bg-white dark:bg-dark-surface dark:border-dark-border">
+                                    <p className="text-gray-500 dark:text-gray-400 font-medium mb-2">No chapters yet</p>
+                                    <p className="text-sm text-gray-400">Start writing your story to bring it to life.</p>
+                                </div>
+                            )}
+                        </div>
+                        {/* Floating Action Button for Chapters only */}
+                        <button
+                            onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}
+                            className="fixed bottom-8 right-8 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:scale-105 transition-all z-20 group"
+                            title="Add New Chapter"
+                        >
+                            <PlusIcon className="w-7 h-7 transition-transform group-hover:rotate-90" />
+                        </button>
+                    </>
+                )}
+
+                {activeTab === 'characters' && <CharacterList bookId={bookId} />}
+                {activeTab === 'scenes' && <SceneList bookId={bookId} chapters={book.chapters} />}
+                {activeTab === 'notes' && <NoteList bookId={bookId} />}
+
             </div>
 
-            {/* Floating Action Button */}
-            <button 
-                onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}
-                className="fixed bottom-8 right-8 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:scale-105 transition-all z-20 group"
-                title="Add New Chapter"
-            >
-                <PlusIcon className="w-7 h-7 transition-transform group-hover:rotate-90"/>
-            </button>
-            
-            <EditBookModal 
-                isOpen={isEditModalOpen} 
-                onClose={() => setIsEditModalOpen(false)} 
-                book={book} 
-                onUpdate={handleBookUpdate} 
+            <EditBookModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                book={book}
+                onUpdate={handleBookUpdate}
             />
         </div>
     );

@@ -5,6 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { CharacterList } from '../components/CharacterList';
 import { useFeedback } from '../contexts/FeedbackContext';
 
 
@@ -207,6 +208,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
 
     const [allReviews, setAllReviews] = useState<Review[]>([]);
+    const [activeTab, setActiveTab] = useState<'Chapters' | 'Characters' | 'Reviews'>('Chapters');
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [userComment, setUserComment] = useState('');
@@ -493,89 +495,115 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     </div>
                 </section>
 
-                {/* Chapter List */}
-                <section className="max-w-4xl mx-auto mb-16">
-                    <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Chapters</h3>
-                    <div className="bg-surface dark:bg-dark-surface rounded-2xl border border-gray-200/80 dark:border-dark-border overflow-hidden">
-                        {book.chapters.map((chapter, i) => {
-                            const chapterProgress = readingProgress?.chapters[chapter.id]?.progress || 0;
-                            return (
-                                <ChapterItem
-                                    key={chapter.id}
-                                    chapter={chapter}
-                                    index={i}
-                                    progress={chapterProgress}
-                                    onRead={() => handleReadChapterClick(i)}
-                                    onToggleLike={handleToggleChapterLike}
-                                />
-                            )
-                        })}
-                    </div>
-                </section>
+                {/* Tab Navigation */}
+                <div className="flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
+                    {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-3 font-sans font-medium text-sm transition-colors border-b-2 ${activeTab === tab
+                                ? 'border-accent text-accent'
+                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
+                                }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
 
-                {/* Reviews Section */}
-                <section className="max-w-4xl mx-auto mb-16">
-                    <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Community Reviews</h3>
-
-                    {/* Review Form / User's Review */}
-                    <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border mb-8">
-                        {!currentUser ? (
-                            <div className="text-center">
-                                <p className="mb-4">You must be logged in to leave a review.</p>
-                                <button onClick={() => window.location.hash = '/auth'} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors">
-                                    Log in to leave a review
-                                </button>
+                <div className="max-w-4xl mx-auto mb-16 min-h-[400px]">
+                    {activeTab === 'Chapters' && (
+                        <section className="animate-fade-in">
+                            <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Chapters</h3>
+                            <div className="bg-surface dark:bg-dark-surface rounded-2xl border border-gray-200/80 dark:border-dark-border overflow-hidden">
+                                {book.chapters.map((chapter, i) => {
+                                    const chapterProgress = readingProgress?.chapters[chapter.id]?.progress || 0;
+                                    return (
+                                        <ChapterItem
+                                            key={chapter.id}
+                                            chapter={chapter}
+                                            index={i}
+                                            progress={chapterProgress}
+                                            onRead={() => handleReadChapterClick(i)}
+                                            onToggleLike={handleToggleChapterLike}
+                                        />
+                                    )
+                                })}
                             </div>
-                        ) : currentUserReview && !isEditingReview ? (
-                            // Display user's existing review
-                            <div>
-                                <div className="flex justify-between items-start">
-                                    <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-4">Your Review</h4>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => setIsEditingReview(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
-                                        <button onClick={handleDeleteReview} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        </section>
+                    )}
+
+                    {activeTab === 'Characters' && (
+                        <section className="animate-fade-in">
+                            <CharacterList bookId={bookId} readOnly={true} />
+                        </section>
+                    )}
+
+                    {activeTab === 'Reviews' && (
+                        <section className="animate-fade-in">
+                            <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Community Reviews</h3>
+
+                            {/* Review Form / User's Review */}
+                            <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border mb-8">
+                                {!currentUser ? (
+                                    <div className="text-center">
+                                        <p className="mb-4">You must be logged in to leave a review.</p>
+                                        <button onClick={() => window.location.hash = '/auth'} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors">
+                                            Log in to leave a review
+                                        </button>
                                     </div>
-                                </div>
-                                <div className="flex items-center">
-                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < currentUserReview.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
-                                </div>
-                                <p className="text-text-body dark:text-dark-text-body mt-2">{currentUserReview.comment}</p>
+                                ) : currentUserReview && !isEditingReview ? (
+                                    // Display user's existing review
+                                    <div>
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-4">Your Review</h4>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => setIsEditingReview(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                                                <button onClick={handleDeleteReview} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center">
+                                            {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < currentUserReview.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
+                                        </div>
+                                        <p className="text-text-body dark:text-dark-text-body mt-2">{currentUserReview.comment}</p>
+                                    </div>
+                                ) : (
+                                    // Display review form
+                                    <form onSubmit={handleSubmitReview}>
+                                        <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-2">{currentUserReview ? 'Edit Your Review' : 'Write a Review'}</h4>
+                                        <StarRatingInput rating={userRating} setRating={setUserRating} hoverRating={hoverRating} setHoverRating={setHoverRating} />
+                                        <textarea
+                                            value={userComment}
+                                            onChange={(e) => setUserComment(e.target.value)}
+                                            placeholder="Share your thoughts..."
+                                            className="w-full mt-4 p-3 rounded-lg border-gray-300 focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-body"
+                                            rows={4}
+                                            required
+                                        ></textarea>
+                                        <div className="flex justify-end items-center gap-4 mt-4">
+                                            {isEditingReview && <button type="button" onClick={() => setIsEditingReview(false)} className="font-sans font-semibold text-sm">Cancel</button>}
+                                            <button type="submit" disabled={!userRating || !userComment} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                                                {currentUserReview ? 'Update Review' : 'Submit Review'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
                             </div>
-                        ) : (
-                            // Display review form
-                            <form onSubmit={handleSubmitReview}>
-                                <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-2">{currentUserReview ? 'Edit Your Review' : 'Write a Review'}</h4>
-                                <StarRatingInput rating={userRating} setRating={setUserRating} hoverRating={hoverRating} setHoverRating={setHoverRating} />
-                                <textarea
-                                    value={userComment}
-                                    onChange={(e) => setUserComment(e.target.value)}
-                                    placeholder="Share your thoughts..."
-                                    className="w-full mt-4 p-3 rounded-lg border-gray-300 focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-body"
-                                    rows={4}
-                                    required
-                                ></textarea>
-                                <div className="flex justify-end items-center gap-4 mt-4">
-                                    {isEditingReview && <button type="button" onClick={() => setIsEditingReview(false)} className="font-sans font-semibold text-sm">Cancel</button>}
-                                    <button type="submit" disabled={!userRating || !userComment} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
-                                        {currentUserReview ? 'Update Review' : 'Submit Review'}
-                                    </button>
-                                </div>
-                            </form>
-                        )}
-                    </div>
 
-                    {/* Other Reviews */}
-                    <div className="space-y-6">
-                        {allReviews.filter(review => review.userId !== currentUser?.id).map(review => (
-                            <ReviewItem
-                                key={review.id}
-                                review={review}
-                                currentUser={currentUser}
-                                onReply={handleReplyToReview}
-                            />
-                        ))}
-                    </div>
-                </section>
+                            {/* Other Reviews */}
+                            <div className="space-y-6">
+                                {allReviews.filter(review => review.userId !== currentUser?.id).map(review => (
+                                    <ReviewItem
+                                        key={review.id}
+                                        review={review}
+                                        currentUser={currentUser}
+                                        onReply={handleReplyToReview}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
 
 
                 {/* More from author */}
