@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -154,15 +154,42 @@ export async function getGenres(): Promise<string[]> {
     return await handleResponse(response);
 }
 
-export async function getBooks(filters: { genres?: string[], sortBy?: 'Recent' | 'Rating' | 'Popular', limit?: number }): Promise<Book[]> {
-    let url = `${API_BASE_URL}/books?sortBy=${filters.sortBy || 'Recent'}`;
-    if (filters.genres && filters.genres.length > 0) {
-        url += `&genres=${filters.genres.join(',')}`;
-    }
-    const response = await fetch(url, { headers: getHeaders() });
-    const books = await handleResponse(response);
-    if (filters.limit) return books.slice(0, filters.limit);
-    return books;
+export async function getGenresRanked(): Promise<{ name: string; bookCount: number; readCount: number }[]> {
+    const response = await fetch(`${API_BASE_URL}/books/genres/ranked`);
+    return await handleResponse(response);
+}
+
+export async function getBooks(filters: {
+    sort?: 'most_read' | 'most_viewed' | 'recent_update' | 'new';
+    genre?: string;
+    page?: number;
+    size?: number;
+}): Promise<{ content: Book[]; hasMore: boolean; totalElements: number; page: number }> {
+    const params = new URLSearchParams();
+    if (filters.sort) params.append('sort', filters.sort);
+    if (filters.genre) params.append('genre', filters.genre);
+    params.append('page', String(filters.page ?? 0));
+    params.append('size', String(filters.size ?? 12));
+    const response = await fetch(`${API_BASE_URL}/books?${params.toString()}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getHomeGenres(): Promise<Record<string, Book[]>> {
+    const response = await fetch(`${API_BASE_URL}/books/home-genres`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getBooksByGenre(genre: string, filters: {
+    sort?: 'most_read' | 'most_viewed' | 'recent_update' | 'new';
+    page?: number;
+    size?: number;
+}): Promise<{ content: Book[]; hasMore: boolean; totalElements: number; page: number }> {
+    const params = new URLSearchParams();
+    if (filters.sort) params.append('sort', filters.sort);
+    params.append('page', String(filters.page ?? 0));
+    params.append('size', String(filters.size ?? 12));
+    const response = await fetch(`${API_BASE_URL}/books/genre/${encodeURIComponent(genre)}?${params.toString()}`, { headers: getHeaders() });
+    return await handleResponse(response);
 }
 
 export async function getBookById(id: string): Promise<Book | null> {
@@ -647,3 +674,25 @@ export const getNotificationStreamUrl = (): string => {
     return `${API_BASE_URL}/notifications/stream?token=${token}`;
 };
 
+// --- Search API ---
+
+export const searchAutocomplete = async (query: string): Promise<SearchAutocompleteResponse> => {
+    const response = await fetch(`${API_BASE_URL}/search/autocomplete?q=${encodeURIComponent(query)}`);
+    return handleResponse(response);
+};
+
+export const searchFull = async (
+    query: string,
+    type: 'all' | 'books' | 'authors' = 'all',
+    page = 0,
+    size = 12
+): Promise<SearchFullResponse> => {
+    const params = new URLSearchParams({
+        q: query,
+        type,
+        page: String(page),
+        size: String(size),
+    });
+    const response = await fetch(`${API_BASE_URL}/search?${params}`);
+    return handleResponse(response);
+};

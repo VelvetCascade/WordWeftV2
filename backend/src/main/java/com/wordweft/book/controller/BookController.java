@@ -41,9 +41,26 @@ public class BookController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getBooks(@RequestParam(required = false) List<String> genres,
-            @RequestParam(defaultValue = "Recent") String sortBy) {
-        return ResponseEntity.ok(bookService.getAllBooks(genres, sortBy));
+    public ResponseEntity<?> getBooks(
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String genre,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        return ResponseEntity.ok(bookService.getAllBooks(sort, genre, page, size));
+    }
+
+    @GetMapping("/home-genres")
+    public ResponseEntity<?> getHomeGenres() {
+        return ResponseEntity.ok(bookService.getHomeGenres());
+    }
+
+    @GetMapping("/genre/{name}")
+    public ResponseEntity<?> getBooksByGenre(
+            @PathVariable String name,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        return ResponseEntity.ok(bookService.getBooksByGenre(name, sort, page, size));
     }
 
     @GetMapping("/{id}")
@@ -63,6 +80,11 @@ public class BookController {
     @GetMapping("/genres")
     public ResponseEntity<?> getGenres() {
         return ResponseEntity.ok(bookService.getAllGenres());
+    }
+
+    @GetMapping("/genres/ranked")
+    public ResponseEntity<?> getGenresRanked() {
+        return ResponseEntity.ok(bookService.getGenresRanked());
     }
 
     // --- Stats Interaction ---
@@ -97,6 +119,7 @@ public class BookController {
                 .orElseThrow();
 
         chapter.setViewCount(chapter.getViewCount() + 1);
+        book.setViewCountLast7Days((book.getViewCountLast7Days() == null ? 0 : book.getViewCountLast7Days()) + 1);
         bookRepository.save(book);
 
         return ResponseEntity.ok().build();
@@ -110,6 +133,7 @@ public class BookController {
                 .getPrincipal();
         book.setAuthorId(userDetails.getId());
         book.setPublicationStatus("draft");
+        book.setCreatedAt(LocalDate.now());
         if (book.getCoverUrl() == null || book.getCoverUrl().isEmpty()) {
             book.setCoverUrl("https://picsum.photos/seed/" + System.currentTimeMillis() + "/400/600");
         }
@@ -248,6 +272,7 @@ public class BookController {
         // If we just published a chapter and the book is public, bump the date
         if ("published".equals(newStatus) && "published".equals(book.getPublicationStatus())) {
             book.setPublishedDate(LocalDate.now());
+            book.setLastUpdatedAt(LocalDate.now());
         }
 
         bookRepository.save(book);

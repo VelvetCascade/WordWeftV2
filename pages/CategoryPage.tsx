@@ -7,33 +7,33 @@ import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, Star
 import * as api from '../api/client';
 
 type ViewMode = 'grid' | 'list';
-type SortOption = 'Recent' | 'Rating' | 'Popular';
+type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
 
 const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onClick }) => (
-    <div onClick={onClick} className="flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
-        <img src={book.coverUrl} alt={book.title} className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl"/>
-        <div className="flex-1">
-            <div className="flex flex-wrap gap-2 mb-2">
-                {book.genres.map(g => <span key={g} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full">{g}</span>)}
-            </div>
-            <h3 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">{book.title}</h3>
-            <p className="text-sm font-medium text-text-body dark:text-dark-text-body mb-2">by {book.author.name}</p>
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-3">
-                <StarIcon className="w-4 h-4 text-amber-600 mr-1"/>
-                <span>{book.rating}</span>
-                <span className="mx-2">·</span>
-                <span>{book.reviewsCount.toLocaleString()} reviews</span>
-            </div>
-            <p className="text-sm text-text-body dark:text-dark-text-body line-clamp-2 mb-4">{book.summary}</p>
-            <button className="font-sans font-semibold text-sm text-accent hover:underline">Open Book</button>
-        </div>
+  <div onClick={onClick} className="flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
+    <img src={book.coverUrl} alt={book.title} className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
+    <div className="flex-1">
+      <div className="flex flex-wrap gap-2 mb-2">
+        {book.genres.map(g => <span key={g} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full">{g}</span>)}
+      </div>
+      <h3 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">{book.title}</h3>
+      <p className="text-sm font-medium text-text-body dark:text-dark-text-body mb-2">by {book.author.name}</p>
+      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-3">
+        <StarIcon className="w-4 h-4 text-amber-600 mr-1" />
+        <span>{book.rating}</span>
+        <span className="mx-2">·</span>
+        <span>{book.reviewsCount.toLocaleString()} reviews</span>
+      </div>
+      <p className="text-sm text-text-body dark:text-dark-text-body line-clamp-2 mb-4">{book.summary}</p>
+      <button className="font-sans font-semibold text-sm text-accent hover:underline">Open Book</button>
     </div>
+  </div>
 );
 
 
 export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortOption, setSortOption] = useState<SortOption>('Popular');
+  const [sortOption, setSortOption] = useState<SortOption>('most_read');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(genre ? [genre] : []);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isGenreOpen, setIsGenreOpen] = useState(false);
@@ -41,41 +41,42 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [books, setBooks] = useState<Book[]>([]);
   const [allGenres, setAllGenres] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [genreSearch, setGenreSearch] = useState('');
 
   const genreDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const toggleGenre = (g: string) => {
-      setSelectedGenres(prev => prev.includes(g) ? prev.filter(i => i !== g) : [...prev, g]);
+    setSelectedGenres(prev => prev.includes(g) ? prev.filter(i => i !== g) : [...prev, g]);
   };
-  
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target as Node)) {
-                setIsGenreOpen(false);
-            }
-            if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
-                setIsSortOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
 
-    useEffect(() => {
-        api.getGenres().then(setAllGenres);
-    }, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target as Node)) {
+        setIsGenreOpen(false);
+      }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-    useEffect(() => {
-        setIsLoading(true);
-        api.getBooks({ genres: selectedGenres, sortBy: sortOption }).then(fetchedBooks => {
-            setBooks(fetchedBooks);
-            setIsLoading(false);
-        });
-    }, [selectedGenres, sortOption]);
-  
+  useEffect(() => {
+    api.getGenres().then(setAllGenres);
+  }, []);
+
+  useEffect(() => {
+    setIsLoading(true);
+    api.getBooks({ genre: selectedGenres.length > 0 ? selectedGenres[0] : undefined, sort: sortOption }).then(res => {
+      setBooks(res.content);
+      setIsLoading(false);
+    });
+  }, [selectedGenres, sortOption]);
+
   const handleGenreToggle = () => {
     setIsGenreOpen(prev => !prev);
     setIsSortOpen(false); // Close other dropdown
@@ -87,25 +88,35 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   };
 
 
+  const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
+
   const FilterDrawer: React.FC = () => (
     <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isFilterOpen ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} onClick={() => setIsFilterOpen(false)}>
-        <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-surface rounded-t-3xl p-6 shadow-2xl transform transition-transform duration-300 ${isFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
-                <button onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body"/></button>
-            </div>
-            <div>
-                <h4 className="font-sans font-semibold mb-3 dark:text-dark-text-rich">Genres</h4>
-                <div className="flex flex-wrap gap-2">
-                    {allGenres.map(g => (
-                        <button key={g} onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
-                            {g}
-                        </button>
-                    ))}
-                </div>
-            </div>
-            <button onClick={() => setIsFilterOpen(false)} className="mt-6 w-full bg-accent text-white font-sans font-semibold py-3 rounded-xl">Apply Filters</button>
+      <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-surface rounded-t-3xl p-6 shadow-2xl transform transition-transform duration-300 ${isFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
+          <button onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body" /></button>
         </div>
+        <div>
+          <h4 className="font-sans font-semibold mb-3 dark:text-dark-text-rich">Genres</h4>
+          <input
+            type="text"
+            placeholder="Search genres..."
+            value={genreSearch}
+            onChange={e => setGenreSearch(e.target.value)}
+            className="w-full h-10 px-4 mb-3 rounded-xl text-sm font-sans border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
+          />
+          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+            {filteredGenres.map(g => (
+              <button key={g} onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
+                {g}
+              </button>
+            ))}
+            {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match.</p>}
+          </div>
+        </div>
+        <button onClick={() => setIsFilterOpen(false)} className="mt-6 w-full bg-accent text-white font-sans font-semibold py-3 rounded-xl">Apply Filters</button>
+      </div>
     </div>
   );
 
@@ -124,31 +135,39 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           <div className="flex justify-between items-center">
             {/* Desktop Filters */}
             <div className="hidden md:flex items-center gap-4">
-               <div ref={genreDropdownRef} className="relative">
-                    <button onClick={handleGenreToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        Genre <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isGenreOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    <div className={`absolute top-full mt-2 w-72 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 transition-all duration-200 origin-top-left border dark:border-dark-border ${isGenreOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                         <div className="flex flex-wrap gap-2">
-                            {allGenres.map(g => (
-                                <button key={g} onClick={() => toggleGenre(g)} className={`px-2 py-1 rounded-md text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
-                                    {g}
-                                </button>
-                            ))}
-                        </div>
-                        {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="text-xs text-accent mt-3 hover:underline">Clear all</button>}
-                    </div>
-               </div>
-                <div ref={sortDropdownRef} className="relative">
-                    <button onClick={handleSortToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                        Sort by: {sortOption} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    <div className={`absolute top-full mt-2 w-40 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 transition-all duration-200 origin-top-left border dark:border-dark-border ${isSortOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                        {(['Popular', 'Rating', 'Recent'] as SortOption[]).map(opt => (
-                           <a key={opt} href="#" onClick={(e) => { e.preventDefault(); setSortOption(opt); setIsSortOpen(false); }} className="block px-4 py-2 text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{opt}</a>
-                        ))}
-                    </div>
-               </div>
+              <div ref={genreDropdownRef} className="relative">
+                <button onClick={handleGenreToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                  Genre <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isGenreOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`absolute top-full mt-2 w-80 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 transition-all duration-200 origin-top-left border dark:border-dark-border ${isGenreOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  <input
+                    type="text"
+                    placeholder="Search genres..."
+                    value={genreSearch}
+                    onChange={e => setGenreSearch(e.target.value)}
+                    className="w-full h-9 px-3 mb-3 rounded-lg text-sm font-sans border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
+                  />
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                    {filteredGenres.map(g => (
+                      <button key={g} onClick={() => toggleGenre(g)} className={`px-2 py-1 rounded-md text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-border'}`}>
+                        {g}
+                      </button>
+                    ))}
+                    {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match.</p>}
+                  </div>
+                  {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="text-xs text-accent mt-3 hover:underline">Clear all</button>}
+                </div>
+              </div>
+              <div ref={sortDropdownRef} className="relative">
+                <button onClick={handleSortToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                  Sort by: {sortOption} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`absolute top-full mt-2 w-40 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 transition-all duration-200 origin-top-left border dark:border-dark-border ${isSortOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  {([['most_read', 'Most Read'], ['most_viewed', 'Most Viewed'], ['recent_update', 'Recently Updated'], ['new', 'Newly Added']] as [SortOption, string][]).map(([val, label]) => (
+                    <a key={val} href="#" onClick={(e) => { e.preventDefault(); setSortOption(val); setIsSortOpen(false); }} className="block px-4 py-2 text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{label}</a>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Mobile Filter Button */}
@@ -160,28 +179,28 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
             <div className="flex items-center gap-2 bg-gray-100 dark:bg-dark-surface-alt p-1 rounded-lg">
               <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
-                <Squares2X2Icon className="w-5 h-5"/>
+                <Squares2X2Icon className="w-5 h-5" />
               </button>
               <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
-                <Bars3Icon className="w-5 h-5"/>
+                <Bars3Icon className="w-5 h-5" />
               </button>
             </div>
           </div>
-            {selectedGenres.length > 0 && (
-                <div className="hidden md:flex items-center gap-2 pt-3">
-                    {selectedGenres.map(g => (
-                        <div key={g} className="flex items-center gap-1 bg-accent/10 text-accent text-sm font-medium px-2 py-1 rounded-full">
-                            <span>{g}</span>
-                            <button onClick={() => toggleGenre(g)}><XMarkIcon className="w-4 h-4"/></button>
-                        </div>
-                    ))}
+          {selectedGenres.length > 0 && (
+            <div className="hidden md:flex items-center gap-2 pt-3">
+              {selectedGenres.map(g => (
+                <div key={g} className="flex items-center gap-1 bg-accent/10 text-accent text-sm font-medium px-2 py-1 rounded-full">
+                  <span>{g}</span>
+                  <button onClick={() => toggleGenre(g)}><XMarkIcon className="w-4 h-4" /></button>
                 </div>
-            )}
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Books Display */}
         {isLoading ? (
-            <div className="text-center p-8">Loading books...</div>
+          <div className="text-center p-8">Loading books...</div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
             {books.map(book => (
