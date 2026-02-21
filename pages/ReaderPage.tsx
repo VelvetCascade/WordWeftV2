@@ -245,6 +245,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             setIsLoading(false);
         });
         api.getCharactersByBookId(bookId).then(setCharacters);
+        return () => { checkReadingDuration(); };
     }, [bookId]);
 
     useEffect(() => {

@@ -583,6 +583,7 @@ function mapBackendUserToFrontend(backendData: any): User {
     };
 }
 
+
 // --- Feedback ---
 
 export const submitFeedback = async (feedbackData: Record<string, unknown>): Promise<{ message: string; id: string }> => {

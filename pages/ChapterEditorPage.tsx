@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Character } from '../types';
 import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
-import { useFeedback } from '../contexts/FeedbackContext';
 import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
+import { useFeedback } from '../contexts/FeedbackContext';
 
 interface ChapterEditorPageProps {
     currentUser: User;

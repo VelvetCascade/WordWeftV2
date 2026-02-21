@@ -5,8 +5,8 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
-import { CharacterList } from '../components/CharacterList';
 import { useFeedback } from '../contexts/FeedbackContext';
+import { CharacterList } from '../components/CharacterList';
 
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
