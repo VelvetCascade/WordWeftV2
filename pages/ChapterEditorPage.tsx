@@ -8,6 +8,7 @@ import { RichTextEditor } from '../components/RichTextEditor';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
+import { useFeedback } from '../contexts/FeedbackContext';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -92,6 +93,7 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
 };
 
 export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
+    const { triggerFeedback } = useFeedback();
     const [chapterId, setChapterId] = useState(initialChapterId);
     const isNewChapter = chapterId === 'new';
 
@@ -147,6 +149,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             setSaveState('saved');
 
             if (status === 'published') {
+                triggerFeedback('PUBLISH_FLOW');
                 window.location.hash = `/write/book/${bookId}/manage`;
             }
         } catch (error) {

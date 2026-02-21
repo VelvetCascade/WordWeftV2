@@ -3,6 +3,7 @@ import type { User, Book, Comment, Character } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
+import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
@@ -226,6 +227,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const maxPercentageRef = useRef<number>(0);
 
     const { theme: globalTheme } = useTheme();
+    const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
 
     const chapter = book?.chapters[currentChapterIndex];
 
@@ -237,11 +239,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
     useEffect(() => {
         setIsLoading(true);
+        startReadingTimer();
         api.getBookById(bookId).then(fetchedBook => {
             setBook(fetchedBook);
             setIsLoading(false);
         });
         api.getCharactersByBookId(bookId).then(setCharacters);
+        return () => { checkReadingDuration(); };
     }, [bookId]);
 
     useEffect(() => {
@@ -369,6 +373,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         if (!book || !chapter) return;
         const newComment = await api.addChapterComment(bookId, chapter.id, activeParagraphIndex, content, parentId);
         setComments(prev => [newComment, ...prev]);
+        triggerFeedback('COMMENT_SYSTEM', 3000);
     };
 
     const scrollToParagraph = (index: number) => {

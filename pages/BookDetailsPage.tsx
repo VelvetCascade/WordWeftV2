@@ -5,6 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 
 
@@ -198,6 +199,7 @@ interface BookDetailsPageProps {
 }
 
 export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, currentUser, onUserUpdate }) => {
+    const { triggerFeedback } = useFeedback();
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
@@ -220,6 +222,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     // Manage Shelves State
     const [isManageShelvesModalOpen, setIsManageShelvesModalOpen] = useState(false);
     const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set());
+    const [initialShelfIds, setInitialShelfIds] = useState<Set<string>>(new Set()); // Track existing shelves that are hidden
     const [isSavingShelves, setIsSavingShelves] = useState(false);
 
     const openManageShelvesModal = () => {
@@ -231,6 +234,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             }
         });
         setSelectedShelfIds(currentShelfIds);
+        setInitialShelfIds(currentShelfIds);
         setIsManageShelvesModalOpen(true);
     };
 
@@ -238,7 +242,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser) return;
         setIsSavingShelves(true);
         try {
-            const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(selectedShelfIds));
+            // Merge hidden (initial) shelves with selected shelves
+            const mergedShelves = new Set<string>([...initialShelfIds, ...selectedShelfIds]);
+            const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(mergedShelves));
             onUserUpdate(updatedUser);
             setIsManageShelvesModalOpen(false);
         } catch (e) {
@@ -313,6 +319,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         } else {
             const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
             onUserUpdate(updatedUser);
+            triggerFeedback('FIRST_EXPERIENCE');
         }
     };
 
@@ -624,7 +631,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </div>
 
                         <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2">
-                            {currentUser?.library.filter(s => s.id !== 'all').map(shelf => (
+                            {currentUser?.library.filter(s => s.id !== 'all' && s.type !== 'default' && s.id !== 'reading' && s.id !== 'toread' && s.id !== 'completed' && !s.books.some(b => b.id === bookId)).map(shelf => (
                                 <label key={shelf.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-surface-alt cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-dark-border">
                                     <input
                                         type="checkbox"
