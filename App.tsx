@@ -21,6 +21,7 @@ import { SafetyRulesPage } from './pages/SafetyRulesPage';
 import { ContactPage } from './pages/ContactPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { GenrePage } from './pages/GenrePage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -50,7 +51,8 @@ export type Page =
   | { name: 'safety' }
   | { name: 'contact' }
   | { name: 'feedback' }
-  | { name: 'notifications' };
+  | { name: 'notifications' }
+  | { name: 'genre-page'; genre: string };
 
 
 const App: React.FC = () => {
@@ -58,6 +60,7 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
+  const [showForYouModal, setShowForYouModal] = useState(false);
   const notif = useNotifications(isAuthenticated);
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
 
@@ -190,6 +193,9 @@ const App: React.FC = () => {
         targetPage = { name: 'feedback' };
       } else if (hash.startsWith('notifications')) {
         targetPage = { name: 'notifications' };
+      } else if (hash.startsWith('genre/')) {
+        const genreName = decodeURIComponent(hash.split('/').slice(1).join('/'));
+        targetPage = genreName ? { name: 'genre-page', genre: genreName } : { name: 'home' };
       } else if (hash.startsWith('terms')) {
         targetPage = { name: 'terms' };
       } else {
@@ -272,6 +278,8 @@ const App: React.FC = () => {
           onLoadMore={notif.loadMore}
           isLoading={notif.isLoading}
         />;
+      case 'genre-page':
+        return <GenrePage genre={page.genre} />;
       default:
         return <HomePage />;
     }
@@ -304,6 +312,7 @@ const App: React.FC = () => {
               />
             ) : undefined
           }
+          onForYouClick={() => setShowForYouModal(true)}
         />}
 
         {isWriterPage ? (
@@ -337,6 +346,25 @@ const App: React.FC = () => {
           onDismiss={notif.dismissToast}
           onNavigate={navigateTo}
         />
+
+        {/* Personalized / For You Modal */}
+        {showForYouModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForYouModal(false)}>
+            <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
+              <div className="text-4xl mb-4">✨</div>
+              <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery Coming Soon</h3>
+              <p className="text-text-body dark:text-dark-text-body mb-6">
+                We are building a thoughtful recommendation experience. For now, explore stories by genre and transparent ranking.
+              </p>
+              <button
+                onClick={() => setShowForYouModal(false)}
+                className="bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-colors"
+              >
+                Back to Explore
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </FeedbackContext.Provider>
   );

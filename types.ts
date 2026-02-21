@@ -80,6 +80,7 @@ export interface Book {
   isLiked: boolean;
 
   genres: string[];
+  category?: string;
   tags: string[];
   summary: string;
   chapters: Chapter[];

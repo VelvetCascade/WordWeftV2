@@ -154,15 +154,42 @@ export async function getGenres(): Promise<string[]> {
     return await handleResponse(response);
 }
 
-export async function getBooks(filters: { genres?: string[], sortBy?: 'Recent' | 'Rating' | 'Popular', limit?: number }): Promise<Book[]> {
-    let url = `${API_BASE_URL}/books?sortBy=${filters.sortBy || 'Recent'}`;
-    if (filters.genres && filters.genres.length > 0) {
-        url += `&genres=${filters.genres.join(',')}`;
-    }
-    const response = await fetch(url, { headers: getHeaders() });
-    const books = await handleResponse(response);
-    if (filters.limit) return books.slice(0, filters.limit);
-    return books;
+export async function getGenresRanked(): Promise<{ name: string; bookCount: number; readCount: number }[]> {
+    const response = await fetch(`${API_BASE_URL}/books/genres/ranked`);
+    return await handleResponse(response);
+}
+
+export async function getBooks(filters: {
+    sort?: 'most_read' | 'most_viewed' | 'recent_update' | 'new';
+    genre?: string;
+    page?: number;
+    size?: number;
+}): Promise<{ content: Book[]; hasMore: boolean; totalElements: number; page: number }> {
+    const params = new URLSearchParams();
+    if (filters.sort) params.append('sort', filters.sort);
+    if (filters.genre) params.append('genre', filters.genre);
+    params.append('page', String(filters.page ?? 0));
+    params.append('size', String(filters.size ?? 12));
+    const response = await fetch(`${API_BASE_URL}/books?${params.toString()}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getHomeGenres(): Promise<Record<string, Book[]>> {
+    const response = await fetch(`${API_BASE_URL}/books/home-genres`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function getBooksByGenre(genre: string, filters: {
+    sort?: 'most_read' | 'most_viewed' | 'recent_update' | 'new';
+    page?: number;
+    size?: number;
+}): Promise<{ content: Book[]; hasMore: boolean; totalElements: number; page: number }> {
+    const params = new URLSearchParams();
+    if (filters.sort) params.append('sort', filters.sort);
+    params.append('page', String(filters.page ?? 0));
+    params.append('size', String(filters.size ?? 12));
+    const response = await fetch(`${API_BASE_URL}/books/genre/${encodeURIComponent(genre)}?${params.toString()}`, { headers: getHeaders() });
+    return await handleResponse(response);
 }
 
 export async function getBookById(id: string): Promise<Book | null> {
