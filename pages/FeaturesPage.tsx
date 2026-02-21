@@ -51,12 +51,12 @@ const ArrowRightIcon = () => (
 // ─── Mood Demo Component ──────────────────────────────────────
 const MoodDemo: React.FC = () => {
     const moods = [
-        { name: 'Romantic', color: 'linear-gradient(135deg, #C44D73, #8D6E63)', emoji: '💕' },
-        { name: 'Tense', color: 'linear-gradient(135deg, #B71C1C, #5D4037)', emoji: '⚡' },
-        { name: 'Melancholy', color: 'linear-gradient(135deg, #5B86E5, #4E342E)', emoji: '🌧' },
-        { name: 'Triumphant', color: 'linear-gradient(135deg, #D4A017, #8D6E63)', emoji: '🏆' },
-        { name: 'Eerie', color: 'linear-gradient(135deg, #3E2723, #1B0E0A)', emoji: '👻' },
-        { name: 'Serene', color: 'linear-gradient(135deg, #A1887F, #5D4037)', emoji: '🌊' },
+        { name: 'Romantic', color: 'linear-gradient(135deg, #C44D73, #8D6E63)' },
+        { name: 'Tense', color: 'linear-gradient(135deg, #B71C1C, #5D4037)' },
+        { name: 'Melancholy', color: 'linear-gradient(135deg, #5B86E5, #4E342E)' },
+        { name: 'Triumphant', color: 'linear-gradient(135deg, #D4A017, #8D6E63)' },
+        { name: 'Eerie', color: 'linear-gradient(135deg, #3E2723, #1B0E0A)' },
+        { name: 'Serene', color: 'linear-gradient(135deg, #A1887F, #5D4037)' },
     ];
     const [active, setActive] = useState(0);
 
@@ -68,10 +68,9 @@ const MoodDemo: React.FC = () => {
     return (
         <div className="ft-mood-demo">
             <div className="ft-mood-preview" style={{ background: moods[active].color }}>
-                <span className="ft-mood-emoji">{moods[active].emoji}</span>
                 <span className="ft-mood-label">{moods[active].name}</span>
                 <p className="ft-mood-sample-text">
-                    The golden light filtered through the ancient windows, casting long shadows across the stone floor…
+                    The golden light filtered through the ancient windows, casting long shadows across the stone floor...
                 </p>
             </div>
             <div className="ft-mood-pills">
@@ -81,7 +80,7 @@ const MoodDemo: React.FC = () => {
                         className={`ft-mood-pill ${i === active ? 'ft-mood-pill-active' : ''}`}
                         onClick={() => setActive(i)}
                     >
-                        {m.emoji} {m.name}
+                        {m.name}
                     </button>
                 ))}
             </div>
@@ -106,7 +105,7 @@ const SpoilerDemo: React.FC = () => {
                 ,&quot; she whispered into the darkness.
             </p>
             <button className="ft-demo-reset" onClick={() => setRevealed(false)}>
-                {revealed ? '🔓 Revealed! Click to re-hide' : '🔒 Click the blurred text to reveal'}
+                {revealed ? 'Revealed \u2014 click to re-hide' : 'Click the blurred text to reveal'}
             </button>
         </div>
     );
@@ -118,16 +117,16 @@ const DetailsDemo: React.FC = () => {
     return (
         <div className="ft-details-demo">
             <button className="ft-details-summary" onClick={() => setOpen(!open)}>
-                <span className={`ft-details-arrow ${open ? 'ft-details-arrow-open' : ''}`}>▶</span>
+                <span className={`ft-details-arrow ${open ? 'ft-details-arrow-open' : ''}`}>&#9654;</span>
                 <span className="ft-details-title">Author&apos;s Lore Notes: The Great War of Eldoria</span>
             </button>
             <div className={`ft-details-content ${open ? 'ft-details-open' : ''}`}>
                 <p>
-                    The Great War of Eldoria (1247–1251 AE) was a pivotal conflict between the Northern Alliance and the
-                    Southern Dominion. The war began when the Archmage Veridon discovered the forbidden scroll of…
+                    The Great War of Eldoria (1247&ndash;1251 AE) was a pivotal conflict between the Northern Alliance and the
+                    Southern Dominion. The war began when the Archmage Veridon discovered the forbidden scroll of...
                 </p>
                 <p style={{ marginTop: '8px', color: '#A1887F', fontSize: '12px' }}>
-                    📝 This lore note is only visible when readers choose to expand it.
+                    This lore note is only visible when readers choose to expand it.
                 </p>
             </div>
         </div>
@@ -141,7 +140,7 @@ const PullQuoteDemo: React.FC = () => (
         <p className="ft-pullquote-text">
             Not all those who wander are lost.
         </p>
-        <cite className="ft-pullquote-cite">— J.R.R. Tolkien</cite>
+        <cite className="ft-pullquote-cite">&mdash; J.R.R. Tolkien</cite>
         <div className="ft-pullquote-mark ft-pullquote-mark-end">&rdquo;</div>
     </div>
 );
@@ -149,9 +148,9 @@ const PullQuoteDemo: React.FC = () => (
 // ─── Reader Demo Component ──────────────────────────────────
 const ReaderDemo: React.FC = () => {
     const themes = [
-        { name: 'Light', bg: '#FBF9F6', text: '#3E2723', icon: '☀️' },
-        { name: 'Sepia', bg: '#FBF0D9', text: '#5B4636', icon: '📜' },
-        { name: 'Dark', bg: '#261F1D', text: '#BCAAA4', icon: '🌙' },
+        { name: 'Light', bg: '#FBF9F6', text: '#3E2723' },
+        { name: 'Sepia', bg: '#FBF0D9', text: '#5B4636' },
+        { name: 'Dark', bg: '#261F1D', text: '#BCAAA4' },
     ];
     const [active, setActive] = useState(0);
     const [progress, setProgress] = useState(34);
@@ -168,7 +167,7 @@ const ReaderDemo: React.FC = () => {
                 <h4 className="ft-reader-chapter-title">Chapter 7: The Revelation</h4>
                 <p className="ft-reader-sample" style={{ color: themes[active].text }}>
                     The morning sun cast golden rays across the library floor. Elara traced her fingers along the
-                    spines of ancient tomes, each one whispering secrets of a forgotten age…
+                    spines of ancient tomes, each one whispering secrets of a forgotten age...
                 </p>
             </div>
             <div className="ft-reader-themes">
@@ -179,7 +178,7 @@ const ReaderDemo: React.FC = () => {
                         style={{ background: t.bg, color: t.text, border: i === active ? '2px solid #8D6E63' : '2px solid transparent' }}
                         onClick={() => setActive(i)}
                     >
-                        {t.icon} {t.name}
+                        {t.name}
                     </button>
                 ))}
             </div>
@@ -229,7 +228,7 @@ const WorldBuildingDemo: React.FC = () => {
             { name: 'Battle of Windhollow', role: 'Act II, Ch. 7', desc: 'The army clashes at dawn' },
         ],
         notes: [
-            { name: 'Magic System Rules', role: 'Lore', desc: 'Three tiers of elemental magic…' },
+            { name: 'Magic System Rules', role: 'Lore', desc: 'Three tiers of elemental magic...' },
             { name: 'Timeline of Eldoria', role: 'Reference', desc: 'Key historical dates' },
         ],
     };
@@ -237,7 +236,7 @@ const WorldBuildingDemo: React.FC = () => {
     return (
         <div className="ft-world-demo">
             <div className="ft-world-sidebar">
-                <div className="ft-world-header">🌍 World Building</div>
+                <div className="ft-world-header">World Building</div>
                 <div className="ft-world-tabs">
                     {(['characters', 'scenes', 'notes'] as const).map(t => (
                         <button
@@ -245,7 +244,7 @@ const WorldBuildingDemo: React.FC = () => {
                             className={`ft-world-tab ${tab === t ? 'ft-world-tab-active' : ''}`}
                             onClick={() => setTab(t)}
                         >
-                            {t === 'characters' ? '🧑' : t === 'scenes' ? '🎬' : '📝'} {t.charAt(0).toUpperCase() + t.slice(1)}
+                            {t.charAt(0).toUpperCase() + t.slice(1)}
                         </button>
                     ))}
                 </div>
@@ -271,9 +270,9 @@ const SearchDemo: React.FC = () => {
     const [typing, setTyping] = useState('');
     const fullText = 'midnight';
     const results = [
-        { type: 'book', title: 'Midnight Garden', author: 'Luna Evergreen', rating: '4.8' },
-        { type: 'book', title: 'The Midnight Express', author: 'Jack Thorne', rating: '4.5' },
-        { type: 'author', title: 'Midnight Quill', subtitle: '23 books · 14k followers' },
+        { type: 'book', title: 'Midnight Garden', author: 'Luna Evergreen', rating: '4.8', subtitle: '' },
+        { type: 'book', title: 'The Midnight Express', author: 'Jack Thorne', rating: '4.5', subtitle: '' },
+        { type: 'author', title: 'Midnight Quill', author: '', rating: '', subtitle: '23 books \u00b7 14k followers' },
     ];
 
     useEffect(() => {
@@ -303,72 +302,16 @@ const SearchDemo: React.FC = () => {
                     {results.map((r, i) => (
                         <div key={i} className="ft-search-result-item" style={{ animationDelay: `${i * 80}ms` }}>
                             <div className={`ft-search-result-badge ${r.type === 'author' ? 'ft-search-badge-author' : ''}`}>
-                                {r.type === 'book' ? '📚' : '✍️'}
+                                {r.type === 'book' ? 'B' : 'A'}
                             </div>
                             <div>
                                 <div className="ft-search-result-title">{r.title}</div>
-                                <div className="ft-search-result-sub">{r.type === 'book' ? `by ${r.author} · ⭐ ${r.rating}` : r.subtitle}</div>
+                                <div className="ft-search-result-sub">{r.type === 'book' ? `by ${r.author} \u00b7 ${r.rating}` : r.subtitle}</div>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-        </div>
-    );
-};
-
-// ─── Kanban Board Demo Component ────────────────────────────
-const KanbanDemo: React.FC = () => {
-    const columns = [
-        {
-            title: 'Ideas',
-            color: '#A1887F',
-            cards: [
-                { label: 'Dragon revolt subplot', tag: 'Plot' },
-                { label: 'Elara backstory reveal', tag: 'Character' },
-            ],
-        },
-        {
-            title: 'Drafting',
-            color: '#8D6E63',
-            cards: [
-                { label: 'Ch. 12 — The Betrayal', tag: 'Chapter' },
-            ],
-        },
-        {
-            title: 'Editing',
-            color: '#795548',
-            cards: [
-                { label: 'Ch. 10 — Climax rewrite', tag: 'Chapter' },
-                { label: 'Magic system consistency', tag: 'Lore' },
-            ],
-        },
-        {
-            title: 'Published',
-            color: '#5D4037',
-            cards: [
-                { label: 'Ch. 1–9 (Live)', tag: '✅' },
-            ],
-        },
-    ];
-
-    return (
-        <div className="ft-kanban-demo">
-            {columns.map(col => (
-                <div key={col.title} className="ft-kanban-col">
-                    <div className="ft-kanban-col-header" style={{ borderBottomColor: col.color }}>
-                        <span className="ft-kanban-col-dot" style={{ background: col.color }} />
-                        <span>{col.title}</span>
-                        <span className="ft-kanban-col-count">{col.cards.length}</span>
-                    </div>
-                    {col.cards.map((card, i) => (
-                        <div key={i} className="ft-kanban-card">
-                            <span className="ft-kanban-card-label">{card.label}</span>
-                            <span className="ft-kanban-card-tag">{card.tag}</span>
-                        </div>
-                    ))}
-                </div>
-            ))}
         </div>
     );
 };
@@ -406,12 +349,20 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({ id, badge, title, descr
 };
 
 // ─── Upcoming Feature Card ──────────────────────────────────
-const UpcomingCard: React.FC<{ emoji: string; title: string; desc: string; highlights: string[]; delay: number }> = ({ emoji, title, desc, highlights, delay }) => {
+interface UpcomingCardProps {
+    icon: React.ReactNode;
+    title: string;
+    desc: string;
+    highlights: string[];
+    delay: number;
+}
+
+const UpcomingCard: React.FC<UpcomingCardProps> = ({ icon, title, desc, highlights, delay }) => {
     const [ref, visible] = useReveal();
     return (
         <div ref={ref} className={`ft-upcoming-card ${visible ? 'ft-upcoming-card-visible' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
             <div className="ft-upcoming-badge">Coming Soon</div>
-            <span className="ft-upcoming-emoji">{emoji}</span>
+            <div className="ft-upcoming-icon">{icon}</div>
             <h4 className="ft-upcoming-title">{title}</h4>
             <p className="ft-upcoming-desc">{desc}</p>
             <ul className="ft-upcoming-highlights">
@@ -421,9 +372,36 @@ const UpcomingCard: React.FC<{ emoji: string; title: string; desc: string; highl
     );
 };
 
-// ═════════════════════════════════════════════════════════════
+// ─── SVG Icons for upcoming cards ───────────────────────────
+const TrophyIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+);
+const TargetIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+    </svg>
+);
+const UsersIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+);
+const KanbanIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="M15 3v18" />
+        <path d="M3 9h6" /><path d="M3 15h6" /><path d="M9 9h6" /><path d="M15 9h6" />
+    </svg>
+);
+
+// =============================================================
 //  MAIN COMPONENT
-// ═════════════════════════════════════════════════════════════
+// =============================================================
 export const FeaturesPage: React.FC = () => {
     const [heroRef, heroVisible] = useReveal();
 
@@ -440,7 +418,7 @@ export const FeaturesPage: React.FC = () => {
                 </div>
 
                 <div className="ft-hero-content">
-                    <span className="ft-hero-eyebrow">✨ The Future of Storytelling</span>
+                    <span className="ft-hero-eyebrow">The Future of Storytelling</span>
                     <h1 className="ft-hero-headline">
                         Where Stories<br />
                         <span className="ft-hero-gradient-text">Come Alive</span>
@@ -448,7 +426,7 @@ export const FeaturesPage: React.FC = () => {
                     <p className="ft-hero-sub">
                         WordWeft gives writers superpowers and readers immersive experiences.
                         Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit
-                        — all in one beautiful platform.
+                        &mdash; all in one beautiful platform.
                     </p>
                     <div className="ft-hero-ctas">
                         <a href="#/auth" className="ft-btn ft-btn-primary">
@@ -463,7 +441,7 @@ export const FeaturesPage: React.FC = () => {
                         <div className="ft-hero-stat-divider" />
                         <div className="ft-hero-stat"><strong>6</strong><span>Mood Themes</span></div>
                         <div className="ft-hero-stat-divider" />
-                        <div className="ft-hero-stat"><strong>∞</strong><span>Stories to Tell</span></div>
+                        <div className="ft-hero-stat"><strong>&infin;</strong><span>Stories to Tell</span></div>
                     </div>
                 </div>
             </section>
@@ -472,9 +450,9 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="mood"
-                badge="🎭 Atmosphere Engine"
+                badge="Atmosphere Engine"
                 title="Set the Mood"
-                description="Tag sections of your story with moods — romantic, tense, eerie, triumphant — and readers experience subtle, immersive color shifts that match the narrative's emotion."
+                description="Tag sections of your story with moods &mdash; romantic, tense, eerie, triumphant &mdash; and readers experience subtle, immersive color shifts that match the narrative's emotion."
                 bullets={[
                     '6 handcrafted mood themes with unique palettes',
                     'Background, text, and accent colors shift automatically',
@@ -487,12 +465,12 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="spoiler"
-                badge="🔒 Spoiler Guard"
+                badge="Spoiler Guard"
                 title="Hide Plot Twists"
                 description="Blur sensitive text that readers reveal with a satisfying click. Perfect for reviews, fan theories, and plot-heavy chapters."
                 bullets={[
                     'Writers mark text as spoiler with one click',
-                    'Readers see a blurred haze — no accidental spoilers',
+                    'Readers see a blurred haze \u2014 no accidental spoilers',
                     'Click-to-reveal with smooth unblur animation',
                     'Subtle dashed indicator in the editor',
                 ]}
@@ -503,7 +481,7 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="details"
-                badge="📑 Collapsible Blocks"
+                badge="Collapsible Blocks"
                 title="Author Notes & Lore"
                 description="Tuck world-building notes, glossaries, and bonus content into collapsible blocks that readers can explore at their own pace."
                 bullets={[
@@ -518,7 +496,7 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="pullquote"
-                badge="✨ Pull Quotes"
+                badge="Pull Quotes"
                 title="Typographic Beauty"
                 description="Stunning decorative quotes with oversized quotation marks, elegant attribution, and a center-aligned layout that turns memorable lines into visual anchors."
                 bullets={[
@@ -534,7 +512,7 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="reader"
-                badge="📖 Immersive Reader"
+                badge="Immersive Reader"
                 title="Your Reading Sanctuary"
                 description="Three content themes, adjustable font sizes, auto-saved reading progress, paragraph-level commenting, and an inline table of contents. Reading has never felt this good."
                 bullets={[
@@ -550,9 +528,9 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="characters"
-                badge="🧑‍🤝‍🧑 Character Universe"
+                badge="Character Universe"
                 title="Living Characters"
-                description="@mention characters in your chapters — readers hover to see bios, roles, and portraits in a beautiful preview card. Characters become interactive entities, not just names."
+                description="@mention characters in your chapters &mdash; readers hover to see bios, roles, and portraits in a beautiful preview card. Characters become interactive entities, not just names."
                 bullets={[
                     '@mention any character while writing',
                     'Readers hover/tap to see character profiles',
@@ -566,9 +544,9 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="worldbuilding"
-                badge="🌍 World Building"
+                badge="World Building"
                 title="Your Story Bible"
-                description="Characters, scenes, and notes — all accessible in a slide-out sidebar while you write. Never lose track of your world's details again."
+                description="Characters, scenes, and notes &mdash; all accessible in a slide-out sidebar while you write. Never lose track of your world's details again."
                 bullets={[
                     'Three tabs: Characters, Scenes, Notes',
                     'Accessible directly from the editor',
@@ -581,35 +559,18 @@ export const FeaturesPage: React.FC = () => {
 
             <FeatureSection
                 id="search"
-                badge="⚡ Smart Search"
+                badge="Smart Search"
                 title="Find Anything Instantly"
-                description="Lightning-fast autocomplete for books and authors with rich previews — covers, ratings, genres, and follower counts. Press ⌘K from anywhere."
+                description="Lightning-fast autocomplete for books and authors with rich previews &mdash; covers, ratings, genres, and follower counts. Press Ctrl+K from anywhere."
                 bullets={[
                     'Real-time autocomplete as you type',
                     'Rich result cards with covers and ratings',
-                    'Full keyboard navigation (↑↓ Enter Esc)',
-                    'Global ⌘K / Ctrl+K shortcut from any page',
+                    'Full keyboard navigation',
+                    'Global Ctrl+K shortcut from any page',
                 ]}
                 reversed
             >
                 <SearchDemo />
-            </FeatureSection>
-
-            {/* ── STORY BOARD SECTION — Full-width standalone ───── */}
-            <FeatureSection
-                id="storyboard"
-                badge="📋 Story Board"
-                title="Plan Like a Pro"
-                description="A Kanban-style board to plan, draft, edit, and publish your stories. Drag ideas through columns — from spark to published chapter — just like a production pipeline."
-                bullets={[
-                    'Visual columns: Ideas → Drafting → Editing → Published',
-                    'Tag cards as Plot, Character, Lore, or Chapter',
-                    'Drag and drop between stages',
-                    'Per-book boards with shared team access',
-                    'Track progress at a glance — like Jira, but for stories',
-                ]}
-            >
-                <KanbanDemo />
             </FeatureSection>
 
             {/* ── UPCOMING FEATURES ────────────────────────────────── */}
@@ -623,31 +584,31 @@ export const FeaturesPage: React.FC = () => {
                 </div>
                 <div className="ft-upcoming-grid">
                     <UpcomingCard
-                        emoji="🏆"
+                        icon={<TrophyIcon />}
                         title="Reading & Writing Challenges"
                         desc="Set personal goals, join community challenges, earn badges, and climb leaderboards."
                         highlights={[
-                            'Daily / weekly / monthly reading & writing streaks',
-                            'Community-wide events (NaNoWriMo-style sprints)',
-                            'Badges for milestones: 10k words, 50 chapters read, etc.',
+                            'Daily, weekly, and monthly reading & writing streaks',
+                            'Community-wide events and NaNoWriMo-style sprints',
+                            'Badges for milestones: 10k words, 50 chapters read, and more',
                             'Leaderboards ranked by streak, output, and engagement',
                         ]}
                         delay={0}
                     />
                     <UpcomingCard
-                        emoji="🎯"
-                        title="For You — Personalized Picks"
-                        desc="AI-curated recommendations tailored to your reading history, favorite genres, and bookmarked authors."
+                        icon={<TargetIcon />}
+                        title="For You &mdash; Personalized Picks"
+                        desc="Curated recommendations tailored to your reading history, favorite genres, and bookmarked authors."
                         highlights={[
-                            'Smart feed adapts to your taste over time',
+                            'Smart feed that adapts to your taste over time',
                             'Discover hidden gems from emerging writers',
-                            'Genre affinity scores + mood-matching',
+                            'Genre affinity scores and mood-matching',
                             'Weekly digest emails with top picks',
                         ]}
                         delay={100}
                     />
                     <UpcomingCard
-                        emoji="💬"
+                        icon={<UsersIcon />}
                         title="Communities"
                         desc="Join or create communities around genres, fandoms, or writing groups. Share work, give feedback, and connect."
                         highlights={[
@@ -657,6 +618,18 @@ export const FeaturesPage: React.FC = () => {
                             'Featured community picks on the home feed',
                         ]}
                         delay={200}
+                    />
+                    <UpcomingCard
+                        icon={<KanbanIcon />}
+                        title="Story Board"
+                        desc="A Kanban-style board to plan, draft, edit, and publish your stories. Drag ideas through columns like a production pipeline."
+                        highlights={[
+                            'Visual columns: Ideas, Drafting, Editing, Published',
+                            'Tag cards as Plot, Character, Lore, or Chapter',
+                            'Drag and drop between stages',
+                            'Per-book boards with shared team access',
+                        ]}
+                        delay={300}
                     />
                 </div>
             </section>
