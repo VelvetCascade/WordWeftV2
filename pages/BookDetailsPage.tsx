@@ -5,6 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useFeedback } from '../contexts/FeedbackContext';
 
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
@@ -197,6 +198,7 @@ interface BookDetailsPageProps {
 }
 
 export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, currentUser, onUserUpdate }) => {
+    const { triggerFeedback } = useFeedback();
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
@@ -315,6 +317,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         } else {
             const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
             onUserUpdate(updatedUser);
+            triggerFeedback('FIRST_EXPERIENCE');
         }
     };
 

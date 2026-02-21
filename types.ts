@@ -166,3 +166,35 @@ export interface BookProgress {
   lastReadScrollPosition: number;
   chapters: { [chapterId: string]: ChapterProgress };
 }
+
+// --- Notification Types ---
+
+export type NotificationType =
+  | 'NEW_FOLLOWER'
+  | 'NEW_COMMENT'
+  | 'COMMENT_REPLY'
+  | 'AUTHOR_NEW_CHAPTER'
+  | 'AUTHOR_NEW_STORY'
+  | 'BOOK_UPDATE'
+  | 'SYSTEM_UPDATE';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  actorId: string | null;
+  type: NotificationType;
+  entityType: 'USER' | 'BOOK' | 'CHAPTER' | 'SYSTEM';
+  entityId: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  metadata: Record<string, string>;
+}
+
+export interface NotificationPreferences {
+  follows: boolean;
+  comments: boolean;
+  storyUpdates: boolean;
+  systemAnnouncements: boolean;
+}
+

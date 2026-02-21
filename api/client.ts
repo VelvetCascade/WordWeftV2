@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, AppNotification, NotificationPreferences } from '../types';
 
 //const API_BASE_URL = 'http://localhost:8080/api';
  const API_BASE_URL = 'https://wordweftv2.onrender.com/api';
@@ -432,3 +432,94 @@ function mapBackendUserToFrontend(backendData: any): User {
         writtenBooks: backendData.writtenBooks || []
     };
 }
+
+// --- Feedback ---
+
+export const submitFeedback = async (feedbackData: Record<string, unknown>): Promise<{ message: string; id: string }> => {
+    const response = await fetch(`${API_BASE_URL}/feedback`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(feedbackData),
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to submit feedback' }));
+        throw new Error(err.error || 'Failed to submit feedback');
+    }
+    return response.json();
+};
+
+export const submitQuickFeedback = async (data: {
+    feedbackType: string;
+    rating?: number;
+    shortResponse?: string;
+    longResponse?: string;
+    page?: string;
+    feature?: string;
+    sessionId?: string;
+    contextData?: Record<string, unknown>;
+}): Promise<{ message: string; id: string }> => {
+    const response = await fetch(`${API_BASE_URL}/feedback/quick`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to submit feedback' }));
+        throw new Error(err.error || 'Failed to submit feedback');
+    }
+    return response.json();
+};
+
+// --- Notifications API ---
+
+export const getNotifications = async (page = 0, size = 20, type?: string): Promise<{
+    notifications: AppNotification[];
+    totalPages: number;
+    totalElements: number;
+    currentPage: number;
+    hasNext: boolean;
+}> => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (type) params.append('type', type);
+    const response = await fetch(`${API_BASE_URL}/notifications?${params}`, {
+        headers: getHeaders(),
+    });
+    return handleResponse(response);
+};
+
+export const getUnreadNotificationCount = async (): Promise<number> => {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+        headers: getHeaders(),
+    });
+    const data = await handleResponse(response);
+    return data?.count ?? 0;
+};
+
+export const markNotificationRead = async (id: string): Promise<void> => {
+    await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+        method: 'POST',
+        headers: getHeaders(),
+    });
+};
+
+export const markAllNotificationsRead = async (): Promise<void> => {
+    await fetch(`${API_BASE_URL}/notifications/read-all`, {
+        method: 'POST',
+        headers: getHeaders(),
+    });
+};
+
+export const updateNotificationPreferences = async (prefs: NotificationPreferences): Promise<NotificationPreferences> => {
+    const response = await fetch(`${API_BASE_URL}/users/me/notification-preferences`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify(prefs),
+    });
+    return handleResponse(response);
+};
+
+export const getNotificationStreamUrl = (): string => {
+    const token = localStorage.getItem(JWT_KEY);
+    return `${API_BASE_URL}/notifications/stream?token=${token}`;
+};
+
