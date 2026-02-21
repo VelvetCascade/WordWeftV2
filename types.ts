@@ -214,3 +214,52 @@ export interface NotificationPreferences {
   systemAnnouncements: boolean;
 }
 
+// --- Search Types ---
+
+export interface SearchBookResult {
+  id: string;
+  title: string;
+  coverUrl: string;
+  genres: string[];
+  tags?: string[];
+  summary?: string;
+  description?: string;
+  rating: number;
+  reviewsCount?: number;
+  readingStatus?: string;
+  publishedDate?: string;
+  score: number;
+  author?: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    bio?: string;
+  };
+}
+
+export interface SearchAuthorResult {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  bio: string;
+  followersCount: number;
+  followingCount?: number;
+  favoriteGenres?: string[];
+}
+
+export interface SearchAutocompleteResponse {
+  books: SearchBookResult[];
+  authors: SearchAuthorResult[];
+}
+
+export interface SearchPaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface SearchFullResponse {
+  books?: SearchPaginatedResult<SearchBookResult>;
+  authors?: SearchPaginatedResult<SearchAuthorResult>;
+}

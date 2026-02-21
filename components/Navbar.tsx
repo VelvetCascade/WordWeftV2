@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
 import { useTheme } from '../contexts/ThemeContext';
+import { SearchOverlay } from './SearchOverlay';
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -13,6 +14,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notificationBell }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [heroSearchVisible, setHeroSearchVisible] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +23,28 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keyboard shortcut: Ctrl+K or Cmd+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Listen for hero search scroll visibility from HomePage
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setHeroSearchVisible(detail?.visible ?? true);
+    };
+    window.addEventListener('heroSearchVisibility', handler);
+    return () => window.removeEventListener('heroSearchVisibility', handler);
   }, []);
 
   const desktopNavLinks = [
@@ -37,6 +62,13 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     { label: 'Profile', action: () => { window.location.hash = '/profile'; }, icon: UserCircleIcon },
   ];
 
+  const SearchIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+
   return (
     <>
       {/* Desktop Navbar */}
@@ -52,7 +84,18 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
               </a>
             ))}
           </nav>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            {/* Search Button */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className={`search-navbar-btn ${!heroSearchVisible ? 'search-navbar-btn-morph' : ''}`}
+              title="Search (Ctrl+K)"
+            >
+              <SearchIcon />
+              <span className="search-navbar-label">Search</span>
+              <kbd className="search-navbar-kbd">⌘K</kbd>
+            </button>
+
             <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
               {theme === 'light' ? <MoonIcon className="w-6 h-6 text-text-body" /> : <SunIcon className="w-6 h-6 text-dark-text-body" />}
             </button>
@@ -96,6 +139,18 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
           })}
         </nav>
       </div>
+
+      {/* Mobile Search FAB */}
+      <button
+        className="search-mobile-fab md:hidden"
+        onClick={() => setIsSearchOpen(true)}
+        aria-label="Search"
+      >
+        <SearchIcon />
+      </button>
+
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };

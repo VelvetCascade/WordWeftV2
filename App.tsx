@@ -21,6 +21,7 @@ import { SafetyRulesPage } from './pages/SafetyRulesPage';
 import { ContactPage } from './pages/ContactPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -50,7 +51,8 @@ export type Page =
   | { name: 'safety' }
   | { name: 'contact' }
   | { name: 'feedback' }
-  | { name: 'notifications' };
+  | { name: 'notifications' }
+  | { name: 'search'; query: string };
 
 
 const App: React.FC = () => {
@@ -74,6 +76,7 @@ const App: React.FC = () => {
       case 'auth': window.location.hash = '/auth'; break;
       case 'edit-profile': window.location.hash = '/edit-profile'; break;
       case 'notifications': window.location.hash = '/notifications'; break;
+      case 'search': window.location.hash = `/search?q=${encodeURIComponent(target.query)}`; break;
       case 'terms': window.location.hash = '/terms'; break;
       case 'privacy': window.location.hash = '/privacy'; break;
       case 'safety': window.location.hash = '/safety'; break;
@@ -190,6 +193,9 @@ const App: React.FC = () => {
         targetPage = { name: 'feedback' };
       } else if (hash.startsWith('notifications')) {
         targetPage = { name: 'notifications' };
+      } else if (hash.startsWith('search')) {
+        const searchParams = new URLSearchParams(hash.split('?')[1] || '');
+        targetPage = { name: 'search', query: searchParams.get('q') || '' };
       } else if (hash.startsWith('terms')) {
         targetPage = { name: 'terms' };
       } else {
@@ -272,6 +278,8 @@ const App: React.FC = () => {
           onLoadMore={notif.loadMore}
           isLoading={notif.isLoading}
         />;
+      case 'search':
+        return <SearchResultsPage />;
       default:
         return <HomePage />;
     }

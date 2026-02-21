@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -647,3 +647,25 @@ export const getNotificationStreamUrl = (): string => {
     return `${API_BASE_URL}/notifications/stream?token=${token}`;
 };
 
+// --- Search API ---
+
+export const searchAutocomplete = async (query: string): Promise<SearchAutocompleteResponse> => {
+    const response = await fetch(`${API_BASE_URL}/search/autocomplete?q=${encodeURIComponent(query)}`);
+    return handleResponse(response);
+};
+
+export const searchFull = async (
+    query: string,
+    type: 'all' | 'books' | 'authors' = 'all',
+    page = 0,
+    size = 12
+): Promise<SearchFullResponse> => {
+    const params = new URLSearchParams({
+        q: query,
+        type,
+        page: String(page),
+        size: String(size),
+    });
+    const response = await fetch(`${API_BASE_URL}/search?${params}`);
+    return handleResponse(response);
+};

@@ -84,6 +84,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/feedback/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/profile").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/notifications/stream").authenticated()
                         .anyRequest().authenticated());
 
