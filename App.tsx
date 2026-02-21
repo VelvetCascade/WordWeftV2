@@ -28,6 +28,7 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
 import { NotificationBell } from './components/NotificationBell';
 import { NotificationToast } from './components/NotificationToast';
+import { WhatsNewPopup } from './components/WhatsNewPopup';
 import { FeedbackContext } from './contexts/FeedbackContext';
 import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
@@ -207,6 +208,11 @@ const App: React.FC = () => {
         targetPage = { name: 'home' };
       }
 
+      // For logged-out users, the root landing page is the Features page
+      if (!isAuthenticated && targetPage.name === 'home') {
+        targetPage = { name: 'features' };
+      }
+
       const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile', 'notifications'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
@@ -352,6 +358,7 @@ const App: React.FC = () => {
           onDismiss={notif.dismissToast}
           onNavigate={navigateTo}
         />
+        {isAuthenticated && <WhatsNewPopup />}
       </div>
     </FeedbackContext.Provider>
   );
