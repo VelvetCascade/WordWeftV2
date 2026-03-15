@@ -240,12 +240,20 @@ export async function getBooks(filters: {
     params.append('page', String(filters.page ?? 0));
     params.append('size', String(filters.size ?? 12));
     const response = await fetch(`${API_BASE_URL}/books?${params.toString()}`, { headers: getHeaders() });
-    return await handleResponse(response);
+    const data = await handleResponse(response);
+    if (data && data.content) data.content = data.content.map(mapBackendBookToFrontend);
+    return data;
 }
 
 export async function getHomeGenres(): Promise<Record<string, Book[]>> {
     const response = await fetch(`${API_BASE_URL}/books/home-genres`, { headers: getHeaders() });
-    return await handleResponse(response);
+    const data = await handleResponse(response);
+    if (data) {
+        Object.keys(data).forEach(key => {
+            data[key] = data[key].map(mapBackendBookToFrontend);
+        });
+    }
+    return data;
 }
 
 export async function getBooksByGenre(genre: string, filters: {
@@ -258,13 +266,15 @@ export async function getBooksByGenre(genre: string, filters: {
     params.append('page', String(filters.page ?? 0));
     params.append('size', String(filters.size ?? 12));
     const response = await fetch(`${API_BASE_URL}/books/genre/${encodeURIComponent(genre)}?${params.toString()}`, { headers: getHeaders() });
-    return await handleResponse(response);
+    const data = await handleResponse(response);
+    if (data && data.content) data.content = data.content.map(mapBackendBookToFrontend);
+    return data;
 }
 
 export async function getBookById(id: string): Promise<Book | null> {
     const response = await fetch(`${API_BASE_URL}/books/${id}`, { headers: getHeaders() });
     if (!response.ok) return null;
-    return await handleResponse(response);
+    return mapBackendBookToFrontend(await handleResponse(response));
 }
 
 export async function getAuthorById(id: string): Promise<Author | null> {
@@ -275,9 +285,9 @@ export async function getAuthorById(id: string): Promise<Author | null> {
 
 export async function getBooksByAuthor(authorId: string, excludeBookId?: string): Promise<Book[]> {
     const response = await fetch(`${API_BASE_URL}/books/author/${authorId}`, { headers: getHeaders() });
-    let books = await handleResponse(response);
+    let books: Book[] = (await handleResponse(response) || []).map(mapBackendBookToFrontend);
     if (excludeBookId) {
-        books = books.filter((b: Book) => b.id !== excludeBookId);
+        books = books.filter(b => b.id !== excludeBookId);
     }
     return books;
 }
@@ -287,7 +297,7 @@ export async function toggleBookLike(bookId: string): Promise<Book> {
         method: 'POST',
         headers: getHeaders()
     });
-    return await handleResponse(response);
+    return mapBackendBookToFrontend(await handleResponse(response));
 }
 
 export async function toggleChapterLike(bookId: string, chapterId: string): Promise<Book> {
@@ -295,7 +305,7 @@ export async function toggleChapterLike(bookId: string, chapterId: string): Prom
         method: 'POST',
         headers: getHeaders()
     });
-    return await handleResponse(response);
+    return mapBackendBookToFrontend(await handleResponse(response));
 }
 
 export async function recordChapterView(bookId: string, chapterId: string): Promise<void> {
@@ -664,8 +674,27 @@ function mapBackendUserToFrontend(backendData: any): User {
         following: backendData.following || [], // Should be list of IDs
         followersCount: backendData.followersCount || 0,
         followingCount: backendData.followingCount || 0,
-        library: backendData.library || [],
-        writtenBooks: backendData.writtenBooks || []
+        library: (backendData.library || []).map((shelf: any) => ({
+            ...shelf,
+            books: (shelf.books || []).map((book: any) => {
+                const mappedBook = mapBackendBookToFrontend(book);
+                return {
+                    ...mappedBook,
+                    progress: book.progress ?? 0,
+                    addedDate: book.addedDate
+                };
+            })
+        })),
+        writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend)
+    };
+}
+
+function mapBackendBookToFrontend(backendBook: any): Book {
+    if (!backendBook) return backendBook;
+    return {
+        ...backendBook,
+        isAIGenerated: backendBook.isAIGenerated ?? backendBook.aIGenerated ?? backendBook.aigenerated ?? backendBook.aiGenerated ?? false,
+        isMature: backendBook.isMature ?? backendBook.mature ?? false,
     };
 }
 

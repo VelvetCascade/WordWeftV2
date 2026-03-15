@@ -119,6 +119,8 @@ const App: React.FC = () => {
       window.location.hash = `/book/${targetPage.bookId}`;
     } else if (targetPage.name === 'author') {
       window.location.hash = `/author/${targetPage.authorId}`;
+    } else if (targetPage.name === 'reader') {
+      window.location.hash = `/read/book/${targetPage.bookId}/chapter/${targetPage.chapterIndex}`;
     } else if (targetPage.name !== 'home' && targetPage.name !== 'auth') {
       window.location.hash = `/${targetPage.name}`;
     } else {
@@ -225,7 +227,7 @@ const App: React.FC = () => {
         targetPage = { name: 'features' };
       }
 
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile', 'notifications'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile', 'notifications', 'reader'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
@@ -249,7 +251,7 @@ const App: React.FC = () => {
       return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
 
-    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {
+    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile' || page.name === 'reader')) {
       return null;
     }
 

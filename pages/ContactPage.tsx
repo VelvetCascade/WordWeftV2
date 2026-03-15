@@ -29,7 +29,7 @@ interface ContactPageProps {
 
 export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
     const [formData, setFormData] = useState({
-        name: currentUser?.username || '',
+        name: currentUser?.name || '',
         email: currentUser?.email || '',
         category: '',
         subject: '',
