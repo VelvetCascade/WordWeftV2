@@ -467,8 +467,15 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
                             <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
 
-                            <div className="flex items-center gap-2" title="Reviews">
+                            <div className="flex items-center gap-2" title="Total Comments (across all chapters)">
                                 <ChatBubbleLeftIcon className="w-5 h-5" />
+                                <span className="font-sans font-medium">{book.commentCount.toLocaleString()}</span>
+                            </div>
+
+                            <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
+
+                            <div className="flex items-center gap-2" title="Reviews">
+                                <PencilIcon className="w-5 h-5" />
                                 <span className="font-sans font-medium">{book.reviewsCount.toLocaleString()}</span>
                             </div>
                         </div>

@@ -194,9 +194,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl border dark:border-dark-border">
           <form onSubmit={handleSave} className="space-y-6">
-            <div className="flex items-center gap-6">
-              <img src={avatarUrl || `https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar preview" className="w-24 h-24 rounded-full object-cover ring-2 ring-gray-100 dark:ring-dark-border" />
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <img src={avatarUrl || `https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar preview" className="w-24 h-24 rounded-full object-cover ring-2 ring-gray-100 dark:ring-dark-border flex-shrink-0" />
+              <div className="flex-1 w-full">
                 <label htmlFor="avatarUrl" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
                   Avatar URL
                 </label>

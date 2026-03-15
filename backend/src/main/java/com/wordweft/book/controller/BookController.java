@@ -291,4 +291,35 @@ public class BookController {
 
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
+
+    // --- Delete Endpoints ---
+
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<?> deleteBook(@PathVariable String bookId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
+
+        if (!book.getAuthorId().equals(userDetails.getId())) {
+            return ResponseEntity.status(403).body("Not authorized to delete this book");
+        }
+
+        bookService.deleteBook(bookId);
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
+
+    @DeleteMapping("/{bookId}/chapters/{chapterId}")
+    public ResponseEntity<?> deleteChapter(@PathVariable String bookId, @PathVariable String chapterId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
+
+        if (!book.getAuthorId().equals(userDetails.getId())) {
+            return ResponseEntity.status(403).body("Not authorized to edit this book");
+        }
+
+        book.getChapters().removeIf(c -> c.getId().equals(chapterId));
+        bookRepository.save(book);
+        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
 }

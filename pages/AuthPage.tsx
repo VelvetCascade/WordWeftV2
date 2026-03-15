@@ -213,6 +213,28 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         return hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
     };
 
+    const getFriendlyError = (err: any): string => {
+        const msg = err?.message || '';
+
+        // Network / connectivity errors
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+            return 'Unable to connect to the server. Please check your internet connection and try again.';
+        }
+        if (msg.includes('timeout') || msg.includes('Timeout')) {
+            return 'The request timed out. Please try again.';
+        }
+
+        // Strip "Error: " prefix if the backend still sends it
+        const cleaned = msg.replace(/^Error:\s*/i, '').trim();
+
+        // If the message is empty or too technical
+        if (!cleaned || cleaned === 'Unauthorized' || cleaned === 'Internal Server Error') {
+            return 'Something went wrong. Please try again.';
+        }
+
+        return cleaned;
+    };
+
     const handleAuthAction = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -244,7 +266,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 setSuccessMsg(msg);
             }
         } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred.');
+            setError(getFriendlyError(err));
         } finally {
             setIsLoading(false);
         }

@@ -49,6 +49,9 @@ public class User {
     private String resetPasswordToken;
     private Instant resetPasswordTokenExpiry;
 
+    // Password History (stores last 2 hashed passwords to prevent reuse)
+    private List<String> previousPasswords = new ArrayList<>();
+
     // For future role-based access control (Reader, Author, Admin)
     private Set<String> roles = new HashSet<>();
 

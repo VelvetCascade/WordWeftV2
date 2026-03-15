@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface CharacterRepository extends MongoRepository<Character, String> {
     List<Character> findByBookId(String bookId);
+    void deleteByBookId(String bookId);
 }

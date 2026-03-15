@@ -10,4 +10,5 @@ public interface LibraryRepository extends MongoRepository<LibraryEntry, String>
     List<LibraryEntry> findByUserId(String userId);
     Optional<LibraryEntry> findByUserIdAndBookId(String userId, String bookId);
     void deleteByUserIdAndBookId(String userId, String bookId);
+    void deleteByBookId(String bookId);
 }
