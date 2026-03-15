@@ -4,6 +4,7 @@ import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon } from '../compon
 import * as api from '../api/client';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { GoogleProfileCompletion } from '../components/GoogleProfileCompletion';
+import { ModernBirthdaySelector } from '../components/ModernBirthdaySelector';
 
 interface AuthPageProps {
     onLogin: (user: User) => void;
@@ -265,7 +266,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 if (!birthday) throw new Error("Birthday is required.");
 
                 const age = calculateAge(birthday);
-                if (age < 8 || age > 100) throw new Error("You must be between 8 and 100 years old to join WordWeft.");
+                if (age < 13 || age > 100) throw new Error("For your safety, you must be at least 13 years old to create an account on WordWeft.");
                 if (!termsAccepted || !privacyAccepted) throw new Error("Please accept the Terms and Privacy Policy.");
 
                 const result = await api.signup(username, email, password);
@@ -473,13 +474,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         {view === 'signup' && (
                             <>
                                 <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
-                                <InputField
-                                    id="birthday"
-                                    label="Birthday"
-                                    type="date"
-                                    placeholder=""
+                                <ModernBirthdaySelector 
                                     value={birthday}
-                                    onChange={e => setBirthday(e.target.value)}
+                                    onChange={(newVal: string) => setBirthday(newVal)}
                                 />
                             </>
                         )}
