@@ -90,6 +90,31 @@ public class AuthDtos {
     }
 
     @Data
+    public static class VerifyOtpRequest {
+        @NotBlank
+        @Email
+        private String email;
+        @NotBlank
+        @Size(min = 6, max = 6)
+        private String otp;
+    }
+
+    @Data
+    public static class ResendOtpRequest {
+        @NotBlank
+        @Email
+        private String email;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class SignupResponse {
+        private String message;
+        private boolean requiresOtp;
+        private String email;
+    }
+
+    @Data
     public static class GoogleLoginRequest {
         @NotBlank
         private String idToken;

@@ -45,6 +45,11 @@ public class User {
 
     private LocalDate joinDate;
 
+    // Email Verification
+    private boolean isEmailVerified = false;
+    private String emailVerificationOtp;
+    private Instant emailVerificationOtpExpiry;
+
     // Password Reset
     private String resetPasswordToken;
     private Instant resetPasswordTokenExpiry;
@@ -85,6 +90,7 @@ public class User {
         this.avatarUrl = "https://ui-avatars.com/api/?name=" + username + "&background=random";
         this.stats = new UserStats();
         this.roles.add("ROLE_USER");
+        this.isEmailVerified = false; // Local signups need verification
     }
 
     // Constructor for Google OAuth users
@@ -98,6 +104,7 @@ public class User {
         this.joinDate = LocalDate.now();
         this.stats = new UserStats();
         this.roles.add("ROLE_USER");
+        this.isEmailVerified = true; // Google emails are pre-verified
     }
 
     @Data

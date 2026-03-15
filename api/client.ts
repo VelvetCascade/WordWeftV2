@@ -47,7 +47,7 @@ export async function login(email: string, password_used: string): Promise<User 
     return null;
 }
 
-export async function signup(username: string, email: string, password: string): Promise<User> {
+export async function signup(username: string, email: string, password: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,11 +56,42 @@ export async function signup(username: string, email: string, password: string):
 
     const data = await handleResponse(response);
 
+    // If it requires OTP, return that info
+    if (data && data.requiresOtp) {
+        return { requiresOtp: true, message: data.message };
+    }
+
+    // Fallback for immediate login (e.g. if OTP is disabled later)
+    if (data && data.token) {
+        localStorage.setItem(JWT_KEY, data.token);
+        return { requiresOtp: false, message: "Signup successful", user: mapBackendUserToFrontend(data) };
+    }
+    throw new Error("Signup failed");
+}
+
+export async function verifyOtp(email: string, otp: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+    });
+
+    const data = await handleResponse(response);
+
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
         return mapBackendUserToFrontend(data);
     }
-    throw new Error("Signup failed");
+    throw new Error("OTP Verification failed");
+}
+
+export async function resendOtp(email: string): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    return await handleResponse(response);
 }
 
 export async function forgotPassword(email: string): Promise<string> {
@@ -601,6 +632,7 @@ function mapBackendUserToFrontend(backendData: any): User {
         location: backendData.location,
         website: backendData.website,
         joinDate: safeJoinDate,
+        isEmailVerified: backendData.isEmailVerified ?? true,
         stats: backendData.stats || {
             booksRead: 0,
             chaptersRead: 0,

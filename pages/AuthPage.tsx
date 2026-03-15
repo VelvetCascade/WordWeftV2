@@ -101,12 +101,14 @@ const LegalModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string
 };
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
-    const [view, setView] = useState<'login' | 'signup' | 'forgot'>('login');
+    const [view, setView] = useState<'login' | 'signup' | 'forgot' | 'otp'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [username, setUsername] = useState('');
     const [birthday, setBirthday] = useState('');
+    const [otp, setOtp] = useState('');
+    const [otpResendCooldown, setOtpResendCooldown] = useState(0);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -136,7 +138,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     cancel_on_tap_outside: true
                 });
 
-                if (googleButtonRef.current) {
+                if (googleButtonRef.current && view !== 'otp') {
                     window.google.accounts.id.renderButton(googleButtonRef.current, {
                         theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
                         size: 'large',
@@ -163,6 +165,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
         return () => clearInterval(checkGoogleInterval);
     }, [view]); // Re-render button text when view changes
+
+    useEffect(() => {
+        if (otpResendCooldown > 0) {
+            const timerId = setTimeout(() => setOtpResendCooldown(c => c - 1), 1000);
+            return () => clearTimeout(timerId);
+        }
+    }, [otpResendCooldown]);
 
     const handleGoogleResponse = async (response: any) => {
         setIsLoading(true);
@@ -259,16 +268,44 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 if (age < 8 || age > 100) throw new Error("You must be between 8 and 100 years old to join WordWeft.");
                 if (!termsAccepted || !privacyAccepted) throw new Error("Please accept the Terms and Privacy Policy.");
 
-                const newUser = await api.signup(username, email, password);
-                onLogin(newUser);
+                const result = await api.signup(username, email, password);
+                if (result.requiresOtp) {
+                    setSuccessMsg(result.message);
+                    setView('otp');
+                    setOtpResendCooldown(60); // 1-minute cooldown initial
+                } else if (result.user) {
+                    onLogin(result.user);
+                }
+            } else if (view === 'otp') {
+                if (otp.length !== 6) throw new Error("Please enter a valid 6-digit code.");
+                const user = await api.verifyOtp(email, otp);
+                onLogin(user);
             } else if (view === 'forgot') {
                 const msg = await api.forgotPassword(email);
                 setSuccessMsg(msg);
             }
         } catch (err: any) {
-            setError(getFriendlyError(err));
+             const errorMsg = getFriendlyError(err);
+             setError(errorMsg);
+             if (view === 'login' && errorMsg.includes("Email not verified")) {
+                 setView('otp');
+                 setSuccessMsg("Please check your email for the verification code. You can request a new one below.");
+             }
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (otpResendCooldown > 0) return;
+        setError(null);
+        setSuccessMsg(null);
+        try {
+           const msg = await api.resendOtp(email);
+           setSuccessMsg(msg);
+           setOtpResendCooldown(60); // 1 min cooldown
+        } catch (err: any) {
+           setError(getFriendlyError(err));
         }
     };
 
@@ -408,14 +445,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         {view === 'login' && 'Welcome Back'}
                         {view === 'signup' && 'Create Account'}
                         {view === 'forgot' && 'Reset Password'}
+                        {view === 'otp' && 'Verify Email'}
                     </h2>
                     <p className="text-center text-text-body dark:text-dark-text-body mb-8">
                         {view === 'login' && "Sign in to continue your journey."}
                         {view === 'signup' && "Join our community of readers and writers."}
                         {view === 'forgot' && "Enter your email to receive a reset link."}
+                        {view === 'otp' && "We've sent a 6-digit code to your email."}
                     </p>
 
-                    {view !== 'forgot' && (
+                    {(view === 'login' || view === 'signup') && (
                         <>
                             {/* Google Sign-in Button Container */}
                             <div className="w-full flex justify-center h-11 mb-2">
@@ -445,9 +484,38 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                             </>
                         )}
 
-                        <InputField id="email" label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        {view !== 'otp' && (
+                            <InputField id="email" label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        )}
 
-                        {view !== 'forgot' && (
+                        {view === 'otp' && (
+                            <div className="text-center mb-6">
+                                <div className="w-full flex justify-center mb-4">
+                                     <InputField
+                                        id="otp"
+                                        label="Verification Code"
+                                        type="text"
+                                        placeholder="······"
+                                        value={otp}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '').substring(0, 6);
+                                            setOtp(val);
+                                        }}
+                                        required={true}
+                                    />
+                                </div>
+                                <button 
+                                    type="button" 
+                                    disabled={otpResendCooldown > 0 || isLoading}
+                                    onClick={handleResendOtp}
+                                    className={`text-sm font-semibold transition-colors ${otpResendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-accent hover:underline'}`}
+                                >
+                                    {otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown}s` : 'Resend Code'}
+                                </button>
+                            </div>
+                        )}
+
+                        {(view === 'login' || view === 'signup') && (
                             <InputField
                                 id="password"
                                 label="Password"
@@ -514,16 +582,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         {error && <p className="text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
                         {successMsg && <p className="text-center text-xs text-success font-sans pt-2 leading-tight font-semibold">{successMsg}</p>}
 
-                        <button type="submit" disabled={isLoading} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
+                        <button type="submit" disabled={isLoading || (view === 'otp' && otp.length !== 6)} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
                             {isLoading ? 'Processing...' : (
                                 view === 'login' ? 'Sign In' :
                                     view === 'signup' ? 'Create Account' :
+                                        view === 'otp' ? 'Verify' :
                                         'Send Reset Link'
                             )}
                         </button>
                     </form>
 
-                    {view !== 'forgot' && (
+                    {(view === 'login' || view === 'signup') && (
                         <p className="text-center text-sm text-text-body dark:text-dark-text-body mt-8">
                             {view === 'login' ? "Don't have an account?" : "Already have an account?"}
                             <button
@@ -547,6 +616,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             {/* Profile Completion Modal for New Google Users */}
             {showGoogleProfileModal && pendingGoogleUser && (
                 <GoogleProfileCompletion
+                    user={pendingGoogleUser}
                     onComplete={handleGoogleProfileComplete}
                     onCancel={() => {
                         api.logout(); // Logout if they cancel the mandatory step
