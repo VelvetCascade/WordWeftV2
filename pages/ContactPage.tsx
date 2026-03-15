@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Footer } from '../components/Footer';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
+import * as api from '../api/client';
+import type { User } from '../types';
 
 const ContactChannelCard: React.FC<{
     icon: string;
@@ -21,31 +23,42 @@ const ContactChannelCard: React.FC<{
     </div>
 );
 
-export const ContactPage: React.FC = () => {
+interface ContactPageProps {
+    currentUser: User | null;
+}
+
+export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
+        name: currentUser?.name || '',
+        email: currentUser?.email || '',
         category: '',
         subject: '',
         message: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        if (error) setError(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setError(null);
 
-        // Simulate form submission
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        setIsSubmitting(false);
-        setSubmitted(true);
-        setFormData({ name: '', email: '', category: '', subject: '', message: '' });
+        try {
+            await api.submitGrievance(formData);
+            setSubmitted(true);
+            setFormData({ name: '', email: '', category: '', subject: '', message: '' });
+        } catch (err: any) {
+            console.error("Failed to submit grievance:", err);
+            setError(err.message || "Something went wrong. Please try again later.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -79,7 +92,30 @@ export const ContactPage: React.FC = () => {
                                 Fill out the form below and we'll get back to you within 24–72 hours.
                             </p>
 
-                            {submitted ? (
+                            {!currentUser ? (
+                                <div className="text-center py-12 px-6 border border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-surface-alt/30 rounded-2xl">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-5">
+                                        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-3">
+                                        Login Required
+                                    </h3>
+                                    <p className="text-text-body dark:text-dark-text-body mb-6 text-sm max-w-md mx-auto leading-relaxed">
+                                        To protect user safety and limit spam, the grievance submisison form is reserved for logged-in users.
+                                        <br /><br />
+                                        However, you can still easily reach us directly via email at:{' '}
+                                        <a href="mailto:wordweftstudio@gmail.com" className="text-accent font-semibold hover:underline">wordweftstudio@gmail.com</a>
+                                    </p>
+                                    <a
+                                        href="#/auth"
+                                        className="inline-block bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-all hover:scale-105 duration-300 shadow-lg text-sm"
+                                    >
+                                        Log In or Register
+                                    </a>
+                                </div>
+                            ) : submitted ? (
                                 <div className="text-center py-12">
                                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
                                         <span className="text-3xl">✅</span>
@@ -99,6 +135,11 @@ export const ContactPage: React.FC = () => {
                                 </div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-5">
+                                    {error && (
+                                        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm border border-red-200 dark:border-red-800/30">
+                                            {error}
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                         <div>
                                             <label htmlFor="contact-name" className="block text-sm font-medium text-text-body dark:text-dark-text-body mb-1.5">
@@ -126,8 +167,8 @@ export const ContactPage: React.FC = () => {
                                                 value={formData.email}
                                                 onChange={handleChange}
                                                 required
-                                                placeholder="you@example.com"
-                                                className="w-full h-11 px-4 rounded-xl text-sm border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich focus:ring-2 focus:ring-accent focus:border-accent transition-all"
+                                                readOnly={!!currentUser?.email}
+                                                className={`w-full h-11 px-4 rounded-xl text-sm border border-gray-300 dark:border-dark-border text-text-rich dark:text-dark-text-rich focus:ring-2 focus:ring-accent focus:border-accent transition-all ${!!currentUser?.email ? 'bg-gray-100 dark:bg-dark-surface opacity-70 cursor-not-allowed' : 'bg-white dark:bg-dark-surface-alt'}`}
                                             />
                                         </div>
                                     </div>
@@ -215,7 +256,7 @@ export const ContactPage: React.FC = () => {
                     {/* Contact Channels - Right Side (2 cols) */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Direct Email Channels */}
-                        <div>
+                        {/* <div>
                             <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich mb-1">
                                 Direct Channels
                             </h3>
@@ -226,47 +267,47 @@ export const ContactPage: React.FC = () => {
                                 <ContactChannelCard
                                     icon="🛟"
                                     title="General Support"
-                                    email="support@wordweft.com"
-                                    description="Account help, login issues, bugs"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Help with accounts, payments, or reading."
                                 />
                                 <ContactChannelCard
                                     icon="🛡️"
                                     title="Safety & Abuse"
-                                    email="safety@wordweft.com"
-                                    description="Harassment, spam, illegal content"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Report severe rule violations or harassment."
                                 />
                                 <ContactChannelCard
                                     icon="©️"
                                     title="Copyright / IP"
-                                    email="copyright@wordweft.com"
-                                    description="Stolen or plagiarized work"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Submit a DMCA takedown notice."
                                 />
                                 <ContactChannelCard
                                     icon="🔐"
-                                    title="Privacy Requests"
-                                    email="privacy@wordweft.com"
-                                    description="Data access, correction, deletion"
+                                    title="Privacy"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Data removal or GDPR requests."
                                 />
                                 <ContactChannelCard
                                     icon="📩"
                                     title="Appeals"
-                                    email="appeals@wordweft.com"
-                                    description="Moderation disputes"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Appeal a moderation decision."
                                 />
                                 <ContactChannelCard
                                     icon="🤝"
                                     title="Business"
-                                    email="business@wordweft.com"
-                                    description="Partnerships & collaborations"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Partnerships and press inquiries."
                                 />
                                 <ContactChannelCard
                                     icon="⚖️"
                                     title="Legal"
-                                    email="legal@wordweft.com"
-                                    description="Law enforcement & legal notices"
+                                    email="wordweftstudio@gmail.com"
+                                    description="Law enforcement or legal matters."
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Response Info */}
                         <div className="bg-accent/5 border border-accent/15 rounded-2xl p-5">
@@ -291,12 +332,6 @@ export const ContactPage: React.FC = () => {
                             </ul>
                         </div>
                     </div>
-                </div>
-
-                {/* Closing */}
-                <div className="mt-16 text-center border-t border-gray-200 dark:border-dark-border pt-10">
-                    <div className="flex justify-center mb-2"><WordWeftLogo className="w-14 h-14 md:w-16 md:h-16" /></div>
-                    <p className="text-text-body dark:text-dark-text-body mt-1">Building a safer space for writers and readers.</p>
                 </div>
             </div>
 

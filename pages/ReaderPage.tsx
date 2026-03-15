@@ -552,14 +552,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             <TableOfContents />
 
             {/* Header */}
-            <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border' : 'bg-background/80 border-gray-200'} backdrop-blur-md border-b`}>
+            <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border text-dark-text-body' : 'bg-background/80 border-gray-200 text-text-body'} backdrop-blur-md border-b`}>
                 <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
                     <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
                         <ChevronLeftIcon className="w-5 h-5" />
                         <span>{book.title}</span>
                     </button>
                     <div className="text-center">
-                        <h2 className="font-sans font-semibold truncate dark:text-dark-text-rich">{chapter.title}</h2>
+                        <h2 className="font-sans font-semibold truncate text-text-rich dark:text-dark-text-rich">{chapter.title}</h2>
                     </div>
                     <div className="flex items-center gap-4">
                         <button
@@ -685,7 +685,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
             {/* Footer Navigation */}
             <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20">
-                <div className={`flex items-center justify-center gap-4 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border' : 'bg-surface/90 border-gray-200'} backdrop-blur-lg border rounded-2xl shadow-lg p-2`}>
+                <div className={`flex items-center justify-center gap-4 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-2xl shadow-lg p-2`}>
                     <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronLeftIcon className="w-5 h-5" /></button>
                     <span className="font-sans text-sm w-20 text-center dark:text-dark-text-body">{currentChapterIndex + 1} / {book.chapters.length}</span>
                     <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronRightIcon className="w-5 h-5" /></button>
@@ -693,7 +693,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             </footer>
 
             {/* Settings Toolbar */}
-            <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+            <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                 <div ref={settingsPanelRef} className="relative">
                     <button onClick={() => setIsSettingsPanelVisible(prev => !prev)} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors">
                         <PaintBrushIcon className="w-5 h-5" />

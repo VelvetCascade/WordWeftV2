@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,5 +42,8 @@ public class Book {
     private LocalDate publishedDate;
     private LocalDate lastUpdatedAt;
     private LocalDate createdAt;
+    @JsonProperty("isMature")
     private boolean isMature = false;
+    @JsonProperty("isAIGenerated")
+    private boolean isAIGenerated = false;
 }

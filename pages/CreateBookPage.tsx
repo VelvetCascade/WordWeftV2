@@ -15,6 +15,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [category, setCategory] = useState('');
     const [isMature, setIsMature] = useState(false);
+    const [isAIGenerated, setIsAIGenerated] = useState(false);
     const [coverUrl, setCoverUrl] = useState('');
     const [allGenres, setAllGenres] = useState<string[]>([]);
     const [isLoadingGenres, setIsLoadingGenres] = useState(true);
@@ -55,6 +56,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
             category: finalCategory,
             tags: selectedGenres,
             isMature,
+            isAIGenerated,
         };
 
         const updatedUser = await api.createBook(currentUser.id, newBookData);
@@ -192,6 +194,21 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                             </div>
                         </label>
                     </div> */}
+
+                    <div className="flex items-center justify-between pt-2 border-t dark:border-dark-border">
+                        <label htmlFor="isAIGenerated" className="flex items-center cursor-pointer py-2">
+                            <div className="relative">
+                                <input type="checkbox" id="isAIGenerated" className="sr-only" checked={isAIGenerated} onChange={e => setIsAIGenerated(e.target.checked)} />
+                                <div className={`block w-12 h-6 rounded-full transition-colors ${isAIGenerated ? 'bg-accent' : 'bg-gray-200 dark:bg-dark-surface-alt'}`}></div>
+                                <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isAIGenerated ? 'translate-x-6' : ''}`}></div>
+                            </div>
+                            <div className="ml-3 text-text-body dark:text-dark-text-body">
+                                <p className="font-sans font-bold flex items-center gap-2">✨ AI Generated Content</p>
+                                <p className="text-xs text-gray-500 mt-1">Check this if your book utilizes AI to generate text or structure.</p>
+                            </div>
+                        </label>
+                    </div>
+
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={() => window.location.hash = '/write'} className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors">Cancel</button>
                         <button type="submit" className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400" disabled={!title || !description}>Create Book & Add Chapters</button>

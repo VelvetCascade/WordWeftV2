@@ -1,5 +1,5 @@
 declare namespace google {
-    accounts: {
+    export const accounts: {
         id: {
             initialize: (config: any) => void;
             renderButton: (parent: HTMLElement, options: any) => void;

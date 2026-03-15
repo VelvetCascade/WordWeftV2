@@ -32,7 +32,7 @@ export const Footer: React.FC = () => {
               <li><a href="#/contact" className="hover:text-accent transition-colors">Contact Us</a></li>
             </ul>
           </div>
-          <div className="col-span-1">
+          {/* <div className="col-span-1">
             <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich mb-4">Subscribe</h4>
             <p className="text-sm mb-3">Get the latest news and featured stories.</p>
             <form className="flex">
@@ -41,7 +41,7 @@ export const Footer: React.FC = () => {
                 Go
               </button>
             </form>
-          </div>
+          </div> */}
         </div>
         <div className="mt-12 pt-8 border-t border-gray-200/80 dark:border-dark-border text-center text-xs text-gray-500 dark:text-gray-400">
           <p>&copy; {new Date().getFullYear()} WordWeft. All rights reserved.</p>

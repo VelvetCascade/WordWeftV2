@@ -140,15 +140,14 @@ export const TermsPage: React.FC = () => {
                 </Section>
 
                 <Section number="6" title="Mature / NSFW Content">
-                    <p>Allowed only if:</p>
-                    <BulletList items={[
-                        "Properly tagged",
-                        "Fictional",
-                        "Consensual (unless clearly fictional narrative context)",
-                        "No minors involved"
-                    ]} />
+                    <p className="font-medium text-text-rich dark:text-dark-text-rich">
+                        Currently, we do not allow mature or NSFW content on WordWeft.
+                    </p>
+                    <p className="mt-2">
+                        While this is our current policy to maintain a general audience platform, we understand the need for mature storytelling spaces. Support for properly tagged mature content may be introduced in a future release.
+                    </p>
                     <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                        We may restrict visibility based on reader filters or legal requirements. We reserve the right to geo-restrict content.
+                        Until then, any mature content will be subject to removal.
                     </p>
                 </Section>
 
@@ -302,7 +301,7 @@ export const TermsPage: React.FC = () => {
                     <p>For legal issues:</p>
                     <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 mt-2">
                         <p className="font-medium text-text-rich dark:text-dark-text-rich">
-                            📧 <a href="mailto:legal@wordweft.com" className="text-accent hover:underline">legal@wordweft.com</a>
+                            📧 <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>
                         </p>
                     </div>
                 </Section>
