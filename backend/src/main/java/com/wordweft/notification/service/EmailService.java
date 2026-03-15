@@ -1,26 +1,27 @@
-
 package com.wordweft.notification.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
-
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    @Value("${wordweft.email.apps-script-url}")
+    private String appsScriptUrl;
 
     @Value("${wordweft.app.frontendUrl}")
     private String frontendUrl;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Async
     public void sendWelcomeEmail(String toEmail, String username) {
@@ -71,7 +72,7 @@ public class EmailService {
             <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
                 <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 40px 32px; text-align: center;">
                     <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Password Reset</h1>
-                    <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 16px;">We've got you covered 🔒</p>
+                    <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 16px;">We've got you covered!</p>
                 </div>
                 <div style="padding: 32px;">
                     <p style="font-size: 15px; color: #4b5563; line-height: 1.7;">
@@ -101,17 +102,34 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String toEmail, String subject, String htmlContent) {
+        if (appsScriptUrl == null || appsScriptUrl.isBlank()) {
+            System.err.println("❌ Apps Script URL not configured! Set GMAIL_APPS_SCRIPT_URL in environment. Email to " + toEmail + " was NOT sent.");
+            return;
+        }
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "WordWeft");
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            mailSender.send(message);
-            System.out.println("Email sent successfully to: " + toEmail);
-        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
-            System.err.println("Failed to send email to " + toEmail + ": " + e.getMessage());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, String> payload = new HashMap<>();
+            payload.put("to", toEmail);
+            payload.put("subject", subject);
+            payload.put("htmlBody", htmlContent);
+            payload.put("senderName", "WordWeft");
+
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(payload, headers);
+            
+            ResponseEntity<String> response = restTemplate.postForEntity(appsScriptUrl, request, String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null && response.getBody().contains("\"success\":true")) {
+                System.out.println("✅ Email sent successfully to: " + toEmail);
+            } else {
+                System.err.println("❌ Failed to send email to " + toEmail + " — Apps Script responded: " + response.getBody());
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send email to " + toEmail + " via Apps Script: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
