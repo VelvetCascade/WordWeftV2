@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { User, Chapter, Book } from '../types';
-import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { CharacterList } from '../components/CharacterList';
 import { SceneList } from '../components/SceneList';
@@ -132,7 +132,31 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     );
 };
 
-const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void }> = ({ chapter, bookId, index, onPublishToggle }) => (
+// --- Confirmation Dialog ---
+const ConfirmDialog: React.FC<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+}> = ({ isOpen, title, message, confirmLabel = 'Delete', onConfirm, onCancel }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6">
+                <h3 className="text-lg font-bold text-text-rich dark:text-dark-text-rich mb-2">{title}</h3>
+                <p className="text-sm text-text-body dark:text-dark-text-body mb-6">{message}</p>
+                <div className="flex justify-end gap-3">
+                    <button onClick={onCancel} className="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg transition-colors">Cancel</button>
+                    <button onClick={onConfirm} className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">{confirmLabel}</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onDelete: () => void }> = ({ chapter, bookId, index, onPublishToggle, onDelete }) => (
     <div className="flex items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors">
         <div className="flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
@@ -159,6 +183,13 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             >
                 {chapter.status === 'published' ? 'Unpublish' : 'Publish'}
             </button>
+            <button
+                onClick={onDelete}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                title="Delete chapter"
+            >
+                <TrashIcon className="w-4 h-4" />
+            </button>
         </div>
     </div>
 );
@@ -168,6 +199,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('chapters');
+    const [deleteChapterTarget, setDeleteChapterTarget] = useState<{ id: string; title: string } | null>(null);
+    const [showDeleteBookConfirm, setShowDeleteBookConfirm] = useState(false);
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
@@ -179,6 +212,30 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
         onUserUpdate(updatedUser);
         setErrorMsg(null);
+    };
+
+    const handleDeleteChapter = async (chapterId: string) => {
+        try {
+            const updatedUser = await api.deleteChapter(bookId, chapterId);
+            onUserUpdate(updatedUser);
+            setDeleteChapterTarget(null);
+            setErrorMsg(null);
+        } catch (e: any) {
+            setErrorMsg(e.message);
+            setTimeout(() => setErrorMsg(null), 5000);
+        }
+    };
+
+    const handleDeleteBook = async () => {
+        try {
+            const updatedUser = await api.deleteBook(bookId);
+            onUserUpdate(updatedUser);
+            window.location.hash = '/write';
+        } catch (e: any) {
+            setErrorMsg(e.message);
+            setShowDeleteBookConfirm(false);
+            setTimeout(() => setErrorMsg(null), 5000);
+        }
     };
 
     const handleBookPublishToggle = async () => {
@@ -256,6 +313,9 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                     <button onClick={() => setIsEditModalOpen(true)} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
                                         <Cog6ToothIcon className="w-3 h-3" /> Edit Details
                                     </button>
+                                    <button onClick={() => setShowDeleteBookConfirm(true)} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1">
+                                        <TrashIcon className="w-3 h-3" /> Delete Book
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -305,6 +365,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                         bookId={book.id}
                                         index={i}
                                         onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
+                                        onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
                                     />
                                 ))
                             ) : (
@@ -336,6 +397,25 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 onClose={() => setIsEditModalOpen(false)}
                 book={book}
                 onUpdate={handleBookUpdate}
+            />
+
+            {/* Delete Chapter Confirmation */}
+            <ConfirmDialog
+                isOpen={!!deleteChapterTarget}
+                title="Delete Chapter"
+                message={`Are you sure you want to delete "${deleteChapterTarget?.title}"? This action cannot be undone.`}
+                onConfirm={() => deleteChapterTarget && handleDeleteChapter(deleteChapterTarget.id)}
+                onCancel={() => setDeleteChapterTarget(null)}
+            />
+
+            {/* Delete Book Confirmation */}
+            <ConfirmDialog
+                isOpen={showDeleteBookConfirm}
+                title="Delete Book"
+                message={`Are you sure you want to delete "${book.title}"? This will permanently remove the book, all its chapters, and all associated data (reviews, comments, reading progress). This action cannot be undone.`}
+                confirmLabel="Delete Book"
+                onConfirm={handleDeleteBook}
+                onCancel={() => setShowDeleteBookConfirm(false)}
             />
         </div>
     );

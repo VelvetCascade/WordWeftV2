@@ -21,6 +21,31 @@ public class BookService {
     UserRepository userRepository;
     @Autowired
     ReviewRepository reviewRepository;
+    @Autowired
+    CommentRepository commentRepository;
+    @Autowired
+    ReadingProgressRepository readingProgressRepository;
+    @Autowired
+    CharacterRepository characterRepository;
+    @Autowired
+    SceneRepository sceneRepository;
+    @Autowired
+    NoteRepository noteRepository;
+    @Autowired
+    LibraryRepository libraryRepository;
+
+    public void deleteBook(String bookId) {
+        // Delete the book document
+        bookRepository.deleteById(bookId);
+        // Cascade: remove all related data
+        reviewRepository.deleteByBookId(bookId);
+        commentRepository.deleteByBookId(bookId);
+        readingProgressRepository.deleteByBookId(bookId);
+        characterRepository.deleteByBookId(bookId);
+        sceneRepository.deleteByBookId(bookId);
+        noteRepository.deleteByBookId(bookId);
+        libraryRepository.deleteByBookId(bookId);
+    }
 
     private String getCurrentUserId() {
         try {
@@ -164,6 +189,12 @@ public class BookService {
                 .mapToInt(c -> c.getLikes() != null ? c.getLikes().size() : 0)
                 .sum();
         map.put("likesCount", totalChapterLikes);
+
+        // AGGREGATE COMMENTS: Sum of all chapter comments
+        int totalChapterComments = book.getChapters().stream()
+                .mapToInt(Chapter::getCommentCount)
+                .sum();
+        map.put("commentCount", totalChapterComments);
 
         // isLiked for Book is essentially if the user has liked ANY chapter (optional
         // interpretation)

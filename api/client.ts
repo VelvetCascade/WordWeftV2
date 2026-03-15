@@ -398,6 +398,22 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
+export async function deleteBook(bookId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function deleteChapter(bookId: string, chapterId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
 export async function getBookReviews(bookId: string): Promise<Review[]> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/reviews`);
     return await handleResponse(response);

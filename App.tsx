@@ -24,6 +24,7 @@ import { NotificationsPage } from './pages/NotificationsPage';
 import { GenrePage } from './pages/GenrePage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { FeaturesPage } from './pages/FeaturesPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -57,7 +58,8 @@ export type Page =
   | { name: 'notifications' }
   | { name: 'search'; query: string }
   | { name: 'features' }
-  | { name: 'genre-page'; genre: string };
+  | { name: 'genre-page'; genre: string }
+  | { name: 'reset-password'; token: string };
 
 
 const App: React.FC = () => {
@@ -206,6 +208,10 @@ const App: React.FC = () => {
       } else if (hash.startsWith('search')) {
         const searchParams = new URLSearchParams(hash.split('?')[1] || '');
         targetPage = { name: 'search', query: searchParams.get('q') || '' };
+      } else if (hash.startsWith('reset-password')) {
+        const searchParams = new URLSearchParams(hash.split('?')[1] || '');
+        const token = searchParams.get('token') || '';
+        targetPage = { name: 'reset-password', token };
       } else if (hash.startsWith('terms')) {
         targetPage = { name: 'terms' };
       } else if (hash.startsWith('features')) {
@@ -301,13 +307,15 @@ const App: React.FC = () => {
         return <SearchResultsPage />;
       case 'features':
         return <FeaturesPage />;
+      case 'reset-password':
+        return <ResetPasswordPage token={page.token} />;
       default:
         return <HomePage />;
     }
   };
 
   const isWriterPage = page.name.startsWith('writer-');
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && !isWriterPage;
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && page.name !== 'reset-password' && !isWriterPage;
 
   const feedbackCtx = {
     triggerFeedback: feedback.triggerFeedback,
@@ -341,7 +349,7 @@ const App: React.FC = () => {
             {renderPage()}
           </WriterLayout>
         ) : (
-          <main className={showNavbar ? "pt-20" : ""}>
+          <main className={showNavbar ? "pt-20 pb-24 md:pb-0" : ""}>
             {renderPage()}
           </main>
         )}

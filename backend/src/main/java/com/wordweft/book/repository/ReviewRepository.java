@@ -8,4 +8,5 @@ import java.util.List;
 public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findByBookId(String bookId);
     void deleteByUserIdAndBookId(String userId, String bookId);
+    void deleteByBookId(String bookId);
 }

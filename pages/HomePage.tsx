@@ -386,23 +386,23 @@ export const HomePage: React.FC = () => {
   return (
     <div className="overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative h-[80vh] md:h-[90vh] min-h-[600px] flex items-center text-white overflow-hidden">
+      <section className="relative h-screen min-h-[600px] flex items-center text-white overflow-hidden">
         <div className="absolute inset-0 bg-animated-gradient animate-gradient-shift"></div>
         <div className="absolute inset-0 bg-primary/30"></div>
-        <div className="container mx-auto px-6 relative z-10 grid md:grid-cols-2 items-center gap-8">
-          <div className="text-center md:text-left">
-            <h1 className="font-sans text-5xl md:text-7xl font-extrabold leading-tight tracking-tighter mb-4">
+        <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 lg:gap-8 items-center h-full pt-16 lg:pt-0">
+          <div className="text-center lg:text-left z-20 mt-12 lg:mt-0 flex flex-col items-center lg:items-start">
+            <h1 className="font-sans text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tighter mb-4 drop-shadow-md">
               Discover. Write. Publish.
             </h1>
-            <p className="text-lg md:text-xl max-w-lg mx-auto md:mx-0 text-gray-200 mb-8">
+            <p className="text-lg md:text-xl max-w-lg text-gray-100 mb-8 drop-shadow">
               A next-gen platform for readers and storytellers.
             </p>
-            <div className="flex justify-center md:justify-start space-x-4">
-              <button onClick={() => window.location.hash = '/category'} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg">Start Reading</button>
-              <button onClick={() => window.location.hash = '/write'} className="bg-surface/20 font-sans font-semibold px-8 py-3 rounded-xl hover:bg-surface/30 transition-transform hover:scale-105 duration-300 shadow-lg">Start Writing</button>
+            <div className="flex justify-center lg:justify-start space-x-4">
+              <button onClick={() => window.location.hash = '/category'} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-xl border border-transparent">Start Reading</button>
+              <button onClick={() => window.location.hash = '/write'} className="bg-white/10 backdrop-blur-md font-sans font-semibold px-8 py-3 rounded-xl hover:bg-white/20 transition-transform hover:scale-105 duration-300 shadow-xl border border-white/20">Start Writing</button>
             </div>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden md:flex lg:block justify-center items-center w-full z-10 mt-8 lg:mt-0 opacity-90 pb-16 lg:pb-0">
             <HeroCarousel books={books.slice(0, 5)} />
           </div>
         </div>

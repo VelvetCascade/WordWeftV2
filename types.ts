@@ -77,6 +77,7 @@ export interface Book {
   // Stats
   viewCount: number;
   likesCount: number;
+  commentCount: number;
   isLiked: boolean;
 
   genres: string[];
@@ -131,6 +132,7 @@ export interface Shelf {
   id: string;
   name: string;
   books: LibraryBook[];
+  type?: string;
 }
 
 export interface LibraryBook extends Book {
