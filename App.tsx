@@ -283,7 +283,7 @@ const App: React.FC = () => {
       case 'safety':
         return <SafetyRulesPage />;
       case 'contact':
-        return <ContactPage />;
+        return <ContactPage currentUser={currentUser} />;
       case 'feedback':
         return <FeedbackPage />;
       case 'author':

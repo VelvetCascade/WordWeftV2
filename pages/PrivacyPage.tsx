@@ -56,7 +56,7 @@ export const PrivacyPage: React.FC = () => {
                             <span className="font-semibold text-text-rich dark:text-dark-text-rich">February 15, 2026</span>
                         </div>
                         <div className="bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
-                            Contact: <a href="mailto:privacy@wordweft.com" className="text-accent font-semibold hover:underline">privacy@wordweft.com</a>
+                            Contact: <a href="mailto:wordweftstudio@gmail.com" className="text-accent font-semibold hover:underline">wordweftstudio@gmail.com</a>
                         </div>
                     </div>
                 </div>
@@ -291,7 +291,7 @@ export const PrivacyPage: React.FC = () => {
                         "Data deleted"
                     ]} />
                     <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                        Parents may contact us for removal at <a href="mailto:privacy@wordweft.com" className="text-accent hover:underline">privacy@wordweft.com</a>.
+                        Parents may contact us for removal at <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>.
                     </p>
                 </Section>
 
@@ -310,7 +310,7 @@ export const PrivacyPage: React.FC = () => {
                     ]} />
                     <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 mt-3">
                         <p className="font-medium text-text-rich dark:text-dark-text-rich">
-                            📧 Contact: <a href="mailto:privacy@wordweft.com" className="text-accent hover:underline">privacy@wordweft.com</a>
+                            📧 Contact: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>
                         </p>
                     </div>
                 </Section>
@@ -323,10 +323,10 @@ export const PrivacyPage: React.FC = () => {
                 <Section number="14" title="Contact">
                     <div className="bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border rounded-xl p-5 space-y-2">
                         <p className="font-medium text-text-rich dark:text-dark-text-rich">
-                            🔐 Privacy inquiries: <a href="mailto:privacy@wordweft.com" className="text-accent hover:underline">privacy@wordweft.com</a>
+                            🔐 Privacy inquiries: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>
                         </p>
                         <p className="font-medium text-text-rich dark:text-dark-text-rich">
-                            ⚖️ Legal: <a href="mailto:legal@wordweft.com" className="text-accent hover:underline">legal@wordweft.com</a>
+                            ⚖️ Legal: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>
                         </p>
                     </div>
                 </Section>

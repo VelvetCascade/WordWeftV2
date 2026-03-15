@@ -169,6 +169,25 @@ export async function changePassword(userId: string, oldPassword_unused: string,
     return (await getMe())!;
 }
 
+// --- Support API ---
+
+export interface GrievanceData {
+    name: string;
+    email: string;
+    category: string;
+    subject: string;
+    message: string;
+}
+
+export async function submitGrievance(data: GrievanceData): Promise<{ success: boolean; message: string; grievanceId: string }> {
+    const response = await fetch(`${API_BASE_URL}/support/grievances`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+    });
+    return await handleResponse(response);
+}
+
 // --- Follow API ---
 
 export async function followUser(userId: string): Promise<Author> {

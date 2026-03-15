@@ -356,7 +356,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 <div><h4 className="font-bold mb-1">19. Changes to Terms</h4>
                     <p>We may update Terms anytime. Continued use constitutes acceptance.</p></div>
                 <div><h4 className="font-bold mb-1">20. Contact</h4>
-                    <p>For legal issues: <a href="mailto:legal@wordweft.com" className="text-accent hover:underline">legal@wordweft.com</a></p></div>
+                    <p>For legal issues: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a></p></div>
             </div>
         )
     });
@@ -365,7 +365,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         title: "Privacy Policy",
         content: (
             <div className="space-y-6 text-sm">
-                <p className="text-xs text-gray-500">Last Updated: February 15, 2026 · Contact: privacy@wordweft.com</p>
+                <p className="text-xs text-gray-500">Last Updated: February 15, 2026 · Contact: wordweftstudio@gmail.com</p>
                 {/* Shortened privacy content for brevity in file editing */}
                 <div><h4 className="font-bold mb-1">1. What Data We Collect</h4>
                     <p><strong>Account:</strong> Username, email, encrypted password, display name, bio, profile image, social links (optional), country (optional). We never store plain text passwords.</p>
@@ -398,11 +398,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 <div><h4 className="font-bold mb-1">11. International Users</h4>
                     <p>Your data may be stored on servers outside your country. By using WordWeft you consent to cross-border data processing.</p></div>
                 <div><h4 className="font-bold mb-1">12. Your Rights</h4>
-                    <p>You may request: access to your data, correction, deletion, or restriction of processing. Contact: <a href="mailto:privacy@wordweft.com" className="text-accent hover:underline">privacy@wordweft.com</a></p></div>
+                    <p>You may request: access to your data, correction, deletion, or restriction of processing. Contact: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a></p></div>
                 <div><h4 className="font-bold mb-1">13. Changes to Policy</h4>
                     <p>We may update this policy anytime. Major changes will be notified. Continued use = acceptance.</p></div>
                 <div><h4 className="font-bold mb-1">14. Contact</h4>
-                    <p>Privacy: <a href="mailto:privacy@wordweft.com" className="text-accent hover:underline">privacy@wordweft.com</a> · Legal: <a href="mailto:legal@wordweft.com" className="text-accent hover:underline">legal@wordweft.com</a></p></div>
+                    <p>Contact us at: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a></p></div>
             </div>
         )
     });

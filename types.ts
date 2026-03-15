@@ -89,6 +89,7 @@ export interface Book {
   publicationStatus: 'draft' | 'published';
   publishedDate?: string;
   isMature: boolean;
+  isAIGenerated: boolean;
   description: string;
 }
 

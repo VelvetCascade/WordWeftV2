@@ -292,10 +292,10 @@ export const SafetyRulesPage: React.FC = () => {
                     <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Contact</h2>
                     <div className="bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border rounded-xl p-5 space-y-2">
                         <p className="font-medium text-text-rich dark:text-dark-text-rich">
-                            🛡️ Report content: <a href="mailto:safety@wordweft.com" className="text-accent hover:underline">safety@wordweft.com</a>
+                            🛡️ Report content: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>
                         </p>
                         <p className="font-medium text-text-rich dark:text-dark-text-rich">
-                            📩 Appeals: <a href="mailto:appeals@wordweft.com" className="text-accent hover:underline">appeals@wordweft.com</a>
+                            📩 Appeals: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a>
                         </p>
                     </div>
                 </section>

@@ -26,6 +26,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [description, setDescription] = useState(book.description || '');
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
     const [category, setCategory] = useState(book.category || '');
+    const [isAIGenerated, setIsAIGenerated] = useState(book.isAIGenerated || false);
     const [genres, setGenres] = useState<string[]>(book.genres || []);
     const [allGenres, setAllGenres] = useState<string[]>([]);
     const [genreSearch, setGenreSearch] = useState('');
@@ -44,7 +45,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
             coverUrl,
             category,
-            genres
+            genres,
+            isAIGenerated
         });
         onClose();
     };
@@ -120,6 +122,19 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                                 ))}
                                 {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match your search.</p>}
                             </div>
+                        </div>
+                        <div className="pt-2 border-t dark:border-dark-border mt-4">
+                            <label htmlFor="editIsAIGenerated" className="flex items-center cursor-pointer py-2">
+                                <div className="relative">
+                                    <input type="checkbox" id="editIsAIGenerated" className="sr-only" checked={isAIGenerated} onChange={e => setIsAIGenerated(e.target.checked)} />
+                                    <div className={`block w-10 h-6 rounded-full transition-colors ${isAIGenerated ? 'bg-accent' : 'bg-gray-200 dark:bg-dark-surface-alt'}`}></div>
+                                    <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isAIGenerated ? 'translate-x-4' : ''}`}></div>
+                                </div>
+                                <div className="ml-3 text-text-body dark:text-dark-text-body">
+                                    <p className="font-sans font-bold text-sm flex items-center gap-1.5">✨ AI Generated Content</p>
+                                    <p className="text-xs text-gray-500">Flag this book as containing AI-generated text or structure.</p>
+                                </div>
+                            </label>
                         </div>
                     </form>
                 </div>
