@@ -77,6 +77,7 @@ public class DataSeeder implements CommandLineRunner {
         b2.setPublicationStatus("published");
         b2.setPublishedDate(LocalDate.of(2022, 11, 30));
         b2.setMature(true);
+        b2.setAIGenerated(true);
         
         List<Chapter> c2 = new ArrayList<>();
         Chapter ch3 = new Chapter(); ch3.setTitle("Neon Rain"); ch3.setContent("The rain tasted like acid..."); ch3.setStatus("published"); ch3.updateWordCount(); c2.add(ch3);

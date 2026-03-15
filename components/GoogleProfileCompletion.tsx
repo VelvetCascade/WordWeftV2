@@ -4,11 +4,12 @@ import type { User } from '../types';
 import { Book, User as UserIcon } from 'lucide-react';
 
 interface GoogleProfileCompletionProps {
+    user: User;
     onComplete: (user: User) => void;
     onCancel: () => void;
 }
 
-export function GoogleProfileCompletion({ onComplete, onCancel }: GoogleProfileCompletionProps) {
+export function GoogleProfileCompletion({ user, onComplete, onCancel }: GoogleProfileCompletionProps) {
     const [username, setUsername] = useState('');
     const [bio, setBio] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +26,7 @@ export function GoogleProfileCompletion({ onComplete, onCancel }: GoogleProfileC
 
         setIsLoading(true);
         try {
-            const updatedUser = await api.updateUserProfile('me', { username, bio });
+            const updatedUser = await api.updateUserProfile(user.id, { name: username, bio });
             onComplete(updatedUser);
         } catch (err: any) {
             setError(err.message || 'Failed to update profile. Username might be taken.');

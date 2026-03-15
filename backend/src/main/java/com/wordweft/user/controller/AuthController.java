@@ -52,21 +52,29 @@ public class AuthController {
     @Value("${wordweft.app.googleClientId}")
     private String googleClientId;
 
+    private String generateOtp() {
+        return String.format("%06d", new java.util.Random().nextInt(999999));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+
+            if (!user.isEmailVerified() && "LOCAL".equals(user.getAuthProvider())) {
+                return ResponseEntity.status(403).body("Email not verified. Please verify your email first.");
+            }
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtils.generateJwtToken(authentication);
 
-            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(item -> item.getAuthority())
                     .collect(Collectors.toList());
-
-            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
 
             return ResponseEntity.ok(new JwtResponse(jwt, "Bearer",
                     userDetails.getId(),
@@ -101,16 +109,52 @@ public class AuthController {
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
-        // Send welcome email
+        // Generate and set OTP
+        String otp = generateOtp();
+        user.setEmailVerificationOtp(otp);
+        user.setEmailVerificationOtpExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
+        user.setEmailVerified(false);
+
         userRepository.save(user);
+        
+        // Send OTP email instead of welcome email
+        emailService.sendOtpEmail(user.getEmail(), otp);
+
+        return ResponseEntity.ok(new SignupResponse("OTP sent to your email. Please verify.", true, user.getEmail()));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found.");
+        }
+        
+        if (user.isEmailVerified()) {
+            return ResponseEntity.badRequest().body("Email is already verified.");
+        }
+
+        if (user.getEmailVerificationOtp() == null || !user.getEmailVerificationOtp().equals(request.getOtp())) {
+            return ResponseEntity.badRequest().body("Invalid OTP. Please check the code and try again.");
+        }
+
+        if (user.getEmailVerificationOtpExpiry() == null || user.getEmailVerificationOtpExpiry().isBefore(Instant.now())) {
+            return ResponseEntity.badRequest().body("OTP has expired. Please request a new one.");
+        }
+
+        // OTP is valid
+        user.setEmailVerified(true);
+        user.setEmailVerificationOtp(null);
+        user.setEmailVerificationOtpExpiry(null);
+        userRepository.save(user);
+        
+        // Send welcome email now that they are verified
         emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(signUpRequest.getEmail(), signUpRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
+        // Generate JWT and log user in
+        String jwt = jwtUtils.generateTokenForUser(user.getUsername());
+        
         return ResponseEntity.ok(new JwtResponse(jwt, "Bearer",
                 user.getId(),
                 user.getUsername(),
@@ -120,6 +164,35 @@ public class AuthController {
                 user.getLocation(),
                 user.getWebsite(),
                 List.of("ROLE_USER")));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found.");
+        }
+
+        if (user.isEmailVerified()) {
+            return ResponseEntity.badRequest().body("Email is already verified.");
+        }
+
+        // Throttle check: Don't allow resending within 1 minute of previous request
+        if (user.getEmailVerificationOtpExpiry() != null && 
+            user.getEmailVerificationOtpExpiry().minus(9, ChronoUnit.MINUTES).isAfter(Instant.now())) {
+            return ResponseEntity.badRequest().body("Please wait a moment before requesting another code.");
+        }
+
+        // Generate new OTP
+        String otp = generateOtp();
+        user.setEmailVerificationOtp(otp);
+        user.setEmailVerificationOtpExpiry(Instant.now().plus(10, ChronoUnit.MINUTES));
+        userRepository.save(user);
+
+        emailService.sendOtpEmail(user.getEmail(), otp);
+
+        return ResponseEntity.ok("A new OTP has been sent to your email.");
     }
 
     @PostMapping("/google")
@@ -172,7 +245,7 @@ public class AuthController {
                     }
 
                     user = new User(username, email, googleId, pictureUrl, "GOOGLE");
-                    if (name != null && !name.isBlank()) {
+                    if (name != null && !name.trim().isEmpty()) {
                         user.setBio(""); // Will be set during profile completion
                     }
                     userRepository.save(user);

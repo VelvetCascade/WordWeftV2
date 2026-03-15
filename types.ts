@@ -89,6 +89,7 @@ export interface Book {
   publicationStatus: 'draft' | 'published';
   publishedDate?: string;
   isMature: boolean;
+  isAIGenerated: boolean;
   description: string;
 }
 
@@ -116,6 +117,7 @@ export interface User {
   location?: string;
   website?: string;
   joinDate: string;
+  isEmailVerified: boolean;
 
   stats: UserStats;
   socials: UserSocials;

@@ -236,6 +236,7 @@ public class BookService {
         map.put("readCountLast7Days", book.getReadCountLast7Days() != null ? book.getReadCountLast7Days() : 0);
         map.put("viewCountLast7Days", book.getViewCountLast7Days() != null ? book.getViewCountLast7Days() : 0);
         map.put("isMature", book.isMature());
+        map.put("isAIGenerated", book.isAIGenerated());
 
         // Enrich Author
         User author = userRepository.findById(book.getAuthorId()).orElse(new User());

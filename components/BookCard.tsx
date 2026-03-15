@@ -2,6 +2,7 @@
 import React from 'react';
 import type { Book } from '../types';
 import { StarIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon } from './icons/Icons';
+import { AIBadge } from './AIBadge';
 
 interface BookCardProps {
   book: Book;
@@ -23,6 +24,11 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         <div className="absolute inset-0 bg-black/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <span className="text-white font-sans font-semibold bg-black/50 px-4 py-2 rounded-full text-sm">Read Preview</span>
         </div>
+        {book.isAIGenerated && (
+          <div className="absolute top-2 right-2">
+            <AIBadge />
+          </div>
+        )}
       </div>
       <div className="mt-3">
         <h3 className="font-sans font-bold text-md text-text-rich dark:text-dark-text-rich truncate">{book.title}</h3>

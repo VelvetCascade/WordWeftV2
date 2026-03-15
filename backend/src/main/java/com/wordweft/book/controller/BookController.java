@@ -165,6 +165,8 @@ public class BookController {
             book.setGenres(updates.getGenres());
         if (updates.isMature() != book.isMature())
             book.setMature(updates.isMature());
+        if (updates.isAIGenerated() != book.isAIGenerated())
+            book.setAIGenerated(updates.isAIGenerated());
 
         bookRepository.save(book);
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
