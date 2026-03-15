@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.wordweft.notification.service.EmailService;
 import com.wordweft.security.jwt.JwtUtils;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.dto.AuthDtos.*;
@@ -45,50 +46,64 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    EmailService emailService;
+
     @Value("${wordweft.app.googleClientId}")
     private String googleClientId;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
 
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
 
-        return ResponseEntity.ok(new JwtResponse(jwt, "Bearer",
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                user.getAvatarUrl(),
-                user.getBio(),
-                user.getLocation(),
-                user.getWebsite(),
-                roles));
+            return ResponseEntity.ok(new JwtResponse(jwt, "Bearer",
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail(),
+                    user.getAvatarUrl(),
+                    user.getBio(),
+                    user.getLocation(),
+                    user.getWebsite(),
+                    roles));
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            return ResponseEntity.status(401).body("Incorrect email or password. Please try again.");
+        } catch (org.springframework.security.authentication.InternalAuthenticationServiceException e) {
+            // This is thrown when the user is not found at all
+            return ResponseEntity.status(401).body("No account found with this email address.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Something went wrong. Please try again later.");
+        }
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+            return ResponseEntity.badRequest().body("This username is already taken. Please choose another one.");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body("Error: Email is already in use!");
+            return ResponseEntity.badRequest().body("An account with this email already exists. Try signing in instead.");
         }
 
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
+        // Send welcome email
         userRepository.save(user);
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(signUpRequest.getEmail(), signUpRequest.getPassword()));
@@ -162,6 +177,7 @@ public class AuthController {
                     }
                     userRepository.save(user);
                     needsProfileCompletion = true;
+                    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
                 }
             }
 
@@ -195,7 +211,7 @@ public class AuthController {
             user.setResetPasswordToken(token);
             user.setResetPasswordTokenExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
             userRepository.save(user);
-            System.out.println("RESET TOKEN for " + user.getEmail() + ": " + token);
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
         });
 
         return ResponseEntity.ok("If an account exists with that email, a password reset link has been sent.");
@@ -209,7 +225,31 @@ public class AuthController {
                 .orElse(null);
 
         if (user == null || user.getResetPasswordTokenExpiry().isBefore(Instant.now())) {
-            return ResponseEntity.badRequest().body("Error: Invalid or expired token.");
+            return ResponseEntity.badRequest().body("Invalid or expired reset link. Please request a new one.");
+        }
+
+        // Check against current password
+        if (encoder.matches(request.getNewPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body("New password cannot be the same as your current password. Please choose a different one.");
+        }
+
+        // Check against last 2 previous passwords
+        if (user.getPreviousPasswords() != null) {
+            for (String oldHash : user.getPreviousPasswords()) {
+                if (encoder.matches(request.getNewPassword(), oldHash)) {
+                    return ResponseEntity.badRequest()
+                            .body("This password was used recently. Please choose a password you haven't used before.");
+                }
+            }
+        }
+
+        // Save current password to history before changing (keep last 2)
+        if (user.getPreviousPasswords() == null) {
+            user.setPreviousPasswords(new java.util.ArrayList<>());
+        }
+        user.getPreviousPasswords().add(user.getPassword());
+        if (user.getPreviousPasswords().size() > 2) {
+            user.getPreviousPasswords().remove(0);
         }
 
         user.setPassword(encoder.encode(request.getNewPassword()));

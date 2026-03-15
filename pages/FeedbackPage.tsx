@@ -11,7 +11,7 @@ const SectionHeader: React.FC<{ number: number; title: string; subtitle?: string
             <span className="text-xs font-mono text-gray-400 dark:text-gray-500 tabular-nums">{String(number).padStart(2, '0')}</span>
             <h3 className="font-sans text-lg font-bold text-text-rich dark:text-dark-text-rich">{title}</h3>
         </div>
-        {subtitle && <p className="text-sm text-text-body dark:text-dark-text-body ml-8">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-text-body dark:text-dark-text-body ml-4 sm:ml-8">{subtitle}</p>}
     </div>
 );
 
@@ -275,7 +275,7 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Section 1: User Type */}
                     <SectionHeader number={1} title="What describes you best?" />
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ml-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ml-4 sm:ml-8">
                         <RadioOption name="userType" value="writer" label="Mainly a Writer" selected={userType} onChange={setUserType} />
                         <RadioOption name="userType" value="reader" label="Mainly a Reader" selected={userType} onChange={setUserType} />
                         <RadioOption name="userType" value="both" label="Both" selected={userType} onChange={setUserType} />
@@ -297,7 +297,7 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Section 3: What did you try? */}
                     <SectionHeader number={3} title="What did you try?" subtitle="Select all that apply." />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-4 sm:ml-8">
                         {featureOptions.map(feature => (
                             <CheckboxOption
                                 key={feature}
@@ -307,7 +307,7 @@ export const FeedbackPage: React.FC = () => {
                             />
                         ))}
                     </div>
-                    <div className="mt-3 ml-8">
+                    <div className="mt-3 ml-4 sm:ml-8">
                         <input
                             type="text"
                             value={otherFeature}
@@ -361,14 +361,14 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Section 7: Performance */}
                     <SectionHeader number={7} title="Performance" subtitle="Did anything feel slow?" />
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 ml-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 ml-4 sm:ml-8">
                         <RadioOption name="performance" value="no" label="No" selected={performanceIssue} onChange={setPerformanceIssue} />
                         <RadioOption name="performance" value="sometimes" label="Sometimes" selected={performanceIssue} onChange={setPerformanceIssue} />
                         <RadioOption name="performance" value="often" label="Often" selected={performanceIssue} onChange={setPerformanceIssue} />
                         <RadioOption name="performance" value="very_often" label="Very often" selected={performanceIssue} onChange={setPerformanceIssue} />
                     </div>
                     {performanceIssue && performanceIssue !== 'no' && (
-                        <div className="mt-3 ml-8">
+                        <div className="mt-3 ml-4 sm:ml-8">
                             <input
                                 type="text"
                                 value={performanceDetails}
@@ -383,13 +383,13 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Section 8: Would you use this regularly? */}
                     <SectionHeader number={8} title="Would you use this regularly?" />
-                    <div className="grid grid-cols-2 gap-3 ml-8">
+                    <div className="grid grid-cols-2 gap-3 ml-4 sm:ml-8">
                         <RadioOption name="usage" value="daily" label="Yes, daily" selected={usageFrequency} onChange={setUsageFrequency} />
                         <RadioOption name="usage" value="few_times_week" label="Few times a week" selected={usageFrequency} onChange={setUsageFrequency} />
                         <RadioOption name="usage" value="occasionally" label="Occasionally" selected={usageFrequency} onChange={setUsageFrequency} />
                         <RadioOption name="usage" value="probably_not" label="Probably not yet" selected={usageFrequency} onChange={setUsageFrequency} />
                     </div>
-                    <div className="mt-3 ml-8">
+                    <div className="mt-3 ml-4 sm:ml-8">
                         <input
                             type="text"
                             value={usageWhy}
@@ -438,7 +438,7 @@ export const FeedbackPage: React.FC = () => {
 
                     {/* Error */}
                     {error && (
-                        <div className="mb-6 ml-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
+                        <div className="mb-6 ml-4 sm:ml-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
                             {error}
                         </div>
                     )}

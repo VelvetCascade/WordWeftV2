@@ -10,4 +10,5 @@ public interface ReadingProgressRepository extends MongoRepository<ReadingProgre
     Optional<ReadingProgress> findByUserIdAndBookId(String userId, String bookId);
     List<ReadingProgress> findByUserId(String userId);
     void deleteByUserIdAndBookId(String userId, String bookId);
+    void deleteByBookId(String bookId);
 }

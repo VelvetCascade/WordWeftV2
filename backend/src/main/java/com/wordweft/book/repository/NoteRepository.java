@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface NoteRepository extends MongoRepository<Note, String> {
     List<Note> findByBookId(String bookId);
+    void deleteByBookId(String bookId);
 
     List<Note> findByChapterId(String chapterId);
 }
