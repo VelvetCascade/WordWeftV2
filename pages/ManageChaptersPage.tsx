@@ -285,12 +285,6 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             <div className="bg-white dark:bg-dark-surface border-b dark:border-dark-border pt-8 pb-12 px-6 shadow-sm">
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <button
-                            onClick={() => window.location.hash = '/write'}
-                            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors md:hidden"
-                        >
-                            <ArrowLeftIcon className="w-6 h-6" />
-                        </button>
 
                         <div className="relative group flex-shrink-0">
                             <img src={book.coverUrl} alt={book.title} className="w-32 h-48 object-cover rounded-xl shadow-lg" />

@@ -1,110 +1,110 @@
 
 import React, { useState, useEffect } from 'react';
-import { BookOpenIcon, ChartPieIcon, Cog6ToothIcon, ArrowUturnLeftIcon, Bars3Icon, XMarkIcon } from './icons/Icons';
+import { BookOpenIcon, ChartPieIcon, Cog6ToothIcon, ArrowLeftIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
 
 interface WriterLayoutProps {
   children: React.ReactNode;
 }
 
-const SidebarLink: React.FC<{ href: string; icon: React.ElementType; label: string; isActive?: boolean; onClick?: () => void }> = ({ href, icon: Icon, label, isActive, onClick }) => {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    window.location.hash = href.substring(1);
-    if (onClick) {
-      onClick();
-    }
-  };
+const writerTabs = [
+  { id: 'books', label: 'My Books', icon: BookOpenIcon, hash: '#/write' },
+  { id: 'analytics', label: 'Analytics', icon: ChartPieIcon, hash: '#/write/analytics' },
+  { id: 'settings', label: 'Settings', icon: Cog6ToothIcon, hash: '#/write/settings' },
+];
 
-  return (
-    <a
-      href={href}
-      onClick={handleClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
-    >
-      <Icon className="w-5 h-5" />
-      <span className="font-sans">{label}</span>
-    </a>
-  );
+type PageContext = {
+  activeTab: string | null;
+  isChapterEditor: boolean;
+  isSubPage: boolean;
+  backLabel: string;
+  backHash: string;
 };
 
+const getPageContext = (hash: string): PageContext => {
+  // Chapter editor — full distraction-free mode, no writer bar
+  if (hash.match(/#\/write\/book\/[^/]+\/chapter\/[^/]+\/edit/)) {
+    return { activeTab: null, isChapterEditor: true, isSubPage: true, backLabel: '', backHash: '' };
+  }
+  // Manage chapters page
+  if (hash.match(/#\/write\/book\/[^/]+\/manage/)) {
+    return { activeTab: 'books', isChapterEditor: false, isSubPage: true, backLabel: 'My Books', backHash: '/write' };
+  }
+  // Create book page
+  if (hash.startsWith('#/write/book/create')) {
+    return { activeTab: 'books', isChapterEditor: false, isSubPage: true, backLabel: 'My Books', backHash: '/write' };
+  }
+  // Main pages
+  if (hash.startsWith('#/write/analytics')) {
+    return { activeTab: 'analytics', isChapterEditor: false, isSubPage: false, backLabel: 'Home', backHash: '/' };
+  }
+  if (hash.startsWith('#/write/settings')) {
+    return { activeTab: 'settings', isChapterEditor: false, isSubPage: false, backLabel: 'Home', backHash: '/' };
+  }
+  // Default: dashboard
+  return { activeTab: 'books', isChapterEditor: false, isSubPage: false, backLabel: 'Home', backHash: '/' };
+};
 
 export const WriterLayout: React.FC<WriterLayoutProps> = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentHash, setCurrentHash] = useState(window.location.hash);
 
   useEffect(() => {
     const handleHashChange = () => {
       setCurrentHash(window.location.hash);
-      setIsSidebarOpen(false);
-    }
+    };
     window.addEventListener('hashchange', handleHashChange);
-    // Initial call to set hash
     handleHashChange();
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const isActive = (path: string) => {
-    if (path === '#/write') {
-      return currentHash.startsWith('#/write');
-    }
-    return currentHash.includes(path.substring(1));
+  const ctx = getPageContext(currentHash);
+
+  // Chapter editor: render children directly, no wrapper (distraction-free)
+  if (ctx.isChapterEditor) {
+    return <>{children}</>;
   }
 
-  const sidebarContent = (
-    <>
-      <div className="flex-1">
-        <div className="flex items-center justify-between mb-8 px-3">
-          <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }}>
-            <WordWeftLogo className="w-12 h-12 md:w-14 md:h-14" />
-          </a>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1 text-gray-500 dark:text-gray-400">
-            <XMarkIcon className="w-6 h-6" />
-          </button>
-        </div>
-        <nav className="space-y-2">
-          <SidebarLink href="#/write" icon={BookOpenIcon} label="My Books" isActive={isActive('#/write')} onClick={() => setIsSidebarOpen(false)} />
-          <SidebarLink href="#/analytics" icon={ChartPieIcon} label="Analytics" isActive={isActive('analytics')} onClick={() => setIsSidebarOpen(false)} />
-          <SidebarLink href="#/settings" icon={Cog6ToothIcon} label="Settings" isActive={isActive('settings')} onClick={() => setIsSidebarOpen(false)} />
-        </nav>
-      </div>
-      <div className="mt-auto">
-        <SidebarLink href="#/" icon={ArrowUturnLeftIcon} label="Back to Home" onClick={() => setIsSidebarOpen(false)} />
-      </div>
-    </>
-  );
-
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-dark-background">
-      {/* Overlay for mobile */}
-      <div
-        className={`fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setIsSidebarOpen(false)}
-      ></div>
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-background">
+      {/* Writer Top Bar */}
+      <div className="writer-topbar">
+        <div className="writer-topbar-inner">
+          {/* Left: Back + Logo */}
+          <div className="writer-topbar-left">
+            <button
+              className="writer-back-btn"
+              onClick={() => { window.location.hash = ctx.backHash; }}
+              title={`Back to ${ctx.backLabel}`}
+            >
+              <ArrowLeftIcon />
+              <span>{ctx.backLabel}</span>
+            </button>
+            <a href="#/write" onClick={(e) => { e.preventDefault(); window.location.hash = '/write'; }} className="writer-topbar-logo">
+              <WordWeftLogo className="w-9 h-9" />
+              <span className="writer-topbar-studio">Writer Studio</span>
+            </a>
+          </div>
 
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-dark-surface border-r dark:border-dark-border p-4 flex-col z-50 transform transition-transform duration-300 md:relative md:translate-x-0 md:flex ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {sidebarContent}
-      </aside>
+          {/* Right: Tab Navigation */}
+          <div className="writer-tabs">
+            {writerTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`writer-tab ${ctx.activeTab === tab.id ? 'writer-tab-active' : ''}`}
+                onClick={() => { window.location.hash = tab.hash.substring(1); }}
+              >
+                <tab.icon />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-x-hidden">
-        {/* Mobile Header */}
-        <header className="md:hidden bg-white dark:bg-dark-surface border-b dark:border-dark-border flex-shrink-0 h-16 flex items-center px-4 justify-between sticky top-0 z-30">
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2">
-            <Bars3Icon className="w-6 h-6" />
-          </button>
-          <a href="#/write" onClick={(e) => { e.preventDefault(); window.location.hash = '/write'; }}>
-            <WordWeftLogo className="w-11 h-11" />
-          </a>
-          {/* Placeholder for alignment */}
-          <div className="w-6 h-6"></div>
-        </header>
-
-        <main className="flex-1">
-          {children}
-        </main>
-      </div>
+      <main>
+        {children}
+      </main>
     </div>
   );
 };

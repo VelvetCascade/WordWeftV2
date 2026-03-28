@@ -151,8 +151,8 @@ export async function getMe(): Promise<User | null> {
 }
 
 export async function updateUserProfile(userId: string, updatedData: Partial<User>): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-        method: 'PATCH',
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+        method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(updatedData)
     });
