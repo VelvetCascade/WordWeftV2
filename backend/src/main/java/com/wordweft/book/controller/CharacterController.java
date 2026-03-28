@@ -5,6 +5,7 @@ import com.wordweft.book.service.CharacterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class CharacterController {
     }
 
     @PostMapping
-    public Character createCharacter(@RequestBody Character character) {
+    public Character createCharacter(@Valid @RequestBody Character character) {
         return characterService.createCharacter(character);
     }
 
@@ -34,7 +35,7 @@ public class CharacterController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Character> updateCharacter(@PathVariable String id, @RequestBody Character characterDetails) {
+    public ResponseEntity<Character> updateCharacter(@PathVariable String id, @Valid @RequestBody Character characterDetails) {
         Character updatedCharacter = characterService.updateCharacter(id, characterDetails);
         if (updatedCharacter != null) {
             return ResponseEntity.ok(updatedCharacter);

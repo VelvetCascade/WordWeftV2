@@ -14,6 +14,9 @@ public class CharacterService {
     @Autowired
     private CharacterRepository characterRepository;
 
+    @Autowired
+    private com.wordweft.support.ImageKitService imageKitService;
+
     public List<Character> getCharactersByBookId(String bookId) {
         return characterRepository.findByBookId(bookId);
     }
@@ -32,12 +35,31 @@ public class CharacterService {
             character.setRole(characterDetails.getRole());
             character.setDescription(characterDetails.getDescription());
             character.setGoal(characterDetails.getGoal());
-            character.setImageUrl(characterDetails.getImageUrl());
+
+            if (characterDetails.getImageUrl() != null && !characterDetails.getImageUrl().isEmpty()) {
+                if (!characterDetails.getImageUrl().equals(character.getImageUrl()) && character.getImageFileId() != null) {
+                    imageKitService.deleteFile(character.getImageFileId());
+                }
+                character.setImageUrl(characterDetails.getImageUrl());
+                character.setImageFileId(characterDetails.getImageFileId());
+            } else if (characterDetails.getImageUrl() == null || characterDetails.getImageUrl().isEmpty()) {
+                if (character.getImageFileId() != null) {
+                    imageKitService.deleteFile(character.getImageFileId());
+                }
+                character.setImageUrl("");
+                character.setImageFileId(null);
+            }
+
             return characterRepository.save(character);
         }).orElse(null);
     }
 
     public void deleteCharacter(String id) {
-        characterRepository.deleteById(id);
+        characterRepository.findById(id).ifPresent(character -> {
+            if (character.getImageFileId() != null) {
+                imageKitService.deleteFile(character.getImageFileId());
+            }
+            characterRepository.deleteById(id);
+        });
     }
 }

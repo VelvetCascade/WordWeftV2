@@ -644,6 +644,13 @@ export async function uploadFile(formData: FormData): Promise<{ filename: string
     return await handleResponse(response);
 }
 
+// --- ImageKit API ---
+
+export async function getImageKitAuth(): Promise<{ token: string, expire: number, signature: string, publicKey: string }> {
+    const response = await fetch(`${API_BASE_URL}/imagekit/auth`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
 function mapBackendUserToFrontend(backendData: any): User {
     let safeJoinDate = backendData.joinDate;
     if (Array.isArray(safeJoinDate)) {

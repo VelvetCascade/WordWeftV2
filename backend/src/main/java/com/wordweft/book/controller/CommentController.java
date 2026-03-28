@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -43,7 +44,7 @@ public class CommentController {
 
     @PostMapping("/{bookId}/chapters/{chapterId}/comments")
     public ResponseEntity<?> addComment(@PathVariable String bookId, @PathVariable String chapterId,
-            @RequestBody Comment comment) {
+            @Valid @RequestBody Comment comment) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
 

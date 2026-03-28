@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Character } from '../types';
 import * as api from '../api/client';
+import { ImageUpload } from './ImageUpload';
 
 interface CharacterListProps {
     bookId: string;
@@ -85,12 +86,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                         onChange={(e) => setNewCharacter({ ...newCharacter, goal: e.target.value })}
                         className="w-full p-2 rounded-md bg-background dark:bg-dark-background border border-input-border dark:border-dark-input-border"
                     />
-                    <input
-                        type="text"
-                        placeholder="Image URL"
+                    <ImageUpload 
                         value={newCharacter.imageUrl}
-                        onChange={(e) => setNewCharacter({ ...newCharacter, imageUrl: e.target.value })}
-                        className="w-full p-2 rounded-md bg-background dark:bg-dark-background border border-input-border dark:border-dark-input-border"
+                        onChange={(url, fileId) => setNewCharacter({ ...newCharacter, imageUrl: url, imageFileId: fileId || undefined })}
+                        label="Character Image"
                     />
                     <div className="flex justify-end gap-2">
                         <button
@@ -131,6 +130,14 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                     onChange={(e) => char.description = e.target.value}
                                     className="w-full p-2 rounded-md bg-background dark:bg-dark-background border border-input-border dark:border-dark-input-border"
                                 />
+                                <ImageUpload 
+                                    value={char.imageUrl}
+                                    onChange={(url, fileId) => {
+                                        char.imageUrl = url;
+                                        char.imageFileId = fileId || undefined;
+                                    }}
+                                    label="Character Image"
+                                />
                                 <div className="flex justify-end gap-2">
                                     <button
                                         onClick={() => setEditingId(null)}
@@ -139,7 +146,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={() => handleUpdate(char.id, { name: char.name, role: char.role, description: char.description })}
+                                        onClick={() => handleUpdate(char.id, { name: char.name, role: char.role, description: char.description, imageUrl: char.imageUrl, imageFileId: char.imageFileId })}
                                         className="px-3 py-1 bg-primary text-white rounded-md text-sm"
                                     >
                                         Save

@@ -5,6 +5,7 @@ import com.wordweft.book.service.SceneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class SceneController {
     }
 
     @PostMapping
-    public Scene createScene(@RequestBody Scene scene) {
+    public Scene createScene(@Valid @RequestBody Scene scene) {
         return sceneService.createScene(scene);
     }
 
@@ -34,7 +35,7 @@ public class SceneController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Scene> updateScene(@PathVariable String id, @RequestBody Scene sceneDetails) {
+    public ResponseEntity<Scene> updateScene(@PathVariable String id, @Valid @RequestBody Scene sceneDetails) {
         Scene updatedScene = sceneService.updateScene(id, sceneDetails);
         if (updatedScene != null) {
             return ResponseEntity.ok(updatedScene);

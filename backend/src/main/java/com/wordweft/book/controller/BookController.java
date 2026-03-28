@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -31,6 +32,8 @@ public class BookController {
     UserService userService;
     @Autowired
     NotificationService notificationService;
+    @Autowired
+    com.wordweft.support.ImageKitService imageKitService;
 
     private String getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -128,7 +131,7 @@ public class BookController {
     // --- Writer Endpoints ---
 
     @PostMapping
-    public ResponseEntity<?> createBook(@RequestBody Book book) {
+    public ResponseEntity<?> createBook(@Valid @RequestBody Book book) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
         book.setAuthorId(userDetails.getId());
@@ -159,8 +162,13 @@ public class BookController {
             book.setDescription(updates.getDescription());
         if (updates.getSummary() != null)
             book.setSummary(updates.getSummary());
-        if (updates.getCoverUrl() != null)
+        if (updates.getCoverUrl() != null) {
+            if (!updates.getCoverUrl().equals(book.getCoverUrl()) && book.getCoverFileId() != null) {
+                imageKitService.deleteFile(book.getCoverFileId());
+            }
             book.setCoverUrl(updates.getCoverUrl());
+            book.setCoverFileId(updates.getCoverFileId());
+        }
         if (updates.getGenres() != null)
             book.setGenres(updates.getGenres());
         if (updates.isMature() != book.isMature())
@@ -304,6 +312,10 @@ public class BookController {
 
         if (!book.getAuthorId().equals(userDetails.getId())) {
             return ResponseEntity.status(403).body("Not authorized to delete this book");
+        }
+
+        if (book.getCoverFileId() != null) {
+            imageKitService.deleteFile(book.getCoverFileId());
         }
 
         bookService.deleteBook(bookId);
