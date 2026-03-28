@@ -115,47 +115,32 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     });
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary, #f8fafc)' }}>
-            <main style={{ flex: 1, maxWidth: '720px', width: '100%', margin: '0 auto', padding: '24px 16px' }}>
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark-background transition-colors duration-300 pb-20 md:pb-0">
+            <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 md:py-8">
                 {/* Header */}
-                <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
-                }}>
+                <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
                     <div>
-                        <h1 style={{
-                            margin: 0, fontSize: '24px', fontWeight: 700,
-                            color: 'var(--text-primary, #1a1a2e)',
-                        }}>
+                        <h1 className="font-sans text-2xl md:text-3xl font-bold text-text-rich dark:text-dark-text-rich m-0">
                             Notifications
                         </h1>
                         {unreadCount > 0 && (
-                            <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-tertiary, #94a3b8)' }}>
+                            <p className="font-sans mt-1 text-[13px] font-medium text-gray-500 dark:text-gray-400">
                                 {unreadCount} unread
                             </p>
                         )}
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="flex gap-2">
                         {unreadCount > 0 && (
                             <button
                                 onClick={onMarkAllRead}
-                                style={{
-                                    padding: '8px 14px', fontSize: '13px', fontWeight: 500,
-                                    background: 'var(--accent-color, #6366f1)', color: 'white',
-                                    border: 'none', borderRadius: '8px', cursor: 'pointer',
-                                    transition: 'opacity 0.15s',
-                                }}
+                                className="px-3.5 py-2 text-[13px] font-sans font-semibold bg-accent text-white rounded-lg hover:bg-primary transition-colors hover:shadow-md"
                             >
                                 Mark all read
                             </button>
                         )}
                         <button
                             onClick={() => setShowSettings(!showSettings)}
-                            style={{
-                                padding: '8px 14px', fontSize: '13px', fontWeight: 500,
-                                background: 'var(--bg-primary, #ffffff)', color: 'var(--text-secondary, #64748b)',
-                                border: '1px solid rgba(128,128,128,0.15)', borderRadius: '8px', cursor: 'pointer',
-                            }}
+                            className="px-3.5 py-2 text-[13px] font-sans font-semibold bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-text-body dark:text-dark-text-body rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors shadow-sm"
                         >
                             ⚙ Settings
                         </button>
@@ -164,52 +149,32 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
 
                 {/* Settings Panel */}
                 {showSettings && (
-                    <div style={{
-                        background: 'var(--bg-primary, #ffffff)', borderRadius: '12px',
-                        border: '1px solid rgba(128,128,128,0.12)', padding: '20px',
-                        marginBottom: '20px',
-                    }}>
-                        <h3 style={{
-                            margin: '0 0 16px', fontSize: '15px', fontWeight: 600,
-                            color: 'var(--text-primary, #1a1a2e)',
-                        }}>
+                    <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-5 mb-5 animate-fade-in">
+                        <h3 className="font-sans m-0 mb-4 text-[15px] font-bold text-text-rich dark:text-dark-text-rich">
                             Notification Preferences
                         </h3>
                         {[
                             { key: 'follows' as const, label: 'Follows', desc: 'When someone follows you' },
                             { key: 'comments' as const, label: 'Comments', desc: 'Comments on your chapters and replies' },
                             { key: 'storyUpdates' as const, label: 'Story Updates', desc: 'New chapters and stories from authors you follow' },
-                            { key: 'systemAnnouncements' as const, label: 'System', desc: 'Platform updates and announcements' },
-                        ].map(({ key, label, desc }) => (
-                            <div key={key} style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                padding: '12px 0',
-                                borderBottom: key !== 'systemAnnouncements' ? '1px solid rgba(128,128,128,0.08)' : 'none',
-                            }}>
+                            { key: 'systemAnnouncements' as const, label: 'System Announcements', desc: 'Updates from the developers' },
+                        ].map(({ key, label, desc }, i, arr) => (
+                            <div key={key} className={`flex items-center justify-between py-3 ${i !== arr.length - 1 ? 'border-b border-gray-100 dark:border-dark-border' : ''}`}>
                                 <div>
-                                    <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: 'var(--text-primary, #1a1a2e)' }}>
+                                    <p className="font-sans m-0 text-sm font-semibold text-text-body dark:text-dark-text-body">
                                         {label}
                                     </p>
-                                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-tertiary, #94a3b8)' }}>
+                                    <p className="font-sans m-0 mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                                         {desc}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => handlePreferenceChange(key)}
-                                    style={{
-                                        width: '44px', height: '24px', borderRadius: '12px',
-                                        border: 'none', cursor: 'pointer',
-                                        background: preferences[key] ? 'var(--accent-color, #6366f1)' : 'rgba(128,128,128,0.2)',
-                                        position: 'relative', transition: 'background 0.2s',
-                                        flexShrink: 0,
-                                    }}
+                                    className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${preferences[key] ? 'bg-accent' : 'bg-gray-200 dark:bg-gray-700'}`}
                                 >
-                                    <span style={{
-                                        width: '18px', height: '18px', borderRadius: '50%',
-                                        background: 'white', position: 'absolute', top: '3px',
-                                        left: preferences[key] ? '23px' : '3px',
-                                        transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                                    }} />
+                                    <span
+                                        className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow transition-transform duration-200 transform ${preferences[key] ? 'translate-x-5' : 'translate-x-0'}`}
+                                    />
                                 </button>
                             </div>
                         ))}
@@ -217,23 +182,12 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                 )}
 
                 {/* Filter Tabs */}
-                <div style={{
-                    display: 'flex', gap: '4px', marginBottom: '16px',
-                    background: 'var(--bg-primary, #ffffff)', borderRadius: '10px',
-                    padding: '4px', border: '1px solid rgba(128,128,128,0.1)',
-                }}>
+                <div className="flex gap-1 mb-4 bg-white dark:bg-dark-surface rounded-xl p-1 border border-gray-200 dark:border-dark-border shadow-sm overflow-x-auto scrollbar-hide">
                     {FILTER_TABS.map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveFilter(tab.key)}
-                            style={{
-                                flex: 1, padding: '8px 12px', border: 'none',
-                                borderRadius: '8px', cursor: 'pointer',
-                                fontSize: '13px', fontWeight: 500,
-                                background: activeFilter === tab.key ? 'var(--accent-color, #6366f1)' : 'transparent',
-                                color: activeFilter === tab.key ? 'white' : 'var(--text-secondary, #64748b)',
-                                transition: 'all 0.15s',
-                            }}
+                            className={`flex-[1_0_auto] px-3 md:px-0 md:flex-1 py-2 border-none rounded-lg font-sans text-[13px] font-semibold transition-colors ${activeFilter === tab.key ? 'bg-accent text-white shadow' : 'bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
                         >
                             {tab.label}
                         </button>
@@ -241,38 +195,25 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                 </div>
 
                 {/* Search */}
-                <div style={{ marginBottom: '16px' }}>
+                <div className="mb-4">
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search notifications..."
-                        style={{
-                            width: '100%', padding: '10px 14px',
-                            border: '1px solid rgba(128,128,128,0.15)',
-                            borderRadius: '10px', fontSize: '13.5px',
-                            background: 'var(--bg-primary, #ffffff)',
-                            color: 'var(--text-primary, #1a1a2e)',
-                            outline: 'none', boxSizing: 'border-box',
-                        }}
+                        className="w-full px-4 py-2.5 font-sans text-sm bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-xl text-text-body dark:text-dark-text-body outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-sm"
                     />
                 </div>
 
                 {/* Notification List */}
-                <div style={{
-                    background: 'var(--bg-primary, #ffffff)', borderRadius: '12px',
-                    border: '1px solid rgba(128,128,128,0.12)', overflow: 'hidden',
-                }}>
+                <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm">
                     {filtered.length === 0 ? (
-                        <div style={{
-                            padding: '60px 20px', textAlign: 'center',
-                            color: 'var(--text-tertiary, #94a3b8)',
-                        }}>
-                            <span style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }}>🔔</span>
-                            <p style={{ margin: 0, fontSize: '15px', fontWeight: 500 }}>
+                        <div className="py-16 px-5 text-center">
+                            <span className="text-4xl block mb-3 opacity-80">🔔</span>
+                            <p className="font-sans m-0 text-[15px] font-semibold text-text-rich dark:text-dark-text-rich">
                                 {searchQuery ? 'No matching notifications' : 'No notifications yet'}
                             </p>
-                            <p style={{ margin: '4px 0 0', fontSize: '13px' }}>
+                            <p className="font-sans mt-1 text-[13px] text-gray-500 dark:text-gray-400">
                                 {searchQuery ? 'Try a different search term' : "You're all caught up!"}
                             </p>
                         </div>
@@ -285,62 +226,38 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                     const target = getNotificationTarget(n);
                                     if (target) navigateTo(target);
                                 }}
-                                style={{
-                                    display: 'flex', alignItems: 'flex-start', gap: '12px',
-                                    width: '100%', padding: '14px 16px', border: 'none',
-                                    background: n.read ? 'transparent' : 'rgba(var(--accent-rgb, 99,102,241), 0.05)',
-                                    cursor: 'pointer', textAlign: 'left',
-                                    borderBottom: '1px solid rgba(128,128,128,0.08)',
-                                    transition: 'background 0.15s',
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(128,128,128,0.06)')}
-                                onMouseLeave={(e) => (e.currentTarget.style.background = n.read ? 'transparent' : 'rgba(var(--accent-rgb, 99,102,241), 0.05)')}
+                                className={`flex items-start gap-4 w-full p-4 border-b border-gray-100 dark:border-dark-border last:border-0 text-left transition-colors ${!n.read ? 'bg-accent/5 dark:bg-accent/10 hover:bg-accent/10 dark:hover:bg-accent/20' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-dark-surface-alt'}`}
                             >
                                 {/* Icon / Avatar */}
                                 {n.metadata?.actorAvatar ? (
-                                    <img src={n.metadata.actorAvatar} alt=""
-                                        style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                    <img src={n.metadata.actorAvatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-sm" />
                                 ) : (
-                                    <span style={{ fontSize: '24px', flexShrink: 0, marginTop: '2px' }}>
+                                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-surface-alt flex items-center justify-center flex-shrink-0 text-xl shadow-inner text-gray-700 dark:text-gray-300">
                                         {getNotificationIcon(n.type)}
-                                    </span>
+                                    </div>
                                 )}
 
                                 {/* Content */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <p style={{
-                                        margin: 0, fontSize: '14px', lineHeight: 1.5,
-                                        color: 'var(--text-primary, #1a1a2e)',
-                                        fontWeight: n.read ? 400 : 500,
-                                    }}>
+                                <div className="flex-1 min-w-0 font-sans">
+                                    <p className={`m-0 text-sm leading-relaxed ${!n.read ? 'font-semibold text-text-rich dark:text-dark-text-rich' : 'font-medium text-text-body dark:text-dark-text-body'}`}>
                                         {n.metadata?.actorName && (
-                                            <strong style={{ fontWeight: 600 }}>{n.metadata.actorName} </strong>
+                                            <span className="font-bold text-accent dark:text-accent mr-1 hover:underline">{n.metadata.actorName}</span>
                                         )}
                                         {n.message}
                                     </p>
                                     {n.metadata?.bookTitle && (
-                                        <p style={{
-                                            margin: '2px 0 0', fontSize: '12px',
-                                            color: 'var(--accent-color, #6366f1)',
-                                        }}>
+                                        <p className="font-sans m-0 mt-1 text-xs font-semibold text-indigo-500 dark:text-indigo-400">
                                             📖 {n.metadata.bookTitle}
                                         </p>
                                     )}
-                                    <span style={{
-                                        fontSize: '12px', color: 'var(--text-tertiary, #94a3b8)',
-                                        marginTop: '4px', display: 'block',
-                                    }}>
+                                    <span className="font-sans text-xs font-medium text-gray-400 dark:text-gray-500 mt-1.5 block">
                                         {getTimeAgo(n.createdAt)}
                                     </span>
                                 </div>
 
                                 {/* Unread dot */}
                                 {!n.read && (
-                                    <div style={{
-                                        width: 8, height: 8, borderRadius: '50%',
-                                        background: 'var(--accent-color, #6366f1)',
-                                        flexShrink: 0, marginTop: '10px',
-                                    }} />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-accent flex-shrink-0 mt-3 shadow" />
                                 )}
                             </button>
                         ))
@@ -351,12 +268,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         <button
                             onClick={onLoadMore}
                             disabled={isLoading}
-                            style={{
-                                width: '100%', padding: '14px', border: 'none',
-                                background: 'none', cursor: isLoading ? 'default' : 'pointer',
-                                fontSize: '13px', fontWeight: 500,
-                                color: 'var(--accent-color, #6366f1)',
-                            }}
+                            className="w-full p-3.5 font-sans text-sm font-semibold text-accent disabled:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors focus:outline-none"
                         >
                             {isLoading ? 'Loading...' : 'Load more'}
                         </button>
