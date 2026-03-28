@@ -151,8 +151,8 @@ export async function getMe(): Promise<User | null> {
 }
 
 export async function updateUserProfile(userId: string, updatedData: Partial<User>): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-        method: 'PATCH',
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+        method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(updatedData)
     });
@@ -641,6 +641,13 @@ export async function uploadFile(formData: FormData): Promise<{ filename: string
         },
         body: formData
     });
+    return await handleResponse(response);
+}
+
+// --- ImageKit API ---
+
+export async function getImageKitAuth(): Promise<{ token: string, expire: number, signature: string, publicKey: string }> {
+    const response = await fetch(`${API_BASE_URL}/imagekit/auth`, { headers: getHeaders() });
     return await handleResponse(response);
 }
 

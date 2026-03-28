@@ -386,11 +386,11 @@ export const HomePage: React.FC = () => {
   return (
     <div className="overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[600px] flex items-center text-white overflow-hidden">
+      <section className="relative min-h-[65vh] md:h-screen md:min-h-[600px] flex items-center text-white overflow-hidden py-28 md:py-0">
         <div className="absolute inset-0 bg-animated-gradient animate-gradient-shift"></div>
         <div className="absolute inset-0 bg-primary/30"></div>
-        <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 lg:gap-8 items-center h-full pt-16 lg:pt-0">
-          <div className="text-center lg:text-left z-20 mt-12 lg:mt-0 flex flex-col items-center lg:items-start">
+        <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 lg:gap-8 items-center h-full">
+          <div className="text-center lg:text-left z-20 flex flex-col items-center lg:items-start">
             <h1 className="font-sans text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tighter mb-4 drop-shadow-md">
               Discover. Write. Publish.
             </h1>
@@ -412,14 +412,16 @@ export const HomePage: React.FC = () => {
       <HeroSearch onScrolledPast={setHeroSearchPast} />
 
       {/* Explore Books */}
-      <section className="container mx-auto px-6 mb-24 -mt-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Explore Books</h2>
-          <SortDropdown
-            options={SORT_OPTIONS}
-            value={sortMode}
-            onChange={(v) => setSortMode(v as any)}
-          />
+      <section className="container mx-auto px-6 mb-24 mt-4 md:mt-8">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <h2 className="font-sans text-2xl sm:text-3xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">Explore Books</h2>
+          <div className="flex-shrink-0">
+            <SortDropdown
+              options={SORT_OPTIONS}
+              value={sortMode}
+              onChange={(v) => setSortMode(v as any)}
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
           {books.length > 0
@@ -451,12 +453,12 @@ export const HomePage: React.FC = () => {
       {/* Top Genres */}
       {rankedGenres.length > 0 && (
         <section className="container mx-auto px-6 mb-24">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Top Genres</h2>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <h2 className="font-sans text-2xl sm:text-3xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">Top Genres</h2>
             {rankedGenres.length > 6 && (
               <button
                 onClick={() => setShowAllGenres(prev => !prev)}
-                className="font-sans text-sm font-semibold text-accent hover:text-primary transition-colors"
+                className="flex-shrink-0 font-sans text-sm font-semibold text-accent hover:text-primary transition-colors whitespace-nowrap"
               >
                 {showAllGenres ? 'Show Less' : `View All (${rankedGenres.length})`}
               </button>
@@ -497,11 +499,11 @@ export const HomePage: React.FC = () => {
       {/* Genre-wise Book Sections */}
       {Object.keys(genreBooks).length > 0 && Object.entries(genreBooks).map(([genre, gBooks]) => (
         <section key={genre} className="container mx-auto px-6 mb-16">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">{genre}</h2>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h2 className="font-sans text-xl sm:text-2xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">{genre}</h2>
             <a
               href={`#/genre/${encodeURIComponent(genre)}`}
-              className="font-sans text-sm font-semibold text-accent hover:underline transition-colors"
+              className="flex-shrink-0 font-sans text-sm font-semibold text-accent hover:underline transition-colors whitespace-nowrap"
             >
               View All →
             </a>

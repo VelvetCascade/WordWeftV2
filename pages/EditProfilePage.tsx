@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { User } from '../types';
 import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, XMarkIcon, PlusIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { ImageUpload } from '../components/ImageUpload';
 
 interface EditProfilePageProps {
   user: User;
@@ -45,6 +46,7 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
   const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
+  const [avatarFileId, setAvatarFileId] = useState<string | null>(user.avatarFileId || null);
   const [bio, setBio] = useState(user.bio || '');
   const [location, setLocation] = useState(user.location || '');
   const [website, setWebsite] = useState(user.website || '');
@@ -121,6 +123,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     await onUpdateProfile({
       name,
       avatarUrl,
+      avatarFileId,
       bio,
       location,
       website,
@@ -194,22 +197,15 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl border dark:border-dark-border">
           <form onSubmit={handleSave} className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-              <img src={avatarUrl || `https://i.pravatar.cc/150?u=${user.email}`} alt="Avatar preview" className="w-24 h-24 rounded-full object-cover ring-2 ring-gray-100 dark:ring-dark-border flex-shrink-0" />
-              <div className="flex-1 w-full">
-                <label htmlFor="avatarUrl" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
-                  Avatar URL
-                </label>
-                <input
-                  type="url"
-                  id="avatarUrl"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.png"
-                  className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
-                />
-              </div>
-            </div>
+            <ImageUpload 
+              value={avatarUrl}
+              onChange={(url, fileId) => {
+                  setAvatarUrl(url);
+                  setAvatarFileId(fileId);
+              }}
+              fallbackUrl={`https://i.pravatar.cc/150?u=${user.email}`}
+              label="Profile Avatar"
+            />
 
             <div>
               <label htmlFor="name" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">

@@ -46,6 +46,8 @@ export type Page =
   | { name: 'writer-create-book' }
   | { name: 'writer-manage-book'; bookId: string }
   | { name: 'writer-edit-chapter'; bookId: string, chapterId: string | 'new' }
+  | { name: 'writer-analytics' }
+  | { name: 'writer-settings' }
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; authorId: string }
@@ -184,6 +186,10 @@ const App: React.FC = () => {
         } else {
           targetPage = { name: 'writer-dashboard' };
         }
+      } else if (hash.startsWith('write/analytics')) {
+        targetPage = { name: 'writer-analytics' };
+      } else if (hash.startsWith('write/settings')) {
+        targetPage = { name: 'writer-settings' };
       } else if (hash.startsWith('write')) {
         targetPage = { name: 'writer-dashboard' };
       } else if (hash.startsWith('category')) {
@@ -227,7 +233,7 @@ const App: React.FC = () => {
         targetPage = { name: 'features' };
       }
 
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'profile', 'edit-profile', 'notifications', 'reader'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications', 'reader'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
@@ -272,6 +278,26 @@ const App: React.FC = () => {
         return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUserUpdate={setCurrentUser} />;
       case 'writer-edit-chapter':
         return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
+      case 'writer-analytics':
+        return (
+          <div className="writer-coming-soon">
+            <div className="writer-coming-soon-icon">📊</div>
+            <span className="writer-coming-soon-badge">Coming Soon</span>
+            <h2>Analytics Dashboard</h2>
+            <p>Track your readership, engagement, and growth. Detailed insights into views, ratings, comments, and reader demographics — all in one place.</p>
+            <button className="writer-coming-soon-btn" onClick={() => { window.location.hash = '/write'; }}>← Back to My Books</button>
+          </div>
+        );
+      case 'writer-settings':
+        return (
+          <div className="writer-coming-soon">
+            <div className="writer-coming-soon-icon">⚙️</div>
+            <span className="writer-coming-soon-badge">Coming Soon</span>
+            <h2>Writer Settings</h2>
+            <p>Customize your writing environment, manage publishing preferences, notification settings, and more. Your portal, your rules.</p>
+            <button className="writer-coming-soon-btn" onClick={() => { window.location.hash = '/write'; }}>← Back to My Books</button>
+          </div>
+        );
       case 'profile':
         return <ProfilePage user={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'edit-profile':
@@ -344,6 +370,8 @@ const App: React.FC = () => {
             ) : undefined
           }
           onForYouClick={() => setShowForYouModal(true)}
+          unreadCount={notif.unreadCount}
+          currentUser={currentUser}
         />}
 
         {isWriterPage ? (
@@ -351,7 +379,7 @@ const App: React.FC = () => {
             {renderPage()}
           </WriterLayout>
         ) : (
-          <main className={showNavbar ? "pt-20 pb-24 md:pb-0" : ""}>
+          <main className={showNavbar ? `pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'pt-20'}` : ""}>
             {renderPage()}
           </main>
         )}

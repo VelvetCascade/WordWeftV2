@@ -38,10 +38,10 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
           border border-gray-200 dark:border-dark-border
           shadow-sm hover:shadow-md
           hover:border-accent/40 dark:hover:border-accent/40
-          transition-all duration-200 ease-out cursor-pointer"
+          transition-all duration-200 ease-out cursor-pointer whitespace-nowrap"
             >
                 <span className="text-text-body dark:text-dark-text-body">
-                    <span className="text-text-muted dark:text-dark-text-muted">{label}:</span>{' '}
+                    <span className="hidden sm:inline text-text-muted dark:text-dark-text-muted">{label}:</span>{' '}
                     <span className="font-semibold text-text-rich dark:text-dark-text-rich">{selectedOption?.label}</span>
                 </span>
                 <ChevronDownIcon className={`w-4 h-4 text-text-muted dark:text-dark-text-muted transition-transform duration-200 ease-out ${isOpen ? 'rotate-180' : ''}`} />

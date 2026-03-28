@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 
 @Data
 @NoArgsConstructor
@@ -18,9 +21,17 @@ import java.util.Set;
 public class Book {
     @Id
     private String id;
+    
+    @NotBlank(message = "Title is required")
+    @Size(max = 100, message = "Title must be less than 100 characters")
     private String title;
+    
     private String authorId; // Reference to User ID
+    
+    @Pattern(regexp = "^(https?://).*|", message = "Cover URL must be a valid URL")
     private String coverUrl;
+    
+    private String coverFileId;
     private Double rating = 0.0;
     private Integer reviewsCount = 0;
 
@@ -34,8 +45,12 @@ public class Book {
     private List<String> genres = new ArrayList<>();
     private String category; // Novel, Short Story, Poetry, etc.
     private List<String> tags = new ArrayList<>();
+    @Size(max = 2000)
     private String summary;
+    
+    @Size(max = 50000)
     private String description;
+    
     private List<Chapter> chapters = new ArrayList<>();
     private String readingStatus = "Ongoing"; // "Completed" or "Ongoing" status of the book's creation
     private String publicationStatus = "draft"; // "draft" or "published"

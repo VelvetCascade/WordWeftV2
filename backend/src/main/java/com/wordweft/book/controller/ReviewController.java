@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class ReviewController {
     }
     
     @PostMapping("/{bookId}/reviews")
-    public ResponseEntity<?> addReview(@PathVariable String bookId, @RequestBody Review review) {
+    public ResponseEntity<?> addReview(@PathVariable String bookId, @Valid @RequestBody Review review) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
         review.setUserId(userDetails.getId());

@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 @Data
 @NoArgsConstructor
@@ -19,8 +23,15 @@ public class Review {
     private String id;
     private String bookId;
     private String userId;
+    
+    @Min(1)
+    @Max(5)
     private int rating;
+    
+    @NotBlank(message = "Review comment cannot be empty")
+    @Size(max = 5000, message = "Review is too long")
     private String comment;
+    
     private LocalDate date;
     private String sentiment; // "positive", "neutral", "negative"
     
@@ -31,7 +42,11 @@ public class Review {
     public static class Reply {
         private String id = UUID.randomUUID().toString();
         private String userId;
+        
+        @NotBlank(message = "Reply content cannot be empty")
+        @Size(max = 2000, message = "Reply is too long")
         private String content;
+        
         private LocalDateTime timestamp = LocalDateTime.now();
     }
 }

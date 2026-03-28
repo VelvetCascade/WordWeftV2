@@ -72,6 +72,7 @@ export interface Book {
   title: string;
   author: Author;
   coverUrl: string;
+  coverFileId?: string;
   rating: number;
   reviewsCount: number;
   // Stats
@@ -113,6 +114,7 @@ export interface User {
   email: string;
   password?: string;
   avatarUrl: string;
+  avatarFileId?: string;
   bio?: string;
   location?: string;
   website?: string;
@@ -151,6 +153,7 @@ export interface Character {
   description: string;
   goal: string;
   imageUrl: string;
+  imageFileId?: string;
 }
 
 export interface Scene {

@@ -30,6 +30,8 @@ public class UserController {
     PasswordEncoder passwordEncoder;
     @Autowired
     NotificationService notificationService;
+    @Autowired
+    com.wordweft.support.ImageKitService imageKitService;
 
     private String getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -49,15 +51,20 @@ public class UserController {
         return ResponseEntity.ok(userService.getPublicProfile(id, getCurrentUserId()));
     }
 
-    @PatchMapping("/me")
-    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         String userId = getCurrentUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         if (request.getName() != null)
             user.setUsername(request.getName());
-        if (request.getAvatarUrl() != null)
+        if (request.getAvatarUrl() != null) {
+            if (!request.getAvatarUrl().equals(user.getAvatarUrl()) && user.getAvatarFileId() != null) {
+                imageKitService.deleteFile(user.getAvatarFileId());
+            }
             user.setAvatarUrl(request.getAvatarUrl());
+            user.setAvatarFileId(request.getAvatarFileId());
+        }
         if (request.getBio() != null)
             user.setBio(request.getBio());
         if (request.getLocation() != null)
@@ -131,8 +138,8 @@ public class UserController {
         return ResponseEntity.ok(following);
     }
 
-    @PatchMapping("/me/notification-preferences")
-    public ResponseEntity<?> updateNotificationPreferences(@RequestBody Map<String, Boolean> preferences) {
+    @PutMapping("/preferences")
+    public ResponseEntity<?> updateNotificationPreferences(@Valid @RequestBody Map<String, Boolean> preferences) {
         String userId = getCurrentUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         user.setNotificationPreferences(preferences);
