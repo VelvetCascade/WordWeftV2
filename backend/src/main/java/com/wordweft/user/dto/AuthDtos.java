@@ -4,6 +4,7 @@ package com.wordweft.user.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 
@@ -55,10 +56,20 @@ public class AuthDtos {
 
     @Data
     public static class UpdateProfileRequest {
+        @Size(max = 50)
         private String name;
+        
+        @Pattern(regexp = "^(https?://).*|", message = "Avatar URL must be a valid URL")
         private String avatarUrl;
+        private String avatarFileId;
+        
+        @Size(max = 500)
         private String bio;
+        
+        @Size(max = 100)
         private String location;
+        
+        @Pattern(regexp = "^(https?://).*|", message = "Website must be a valid URL")
         private String website;
         private Map<String, String> socials;
         private List<String> favoriteGenres;

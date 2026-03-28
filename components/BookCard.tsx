@@ -19,7 +19,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         <img
           src={book.coverUrl}
           alt={book.title}
-          className="w-full h-auto object-cover rounded-xl shadow-soft group-hover:shadow-lifted transition-shadow duration-300"
+          className="w-full aspect-[2/3] object-cover rounded-xl shadow-soft group-hover:shadow-lifted transition-shadow duration-300"
         />
         <div className="absolute inset-0 bg-black/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <span className="text-white font-sans font-semibold bg-black/50 px-4 py-2 rounded-full text-sm">Read Preview</span>

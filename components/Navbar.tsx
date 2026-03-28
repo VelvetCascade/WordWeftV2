@@ -1,22 +1,67 @@
 
 import React, { useState, useEffect } from 'react';
-import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
+import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
 import { useTheme } from '../contexts/ThemeContext';
 import { SearchOverlay } from './SearchOverlay';
+import type { User } from '../types';
+
+// ── Inline Icons ──
+const EllipsisIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="5" cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="19" cy="12" r="2" />
+  </svg>
+);
+
+const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
+const SparklesIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.35-4.35" />
+  </svg>
+);
 
 interface NavbarProps {
   isAuthenticated: boolean;
   onLogout: () => void;
   notificationBell?: React.ReactNode;
   onForYouClick?: () => void;
+  unreadCount?: number;
+  currentUser?: User | null;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notificationBell, onForYouClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notificationBell, onForYouClick, unreadCount = 0, currentUser }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [heroSearchVisible, setHeroSearchVisible] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Determine active route for bottom nav highlighting
+  const getActiveRoute = (): string => {
+    const hash = window.location.hash.replace('#/', '');
+    if (hash === '' || hash === '/') return 'home';
+    if (hash.startsWith('category') || hash.startsWith('genre')) return 'genres';
+    if (hash.startsWith('profile') || hash.startsWith('edit-profile')) return 'library';
+    if (hash.startsWith('write')) return 'write';
+    return '';
+  };
+
+  const [activeRoute, setActiveRoute] = useState(getActiveRoute());
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +69,13 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Track active route on hash change
+  useEffect(() => {
+    const handleHashChange = () => setActiveRoute(getActiveRoute());
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   // Keyboard shortcut: Ctrl+K or Cmd+K to open search
@@ -48,6 +100,16 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     return () => window.removeEventListener('heroSearchVisibility', handler);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
+
   const desktopNavLinks = [
     { label: 'Home', action: () => { window.location.hash = '/'; } },
     { label: 'Genres', action: () => { window.location.hash = '/category'; } },
@@ -57,19 +119,52 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   ];
 
   const mobileNavLinks = [
-    { label: 'Home', action: () => { window.location.hash = '/'; }, icon: HomeIcon },
-    { label: 'Genres', action: () => { window.location.hash = '/category'; }, icon: Squares2X2Icon },
-    { label: 'Library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
-    { label: 'Write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
-    { label: 'Profile', action: () => { window.location.hash = '/profile'; }, icon: UserCircleIcon },
+    { label: 'Home', route: 'home', action: () => { window.location.hash = '/'; }, icon: HomeIcon },
+    { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; }, icon: Squares2X2Icon },
+    { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
+    { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
   ];
 
-  const SearchIcon = () => (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </svg>
-  );
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    setTouchOffsetY(0);
+  };
+
+  const handleMobileNav = (action: () => void) => {
+    closeMobileMenu();
+    action();
+  };
+
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchOffsetY, setTouchOffsetY] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    const drawer = target.closest('.mobile-more-drawer') as HTMLElement;
+    if (drawer && drawer.scrollTop > 5) return; // Allow normal scroll if already scrolled down
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === null) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY;
+    if (diff > 0) {
+      setTouchOffsetY(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartY === null) return;
+    if (touchOffsetY > 100) {
+      closeMobileMenu();
+    } else {
+      setTouchOffsetY(0);
+    }
+    setTouchStartY(null);
+  };
+
+  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : '?';
 
   return (
     <>
@@ -123,24 +218,152 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
       {/* Mobile Bottom Navbar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
         <nav className="h-full flex justify-around items-center">
-          {mobileNavLinks.map((link) => {
-            if (link.label === 'Profile' && !isAuthenticated) {
-              return (
-                <button key="Login" onClick={() => { window.location.hash = '/auth'; }} className="flex flex-col items-center justify-center space-y-1 text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors w-1/5">
-                  <ArrowRightOnRectangleIcon className="w-6 h-6" />
-                  <span className="text-xs font-sans">Login</span>
-                </button>
-              );
-            }
-            return (
-              <button key={link.label} onClick={link.action} className="flex flex-col items-center justify-center space-y-1 text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors w-1/5">
-                <link.icon className="w-6 h-6" />
-                <span className="text-xs font-sans">{link.label}</span>
-              </button>
-            );
-          })}
+          {mobileNavLinks.map((link) => (
+            <button
+              key={link.label}
+              onClick={() => link.action()}
+              className={`mobile-nav-tab ${activeRoute === link.route ? 'mobile-nav-tab-active' : ''}`}
+            >
+              <link.icon className="w-6 h-6" />
+              <span>{link.label}</span>
+            </button>
+          ))}
+          {/* More Tab */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className={`mobile-nav-tab ${isMobileMenuOpen ? 'mobile-nav-tab-active' : ''}`}
+          >
+            <span style={{ position: 'relative', display: 'inline-flex' }}>
+              <EllipsisIcon className="w-6 h-6" />
+              {unreadCount > 0 && (
+                <span className="mobile-nav-badge">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </span>
+            <span>More</span>
+          </button>
         </nav>
       </div>
+
+      {/* Mobile More Drawer */}
+      {isMobileMenuOpen && (
+        <>
+          <div className="mobile-more-backdrop md:hidden" onClick={closeMobileMenu} />
+          <div 
+            className="mobile-more-drawer md:hidden"
+            style={{ 
+              transform: touchOffsetY > 0 ? `translateY(${touchOffsetY}px)` : undefined, 
+              transition: touchStartY === null ? 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' : 'none' 
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="mobile-more-handle" />
+
+            {isAuthenticated && currentUser ? (
+              <>
+                {/* User Profile Card */}
+                <div
+                  className="mobile-more-user"
+                  onClick={() => handleMobileNav(() => { window.location.hash = '/profile'; })}
+                >
+                  {currentUser.avatarUrl ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="mobile-more-avatar" />
+                  ) : (
+                    <div className="mobile-more-avatar-placeholder">{userInitial}</div>
+                  )}
+                  <div className="mobile-more-user-info">
+                    <p className="mobile-more-user-name">{currentUser.name}</p>
+                    <p className="mobile-more-user-sub">View your profile</p>
+                  </div>
+                  <ChevronRightIcon className="mobile-more-user-arrow" />
+                </div>
+
+                <div className="mobile-more-divider" />
+
+                {/* Notifications */}
+                <button
+                  className="mobile-more-item"
+                  onClick={() => handleMobileNav(() => { window.location.hash = '/notifications'; })}
+                >
+                  <BellIcon className="mobile-more-item-icon" />
+                  <span className="mobile-more-item-label">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="mobile-more-notif-badge">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* For You */}
+                <button
+                  className="mobile-more-item"
+                  onClick={() => { closeMobileMenu(); if (onForYouClick) onForYouClick(); }}
+                >
+                  <SparklesIcon className="mobile-more-item-icon" />
+                  <span className="mobile-more-item-label">For You</span>
+                </button>
+
+                <div className="mobile-more-divider" />
+
+                {/* Dark Mode Toggle */}
+                <div className="mobile-more-toggle-row">
+                  {theme === 'light' ? (
+                    <MoonIcon className="mobile-more-item-icon" />
+                  ) : (
+                    <SunIcon className="mobile-more-item-icon" />
+                  )}
+                  <span className="mobile-more-item-label" style={{ fontSize: '15px', fontWeight: 500, color: 'inherit' }}>
+                    Dark Mode
+                  </span>
+                  <button className="mobile-more-toggle" onClick={toggleTheme} aria-label="Toggle dark mode" />
+                </div>
+
+                <div className="mobile-more-divider" />
+
+                {/* Logout */}
+                <button
+                  className="mobile-more-item mobile-more-item-danger"
+                  onClick={() => handleMobileNav(onLogout)}
+                >
+                  <ArrowRightOnRectangleIcon className="mobile-more-item-icon" />
+                  <span className="mobile-more-item-label">Log Out</span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Non-authenticated state */}
+                <div className="mobile-more-login-card">
+                  <p>Sign in to access all features</p>
+                  <button
+                    className="mobile-more-login-btn"
+                    onClick={() => handleMobileNav(() => { window.location.hash = '/auth'; })}
+                  >
+                    Login / Sign Up
+                  </button>
+                </div>
+
+                <div className="mobile-more-divider" />
+
+                {/* Dark Mode Toggle (always available) */}
+                <div className="mobile-more-toggle-row">
+                  {theme === 'light' ? (
+                    <MoonIcon className="mobile-more-item-icon" />
+                  ) : (
+                    <SunIcon className="mobile-more-item-icon" />
+                  )}
+                  <span className="mobile-more-item-label" style={{ fontSize: '15px', fontWeight: 500, color: 'inherit' }}>
+                    Dark Mode
+                  </span>
+                  <button className="mobile-more-toggle" onClick={toggleTheme} aria-label="Toggle dark mode" />
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Mobile Search FAB */}
       <button

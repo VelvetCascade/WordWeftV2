@@ -5,6 +5,7 @@ import com.wordweft.book.service.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class NoteController {
     }
 
     @PostMapping
-    public Note createNote(@RequestBody Note note) {
+    public Note createNote(@Valid @RequestBody Note note) {
         return noteService.createNote(note);
     }
 
@@ -39,7 +40,7 @@ public class NoteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Note> updateNote(@PathVariable String id, @RequestBody Note noteDetails) {
+    public ResponseEntity<Note> updateNote(@PathVariable String id, @Valid @RequestBody Note noteDetails) {
         Note updatedNote = noteService.updateNote(id, noteDetails);
         if (updatedNote != null) {
             return ResponseEntity.ok(updatedNote);

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { User, Book } from '../types';
 import { ArrowLeftIcon, PhotoIcon, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { ImageUpload } from '../components/ImageUpload';
 
 interface CreateBookPageProps {
     currentUser: User;
@@ -17,6 +18,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const [isMature, setIsMature] = useState(false);
     const [isAIGenerated, setIsAIGenerated] = useState(false);
     const [coverUrl, setCoverUrl] = useState('');
+    const [coverFileId, setCoverFileId] = useState<string | null>(null);
     const [allGenres, setAllGenres] = useState<string[]>([]);
     const [isLoadingGenres, setIsLoadingGenres] = useState(true);
     const [genreSearch, setGenreSearch] = useState('');
@@ -52,6 +54,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
             description,
             summary: description.substring(0, 150) + '...',
             coverUrl: coverUrl || 'https://picsum.photos/seed/newbook/400/600',
+            coverFileId,
             genres: selectedGenres,
             category: finalCategory,
             tags: selectedGenres,
@@ -96,27 +99,15 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         <label htmlFor="description" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Book Description</label>
                         <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} required rows={5} className="w-full p-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich" placeholder="A short, compelling summary of your story."></textarea>
                     </div>
-                    <div>
-                        <label htmlFor="coverUrl" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Cover Image URL</label>
-                        <div className="flex gap-4 items-start">
-                            <input
-                                type="url"
-                                id="coverUrl"
-                                value={coverUrl}
-                                onChange={e => setCoverUrl(e.target.value)}
-                                className="flex-1 h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
-                                placeholder="https://example.com/cover.jpg"
-                            />
-                            <div className="w-16 h-24 bg-gray-100 dark:bg-dark-surface-alt rounded-lg border dark:border-dark-border flex items-center justify-center overflow-hidden flex-shrink-0">
-                                {coverUrl ? (
-                                    <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')} />
-                                ) : (
-                                    <PhotoIcon className="w-6 h-6 text-gray-400" />
-                                )}
-                            </div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Leave empty for a random default cover.</p>
-                    </div>
+                    <ImageUpload 
+                        value={coverUrl}
+                        onChange={(url, fileId) => {
+                            setCoverUrl(url);
+                            setCoverFileId(fileId);
+                        }}
+                        label="Book Cover"
+                        fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                    />
 
                     {/* Book Category */}
                     <div>

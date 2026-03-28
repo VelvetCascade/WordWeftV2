@@ -36,6 +36,7 @@ public class User {
     private String authProvider = "LOCAL"; // LOCAL or GOOGLE
 
     private String avatarUrl;
+    private String avatarFileId;
 
     private String bio;
 

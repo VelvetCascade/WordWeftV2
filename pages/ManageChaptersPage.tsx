@@ -5,6 +5,7 @@ import * as api from '../api/client';
 import { CharacterList } from '../components/CharacterList';
 import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
+import { ImageUpload } from '../components/ImageUpload';
 
 interface ManageChaptersPageProps {
     currentUser: User;
@@ -25,6 +26,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [title, setTitle] = useState(book.title);
     const [description, setDescription] = useState(book.description || '');
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
+    const [coverFileId, setCoverFileId] = useState<string | null>(book.coverFileId || null);
     const [category, setCategory] = useState(book.category || '');
     const [isAIGenerated, setIsAIGenerated] = useState(book.isAIGenerated || false);
     const [genres, setGenres] = useState<string[]>(book.genres || []);
@@ -44,6 +46,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             description,
             summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
             coverUrl,
+            coverFileId,
             category,
             genres,
             isAIGenerated
@@ -72,13 +75,15 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Title</label>
                             <input value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" required />
                         </div>
-                        <div>
-                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Cover URL</label>
-                            <div className="flex gap-4">
-                                <input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} className="flex-1 p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
-                                <img src={coverUrl} className="w-12 h-16 object-cover rounded bg-gray-200" alt="Preview" />
-                            </div>
-                        </div>
+                        <ImageUpload 
+                            value={coverUrl}
+                            onChange={(url, fileId) => {
+                                setCoverUrl(url);
+                                setCoverFileId(fileId);
+                            }}
+                            label="Book Cover"
+                            fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                        />
                         <div>
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
                             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
@@ -280,12 +285,6 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             <div className="bg-white dark:bg-dark-surface border-b dark:border-dark-border pt-8 pb-12 px-6 shadow-sm">
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <button
-                            onClick={() => window.location.hash = '/write'}
-                            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors md:hidden"
-                        >
-                            <ArrowLeftIcon className="w-6 h-6" />
-                        </button>
 
                         <div className="relative group flex-shrink-0">
                             <img src={book.coverUrl} alt={book.title} className="w-32 h-48 object-cover rounded-xl shadow-lg" />
