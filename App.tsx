@@ -379,7 +379,7 @@ const App: React.FC = () => {
             {renderPage()}
           </WriterLayout>
         ) : (
-          <main className={showNavbar ? `pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'pt-20'}` : ""}>
+          <main className={showNavbar ? `pb-24 md:pb-0 md:pt-20 ${page.name === 'home' || page.name === 'features' ? '' : 'pt-20'}` : ""}>
             {renderPage()}
           </main>
         )}
