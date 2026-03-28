@@ -23,8 +23,11 @@ public class ImageKitController {
 
     @GetMapping("/auth")
     public ResponseEntity<?> getAuthParams() {
-        // Generates the token, expire, and signature using ImageKit configuration
-        Map<String, String> authParams = imageKit.getAuthenticationParameters();
+        // Generate custom token and expire (30 mins from now) to mitigate server clock skew
+        // which may push the default expire beyond 1 hour according to ImageKit's clock.
+        String token = java.util.UUID.randomUUID().toString();
+        long expire = (System.currentTimeMillis() / 1000) + 1800; // 30 minutes
+        Map<String, String> authParams = imageKit.getAuthenticationParameters(token, expire);
         Map<String, Object> response = new java.util.HashMap<>(authParams);
         response.put("publicKey", publicKey);
         return ResponseEntity.ok(response);

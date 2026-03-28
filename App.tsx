@@ -344,6 +344,8 @@ const App: React.FC = () => {
             ) : undefined
           }
           onForYouClick={() => setShowForYouModal(true)}
+          unreadCount={notif.unreadCount}
+          currentUser={currentUser}
         />}
 
         {isWriterPage ? (
