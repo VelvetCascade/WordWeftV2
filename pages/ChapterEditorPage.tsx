@@ -9,6 +9,7 @@ import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 import { useFeedback } from '../contexts/FeedbackContext';
+import { MoodAtmosphere } from '../components/MoodAtmosphere';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -18,6 +19,7 @@ interface ChapterEditorPageProps {
 }
 
 const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string; characters: Character[]; onCharacterClick: (char: Character) => void }> = ({ isOpen, onClose, title, content, characters, onCharacterClick }) => {
+    const previewProseRef = React.useRef<HTMLDivElement>(null);
     if (!isOpen) return null;
 
     const options = {
@@ -76,13 +78,15 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-dark-surface w-full max-w-3xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+                {/* Mood Atmosphere in preview */}
+                <MoodAtmosphere contentRef={previewProseRef} active={true} />
                 <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-dark-surface-alt hover:bg-gray-200 transition-colors z-10">
                     <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                 </button>
                 <div className="overflow-y-auto p-8 md:p-12">
                     <div className="max-w-prose mx-auto">
                         <h1 className="text-4xl font-serif font-bold mb-8 leading-snug text-text-rich dark:text-dark-text-rich">{title || 'Untitled Chapter'}</h1>
-                        <div className="ww-prose font-serif text-text-body dark:text-dark-text-body">
+                        <div ref={previewProseRef} className="ww-prose font-serif text-text-body dark:text-dark-text-body">
                             {parse(content, options)}
                         </div>
                     </div>

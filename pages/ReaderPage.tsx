@@ -6,6 +6,7 @@ import * as api from '../api/client';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
+import { MoodAtmosphere } from '../components/MoodAtmosphere';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 
@@ -220,6 +221,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
     const lastScrollY = useRef(0);
     const contentRef = useRef<HTMLDivElement>(null);
+    const moodContentRef = useRef<HTMLDivElement>(null);
     const settingsPanelRef = useRef<HTMLDivElement>(null);
     const saveProgressTimeoutRef = useRef<number | null>(null);
     const hasRecordedView = useRef<string | null>(null);
@@ -549,6 +551,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
     return (
         <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
+            {/* Mood Atmosphere — page-level immersive overlay */}
+            <MoodAtmosphere contentRef={moodContentRef} active={true} />
+
             <TableOfContents />
 
             {/* Header */}
@@ -580,9 +585,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             </header>
 
             {/* Content */}
-            <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1">
+            <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10">
                 <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
                 <div
+                    ref={moodContentRef}
                     className="ww-prose"
                     style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
                 >

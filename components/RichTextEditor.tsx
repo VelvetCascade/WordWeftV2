@@ -77,6 +77,64 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ onClick, isActive, disabl
 
 const Divider = () => <div className="rte-toolbar-divider" />;
 
+// ─── Mood Picker — Immersive Grid ──────────────────────────────────
+const MOOD_OPTIONS = [
+    { mood: 'romantic', emoji: '🌹', label: 'Romantic' },
+    { mood: 'tense', emoji: '⚡', label: 'Tense' },
+    { mood: 'melancholy', emoji: '🌧️', label: 'Melancholy' },
+    { mood: 'triumphant', emoji: '🎉', label: 'Triumphant' },
+    { mood: 'eerie', emoji: '👻', label: 'Eerie' },
+    { mood: 'serene', emoji: '🍃', label: 'Serene' },
+] as const;
+
+const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const panelRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (!isOpen) return;
+        const handleOutsideClick = (e: MouseEvent) => {
+            if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }, [isOpen]);
+
+    return (
+        <div className="relative" ref={panelRef}>
+            <ToolbarButton
+                onClick={() => setIsOpen(!isOpen)}
+                isActive={editor.isActive('moodBlock') || isOpen}
+                title="Set Atmosphere / Mood"
+            >
+                <MoodIcon />
+            </ToolbarButton>
+
+            <div className={`mood-picker-panel ${isOpen ? 'mood-picker-panel--open' : ''}`}>
+                <div className="mood-picker-panel__title">🎭 Set Atmosphere</div>
+                <div className="mood-picker-grid">
+                    {MOOD_OPTIONS.map(({ mood, emoji, label }) => (
+                        <button
+                            key={mood}
+                            type="button"
+                            className={`mood-picker-card mood-picker-card--${mood}`}
+                            onClick={() => {
+                                (editor.chain().focus() as any).insertMoodBlock(mood).run();
+                                setIsOpen(false);
+                            }}
+                        >
+                            <span className="mood-picker-card__emoji">{emoji}</span>
+                            <span className="mood-picker-card__label">{label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Menu Bar ──────────────────────────────────────────────────────
 const MenuBar = ({ editor, addImage }: { editor: Editor | null; addImage: () => void }) => {
     if (!editor) return null;
@@ -158,32 +216,8 @@ const MenuBar = ({ editor, addImage }: { editor: Editor | null; addImage: () => 
 
             <Divider />
 
-            {/* Mood Atmosphere */}
-            <div className="relative group">
-                <ToolbarButton onClick={() => { }} isActive={editor.isActive('moodBlock')} title="Mood / Atmosphere">
-                    <MoodIcon />
-                </ToolbarButton>
-                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-dark-surface shadow-xl rounded-lg border border-gray-200 dark:border-dark-border p-1.5 hidden group-hover:flex flex-col gap-0.5 z-50 min-w-[140px]">
-                    {[
-                        { mood: 'romantic', emoji: '🌹', label: 'Romantic' },
-                        { mood: 'tense', emoji: '⚡', label: 'Tense' },
-                        { mood: 'melancholy', emoji: '🌧️', label: 'Melancholy' },
-                        { mood: 'triumphant', emoji: '🎉', label: 'Triumphant' },
-                        { mood: 'eerie', emoji: '👻', label: 'Eerie' },
-                        { mood: 'serene', emoji: '🍃', label: 'Serene' },
-                    ].map(({ mood, emoji, label }) => (
-                        <button
-                            key={mood}
-                            type="button"
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-left w-full"
-                            onClick={() => (editor.chain().focus() as any).insertMoodBlock(mood).run()}
-                        >
-                            <span>{emoji}</span>
-                            <span className="dark:text-dark-text-rich">{label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+            {/* Mood Atmosphere — Immersive Picker */}
+            <MoodPicker editor={editor} />
 
             <Divider />
 
