@@ -21,14 +21,13 @@ interface MoodAtmosphereProps {
     active?: boolean;
 }
 
-// Particle configurations for each mood
 const MOOD_PARTICLES: Record<MoodType, { count: number; className: string }> = {
-    romantic: { count: 1000, className: 'mood-particle--petal' },
-    tense: { count: 1000, className: 'mood-particle--spark' },
-    melancholy: { count: 1000, className: 'mood-particle--raindrop' },
-    triumphant: { count: 1000, className: 'mood-particle--sparkle' },
-    eerie: { count: 1000, className: 'mood-particle--wisp' },
-    serene: { count: 1000, className: 'mood-particle--orb' },
+    romantic: { count: 35, className: 'mood-particle--petal' },
+    tense: { count: 60, className: 'mood-particle--spark' },
+    melancholy: { count: 80, className: 'mood-particle--raindrop' },
+    triumphant: { count: 45, className: 'mood-particle--sparkle' },
+    eerie: { count: 30, className: 'mood-particle--wisp' },
+    serene: { count: 40, className: 'mood-particle--orb' },
 };
 
 export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, active = true }) => {
@@ -113,6 +112,19 @@ export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, acti
         };
     }, [active, contentRef, determineDominantMood, activeMood]);
 
+    // Apply global body class for immersive full-page styling overrides
+    useEffect(() => {
+        if (activeMood) {
+            document.body.setAttribute('data-active-mood', activeMood);
+        } else {
+            document.body.removeAttribute('data-active-mood');
+        }
+
+        return () => {
+            document.body.removeAttribute('data-active-mood');
+        };
+    }, [activeMood]);
+
     if (!active || !activeMood) return null;
 
     const particleConfig = MOOD_PARTICLES[activeMood];
@@ -133,12 +145,12 @@ export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, acti
                         className={`mood-particle ${particleConfig.className}`}
                         style={{
                             '--particle-index': i,
-                            '--particle-delay': `${(i * 0.5) + Math.random() * 1.5}s`,
-                            '--particle-duration': `${3 + Math.random() * 5}s`,
-                            '--particle-x': `${3 + Math.random() * 94}%`,
+                            '--particle-delay': `${(i * 0.1) + Math.random() * 2}s`,
+                            '--particle-duration': `${5 + Math.random() * 8}s`,
+                            '--particle-x': `${Math.random() * 100}%`,
                             '--particle-y': `${Math.random() * 100}%`,
-                            '--particle-size': `${5 + Math.random() * 12}px`,
-                            '--particle-opacity': `${0.35 + Math.random() * 0.5}`,
+                            '--particle-scale': `${0.5 + Math.random() * 1.5}`,
+                            '--particle-opacity': `${0.6 + Math.random() * 0.4}`,
                         } as React.CSSProperties}
                     />
                 ))}
