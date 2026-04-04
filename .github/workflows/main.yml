@@ -1,0 +1,12 @@
+name: Keep Render Alive
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"  # every 20 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl request
+        run: curl https://wordweftv2.onrender.com/api/public/test
