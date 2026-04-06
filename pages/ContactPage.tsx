@@ -325,7 +325,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-5">
                             <h4 className="font-sans font-semibold text-sm text-amber-900 dark:text-amber-200 mb-2">⚠️ Important Notes</h4>
                             <ul className="space-y-1.5 text-xs text-amber-800 dark:text-amber-300">
-                                <li>• We do not provide support through social media DMs</li>
+                                {/*    <li>• We do not provide support through social media DMs</li>   */}
+                                <li>• Please note that responses on social media may be delayed.</li>
                                 <li>• Sending multiple emails may delay your response</li>
                                 <li>• Harassment toward staff may result in account restrictions</li>
                                 <li>• Include your username in all communications</li>
