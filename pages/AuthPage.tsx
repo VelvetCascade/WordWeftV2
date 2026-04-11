@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User } from '../types';
 import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { GoogleProfileCompletion } from '../components/GoogleProfileCompletion';
 import { ModernBirthdaySelector } from '../components/ModernBirthdaySelector';
+
+
+// Module-level flag: Google GIS must only be initialized ONCE per page session.
+// Calling initialize() more than once causes the callback to be silently dropped.
+let googleGsiInitialized = false;
 
 interface AuthPageProps {
     onLogin: (user: User) => void;
@@ -122,59 +127,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
     const googleButtonRef = useRef<HTMLDivElement>(null);
 
+    // --- Stable refs for Google GIS callback (avoids stale closure) ---
+    const googleCallbackRef = useRef<(response: any) => void>(() => {});
+    const isGoogleProcessingRef = useRef(false); // Prevents concurrent API calls
+
     const [modalContent, setModalContent] = useState<{ title: string; content: React.ReactNode } | null>(null);
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-    useEffect(() => {
-        // Initialize Google Identity Services
-        const initGoogle = () => {
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-                // Ensure we use the exact client ID provided
-                const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    // Keep the callback ref always pointing to the latest handler
+    const handleGoogleResponse = useCallback(async (response: any) => {
+        // Guard against concurrent calls (Google popup can fire multiple times)
+        if (isGoogleProcessingRef.current) return;
+        isGoogleProcessingRef.current = true;
 
-                window.google.accounts.id.initialize({
-                    client_id: clientId,
-                    callback: handleGoogleResponse,
-                    auto_select: false,       // Don't auto-sign in without action
-                    cancel_on_tap_outside: true
-                });
-
-                if (googleButtonRef.current && view !== 'otp') {
-                    window.google.accounts.id.renderButton(googleButtonRef.current, {
-                        theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
-                        size: 'large',
-                        type: 'standard',
-                        text: view === 'signup' ? 'signup_with' : 'signin_with',
-                        shape: 'rectangular',
-                        logo_alignment: 'left',
-                        width: googleButtonRef.current.offsetWidth || 350
-                    });
-                }
-            }
-        };
-
-        // Try to initialize immediately (if script already loaded)
-        initGoogle();
-
-        // Also wait for the script to load if it hasn't
-        const checkGoogleInterval = setInterval(() => {
-            if (window.google) {
-                initGoogle();
-                clearInterval(checkGoogleInterval);
-            }
-        }, 100);
-
-        return () => clearInterval(checkGoogleInterval);
-    }, [view]); // Re-render button text when view changes
-
-    useEffect(() => {
-        if (otpResendCooldown > 0) {
-            const timerId = setTimeout(() => setOtpResendCooldown(c => c - 1), 1000);
-            return () => clearTimeout(timerId);
-        }
-    }, [otpResendCooldown]);
-
-    const handleGoogleResponse = async (response: any) => {
         setIsLoading(true);
         setError(null);
         try {
@@ -195,13 +160,117 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             setError(err.message || 'Google Auth Error');
         } finally {
             setIsLoading(false);
+            isGoogleProcessingRef.current = false;
         }
-    };
+    }, [onLogin]);
+
+    // Always keep the ref current — this is what Google GIS will call
+    useEffect(() => {
+        googleCallbackRef.current = handleGoogleResponse;
+    }, [handleGoogleResponse]);
+
+    // --- Effect 1: Initialize Google GIS exactly ONCE ---
+    useEffect(() => {
+        const doInit = () => {
+            if (googleGsiInitialized) return; // Already initialized this session
+            if (!window.google?.accounts?.id) return; // Script not loaded yet
+
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+            if (!clientId) {
+                console.error('[GoogleAuth] VITE_GOOGLE_CLIENT_ID is not set');
+                return;
+            }
+
+            // The stable wrapper delegates to googleCallbackRef, which always
+            // points to the latest handleGoogleResponse. This avoids the stale
+            // closure problem — Google GIS captures this wrapper once, but the
+            // ref it reads from is always current.
+            window.google.accounts.id.initialize({
+                client_id: clientId,
+                callback: (resp: any) => googleCallbackRef.current(resp),
+                auto_select: false,
+                cancel_on_tap_outside: true,
+            });
+
+            googleGsiInitialized = true;
+        };
+
+        // Try immediately (script may already be loaded)
+        doInit();
+
+        // If not loaded yet, poll with a bounded interval
+        if (!googleGsiInitialized) {
+            let attempts = 0;
+            const maxAttempts = 100; // 10 seconds max
+            const intervalId = setInterval(() => {
+                attempts++;
+                if (window.google?.accounts?.id) {
+                    doInit();
+                    clearInterval(intervalId);
+                } else if (attempts >= maxAttempts) {
+                    console.warn('[GoogleAuth] Google GIS script failed to load after 10s');
+                    clearInterval(intervalId);
+                }
+            }, 100);
+
+            return () => clearInterval(intervalId);
+        }
+    }, []); // Runs once on mount — initialization is module-level guarded
+
+    // --- Effect 2: Render the Google button (separate from initialization) ---
+    // This runs whenever `view` changes so the button text updates (signin_with vs signup_with)
+    useEffect(() => {
+        if (view === 'otp' || view === 'forgot') return; // No Google button on these views
+
+        const renderBtn = () => {
+            if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+
+            // Clear any previous button render to avoid stacking iframes
+            googleButtonRef.current.innerHTML = '';
+
+            window.google.accounts.id.renderButton(googleButtonRef.current, {
+                theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+                size: 'large',
+                type: 'standard',
+                text: view === 'signup' ? 'signup_with' : 'signin_with',
+                shape: 'rectangular',
+                logo_alignment: 'left',
+                width: Math.max(googleButtonRef.current.offsetWidth, 250),
+            });
+        };
+
+        // Defer to next animation frame so the DOM has painted and offsetWidth is accurate
+        const rafId = requestAnimationFrame(() => {
+            if (googleGsiInitialized) {
+                renderBtn();
+            } else {
+                // If GIS hasn't initialized yet, wait briefly then try
+                const waitId = setInterval(() => {
+                    if (googleGsiInitialized) {
+                        renderBtn();
+                        clearInterval(waitId);
+                    }
+                }, 150);
+                // Safety: stop waiting after 5s
+                setTimeout(() => clearInterval(waitId), 5000);
+            }
+        });
+
+        return () => cancelAnimationFrame(rafId);
+    }, [view]);
+
+    useEffect(() => {
+        if (otpResendCooldown > 0) {
+            const timerId = setTimeout(() => setOtpResendCooldown(c => c - 1), 1000);
+            return () => clearTimeout(timerId);
+        }
+    }, [otpResendCooldown]);
 
     const handleGoogleProfileComplete = (user: User) => {
         setShowGoogleProfileModal(false);
         onLogin(user);
     };
+
 
     const calculateAge = (birthDateString: string) => {
         const birthDate = new Date(birthDateString);
