@@ -1,5 +1,6 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { Character } from '../types'
+import { CharacterAvatar } from './CharacterAvatar'
 
 interface MentionListProps {
     items: Character[]
@@ -65,13 +66,7 @@ export const MentionList = forwardRef((props: MentionListProps, ref) => {
                             key={index}
                             onClick={() => selectItem(index)}
                         >
-                            {item.imageUrl ? (
-                                <img src={item.imageUrl} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
-                            ) : (
-                                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent">
-                                    {item.name.charAt(0)}
-                                </div>
-                            )}
+                            <CharacterAvatar name={item.name} imageUrl={item.imageUrl} size="xs" />
                             <div>
                                 <div className="font-bold text-sm dark:text-dark-text-rich">{item.name}</div>
                                 <div className="text-[10px] text-gray-500">{item.role}</div>
