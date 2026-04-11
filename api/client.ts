@@ -280,7 +280,30 @@ export async function getBookById(id: string): Promise<Book | null> {
 export async function getAuthorById(id: string): Promise<Author | null> {
     const response = await fetch(`${API_BASE_URL}/users/${id}/profile`, { headers: getHeaders() });
     if (!response.ok) return null;
-    return await handleResponse(response);
+    const data = await handleResponse(response);
+    if (!data) return null;
+
+    // Map backend fields to the Author type (backend sends `username`, not `name`)
+    let safeJoinDate = data.joinDate;
+    if (Array.isArray(safeJoinDate)) {
+        safeJoinDate = new Date(safeJoinDate[0], safeJoinDate[1] - 1, safeJoinDate[2]).toISOString();
+    }
+
+    return {
+        id: data.id,
+        name: data.username || data.name || 'Unknown',
+        avatarUrl: data.avatarUrl,
+        bio: data.bio || '',
+        location: data.location,
+        website: data.website,
+        joinDate: safeJoinDate,
+        stats: data.stats || undefined,
+        socials: data.socials || {},
+        favoriteGenres: data.favoriteGenres || [],
+        followersCount: data.followersCount || 0,
+        followingCount: data.followingCount || 0,
+        isFollowing: data.isFollowing ?? false,
+    };
 }
 
 export async function getBooksByAuthor(authorId: string, excludeBookId?: string): Promise<Book[]> {

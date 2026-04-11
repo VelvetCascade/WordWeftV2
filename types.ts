@@ -6,6 +6,12 @@ export interface Author {
   name: string;
   avatarUrl: string;
   bio: string;
+  location?: string;
+  website?: string;
+  joinDate?: string;
+  stats?: UserStats;
+  socials?: UserSocials;
+  favoriteGenres?: string[];
   followersCount?: number;
   followingCount?: number;
   isFollowing?: boolean;
