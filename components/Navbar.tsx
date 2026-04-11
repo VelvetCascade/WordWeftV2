@@ -1,6 +1,6 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
-import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon } from './icons/Icons';
+import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon, HeartIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
 import { useTheme } from '../contexts/ThemeContext';
 import { SearchOverlay } from './SearchOverlay';
@@ -193,6 +193,17 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
               <kbd className="search-navbar-kbd">⌘K</kbd>
             </button>
 
+            {/* Support Button */}
+            <a 
+              href="https://ko-fi.com/wordweftstudio" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors group hidden sm:block"
+              title="Support WordWeft on Ko-fi"
+            >
+              <HeartIcon className="w-6 h-6 text-gray-500 dark:text-dark-text-body group-hover:text-red-500 transition-colors" />
+            </a>
+
             <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
               {theme === 'light' ? <MoonIcon className="w-6 h-6 text-text-body" /> : <SunIcon className="w-6 h-6 text-dark-text-body" />}
             </button>
@@ -308,6 +319,30 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
                 <div className="mobile-more-divider" />
 
+                {/* Support WordWeft Premium Banner */}
+                <div className="px-4 py-2">
+                  <a
+                    href="https://ko-fi.com/wordweftstudio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-[rgba(141,110,99,0.15)] dark:to-[rgba(141,110,99,0.05)] border border-red-100 dark:border-accent/20 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+                    onClick={closeMobileMenu}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white dark:bg-dark-surface p-2 rounded-full shadow-sm group-hover:scale-110 group-hover:bg-red-50 dark:group-hover:bg-accent/20 transition-all duration-300">
+                        <HeartIcon className="w-5 h-5 text-red-500 dark:text-accent" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich">Support WordWeft</span>
+                        <span className="text-xs text-text-body dark:text-dark-text-body opacity-80">Buy us a coffee ☕</span>
+                      </div>
+                    </div>
+                    <ChevronRightIcon className="w-5 h-5 text-red-400 dark:text-accent/60 group-hover:text-red-500 dark:group-hover:text-accent transition-colors" />
+                  </a>
+                </div>
+
+                <div className="mobile-more-divider" />
+
                 {/* Dark Mode Toggle */}
                 <div className="mobile-more-toggle-row">
                   {theme === 'light' ? (
@@ -347,6 +382,30 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
                 <div className="mobile-more-divider" />
 
+                {/* Support WordWeft Premium Banner */}
+                <div className="px-4 py-2">
+                  <a
+                    href="https://ko-fi.com/wordweftstudio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-[rgba(141,110,99,0.15)] dark:to-[rgba(141,110,99,0.05)] border border-red-100 dark:border-accent/20 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+                    onClick={closeMobileMenu}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white dark:bg-dark-surface p-2 rounded-full shadow-sm group-hover:scale-110 group-hover:bg-red-50 dark:group-hover:bg-accent/20 transition-all duration-300">
+                        <HeartIcon className="w-5 h-5 text-red-500 dark:text-accent" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich">Support WordWeft</span>
+                        <span className="text-xs text-text-body dark:text-dark-text-body opacity-80">Buy us a coffee ☕</span>
+                      </div>
+                    </div>
+                    <ChevronRightIcon className="w-5 h-5 text-red-400 dark:text-accent/60 group-hover:text-red-500 dark:group-hover:text-accent transition-colors" />
+                  </a>
+                </div>
+
+                <div className="mobile-more-divider" />
+
                 {/* Dark Mode Toggle (always available) */}
                 <div className="mobile-more-toggle-row">
                   {theme === 'light' ? (
@@ -379,3 +438,4 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     </>
   );
 };
+
