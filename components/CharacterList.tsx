@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Character } from '../types';
 import * as api from '../api/client';
 import { ImageUpload } from './ImageUpload';
+import { CharacterAvatar } from './CharacterAvatar';
 
 interface CharacterListProps {
     bookId: string;
@@ -156,13 +157,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                         ) : (
                             <>
                                 <div className="flex items-start gap-4">
-                                    {char.imageUrl ? (
-                                        <img src={char.imageUrl} alt={char.name} className="w-16 h-16 rounded-full object-cover bg-gray-200" />
-                                    ) : (
-                                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
-                                            {char.name.charAt(0)}
-                                        </div>
-                                    )}
+                                    <CharacterAvatar name={char.name} imageUrl={char.imageUrl} size="md" />
                                     <div className="flex-1">
                                         <h4 className="font-bold text-lg text-text-header dark:text-dark-text-header">{char.name}</h4>
                                         <p className="text-sm text-primary font-medium">{char.role}</p>
