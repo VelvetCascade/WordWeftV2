@@ -596,21 +596,42 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 </div>
 
                 {/* Post-Chapter Engagement */}
-                <div className="mt-16 mb-8 flex flex-col items-center">
-                    <div className="h-px w-24 bg-gray-300 dark:bg-dark-border mb-8"></div>
-                    <button
-                        onClick={handleToggleLike}
-                        className={`group flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${chapter.isLiked
-                            ? 'bg-danger text-white ring-4 ring-danger/20'
-                            : 'bg-white dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:border-danger hover:text-danger'
-                            }`}
-                    >
-                        {chapter.isLiked ? <HeartIconSolid className="w-6 h-6 animate-pulse" /> : <HeartIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />}
-                        <span className="font-sans font-bold text-lg">{chapter.isLiked ? 'Liked' : 'Like this Chapter'}</span>
-                        <span className={`text-sm font-medium ml-1 ${chapter.isLiked ? 'text-white/90' : 'text-gray-400 group-hover:text-danger/60'}`}>
-                            {chapter.likesCount}
-                        </span>
-                    </button>
+                <div className="mt-16 mb-8 flex flex-col items-center space-y-12 w-full max-w-2xl mx-auto">
+                    <div className="flex flex-col items-center">
+                        <div className="h-px w-24 bg-gray-300 dark:bg-dark-border mb-8"></div>
+                        <button
+                            onClick={handleToggleLike}
+                            className={`group flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${chapter.isLiked
+                                ? 'bg-danger text-white ring-4 ring-danger/20'
+                                : 'bg-white dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:border-danger hover:text-danger'
+                                }`}
+                        >
+                            {chapter.isLiked ? <HeartIconSolid className="w-6 h-6 animate-pulse" /> : <HeartIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />}
+                            <span className="font-sans font-bold text-lg">{chapter.isLiked ? 'Liked' : 'Like this Chapter'}</span>
+                            <span className={`text-sm font-medium ml-1 ${chapter.isLiked ? 'text-white/90' : 'text-gray-400 group-hover:text-danger/60'}`}>
+                                {chapter.likesCount}
+                            </span>
+                        </button>
+                    </div>
+
+                    {/* Support WordWeft CTA */}
+                    <div className="w-full bg-gradient-to-br from-white to-[#FDFBF7] dark:from-dark-surface-alt dark:to-dark-surface border border-accent/20 dark:border-accent/10 rounded-2xl p-8 shadow-soft text-center group transition-all duration-300 hover:shadow-lifted">
+                        <div className="mx-auto w-14 h-14 bg-accent/10 dark:bg-accent/20 rounded-full flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-accent/20 transition-all duration-300">
+                            <HeartIcon className="w-7 h-7 text-accent" />
+                        </div>
+                        <h3 className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich mb-3">Support WordWeft</h3>
+                        <p className="text-text-body dark:text-dark-text-body mb-8 leading-relaxed max-w-md mx-auto">
+                            Enjoying the reading experience? Consider buying us a coffee on Ko-fi. Your support helps keep WordWeft completely ad-free and fuels future development.
+                        </p>
+                        <a 
+                            href="https://ko-fi.com/wordweftstudio" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-accent text-white font-sans font-semibold px-8 py-3.5 rounded-full hover:bg-primary transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        >
+                            Buy us a Coffee ☕
+                        </a>
+                    </div>
                 </div>
             </main>
 

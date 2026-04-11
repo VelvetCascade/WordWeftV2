@@ -105,5 +105,14 @@
   <body class="bg-background dark:bg-dark-background font-serif text-text-body dark:text-dark-text-body">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+    <script>
+      kofiWidgetOverlay.draw('wordweftstudio', {
+        'type': 'floating-chat',
+        'floating-chat.donateButton.text': 'Support Us',
+        'floating-chat.donateButton.background-color': '#8D6E63',
+        'floating-chat.donateButton.text-color': '#fff'
+      });
+    </script>
   </body>
 </html>
