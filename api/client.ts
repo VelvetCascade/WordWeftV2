@@ -141,11 +141,21 @@ export async function getMe(): Promise<User | null> {
 
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
+        
+        // If it's explicitly an auth error, wipe the token
+        if (response.status === 401 || response.status === 403) {
+            console.error("Session invalid: 401/403");
+            localStorage.removeItem(JWT_KEY);
+            return null;
+        }
+        
         const backendUser = await handleResponse(response);
         return mapBackendUserToFrontend(backendUser);
     } catch (e) {
-        console.error("Session invalid", e);
-        localStorage.removeItem(JWT_KEY);
+        // This catches network errors (Failed to fetch) and other server errors (500)
+        // We DO NOT want to wipe the token here, as the user is still logged in, 
+        // the server is just unreachable.
+        console.error("Error fetching user profile (kept session):", e);
         return null;
     }
 }
