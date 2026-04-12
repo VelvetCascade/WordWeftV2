@@ -3,11 +3,12 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
+import { ShareModal } from '../components/ShareModal';
 
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
@@ -214,6 +215,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
     const [isBookmarked, setIsBookmarked] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
 
     const [allReviews, setAllReviews] = useState<Review[]>([]);
@@ -434,9 +436,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     <div className="flex-1 min-w-0 text-center px-4 flex items-center justify-center">
                         <h2 className="font-sans font-bold text-lg line-clamp-2 leading-tight dark:text-dark-text-rich">{book.title}</h2>
                     </div>
-                    <button onClick={() => setIsBookmarked(!isBookmarked)}>
-                        <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setIsShareModalOpen(true)}>
+                            <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
+                        </button>
+                        <button onClick={() => setIsBookmarked(!isBookmarked)}>
+                            <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -686,6 +693,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     </div>
                 </div>
             )}
+
+            <ShareModal 
+                isOpen={isShareModalOpen} 
+                onClose={() => setIsShareModalOpen(false)} 
+                book={book} 
+            />
 
             <Footer />
         </div>

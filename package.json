@@ -24,6 +24,7 @@
     "@tiptap/starter-kit": "^3.19.0",
     "browser-image-compression": "^2.0.2",
     "html-react-parser": "^5.2.17",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.575.0",
     "nsfwjs": "^4.3.0",
     "react": "^19.2.0",
