@@ -15,11 +15,14 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
     const isInProgress = progress > 0 && progress < 90;
 
     return (
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group">
+        <div 
+            onClick={() => { if (chapter.status === 'published') onRead(); }}
+            className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group ${chapter.status === 'published' ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors' : ''}`}
+        >
             <div className="flex items-center gap-4 flex-1 min-w-0">
                 {isCompleted ? <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0" /> : <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center flex-shrink-0">{index + 1}</span>}
-                <div className="flex-1 min-w-0">
-                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich truncate">{chapter.title}</h4>
+                <div className="flex-1 min-w-0 pr-2">
+                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich line-clamp-2 leading-tight">{chapter.title}</h4>
                     <div className="flex items-center gap-4 mt-2">
                         {/* Progress Bar */}
                         <div className="w-24 bg-gray-200 dark:bg-dark-border rounded-full h-1.5 overflow-hidden flex-shrink-0">
@@ -50,11 +53,16 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                 </div>
             </div>
             {chapter.status === 'published' ? (
-                <button onClick={onRead} className="font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
-                    {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Start Reading'}
-                </button>
+                <div className="flex items-center gap-2">
+                    <span className="hidden sm:block font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
+                        {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Read'}
+                    </span>
+                    <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 sm:hidden transition-opacity flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
             ) : (
-                <LockClosedIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <LockClosedIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
             )}
         </div>
     );
@@ -423,8 +431,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     <button onClick={handleBack} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent transition-colors">
                         <ArrowLeftIcon className="w-5 h-5" /> Back
                     </button>
-                    <div className="flex-1 min-w-0 text-center px-4">
-                        <h2 className="font-sans font-bold text-lg truncate dark:text-dark-text-rich">{book.title}</h2>
+                    <div className="flex-1 min-w-0 text-center px-4 flex items-center justify-center">
+                        <h2 className="font-sans font-bold text-lg line-clamp-2 leading-tight dark:text-dark-text-rich">{book.title}</h2>
                     </div>
                     <button onClick={() => setIsBookmarked(!isBookmarked)}>
                         <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />

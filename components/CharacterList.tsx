@@ -3,8 +3,10 @@ import type { Character } from '../types';
 import * as api from '../api/client';
 import { ImageUpload } from './ImageUpload';
 import { CharacterAvatar } from './CharacterAvatar';
+import { CharacterPreview } from './CharacterPreview';
 
 interface CharacterListProps {
+
     bookId: string;
     readOnly?: boolean;
 }
@@ -14,6 +16,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
     const [isCreating, setIsCreating] = useState(false);
     const [newCharacter, setNewCharacter] = useState<Partial<Character>>({ name: '', role: '', description: '', goal: '', imageUrl: '' });
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
     useEffect(() => {
         loadCharacters();
@@ -91,6 +94,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                         value={newCharacter.imageUrl}
                         onChange={(url, fileId) => setNewCharacter({ ...newCharacter, imageUrl: url, imageFileId: fileId || undefined })}
                         label="Character Image"
+                        aspectRatio={1}
+                        cropShape="circle"
                     />
                     <div className="flex justify-end gap-2">
                         <button
@@ -111,7 +116,15 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {characters.map((char) => (
-                    <div key={char.id} className="p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border shadow-sm">
+                    <div 
+                        key={char.id} 
+                        className={`p-4 bg-card-bg dark:bg-dark-card-bg border border-border dark:border-dark-border shadow-sm transition-all duration-300 ${!editingId ? 'cursor-pointer hover:border-accent/50 dark:hover:border-accent/50 hover:shadow-md group rounded-2xl' : 'rounded-lg'}`}
+                        onClick={() => {
+                            if (!editingId && !isCreating) {
+                                setSelectedCharacter(char);
+                            }
+                        }}
+                    >
                         {editingId === char.id ? (
                             <div className="space-y-4">
                                 <input
@@ -138,6 +151,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                         char.imageFileId = fileId || undefined;
                                     }}
                                     label="Character Image"
+                                    aspectRatio={1}
+                                    cropShape="circle"
                                 />
                                 <div className="flex justify-end gap-2">
                                     <button
@@ -168,15 +183,15 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                     <p className="mt-2 text-xs text-text-muted dark:text-dark-text-muted"><strong>Goal:</strong> {char.goal}</p>
                                 )}
                                 {!readOnly && (
-                                    <div className="mt-4 flex justify-end gap-2">
+                                    <div className="mt-4 flex justify-end gap-2 relative z-10">
                                         <button
-                                            onClick={() => setEditingId(char.id)}
+                                            onClick={(e) => { e.stopPropagation(); setEditingId(char.id); }}
                                             className="p-2 text-text-muted hover:text-primary transition-colors"
                                         >
                                             Edit
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(char.id)}
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(char.id); }}
                                             className="p-2 text-text-muted hover:text-red-500 transition-colors"
                                         >
                                             Delete
@@ -188,6 +203,12 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                     </div>
                 ))}
             </div>
+
+            <CharacterPreview 
+                character={selectedCharacter}
+                isOpen={!!selectedCharacter}
+                onClose={() => setSelectedCharacter(null)}
+            />
         </div>
     );
 };
