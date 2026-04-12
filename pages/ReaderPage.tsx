@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User, Book, BookProgress, Comment, Character  } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 import { useFeedback } from '../contexts/FeedbackContext';
@@ -8,6 +8,7 @@ import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
+import { ShareModal } from '../components/ShareModal';
 import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
@@ -210,6 +211,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     const [comments, setComments] = useState<Comment[]>([]);
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
@@ -577,6 +579,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         <button onClick={() => setIsBookmarked(!isBookmarked)}>
                             <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
                         </button>
+                        <button onClick={() => setIsShareModalOpen(true)}>
+                            <ShareIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
+                        </button>
                         <button onClick={() => setIsTocVisible(true)} className="text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent transition-colors">
                             <Bars3Icon className="w-5 h-5" />
                         </button>
@@ -748,6 +753,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 character={viewingCharacter}
                 isOpen={!!viewingCharacter}
                 onClose={() => setViewingCharacter(null)}
+            />
+
+            <ShareModal 
+                isOpen={isShareModalOpen} 
+                onClose={() => setIsShareModalOpen(false)} 
+                book={book} 
+                chapter={chapter}
             />
         </div>
     );
