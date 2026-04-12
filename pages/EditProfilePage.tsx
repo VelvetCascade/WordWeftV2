@@ -205,6 +205,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               }}
               fallbackUrl={`https://i.pravatar.cc/150?u=${user.email}`}
               label="Profile Avatar"
+              aspectRatio={1}
+              cropShape="circle"
             />
 
             <div>

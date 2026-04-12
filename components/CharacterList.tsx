@@ -94,6 +94,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                         value={newCharacter.imageUrl}
                         onChange={(url, fileId) => setNewCharacter({ ...newCharacter, imageUrl: url, imageFileId: fileId || undefined })}
                         label="Character Image"
+                        aspectRatio={1}
+                        cropShape="circle"
                     />
                     <div className="flex justify-end gap-2">
                         <button
@@ -149,6 +151,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                         char.imageFileId = fileId || undefined;
                                     }}
                                     label="Character Image"
+                                    aspectRatio={1}
+                                    cropShape="circle"
                                 />
                                 <div className="flex justify-end gap-2">
                                     <button

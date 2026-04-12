@@ -107,6 +107,8 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         }}
                         label="Book Cover"
                         fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                        aspectRatio={2/3}
+                        cropShape="rect"
                     />
 
                     {/* Book Category */}

@@ -83,6 +83,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             }}
                             label="Book Cover"
                             fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                            aspectRatio={2/3}
+                            cropShape="rect"
                         />
                         <div>
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
