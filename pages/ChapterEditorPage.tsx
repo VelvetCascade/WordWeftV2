@@ -9,7 +9,11 @@ import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 import { useFeedback } from '../contexts/FeedbackContext';
+import { WritingDemoModal } from '../components/WritingDemoModal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
+import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
+import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
+import { SparklesIcon } from '../components/icons/Icons';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -109,6 +113,32 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showDemoModal, setShowDemoModal] = useState(false);
+    const [smartPasteContent, setSmartPasteContent] = useState<string | null>(null);
+    const [showSmartPasteToast, setShowSmartPasteToast] = useState(false);
+    const [smartPastedCharacters, setSmartPastedCharacters] = useState<Character[]>([]);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [pendingPublish, setPendingPublish] = useState<{content: string, title: string} | null>(null);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    // Show Demo Modal on first visit if not seen
+    useEffect(() => {
+        if (currentUser && currentUser.hasSeenWritingDemo === false) {
+            setShowDemoModal(true);
+        }
+    }, [currentUser]);
+
+    const handleCloseDemo = async () => {
+        setShowDemoModal(false);
+        if (currentUser && currentUser.hasSeenWritingDemo === false) {
+            try {
+                const updatedUser = await api.markWritingDemoSeen();
+                onUserUpdate(updatedUser);
+            } catch (error) {
+                console.error("Failed to mark writing demo as seen:", error);
+            }
+        }
+    };
 
     // Mention System State
     const [characters, setCharacters] = useState<Character[]>([]);
@@ -134,12 +164,27 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const handleSave = async (status: 'draft' | 'published', currentContent: string, currentTitle: string) => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        if (!currentTitle && !currentContent) return; // Don't save empty chapters
+        if (!currentTitle.trim() && !currentContent.trim()) return; // Don't save completely empty chapters
+
+        let finalTitle = currentTitle.trim();
+        if (status === 'published' && !finalTitle) {
+             const chapterIndex = isNewChapter
+                ? (book?.chapters.length || 0) + 1
+                : ((book?.chapters.findIndex(c => c.id === chapterId) ?? -1) + 1);
+             finalTitle = `Chapter ${chapterIndex > 0 ? chapterIndex : 1}`;
+             setTitle(finalTitle); // Instantly update input to show the auto-generated title
+        }
+
+        if (status === 'published' && smartPastedCharacters.length > 0 && !isReviewOpen) {
+            setPendingPublish({ content: currentContent, title: finalTitle });
+            setIsReviewOpen(true);
+            return;
+        }
 
         setSaveState('saving');
 
         try {
-            const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: currentTitle, content: currentContent }, status);
+            const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: finalTitle, content: currentContent }, status);
             onUserUpdate(updatedUser);
 
             // If it was a new chapter, find its newly created ID and update state
@@ -191,6 +236,42 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         }
     };
 
+    const handleLargePaste = (pastedText: string) => {
+        setSmartPasteContent(pastedText);
+        setShowSmartPasteToast(true);
+    };
+
+    const handleAddCharacters = async (names: string[]) => {
+        const newlyAdded: Character[] = [];
+        for (const name of names) {
+            try {
+                const char = await api.createCharacter({ bookId, name, role: 'Secondary' });
+                newlyAdded.push(char);
+            } catch (e) {
+                console.error("Failed to create character", name, e);
+            }
+        }
+        setSmartPastedCharacters(prev => [...prev, ...newlyAdded]);
+        const updated = await api.getCharactersByBookId(bookId);
+        setCharacters(updated);
+    };
+
+    const executeDeferredPublish = () => {
+        setIsReviewOpen(false);
+        setSmartPastedCharacters([]); // clear out to avoid infinite loop
+        if (pendingPublish) {
+            handleSave('published', pendingPublish.content, pendingPublish.title);
+            setPendingPublish(null);
+        }
+    };
+
+    const cancelDeferredPublish = () => {
+        setIsReviewOpen(false);
+        setPendingPublish(null);
+    };
+
+
+
     if (!book) return <div className="p-8">Book not found.</div>;
 
     return (
@@ -206,9 +287,10 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                             >
                                 <ArrowLeftIcon className="w-5 h-5" />
                             </button>
-                            <div className="min-w-0">
+                            <div className="min-w-0 relative">
                                 <p className="text-xs text-text-body dark:text-dark-text-body truncate">{book.title}</p>
                                 <input
+                                    ref={titleInputRef}
                                     type="text"
                                     value={title}
                                     onChange={e => handleTitleChange(e.target.value)}
@@ -218,7 +300,15 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
+                            <button
+                                onClick={() => setShowDemoModal(true)}
+                                className="px-2 sm:px-3 py-1.5 rounded-lg text-sm font-sans font-semibold text-accent hover:bg-accent/10 transition-colors flex items-center justify-center"
+                                title="View Demo"
+                            >
+                                <SparklesIcon className="w-5 h-5 sm:hidden" />
+                                <span className="hidden sm:inline-block">View Demo</span>
+                            </button>
+                            <p className="hidden sm:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
                             <button
                                 onClick={() => setIsPreviewOpen(true)}
                                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors"
@@ -260,6 +350,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 setSaveState('saving');
                             }}
                             characters={characters}
+                            onLargePaste={handleLargePaste}
                         />
                     </div>
                 </main>
@@ -291,6 +382,56 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 character={viewingCharacter}
                 isOpen={!!viewingCharacter}
                 onClose={() => setViewingCharacter(null)}
+            />
+            <WritingDemoModal 
+                isOpen={showDemoModal} 
+                onClose={handleCloseDemo} 
+            />
+
+            {/* Smart Paste Toast */}
+            {showSmartPasteToast && (
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-lg animate-in slide-in-from-top-10 fade-in duration-300">
+                    <div className="bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border-2 border-accent/40 flex items-center justify-between gap-4">
+                        <div 
+                            className="flex items-center gap-4 cursor-pointer flex-1 group" 
+                            onClick={() => setShowSmartPasteToast(false)}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                <SparklesIcon className="w-7 h-7 text-accent animate-pulse" />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-gray-900 dark:text-gray-100 text-base">✨ Story Paste Detected!</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium group-hover:text-accent transition-colors">Click here to auto-detect characters.</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => { setSmartPasteContent(null); setShowSmartPasteToast(false); }} 
+                            className="p-2 bg-gray-100 dark:bg-dark-border rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                            title="Dismiss"
+                        >
+                            <XMarkIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Smart Paste Assistant Modal */}
+            {smartPasteContent && !showSmartPasteToast && (
+                <SmartPasteAssistant 
+                    isOpen={true}
+                    text={smartPasteContent}
+                    existingCharacters={characters}
+                    onClose={() => setSmartPasteContent(null)}
+                    onAddCharacters={handleAddCharacters}
+                    onShowDemo={() => setShowDemoModal(true)}
+                />
+            )}
+
+            <PublishCharacterReviewModal
+                isOpen={isReviewOpen}
+                characters={smartPastedCharacters}
+                onClose={cancelDeferredPublish}
+                onPublish={executeDeferredPublish}
             />
         </div>
     );

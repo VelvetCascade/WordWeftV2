@@ -146,4 +146,13 @@ public class UserController {
         userRepository.save(user);
         return ResponseEntity.ok(preferences);
     }
+
+    @PutMapping("/me/writing-demo")
+    public ResponseEntity<?> markWritingDemoSeen() {
+        String userId = getCurrentUserId();
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setHasSeenWritingDemo(true);
+        userRepository.save(user);
+        return ResponseEntity.ok(userService.enrichUser(user, userId));
+    }
 }

@@ -141,14 +141,14 @@ export async function getMe(): Promise<User | null> {
 
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
-        
+
         // If it's explicitly an auth error, wipe the token
         if (response.status === 401 || response.status === 403) {
             console.error("Session invalid: 401/403");
             localStorage.removeItem(JWT_KEY);
             return null;
         }
-        
+
         const backendUser = await handleResponse(response);
         return mapBackendUserToFrontend(backendUser);
     } catch (e) {
@@ -177,6 +177,14 @@ export async function changePassword(userId: string, oldPassword_unused: string,
     });
     await handleResponse(response);
     return (await getMe())!;
+}
+
+export async function markWritingDemoSeen(): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/users/me/writing-demo`, {
+        method: 'PUT',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
 }
 
 // --- Support API ---
@@ -725,7 +733,8 @@ function mapBackendUserToFrontend(backendData: any): User {
                 };
             })
         })),
-        writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend)
+        writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend),
+        hasSeenWritingDemo: backendData.hasSeenWritingDemo ?? false
     };
 }
 
