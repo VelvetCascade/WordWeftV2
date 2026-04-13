@@ -136,6 +136,7 @@ export interface User {
   followingCount?: number;
   library: Shelf[];
   writtenBooks?: Book[];
+  hasSeenWritingDemo?: boolean;
 }
 
 export interface Shelf {

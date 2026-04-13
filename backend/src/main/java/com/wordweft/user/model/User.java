@@ -46,6 +46,9 @@ public class User {
 
     private LocalDate joinDate;
 
+    // Writing Demo State
+    private boolean hasSeenWritingDemo = false;
+
     // Email Verification
     private boolean isEmailVerified = false;
     private String emailVerificationOtp;
