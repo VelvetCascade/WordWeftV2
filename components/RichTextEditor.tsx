@@ -296,6 +296,7 @@ interface RichTextEditorProps {
     onChange: (value: string) => void;
     characters: Character[];
     readOnly?: boolean;
+    onLargePaste?: (text: string) => void;
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -304,6 +305,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onChange,
     characters,
     readOnly = false,
+    onLargePaste,
 }) => {
     const bubbleMenuRef = useRef<HTMLDivElement>(null);
     const [rteCropFile, setRteCropFile] = useState<File | null>(null);
@@ -408,6 +410,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             attributes: {
                 class: 'rte-content',
             },
+            handlePaste: (view, event) => {
+                if (onLargePaste) {
+                    const pastedText = event.clipboardData?.getData('text/plain') || '';
+                    if (pastedText.length >= 200) {
+                        onLargePaste(pastedText);
+                    }
+                }
+                return false;
+            }
         },
     });
 
