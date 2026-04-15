@@ -40,9 +40,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, book, c
     const posterRef = useRef<HTMLDivElement>(null);
 
     const shareTitle = chapter ? `${book.title} - ${chapter.title}` : book.title;
+    const authorName = book.author?.name || 'an unknown author';
     const shareText = chapter 
         ? `I am reading ${chapter.title} from ${book.title}. Check it out on WordWeft!`
-        : `Check out ${book.title} by ${book.author.name} on WordWeft!`;
+        : `Check out ${book.title} by ${authorName} on WordWeft!`;
 
     // Reset state on open
     useEffect(() => {
@@ -242,7 +243,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, book, c
                                             </div>
                                             <h2 className="text-2xl font-bold font-serif mb-2 leading-tight">{chapter ? chapter.title : book.title}</h2>
                                             {chapter && <p className="text-sm text-gray-300 mb-2 font-medium">From {book.title}</p>}
-                                            <p className="text-gray-400 text-sm">By {book.author.name}</p>
+                                            <p className="text-gray-400 text-sm">By {book.author?.name || 'an unknown author'}</p>
                                         </div>
                                         
                                         {!chapter && book.summary && (
