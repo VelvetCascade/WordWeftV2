@@ -13,7 +13,8 @@ import { WritingDemoModal } from '../components/WritingDemoModal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
 import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
 import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
-import { SparklesIcon } from '../components/icons/Icons';
+import { ChapterScannerModal } from '../components/ChapterScannerModal';
+import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -118,6 +119,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [showSmartPasteToast, setShowSmartPasteToast] = useState(false);
     const [smartPastedCharacters, setSmartPastedCharacters] = useState<Character[]>([]);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [pendingPublish, setPendingPublish] = useState<{content: string, title: string} | null>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -270,6 +272,11 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         setPendingPublish(null);
     };
 
+    const handleApplyReplacedHtml = (newHtml: string) => {
+        setContent(newHtml);
+        debouncedSave('draft', newHtml, title);
+    };
+
 
 
     if (!book) return <div className="p-8">Book not found.</div>;
@@ -305,7 +312,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 className="px-2 sm:px-3 py-1.5 rounded-lg text-sm font-sans font-semibold text-accent hover:bg-accent/10 transition-colors flex items-center justify-center"
                                 title="View Demo"
                             >
-                                <SparklesIcon className="w-5 h-5 sm:hidden" />
+                                <BookOpenIcon className="w-5 h-5 sm:hidden" />
                                 <span className="hidden sm:inline-block">View Demo</span>
                             </button>
                             <p className="hidden sm:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
@@ -324,8 +331,15 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 <SwatchIcon className="w-5 h-5" />
                             </button>
                             <button
+                                onClick={() => setIsScannerOpen(true)}
+                                className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
+                                title="Scan Chapter (Auto-Link)"
+                            >
+                                <SparklesIcon className="w-5 h-5 text-accent" />
+                            </button>
+                            <button
                                 onClick={() => handleSave('draft', content, title)}
-                                className="hidden sm:inline-block bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-border transition-colors text-sm"
+                                className="hidden lg:inline-block bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-border transition-colors text-sm"
                             >
                                 Save Draft
                             </button>
@@ -432,6 +446,15 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 characters={smartPastedCharacters}
                 onClose={cancelDeferredPublish}
                 onPublish={executeDeferredPublish}
+            />
+
+            <ChapterScannerModal
+                isOpen={isScannerOpen}
+                htmlContent={content}
+                existingCharacters={characters}
+                onClose={() => setIsScannerOpen(false)}
+                onAddCharacters={handleAddCharacters}
+                onApplyReplacedHtml={handleApplyReplacedHtml}
             />
         </div>
     );

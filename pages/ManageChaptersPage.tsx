@@ -6,7 +6,6 @@ import { CharacterList } from '../components/CharacterList';
 import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
-
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -179,35 +178,35 @@ const ConfirmDialog: React.FC<{
 };
 
 const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onDelete: () => void }> = ({ chapter, bookId, index, onPublishToggle, onDelete }) => (
-    <div className="flex items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
         <div className="flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
             <div>
                 <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{chapter.title}</h4>
                 <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm flex-shrink-0 ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
                         {chapter.status}
                     </span>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{chapter.wordCount.toLocaleString()} words</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{chapter.wordCount.toLocaleString()} words</p>
                 </div>
             </div>
         </div>
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-2 flex-wrap sm:opacity-0 group-hover:opacity-100 transition-opacity pl-10 sm:pl-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 dark:border-dark-border">
             <button
                 onClick={() => window.location.hash = `/write/book/${bookId}/chapter/${chapter.id}/edit`}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-text-body dark:text-dark-text-body"
+                className="flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-text-body dark:text-dark-text-body"
             >
                 <PencilIcon className="w-4 h-4" /> Edit
             </button>
             <button
                 onClick={onPublishToggle}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${chapter.status === 'published' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
+                className={`flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${chapter.status === 'published' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
             >
                 {chapter.status === 'published' ? 'Unpublish' : 'Publish'}
             </button>
             <button
                 onClick={onDelete}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                 title="Delete chapter"
             >
                 <TrashIcon className="w-4 h-4" />
@@ -288,7 +287,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
 
-                        <div className="relative group flex-shrink-0">
+                        <div className="relative group flex-shrink-0 mx-auto md:mx-0">
                             <img src={book.coverUrl} alt={book.title} className="w-32 h-48 object-cover rounded-xl shadow-lg" />
                             <button
                                 onClick={() => setIsEditModalOpen(true)}
@@ -298,40 +297,42 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                             </button>
                         </div>
 
-                        <div className="flex-1 w-full">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                <div>
+                        <div className="flex-1 w-full flex flex-col justify-center">
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 md:gap-4">
+                                <div className="text-center md:text-left">
                                     <h1 className="font-sans text-3xl font-extrabold text-text-rich dark:text-dark-text-rich leading-tight mb-2">
                                         {book.title}
                                     </h1>
-                                    <div className="flex flex-wrap gap-2 mb-4">
+                                    <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
                                         {book.genres.map(g => (
                                             <span key={g} className="text-xs font-semibold bg-gray-100 dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
                                                 {g}
                                             </span>
                                         ))}
                                     </div>
-                                    <p className="text-sm text-text-body dark:text-dark-text-body line-clamp-2 max-w-xl mb-4">
+                                    <p className="text-sm text-text-body dark:text-dark-text-body line-clamp-2 max-w-xl mb-4 mx-auto md:mx-0">
                                         {book.description || "No description provided."}
                                     </p>
                                 </div>
-                                <div className="flex flex-col items-end gap-3">
+                                <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0 w-full md:w-auto">
                                     <div className={`px-3 py-1 rounded-full flex items-center gap-2 text-sm font-bold ${isBookPublished ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                         {isBookPublished ? <CheckCircleIcon className="w-4 h-4" /> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                                         {isBookPublished ? 'PUBLISHED' : 'DRAFT MODE'}
                                     </div>
                                     <button
                                         onClick={handleBookPublishToggle}
-                                        className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${isBookPublished ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-success text-white hover:bg-opacity-90'}`}
+                                        className={`w-full md:w-auto px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex justify-center ${isBookPublished ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-success text-white hover:bg-opacity-90'}`}
                                     >
                                         {isBookPublished ? 'Unpublish Book' : 'Publish Book'}
                                     </button>
-                                    <button onClick={() => setIsEditModalOpen(true)} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
-                                        <Cog6ToothIcon className="w-3 h-3" /> Edit Details
-                                    </button>
-                                    <button onClick={() => setShowDeleteBookConfirm(true)} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1">
-                                        <TrashIcon className="w-3 h-3" /> Delete Book
-                                    </button>
+                                    <div className="flex items-center gap-4 mt-2">
+                                        <button onClick={() => setIsEditModalOpen(true)} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
+                                            <Cog6ToothIcon className="w-3 h-3" /> Edit Details
+                                        </button>
+                                        <button onClick={() => setShowDeleteBookConfirm(true)} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1">
+                                            <TrashIcon className="w-3 h-3" /> Delete
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

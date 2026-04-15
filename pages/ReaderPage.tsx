@@ -590,7 +590,19 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             </header>
 
             {/* Content */}
-            <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10">
+            <main 
+                ref={contentRef} 
+                className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10 select-none"
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    userSelect: 'none',
+                }}
+            >
                 <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
                 <div
                     ref={moodContentRef}

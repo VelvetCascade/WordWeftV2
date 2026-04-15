@@ -16,26 +16,24 @@ const DraftBookListItem: React.FC<{ book: Book }> = ({ book }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border dark:border-dark-border flex items-center gap-5 group transition-shadow hover:shadow-md">
-            <img 
-                src={book.coverUrl} 
-                alt={book.title} 
-                className="w-16 h-24 object-cover rounded-md flex-shrink-0 cursor-pointer shadow-sm transition-transform group-hover:scale-105"
-                onClick={handleContinueWriting}
-            />
-            <div className="flex-1 min-w-0">
-                <h4 
-                    className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent truncate"
-                    onClick={handleContinueWriting}
-                >
-                    {book.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs font-sans font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Draft</span>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{totalChapters} Chapter{totalChapters !== 1 ? 's' : ''}</p>
+        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border dark:border-dark-border flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 group transition-shadow hover:shadow-md">
+            <div className="flex gap-4 flex-1 min-w-0 w-full" onClick={handleContinueWriting}>
+                <img 
+                    src={book.coverUrl} 
+                    alt={book.title} 
+                    className="w-16 h-24 object-cover rounded-md flex-shrink-0 cursor-pointer shadow-sm transition-transform group-hover:scale-105"
+                />
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h4 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent truncate">
+                        {book.title}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <span className="text-xs font-sans font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Draft</span>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{totalChapters} Chapter{totalChapters !== 1 ? 's' : ''}</p>
+                    </div>
                 </div>
             </div>
-            <button onClick={handleContinueWriting} className="text-sm font-sans font-semibold text-white bg-accent px-4 py-2 rounded-lg hover:bg-primary transition-colors flex items-center gap-2 flex-shrink-0">
+            <button onClick={handleContinueWriting} className="w-full sm:w-auto justify-center text-sm font-sans font-semibold text-white bg-accent px-4 py-2 rounded-lg hover:bg-primary transition-colors flex items-center gap-2 flex-shrink-0">
                <PencilSquareIcon className="w-4 h-4" /> Continue
             </button>
         </div>
@@ -55,30 +53,32 @@ const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) =>
     };
 
     return (
-        <div className="bg-white dark:bg-dark-surface rounded-xl border dark:border-dark-border p-4 flex items-start gap-4 group transition-shadow hover:shadow-md">
-            <img
-                src={book.coverUrl}
-                alt={book.title}
-                className="w-20 h-28 object-cover rounded-md flex-shrink-0 cursor-pointer shadow-sm transition-transform group-hover:scale-105"
-                onClick={handleManageChapters}
-            />
-            <div className="flex-1 flex flex-col h-full min-w-0">
-                <h4 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent truncate" onClick={handleManageChapters}>
-                    {book.title}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Published on {new Date(book.publishedDate!).toLocaleDateString()}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{totalChapters} Chapters ({publishedChapters} published)</p>
-                <div className="mt-auto flex items-center self-end gap-1 pt-2">
-                    <button onClick={() => alert('Stats page coming soon!')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="View Stats">
-                        <ChartBarIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
-                    </button>
-                    <button onClick={() => onUnpublish(book.id)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Unpublish Book">
-                        <CloudArrowDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
-                    </button>
-                    <button onClick={handleManageChapters} className="text-sm font-sans font-semibold text-white bg-accent px-3 py-1.5 rounded-lg hover:bg-primary transition-colors flex items-center gap-1.5">
-                       <PencilSquareIcon className="w-4 h-4" /> Chapter
-                    </button>
+        <div className="bg-white dark:bg-dark-surface rounded-xl border dark:border-dark-border p-4 flex flex-col sm:flex-row items-start gap-4 group transition-shadow hover:shadow-md">
+            <div className="flex gap-4 w-full sm:w-auto flex-1 min-w-0">
+                <img
+                    src={book.coverUrl}
+                    alt={book.title}
+                    className="w-20 h-28 object-cover rounded-md flex-shrink-0 cursor-pointer shadow-sm transition-transform group-hover:scale-105"
+                    onClick={handleManageChapters}
+                />
+                <div className="flex-1 flex flex-col min-w-0 justify-center">
+                    <h4 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent truncate" onClick={handleManageChapters}>
+                        {book.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Published on {new Date(book.publishedDate!).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{totalChapters} Chapters ({publishedChapters} published)</p>
                 </div>
+            </div>
+            <div className="w-full sm:w-auto mt-2 sm:mt-auto flex flex-wrap items-center justify-end gap-2 pt-2 sm:self-end border-t border-gray-100 sm:border-0 dark:border-dark-border">
+                <button onClick={() => alert('Stats page coming soon!')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="View Stats">
+                    <ChartBarIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
+                </button>
+                <button onClick={() => onUnpublish(book.id)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Unpublish Book">
+                    <CloudArrowDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
+                </button>
+                <button onClick={handleManageChapters} className="flex-1 sm:flex-none justify-center text-sm font-sans font-semibold text-white bg-accent px-3 py-1.5 rounded-lg hover:bg-primary transition-colors flex items-center gap-1.5">
+                   <PencilSquareIcon className="w-4 h-4" /> Chapters
+                </button>
             </div>
         </div>
     );
