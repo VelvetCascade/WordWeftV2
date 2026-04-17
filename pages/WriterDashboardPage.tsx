@@ -3,6 +3,7 @@ import React from 'react';
 import type { User, Book } from '../types';
 import { PlusIcon, CloudArrowUpIcon, CloudArrowDownIcon, ChartBarIcon, PencilSquareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { WriterQuickStart } from '../components/WriterQuickStart';
 
 interface WriterDashboardProps {
   currentUser: User;
@@ -112,6 +113,11 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
         <div className="p-6 md:p-8">
             <h1 className="font-sans text-3xl md:text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">Welcome back, {currentUser.name}!</h1>
             <p className="text-text-body dark:text-dark-text-body mt-1">Ready to craft your next chapter?</p>
+            
+            {/* Writer Quick Start Guide */}
+            <div className="mt-6">
+                <WriterQuickStart currentUser={currentUser} />
+            </div>
             
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2 space-y-4">

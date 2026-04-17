@@ -7,6 +7,8 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
+import { FeatureSparkle } from '../components/FeatureSparkle';
+import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
 import parse, { domToReact } from 'html-react-parser';
@@ -553,6 +555,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
     return (
         <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
+            {/* Contextual Reader Onboarding */}
+            <ReaderDiscoveryCoach 
+                hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')} 
+                hasSpoilers={chapter?.content?.includes('spoiler-text')} 
+            />
+
             {/* Mood Atmosphere — page-level immersive overlay */}
             <MoodAtmosphere contentRef={moodContentRef} active={true} />
 
@@ -739,9 +747,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             {/* Settings Toolbar */}
             <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                 <div ref={settingsPanelRef} className="relative">
-                    <button onClick={() => setIsSettingsPanelVisible(prev => !prev)} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors">
-                        <PaintBrushIcon className="w-5 h-5" />
-                    </button>
+                    <FeatureSparkle featureId="reading-theme" tooltip="Customize your reading experience" position="left">
+                        <button onClick={() => setIsSettingsPanelVisible(prev => !prev)} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors flex items-center justify-center">
+                            <PaintBrushIcon className="w-5 h-5" />
+                        </button>
+                    </FeatureSparkle>
                     <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                         <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600" /></button>
                         <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>

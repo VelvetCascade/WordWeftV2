@@ -31,6 +31,7 @@ import { FeedbackBanner } from './components/FeedbackBanner';
 import { NotificationBell } from './components/NotificationBell';
 import { NotificationToast } from './components/NotificationToast';
 import { WhatsNewPopup } from './components/WhatsNewPopup';
+import { WelcomeJourney } from './components/WelcomeJourney';
 import { FeedbackContext } from './contexts/FeedbackContext';
 import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
@@ -70,6 +71,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
+  const [showWelcomeJourney, setShowWelcomeJourney] = useState(false);
   const notif = useNotifications(isAuthenticated);
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
 
@@ -115,6 +117,17 @@ const App: React.FC = () => {
   const handleLogin = (user: User) => {
     setIsAuthenticated(true);
     setCurrentUser(user);
+
+    // Check if user should see the Welcome Journey
+    const hasCompletedJourney = localStorage.getItem('ww_welcomeJourneyCompleted');
+    if (!hasCompletedJourney) {
+      setShowWelcomeJourney(true);
+      // Still navigate to home so URL is correct when journey closes
+      window.location.hash = '/';
+      setIntendedPage(null);
+      return;
+    }
+
     const targetPage = intendedPage || { name: 'home' };
 
     if (targetPage.name === 'book-details') {
@@ -406,6 +419,23 @@ const App: React.FC = () => {
           onNavigate={navigateTo}
         />
         {isAuthenticated && <WhatsNewPopup />}
+
+        {/* Welcome Journey — Full-screen onboarding for new users */}
+        {showWelcomeJourney && currentUser && (
+          <WelcomeJourney
+            userName={currentUser.name}
+            onComplete={(role) => {
+              setShowWelcomeJourney(false);
+              localStorage.setItem('ww_userRole', role);
+              // Navigate based on role
+              if (role === 'writer') {
+                window.location.hash = '/write';
+              } else {
+                window.location.hash = '/';
+              }
+            }}
+          />
+        )}
 
         {/* Personalized / For You Modal */}
         {showForYouModal && (
