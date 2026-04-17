@@ -9,7 +9,7 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
 import { ShareModal } from '../components/ShareModal';
-
+import { FeatureSparkle } from '../components/FeatureSparkle';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
@@ -522,18 +522,28 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
                 {/* Tab Navigation */}
                 <div className="flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
-                    {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-3 font-sans font-medium text-sm transition-colors border-b-2 ${activeTab === tab
-                                ? 'border-accent text-accent'
-                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
-                                }`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
+                    {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => {
+                        const btn = (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-6 py-3 font-sans font-medium text-sm transition-colors border-b-2 ${activeTab === tab
+                                    ? 'border-accent text-accent'
+                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        );
+                        if (tab === 'Characters') {
+                            return (
+                                <FeatureSparkle key={tab} featureId="character-tab" tooltip="Meet the characters in this story" position="bottom" delay={3000}>
+                                    {btn}
+                                </FeatureSparkle>
+                            );
+                        }
+                        return btn;
+                    })}
                 </div>
 
                 <div className="max-w-4xl mx-auto mb-16 min-h-[400px]">

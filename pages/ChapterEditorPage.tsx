@@ -15,6 +15,7 @@ import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
 import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
+import { FeatureSparkle } from '../components/FeatureSparkle';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -316,27 +317,33 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 <span className="hidden sm:inline-block">View Demo</span>
                             </button>
                             <p className="hidden sm:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
-                            <button
-                                onClick={() => setIsPreviewOpen(true)}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors"
-                                title="Preview"
-                            >
-                                <EyeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                            </button>
-                            <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt text-gray-600 dark:text-gray-400'}`}
-                                title="World Building"
-                            >
-                                <SwatchIcon className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => setIsScannerOpen(true)}
-                                className="p-2 rounded-lg hover:bg-accent/10 transition-colors"
-                                title="Scan Chapter (Auto-Link)"
-                            >
-                                <SparklesIcon className="w-5 h-5 text-accent" />
-                            </button>
+                            <FeatureSparkle featureId="reader-preview" tooltip="See exactly what readers will see" position="bottom">
+                                <button
+                                    onClick={() => setIsPreviewOpen(true)}
+                                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors flex items-center justify-center"
+                                    title="Preview"
+                                >
+                                    <EyeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                </button>
+                            </FeatureSparkle>
+                            <FeatureSparkle featureId="world-building" tooltip="Organize your characters, scenes & lore here" position="bottom">
+                                <button
+                                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                    className={`p-2 rounded-lg transition-colors flex items-center justify-center ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt text-gray-600 dark:text-gray-400'}`}
+                                    title="World Building"
+                                >
+                                    <SwatchIcon className="w-5 h-5" />
+                                </button>
+                            </FeatureSparkle>
+                            <FeatureSparkle featureId="chapter-scanner" tooltip="Auto-detect and link character names" position="bottom">
+                                <button
+                                    onClick={() => setIsScannerOpen(true)}
+                                    className="p-2 rounded-lg hover:bg-accent/10 transition-colors flex items-center justify-center"
+                                    title="Scan Chapter (Auto-Link)"
+                                >
+                                    <SparklesIcon className="w-5 h-5 text-accent" />
+                                </button>
+                            </FeatureSparkle>
                             <button
                                 onClick={() => handleSave('draft', content, title)}
                                 className="hidden lg:inline-block bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-border transition-colors text-sm"

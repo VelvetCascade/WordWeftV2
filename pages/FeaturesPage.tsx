@@ -1,6 +1,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Footer } from '../components/Footer';
+import { WritingDemoModal } from '../components/WritingDemoModal';
+import { SparklesIcon } from '../components/icons/Icons';
 
 /* ═══════════════════════════════════════════════════════════════
    FEATURES PAGE — Warm earth-tone themed, immersive showcase
@@ -404,9 +406,11 @@ const KanbanIcon = () => (
 // =============================================================
 export const FeaturesPage: React.FC = () => {
     const [heroRef, heroVisible] = useReveal();
+    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
     return (
         <div className="ft-page">
+            <WritingDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
 
             {/* ── HERO ────────────────────────────────────────────── */}
             <section ref={heroRef} className={`ft-hero ${heroVisible ? 'ft-hero-visible' : ''}`}>
@@ -429,7 +433,12 @@ export const FeaturesPage: React.FC = () => {
                         &mdash; all in one beautiful platform.
                     </p>
                     <div className="ft-hero-ctas">
-                        <a href="#/auth" className="ft-btn ft-btn-primary">
+                        <button onClick={() => setIsDemoModalOpen(true)} className="ft-btn ft-btn-primary shadow-[0_0_15px_rgba(233,30,99,0.4)] relative overflow-hidden group border border-accent/50">
+                            <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                            <SparklesIcon className="w-5 h-5 text-current relative z-10" />
+                            <span className="relative z-10 font-bold">Try Tools Live</span>
+                        </button>
+                        <a href="#/auth" className="ft-btn ft-btn-secondary">
                             <PenIcon /> Start Writing
                         </a>
                         <a href="#/category" className="ft-btn ft-btn-secondary">
