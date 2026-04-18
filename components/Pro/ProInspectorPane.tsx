@@ -41,7 +41,7 @@ const BEAT_TYPES: ProScene['beatType'][] = [
 
 // ─── Scene Inspector Panel ────────────────────────────────────
 const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
-  const { updateScene, characters } = useProStudio();
+  const { updateScene, characters, worldEntries, scenes, chapters } = useProStudio();
   const [local, setLocal] = useState(scene);
 
   // Flush field on blur
@@ -52,8 +52,51 @@ const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
   const sceneChars = characters.filter(c => scene.characterIds.includes(c.id));
   const unassignedChars = characters.filter(c => !scene.characterIds.includes(c.id));
 
+  // World locations for the Setting dropdown
+  const locations = worldEntries.filter(e => e.type === 'location');
+
+  // Scene word stats
+  const chapter = chapters.find(ch => ch.id === scene.chapterId);
+  const chapterScenes = scenes.filter(s => s.chapterId === scene.chapterId);
+  const chapterWc = chapterScenes.reduce((s, sc) => s + (sc.wordCount || 0), 0);
+  const sceneIndex = chapterScenes.findIndex(s => s.id === scene.id) + 1;
+
+  // POV character display
+  const povChar = characters.find(c => c.id === local.pov);
+
   return (
     <div className="pro-inspector-scroll">
+      {/* Scene Position Info */}
+      <div className="pro-inspector-section" style={{ paddingBottom: 8 }}>
+        <div style={{
+          display: 'flex', gap: 12, alignItems: 'center',
+          padding: '8px 0 4px', fontSize: 10, color: 'var(--pro-text-muted)',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--pro-accent)', fontFamily: "'Literata', serif" }}>
+              {(scene.wordCount || 0).toLocaleString()}
+            </span>
+            <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Scene Words</span>
+          </div>
+          <div style={{ width: 1, height: 28, background: 'var(--pro-border-subtle)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--pro-text-body)', fontFamily: "'Literata', serif" }}>
+              {chapterWc.toLocaleString()}
+            </span>
+            <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Chapter Total</span>
+          </div>
+          <div style={{ width: 1, height: 28, background: 'var(--pro-border-subtle)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--pro-text-body)' }}>
+              {sceneIndex}/{chapterScenes.length}
+            </span>
+            <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Position</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="pro-inspector-divider" />
+
       {/* Goal / Conflict / Disaster */}
       <div className="pro-inspector-section">
         <div className="pro-inspector-section-label">
@@ -149,7 +192,7 @@ const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
 
       <div className="pro-inspector-divider" />
 
-      {/* Beat / POV / Time */}
+      {/* Beat / POV / Time / Setting */}
       <div className="pro-inspector-section">
         <div className="pro-inspector-section-label">Metadata</div>
 
@@ -176,6 +219,11 @@ const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
             <option value="">— None —</option>
             {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
+          {povChar && (
+            <div style={{ fontSize: 10, color: 'var(--pro-text-muted)', marginTop: 4 }}>
+              {povChar.role}{povChar.archetype ? ` · ${povChar.archetype}` : ''}{povChar.coreDesire ? ` · Desires: ${povChar.coreDesire}` : ''}
+            </div>
+          )}
         </div>
 
         <div className="pro-inspector-field">
@@ -188,6 +236,66 @@ const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
             onBlur={() => flush({ worldTime: local.worldTime })}
           />
         </div>
+
+        {/* Setting / Location from World Entries */}
+        <div className="pro-inspector-field">
+          <label className="pro-inspector-field-label">📍 Primary Location</label>
+          <select
+            className="pro-inspector-select"
+            value={local.settingId ?? ''}
+            onChange={e => {
+              const val = e.target.value || undefined;
+              setLocal(l => ({ ...l, settingId: val }));
+              flush({ settingId: val });
+            }}
+          >
+            <option value="">— None —</option>
+            {locations.map(l => <option key={l.id} value={l.id}>📍 {l.title}</option>)}
+          </select>
+          {local.settingId && (() => {
+            const loc = locations.find(l => l.id === local.settingId);
+            return loc ? (
+              <div style={{ fontSize: 10, color: 'var(--pro-text-muted)', marginTop: 4 }}>
+                {loc.climate ? `${loc.climate} · ` : ''}{loc.politicalAffiliation || ''}
+              </div>
+            ) : null;
+          })()}
+        </div>
+
+        {/* Additional Locations */}
+        <div className="pro-inspector-field">
+          <label className="pro-inspector-field-label">Additional Locations</label>
+          <div className="pro-inspector-loc-chips">
+            {(scene.locationIds || []).map(lid => {
+              const loc = locations.find(l => l.id === lid);
+              return loc ? (
+                <span key={lid} className="pro-inspector-loc-chip">
+                  📍 {loc.title}
+                  <button onClick={() => {
+                    const ids = scene.locationIds.filter(id => id !== lid);
+                    updateScene(scene.id, { locationIds: ids });
+                  }}>✕</button>
+                </span>
+              ) : null;
+            })}
+          </div>
+          {locations.filter(l => l.id !== local.settingId && !scene.locationIds.includes(l.id)).length > 0 && (
+            <select
+              className="pro-inspector-select"
+              style={{ marginTop: 4, fontSize: 11 }}
+              value=""
+              onChange={e => {
+                if (!e.target.value) return;
+                const ids = [...scene.locationIds, e.target.value];
+                updateScene(scene.id, { locationIds: ids });
+              }}
+            >
+              <option value="">+ Add location…</option>
+              {locations.filter(l => l.id !== local.settingId && !scene.locationIds.includes(l.id))
+                .map(l => <option key={l.id} value={l.id}>📍 {l.title}</option>)}
+            </select>
+          )}
+        </div>
       </div>
 
       <div className="pro-inspector-divider" />
@@ -195,7 +303,7 @@ const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
       {/* Characters in scene */}
       <div className="pro-inspector-section">
         <div className="pro-inspector-section-label" style={{ justifyContent: 'space-between' }}>
-          <span>Characters Present</span>
+          <span>Characters Present ({sceneChars.length})</span>
         </div>
         <div className="pro-char-chips">
           {sceneChars.map(c => (
@@ -224,10 +332,15 @@ const SceneInspectorPanel: React.FC<{ scene: ProScene }> = ({ scene }) => {
               }}
             >
               <option value="">+ Add character</option>
-              {unassignedChars.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {unassignedChars.map(c => <option key={c.id} value={c.id}>{c.name} ({c.role})</option>)}
             </select>
           )}
         </div>
+        {sceneChars.length === 0 && characters.length > 0 && (
+          <div style={{ fontSize: 10, color: 'var(--pro-text-muted)', marginTop: 4, fontStyle: 'italic' }}>
+            Tag characters who appear in this scene for reference tracking.
+          </div>
+        )}
       </div>
 
       <div className="pro-inspector-divider" />

@@ -327,3 +327,54 @@ export interface ProStudioState {
   isSaving: boolean;
   lastSavedAt: string | null;
 }
+
+// ─── Chapter Snapshot (Versioning) ────────────────────────────
+export interface ChapterSnapshot {
+  id: string;
+  chapterId: string;
+  projectId: string;
+  label: string;                // User-defined snapshot name
+  sceneSnapshots: SceneSnapshot[];
+  totalWordCount: number;
+  createdAt: string;
+  notes?: string;               // Why this snapshot was taken
+}
+
+export interface SceneSnapshot {
+  sceneId: string;
+  title: string;
+  content: string;              // Full HTML at time of snapshot
+  wordCount: number;
+  synopsis?: string;
+  order: number;
+}
+
+// ─── Timeline Event ──────────────────────────────────────────
+export interface TimelineEvent {
+  id: string;
+  projectId: string;
+  title: string;
+  description?: string;
+  worldDate: string;             // In-universe date string
+  sortOrder: number;             // Numeric sort key for timeline positioning
+  era?: string;                  // e.g. "First Age", "Pre-War"
+  category: 'political' | 'personal' | 'battle' | 'discovery' | 'natural' | 'cultural' | 'custom';
+  color?: string;                // Custom color for dot
+  linkedSceneIds?: string[];     // Scenes this event appears in
+  linkedCharacterIds?: string[]; // Characters involved
+  linkedEntryIds?: string[];     // World entries related
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Writing Session (Analytics) ──────────────────────────────
+export interface WritingSession {
+  id: string;
+  projectId: string;
+  date: string;                  // ISO date string (YYYY-MM-DD)
+  wordsWritten: number;
+  minutesSpent: number;
+  scenesEdited: string[];        // Scene IDs touched
+  startedAt: string;
+  endedAt: string;
+}

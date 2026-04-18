@@ -7,11 +7,12 @@
 import type {
   ProProject, ProVolume, ProChapter, ProScene,
   ProCharacter, ProRelation, ProWorldEntry, ProMap,
-  ProEditorSettings, ProProjectBible
+  ProEditorSettings, ProProjectBible,
+  ChapterSnapshot, SceneSnapshot, TimelineEvent, WritingSession
 } from '../types/pro';
 
 const DB_NAME = 'wordweft_pro';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 // ─── Store Names ─────────────────────────────────────────────
 const STORES = {
@@ -23,6 +24,9 @@ const STORES = {
   relations:   'pro_relations',
   worldEntries:'pro_world_entries',
   maps:        'pro_maps',
+  snapshots:   'pro_snapshots',
+  timeline:    'pro_timeline',
+  sessions:    'pro_sessions',
 } as const;
 
 // ─── Default Settings ─────────────────────────────────────────
@@ -102,6 +106,24 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORES.maps)) {
         const ms = db.createObjectStore(STORES.maps, { keyPath: 'id' });
         ms.createIndex('projectId', 'projectId', { unique: false });
+      }
+
+      // ── V2 stores ──
+      if (!db.objectStoreNames.contains(STORES.snapshots)) {
+        const sn = db.createObjectStore(STORES.snapshots, { keyPath: 'id' });
+        sn.createIndex('chapterId', 'chapterId', { unique: false });
+        sn.createIndex('projectId', 'projectId', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(STORES.timeline)) {
+        const tl = db.createObjectStore(STORES.timeline, { keyPath: 'id' });
+        tl.createIndex('projectId', 'projectId', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(STORES.sessions)) {
+        const ws = db.createObjectStore(STORES.sessions, { keyPath: 'id' });
+        ws.createIndex('projectId', 'projectId', { unique: false });
+        ws.createIndex('date', 'date', { unique: false });
       }
     };
 
@@ -600,6 +622,120 @@ export async function getVolumeWordCount(volumes: ProVolume[], chapters: ProChap
   return result;
 }
 
+// ═══════════════════════════════════════════════════════════════
+//   Snapshot CRUD (Versioning Engine)
+// ═══════════════════════════════════════════════════════════════
+
+async function createSnapshot(data: { chapterId: string; projectId: string; label: string; sceneSnapshots: SceneSnapshot[]; notes?: string }): Promise<ChapterSnapshot> {
+  const db = await openDB();
+  const snap: ChapterSnapshot = {
+    id: nanoid(),
+    chapterId: data.chapterId,
+    projectId: data.projectId,
+    label: data.label,
+    sceneSnapshots: data.sceneSnapshots,
+    totalWordCount: data.sceneSnapshots.reduce((s, sc) => s + sc.wordCount, 0),
+    notes: data.notes,
+    createdAt: new Date().toISOString(),
+  };
+  await putOne<ChapterSnapshot>(tx(db, STORES.snapshots, 'readwrite'), snap);
+  return snap;
+}
+
+async function getSnapshotsByChapter(chapterId: string): Promise<ChapterSnapshot[]> {
+  const db = await openDB();
+  return getByIndex<ChapterSnapshot>(tx(db, STORES.snapshots), 'chapterId', chapterId);
+}
+
+async function getSnapshotsByProject(projectId: string): Promise<ChapterSnapshot[]> {
+  const db = await openDB();
+  return getByIndex<ChapterSnapshot>(tx(db, STORES.snapshots), 'projectId', projectId);
+}
+
+async function deleteSnapshot(id: string): Promise<void> {
+  const db = await openDB();
+  await deleteOne(tx(db, STORES.snapshots, 'readwrite'), id);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//   Timeline CRUD
+// ═══════════════════════════════════════════════════════════════
+
+async function createTimelineEvent(data: Partial<TimelineEvent> & { projectId: string }): Promise<TimelineEvent> {
+  const db = await openDB();
+  const ev: TimelineEvent = {
+    id: nanoid(),
+    projectId: data.projectId,
+    title: data.title || 'Untitled Event',
+    description: data.description || '',
+    worldDate: data.worldDate || '',
+    sortOrder: data.sortOrder ?? Date.now(),
+    era: data.era,
+    category: data.category || 'personal',
+    color: data.color,
+    linkedSceneIds: data.linkedSceneIds || [],
+    linkedCharacterIds: data.linkedCharacterIds || [],
+    linkedEntryIds: data.linkedEntryIds || [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  await putOne<TimelineEvent>(tx(db, STORES.timeline, 'readwrite'), ev);
+  return ev;
+}
+
+async function getTimelineByProject(projectId: string): Promise<TimelineEvent[]> {
+  const db = await openDB();
+  return getByIndex<TimelineEvent>(tx(db, STORES.timeline), 'projectId', projectId);
+}
+
+async function updateTimelineEvent(id: string, patch: Partial<TimelineEvent>): Promise<TimelineEvent | null> {
+  const db = await openDB();
+  const existing = await getOne<TimelineEvent>(tx(db, STORES.timeline), id);
+  if (!existing) return null;
+  const updated = { ...existing, ...patch, updatedAt: new Date().toISOString() };
+  await putOne<TimelineEvent>(tx(db, STORES.timeline, 'readwrite'), updated);
+  return updated;
+}
+
+async function deleteTimelineEvent(id: string): Promise<void> {
+  const db = await openDB();
+  await deleteOne(tx(db, STORES.timeline, 'readwrite'), id);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//   Writing Session CRUD
+// ═══════════════════════════════════════════════════════════════
+
+async function createWritingSession(data: Partial<WritingSession> & { projectId: string }): Promise<WritingSession> {
+  const db = await openDB();
+  const ws: WritingSession = {
+    id: nanoid(),
+    projectId: data.projectId,
+    date: data.date || new Date().toISOString().split('T')[0],
+    wordsWritten: data.wordsWritten || 0,
+    minutesSpent: data.minutesSpent || 0,
+    scenesEdited: data.scenesEdited || [],
+    startedAt: data.startedAt || new Date().toISOString(),
+    endedAt: data.endedAt || new Date().toISOString(),
+  };
+  await putOne<WritingSession>(tx(db, STORES.sessions, 'readwrite'), ws);
+  return ws;
+}
+
+async function getSessionsByProject(projectId: string): Promise<WritingSession[]> {
+  const db = await openDB();
+  return getByIndex<WritingSession>(tx(db, STORES.sessions), 'projectId', projectId);
+}
+
+async function updateWritingSession(id: string, patch: Partial<WritingSession>): Promise<WritingSession | null> {
+  const db = await openDB();
+  const existing = await getOne<WritingSession>(tx(db, STORES.sessions), id);
+  if (!existing) return null;
+  const updated = { ...existing, ...patch };
+  await putOne<WritingSession>(tx(db, STORES.sessions, 'readwrite'), updated);
+  return updated;
+}
+
 // ─── Exported API Surface ─────────────────────────────────────
 export const proDb = {
   projects: {
@@ -656,5 +792,22 @@ export const proDb = {
     getByProject: getMapsByProject,
     update: updateMap,
     delete: deleteMap,
+  },
+  snapshots: {
+    create: createSnapshot,
+    getByChapter: getSnapshotsByChapter,
+    getByProject: getSnapshotsByProject,
+    delete: deleteSnapshot,
+  },
+  timeline: {
+    create: createTimelineEvent,
+    getByProject: getTimelineByProject,
+    update: updateTimelineEvent,
+    delete: deleteTimelineEvent,
+  },
+  sessions: {
+    create: createWritingSession,
+    getByProject: getSessionsByProject,
+    update: updateWritingSession,
   },
 };

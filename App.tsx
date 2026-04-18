@@ -45,6 +45,9 @@ import { ProStudioPage } from './pages/Pro/ProStudioPage';
 import { ProCharactersPage } from './pages/Pro/ProCharactersPage';
 import { ProWorldPage } from './pages/Pro/ProWorldPage';
 import { ProMapsPage } from './pages/Pro/ProMapsPage';
+import { ProTimelinePage } from './pages/Pro/ProTimelinePage';
+import { ProSnapshotsPage } from './pages/Pro/ProSnapshotsPage';
+import { ProAnalyticsPage } from './pages/Pro/ProAnalyticsPage';
 
 
 export type Page =
@@ -77,7 +80,10 @@ export type Page =
   | { name: 'pro-studio'; projectId: string }
   | { name: 'pro-characters'; projectId: string }
   | { name: 'pro-world'; projectId: string }
-  | { name: 'pro-maps'; projectId: string };
+  | { name: 'pro-maps'; projectId: string }
+  | { name: 'pro-timeline'; projectId: string }
+  | { name: 'pro-snapshots'; projectId: string }
+  | { name: 'pro-analytics'; projectId: string };
 
 
 const App: React.FC = () => {
@@ -261,6 +267,15 @@ const App: React.FC = () => {
       } else if (hash.startsWith('pro/maps/')) {
         const projectId = hash.split('/')[2];
         targetPage = projectId ? { name: 'pro-maps', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro/timeline/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-timeline', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro/snapshots/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-snapshots', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro/analytics/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-analytics', projectId } : { name: 'pro-dashboard' };
       } else if (hash.startsWith('pro')) {
         targetPage = { name: 'pro-dashboard' };
       } else if (hash.startsWith('terms')) {
@@ -281,6 +296,7 @@ const App: React.FC = () => {
         'writer-edit-chapter', 'writer-analytics', 'writer-settings',
         'profile', 'edit-profile', 'notifications', 'reader',
         'pro-dashboard', 'pro-studio', 'pro-characters', 'pro-world', 'pro-maps',
+        'pro-timeline', 'pro-snapshots', 'pro-analytics',
       ];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
@@ -397,6 +413,12 @@ const App: React.FC = () => {
         return <ProWorldPage projectId={page.projectId} />;
       case 'pro-maps':
         return <ProMapsPage projectId={page.projectId} />;
+      case 'pro-timeline':
+        return <ProTimelinePage projectId={page.projectId} />;
+      case 'pro-snapshots':
+        return <ProSnapshotsPage projectId={page.projectId} />;
+      case 'pro-analytics':
+        return <ProAnalyticsPage projectId={page.projectId} />;
 
       default:
         return <HomePage />;
