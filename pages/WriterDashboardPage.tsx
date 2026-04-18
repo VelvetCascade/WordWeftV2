@@ -118,6 +118,25 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
             <div className="mt-6">
                 <WriterQuickStart currentUser={currentUser} />
             </div>
+
+            {/* Pro Studio Entry Point */}
+            <div className="mt-6 relative overflow-hidden rounded-2xl border border-[#5D4037]/30 dark:border-[#5D4037] bg-gradient-to-br from-[#3E2723] to-[#261F1D] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-5 cursor-pointer group transition-all hover:shadow-lg hover:shadow-[rgba(62,39,35,0.2)]" onClick={() => window.location.hash = '/pro'}>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#8D6E63]/8 rounded-full blur-[80px] pointer-events-none" />
+                <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-[#4E342E] flex items-center justify-center border border-[#5D4037]/40">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#BCAAA4" strokeWidth="1.5" className="w-7 h-7"><path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 1-1.158-8.781 2.25 2.25 0 0 1 2.245-2.4 3 3 0 0 0 1.128-5.78 2.25 2.25 0 0 1 2.4-2.245 4.5 4.5 0 0 1 8.781 1.158 2.25 2.25 0 0 1 2.245 2.4 3 3 0 0 0 5.78 1.128 2.25 2.25 0 0 1 2.4 2.245 4.5 4.5 0 0 1-1.158 8.781 2.25 2.25 0 0 1-2.245 2.4 3 3 0 0 0-1.128 5.78 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 1-8.781-1.158 2.25 2.25 0 0 1-2.245-2.4Z" /></svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-sans text-lg font-bold text-[#EFEBE9]">WordWeft Pro Studio</h3>
+                        <span className="text-[9px] font-bold tracking-[0.1em] uppercase px-2 py-0.5 rounded-full bg-[#8D6E63]/20 text-[#8D6E63] border border-[#8D6E63]/30">PRO</span>
+                    </div>
+                    <p className="text-sm text-[#BCAAA4] leading-relaxed">Professional suite for serious authors — manage projects, volumes, chapters & scenes. Full character engine, world compendium, interactive maps, and a three-pane distraction-free editor.</p>
+                </div>
+                <button className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-[#8D6E63] text-white font-sans font-semibold text-sm hover:bg-[#5D4037] transition-colors flex items-center gap-2 group-hover:bg-[#5D4037]">
+                    Open Pro Studio
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </button>
+            </div>
             
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2 space-y-4">

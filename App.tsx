@@ -38,6 +38,15 @@ import { useNotifications } from './hooks/useNotifications';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
 
+// ─── Pro Suite ────────────────────────────────────────────────
+import { ProStudioProvider } from './contexts/ProStudioContext';
+import { ProDashboardPage } from './pages/Pro/ProDashboardPage';
+import { ProStudioPage } from './pages/Pro/ProStudioPage';
+import { ProCharactersPage } from './pages/Pro/ProCharactersPage';
+import { ProWorldPage } from './pages/Pro/ProWorldPage';
+import { ProMapsPage } from './pages/Pro/ProMapsPage';
+
+
 export type Page =
   | { name: 'home' }
   | { name: 'category'; genre: string | null }
@@ -62,7 +71,13 @@ export type Page =
   | { name: 'search'; query: string }
   | { name: 'features' }
   | { name: 'genre-page'; genre: string }
-  | { name: 'reset-password'; token: string };
+  | { name: 'reset-password'; token: string }
+  // ── Pro Suite ──────────────────────────────────────────────
+  | { name: 'pro-dashboard' }
+  | { name: 'pro-studio'; projectId: string }
+  | { name: 'pro-characters'; projectId: string }
+  | { name: 'pro-world'; projectId: string }
+  | { name: 'pro-maps'; projectId: string };
 
 
 const App: React.FC = () => {
@@ -233,6 +248,21 @@ const App: React.FC = () => {
         const searchParams = new URLSearchParams(hash.split('?')[1] || '');
         const token = searchParams.get('token') || '';
         targetPage = { name: 'reset-password', token };
+      // ── Pro routes ─────────────────────────────────────────────
+      } else if (hash.startsWith('pro/studio/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-studio', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro/characters/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-characters', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro/world/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-world', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro/maps/')) {
+        const projectId = hash.split('/')[2];
+        targetPage = projectId ? { name: 'pro-maps', projectId } : { name: 'pro-dashboard' };
+      } else if (hash.startsWith('pro')) {
+        targetPage = { name: 'pro-dashboard' };
       } else if (hash.startsWith('terms')) {
         targetPage = { name: 'terms' };
       } else if (hash.startsWith('features')) {
@@ -246,7 +276,12 @@ const App: React.FC = () => {
         targetPage = { name: 'features' };
       }
 
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications', 'reader'];
+      const protectedRoutes: Page['name'][] = [
+        'writer-dashboard', 'writer-create-book', 'writer-manage-book',
+        'writer-edit-chapter', 'writer-analytics', 'writer-settings',
+        'profile', 'edit-profile', 'notifications', 'reader',
+        'pro-dashboard', 'pro-studio', 'pro-characters', 'pro-world', 'pro-maps',
+      ];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
@@ -270,7 +305,7 @@ const App: React.FC = () => {
       return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
 
-    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile' || page.name === 'reader')) {
+    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile' || page.name === 'reader' || page.name.startsWith('pro-'))) {
       return null;
     }
 
@@ -350,13 +385,27 @@ const App: React.FC = () => {
         return <FeaturesPage />;
       case 'reset-password':
         return <ResetPasswordPage token={page.token} />;
+
+      // ── Pro Suite ───────────────────────────────────────────────
+      case 'pro-dashboard':
+        return <ProDashboardPage />;
+      case 'pro-studio':
+        return <ProStudioPage projectId={page.projectId} />;
+      case 'pro-characters':
+        return <ProCharactersPage projectId={page.projectId} />;
+      case 'pro-world':
+        return <ProWorldPage projectId={page.projectId} />;
+      case 'pro-maps':
+        return <ProMapsPage projectId={page.projectId} />;
+
       default:
         return <HomePage />;
     }
   };
 
   const isWriterPage = page.name.startsWith('writer-');
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && page.name !== 'reset-password' && !isWriterPage;
+  const isProPage = page.name.startsWith('pro-');
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && page.name !== 'reset-password' && !isWriterPage && !isProPage;
 
   const feedbackCtx = {
     triggerFeedback: feedback.triggerFeedback,
@@ -365,98 +414,101 @@ const App: React.FC = () => {
   };
 
   return (
-    <FeedbackContext.Provider value={feedbackCtx}>
-      <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
-        {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout}
-          notificationBell={
-            isAuthenticated ? (
-              <NotificationBell
-                unreadCount={notif.unreadCount}
-                notifications={notif.notifications}
-                onMarkRead={notif.markAsRead}
-                onMarkAllRead={notif.markAllAsRead}
-                onNavigate={navigateTo}
-                hasMore={notif.hasMore}
-                onLoadMore={notif.loadMore}
-                isLoading={notif.isLoading}
-              />
-            ) : undefined
-          }
-          onForYouClick={() => setShowForYouModal(true)}
-          unreadCount={notif.unreadCount}
-          currentUser={currentUser}
-        />}
+    <ProStudioProvider>
+      <FeedbackContext.Provider value={feedbackCtx}>
+        <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
+          {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout}
+            notificationBell={
+              isAuthenticated ? (
+                <NotificationBell
+                  unreadCount={notif.unreadCount}
+                  notifications={notif.notifications}
+                  onMarkRead={notif.markAsRead}
+                  onMarkAllRead={notif.markAllAsRead}
+                  onNavigate={navigateTo}
+                  hasMore={notif.hasMore}
+                  onLoadMore={notif.loadMore}
+                  isLoading={notif.isLoading}
+                />
+              ) : undefined
+            }
+            onForYouClick={() => setShowForYouModal(true)}
+            unreadCount={notif.unreadCount}
+            currentUser={currentUser}
+          />}
 
-        {isWriterPage ? (
-          <WriterLayout>
-            {renderPage()}
-          </WriterLayout>
-        ) : (
-          <main className={showNavbar ? `pb-24 md:pb-0 md:pt-20 ${page.name === 'home' || page.name === 'features' ? '' : 'pt-20'}` : ""}>
-            {renderPage()}
-          </main>
-        )}
+          {isWriterPage ? (
+            <WriterLayout>
+              {renderPage()}
+            </WriterLayout>
+          ) : isProPage ? (
+            renderPage()
+          ) : (
+            <main className={showNavbar ? `pb-24 md:pb-0 md:pt-20 ${page.name === 'home' || page.name === 'features' ? '' : 'pt-20'}` : ""}>
+              {renderPage()}
+            </main>
+          )}
 
-        {/* Contextual Feedback System */}
-        <FeedbackToast
-          config={feedback.toastConfig}
-          onRespond={feedback.handleToastRespond}
-          onDismiss={feedback.handleToastDismiss}
-        />
-        <FeedbackModal
-          config={feedback.modalConfig}
-          onSubmit={feedback.handleModalSubmit}
-          onDismiss={feedback.handleModalDismiss}
-          onOpenFullForm={feedback.openFullFeedback}
-        />
-        <FeedbackBanner
-          visible={feedback.showBanner}
-          onDismiss={feedback.handleBannerDismiss}
-        />
-        <NotificationToast
-          notification={notif.toastNotification}
-          onDismiss={notif.dismissToast}
-          onNavigate={navigateTo}
-        />
-        {isAuthenticated && <WhatsNewPopup />}
-
-        {/* Welcome Journey — Full-screen onboarding for new users */}
-        {showWelcomeJourney && currentUser && (
-          <WelcomeJourney
-            userName={currentUser.name}
-            onComplete={(role) => {
-              setShowWelcomeJourney(false);
-              localStorage.setItem('ww_userRole', role);
-              // Navigate based on role
-              if (role === 'writer') {
-                window.location.hash = '/write';
-              } else {
-                window.location.hash = '/';
-              }
-            }}
+          {/* Contextual Feedback System */}
+          <FeedbackToast
+            config={feedback.toastConfig}
+            onRespond={feedback.handleToastRespond}
+            onDismiss={feedback.handleToastDismiss}
           />
-        )}
+          <FeedbackModal
+            config={feedback.modalConfig}
+            onSubmit={feedback.handleModalSubmit}
+            onDismiss={feedback.handleModalDismiss}
+            onOpenFullForm={feedback.openFullFeedback}
+          />
+          <FeedbackBanner
+            visible={feedback.showBanner}
+            onDismiss={feedback.handleBannerDismiss}
+          />
+          <NotificationToast
+            notification={notif.toastNotification}
+            onDismiss={notif.dismissToast}
+            onNavigate={navigateTo}
+          />
+          {isAuthenticated && <WhatsNewPopup />}
 
-        {/* Personalized / For You Modal */}
-        {showForYouModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForYouModal(false)}>
-            <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
-              <div className="text-4xl mb-4">✨</div>
-              <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery Coming Soon</h3>
-              <p className="text-text-body dark:text-dark-text-body mb-6">
-                We are building a thoughtful recommendation experience. For now, explore stories by genre and transparent ranking.
-              </p>
-              <button
-                onClick={() => setShowForYouModal(false)}
-                className="bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-colors"
-              >
-                Back to Explore
-              </button>
+          {/* Welcome Journey — Full-screen onboarding for new users */}
+          {showWelcomeJourney && currentUser && (
+            <WelcomeJourney
+              userName={currentUser.name}
+              onComplete={(role) => {
+                setShowWelcomeJourney(false);
+                localStorage.setItem('ww_userRole', role);
+                if (role === 'writer') {
+                  window.location.hash = '/write';
+                } else {
+                  window.location.hash = '/';
+                }
+              }}
+            />
+          )}
+
+          {/* Personalized / For You Modal */}
+          {showForYouModal && (
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForYouModal(false)}>
+              <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
+                <div className="text-4xl mb-4">✨</div>
+                <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery Coming Soon</h3>
+                <p className="text-text-body dark:text-dark-text-body mb-6">
+                  We are building a thoughtful recommendation experience. For now, explore stories by genre and transparent ranking.
+                </p>
+                <button
+                  onClick={() => setShowForYouModal(false)}
+                  className="bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-colors"
+                >
+                  Back to Explore
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-    </FeedbackContext.Provider>
+          )}
+        </div>
+      </FeedbackContext.Provider>
+    </ProStudioProvider>
   );
 };
 
