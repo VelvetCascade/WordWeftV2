@@ -35,6 +35,7 @@ import { WelcomeJourney } from './components/WelcomeJourney';
 import { FeedbackContext } from './contexts/FeedbackContext';
 import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
+import { useAnalytics } from './hooks/useAnalytics';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
 
@@ -100,6 +101,10 @@ const App: React.FC = () => {
   };
 
   const feedback = useFeedbackTriggers();
+
+  // Passive analytics — tracks all page views, time-on-page, and session data.
+  // Completely non-blocking; silently skips if analytics URL is not configured.
+  useAnalytics(currentUser);
 
   // Check for existing session on initial load
   useEffect(() => {

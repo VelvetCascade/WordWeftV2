@@ -54,6 +54,10 @@ public class User {
     private String emailVerificationOtp;
     private Instant emailVerificationOtpExpiry;
 
+    // Activity Tracking (for analytics and retention engine)
+    private Instant lastActiveAt;
+    private long totalTimeSpentSeconds = 0;
+
     // Password Reset
     private String resetPasswordToken;
     private Instant resetPasswordTokenExpiry;

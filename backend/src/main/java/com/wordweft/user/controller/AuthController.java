@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.wordweft.analytics.AnalyticsService;
 import com.wordweft.notification.service.EmailService;
 import com.wordweft.security.jwt.JwtUtils;
 import com.wordweft.security.services.UserDetailsImpl;
@@ -49,6 +50,9 @@ public class AuthController {
     @Autowired
     EmailService emailService;
 
+    @Autowired
+    AnalyticsService analyticsService;
+
     @Value("${wordweft.app.googleClientId}")
     private String googleClientId;
 
@@ -75,6 +79,8 @@ public class AuthController {
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(item -> item.getAuthority())
                     .collect(Collectors.toList());
+
+            analyticsService.trackLogin(userDetails.getId(), userDetails.getUsername(), "LOCAL");
 
             return ResponseEntity.ok(new JwtResponse(jwt, "Bearer",
                     userDetails.getId(),
@@ -151,6 +157,7 @@ public class AuthController {
         
         // Send welcome email now that they are verified
         emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
+        analyticsService.trackSignup(user.getId(), user.getUsername(), user.getEmail(), "LOCAL");
 
         // Generate JWT and log user in
         String jwt = jwtUtils.generateTokenForUser(user.getUsername());
@@ -251,12 +258,14 @@ public class AuthController {
                     userRepository.save(user);
                     needsProfileCompletion = true;
                     emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
+                    analyticsService.trackSignup(user.getId(), user.getUsername(), user.getEmail(), "GOOGLE");
                 }
             }
 
             // Generate JWT directly (bypassing AuthenticationManager since there's no
             // password)
             String jwt = jwtUtils.generateTokenForUser(user.getUsername());
+            analyticsService.trackLogin(user.getId(), user.getUsername(), "GOOGLE");
 
             return ResponseEntity.ok(new GoogleAuthResponse(
                     jwt, "Bearer",

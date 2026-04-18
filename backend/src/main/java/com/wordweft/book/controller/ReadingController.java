@@ -3,6 +3,7 @@ package com.wordweft.book.controller;
 
 import com.wordweft.book.model.*;
 import com.wordweft.book.repository.*;
+import com.wordweft.analytics.AnalyticsService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
@@ -31,6 +32,9 @@ public class ReadingController {
     UserRepository userRepository;
     @Autowired
     UserService userService;
+
+    @Autowired
+    AnalyticsService analyticsService;
 
     @GetMapping("/reading/progress/{bookId}")
     public ResponseEntity<?> getProgress(@PathVariable String bookId) {
@@ -108,6 +112,9 @@ public class ReadingController {
                     }
 
                     userRepository.save(user);
+
+                    // Track the chapter completion in analytics
+                    analyticsService.trackReadingProgress(userDetails.getId(), bookId, chapterId, pVal);
                 }
             }
         }

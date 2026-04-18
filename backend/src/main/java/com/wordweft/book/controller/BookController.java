@@ -5,6 +5,7 @@ import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
+import com.wordweft.analytics.AnalyticsService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.service.UserService;
@@ -34,6 +35,9 @@ public class BookController {
     NotificationService notificationService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
+
+    @Autowired
+    AnalyticsService analyticsService;
 
     private String getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -111,6 +115,9 @@ public class BookController {
 
         bookRepository.save(book);
 
+        String action = chapter.getLikes().contains(userId) ? "liked" : "unliked";
+        analyticsService.trackLike(userId, bookId, chapterId, action);
+
         // Do NOT increment view count when toggling a like
         return ResponseEntity.ok(bookService.getBookById(bookId, false));
     }
@@ -124,6 +131,8 @@ public class BookController {
         chapter.setViewCount(chapter.getViewCount() + 1);
         book.setViewCountLast7Days((book.getViewCountLast7Days() == null ? 0 : book.getViewCountLast7Days()) + 1);
         bookRepository.save(book);
+
+        analyticsService.trackChapterView(bookId, book.getTitle(), chapterId, chapter.getTitle(), chapter.getViewCount());
 
         return ResponseEntity.ok().build();
     }
@@ -243,10 +252,12 @@ public class BookController {
                 return ResponseEntity.badRequest().body("Cannot publish a book with no published chapters.");
             }
             book.setPublicationStatus("published");
-            // Set date only if it wasn't set before or if we want to bump it
+            // Set date only if it wasn't set before
             if (book.getPublishedDate() == null) {
                 book.setPublishedDate(LocalDate.now());
             }
+
+            analyticsService.trackPublishing(userDetails.getId(), bookId, book.getTitle(), "", "book");
 
             // Notify followers about new story
             java.util.Map<String, String> meta = new java.util.HashMap<>();
@@ -286,6 +297,7 @@ public class BookController {
         }
 
         bookRepository.save(book);
+        analyticsService.trackPublishing(userDetails.getId(), bookId, book.getTitle(), chapterId, "chapter");
 
         // Notify followers about new chapter
         if ("published".equals(newStatus) && "published".equals(book.getPublicationStatus())) {

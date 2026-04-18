@@ -6,6 +6,7 @@ import com.wordweft.user.dto.AuthDtos.*;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
 import com.wordweft.user.service.UserService;
+import com.wordweft.analytics.AnalyticsService;
 import com.wordweft.notification.service.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class UserController {
     NotificationService notificationService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
+
+    @Autowired
+    AnalyticsService analyticsService;
 
     private String getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -104,6 +108,8 @@ public class UserController {
             return ResponseEntity.badRequest().body("Cannot follow yourself");
 
         userService.followUser(currentUserId, id);
+
+        analyticsService.trackFollow(currentUserId, id);
 
         // Notify target user about new follower
         User follower = userRepository.findById(currentUserId).orElse(null);

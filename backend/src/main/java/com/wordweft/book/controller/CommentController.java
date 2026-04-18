@@ -6,6 +6,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.Comment;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.CommentRepository;
+import com.wordweft.analytics.AnalyticsService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
@@ -36,6 +37,9 @@ public class CommentController {
     @Autowired
     NotificationService notificationService;
 
+    @Autowired
+    AnalyticsService analyticsService;
+
     @GetMapping("/{bookId}/chapters/{chapterId}/comments")
     public ResponseEntity<?> getComments(@PathVariable String bookId, @PathVariable String chapterId) {
         List<Comment> comments = commentRepository.findByChapterIdOrderByCreatedAtDesc(chapterId);
@@ -54,6 +58,12 @@ public class CommentController {
         comment.setCreatedAt(LocalDateTime.now());
 
         commentRepository.save(comment);
+
+        analyticsService.trackComment(
+            userDetails.getId(), bookId, chapterId,
+            comment.getParagraphIndex() != null ? String.valueOf(comment.getParagraphIndex()) : "null",
+            comment.getParentId() != null
+        );
 
         // Increment chapter comment count
         Book book = bookRepository.findById(bookId).orElseThrow();
