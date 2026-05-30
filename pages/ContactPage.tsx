@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import type { User } from '../types';
 
 const ContactChannelCard: React.FC<{
@@ -28,6 +29,8 @@ interface ContactPageProps {
 }
 
 export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('support', 'contact_form_view'); }, []);
     const [formData, setFormData] = useState({
         name: currentUser?.name || '',
         email: currentUser?.email || '',

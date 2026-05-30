@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, CheckCircleIcon, EyeIcon } from '../components/icons/Icons';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 const EyeSlashIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -15,6 +16,8 @@ interface ResetPasswordPageProps {
 }
 
 export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) => {
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('auth', 'reset_password_view'); }, []);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState<string | null>(null);

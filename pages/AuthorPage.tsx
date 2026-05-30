@@ -6,6 +6,7 @@ import { Footer } from '../components/Footer';
 import { UserGroupIcon, PlusIcon, CheckCircleIcon, BookOpenIcon, StarIcon, EyeIcon, HeartIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { ConnectionsModal } from '../components/ConnectionsModal';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 // ── Inline icons not in the shared set ──
 
@@ -69,6 +70,7 @@ const formatJoinDate = (dateStr?: string) => {
 // ── Main Component ──
 
 export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
+    const { trackEvent } = useAnalytics();
     const [author, setAuthor] = useState<Author | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);

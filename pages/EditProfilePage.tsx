@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { User } from '../types';
 import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, XMarkIcon, PlusIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
 
 interface EditProfilePageProps {
@@ -44,6 +45,7 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 
 
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
+    const { trackEvent } = useAnalytics();
   const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
   const [avatarFileId, setAvatarFileId] = useState<string | null>(user.avatarFileId || null);

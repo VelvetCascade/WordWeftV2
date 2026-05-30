@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Character } from '../types';
 import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -103,6 +104,7 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
 };
 
 export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
+    const { trackEvent } = useAnalytics();
     const { triggerFeedback } = useFeedback();
     const [chapterId, setChapterId] = useState(initialChapterId);
     const isNewChapter = chapterId === 'new';

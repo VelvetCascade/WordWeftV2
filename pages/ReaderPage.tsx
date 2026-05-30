@@ -3,6 +3,7 @@ import type { User, Book, BookProgress, Comment, Character  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
@@ -234,6 +235,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
     const { theme: globalTheme } = useTheme();
     const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
+    const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
 
@@ -260,6 +262,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
             if (hasRecordedView.current !== chapter.id) {
                 api.recordChapterView(bookId, chapter.id);
+                trackEvent('reading', 'chapter_read_start', chapter.title, undefined, { bookId, chapterId: chapter.id, chapterIndex: currentChapterIndex });
                 hasRecordedView.current = chapter.id;
             }
         }
@@ -366,6 +369,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const goToChapter = (index: number) => {
         if (!book || (index < 0 || index >= book.chapters.length)) return;
         saveProgress();
+        trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setCurrentChapterIndex(index);
         window.location.hash = `/read/book/${book.id}/chapter/${index}`;
     };

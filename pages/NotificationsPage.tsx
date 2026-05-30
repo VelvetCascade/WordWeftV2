@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { AppNotification, User, NavigateTo, NotificationPreferences } from '../types';
 import type { Page } from '../App';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 interface NotificationsPageProps {
     currentUser: User | null;
@@ -77,6 +78,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     onMarkAllRead, unreadCount, hasMore, onLoadMore, isLoading,
 }) => {
     const [activeFilter, setActiveFilter] = useState('ALL');
+    const { trackEvent } = useAnalytics();
     const [searchQuery, setSearchQuery] = useState('');
     const [showSettings, setShowSettings] = useState(false);
     const [preferences, setPreferences] = useState<NotificationPreferences>({

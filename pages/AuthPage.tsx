@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User } from '../types';
 import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { GoogleProfileCompletion } from '../components/GoogleProfileCompletion';
 import { ModernBirthdaySelector } from '../components/ModernBirthdaySelector';
@@ -133,6 +134,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
     const [modalContent, setModalContent] = useState<{ title: string; content: React.ReactNode } | null>(null);
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+    const { trackEvent } = useAnalytics();
 
     // Keep the callback ref always pointing to the latest handler
     const handleGoogleResponse = useCallback(async (response: any) => {
@@ -324,6 +326,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             if (view === 'login') {
                 const user = await api.login(email, password);
                 if (user) {
+                    trackEvent('auth', 'login_success', 'email');
                     onLogin(user);
                 }
             } else if (view === 'signup') {
@@ -340,10 +343,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                 const result = await api.signup(username, email, password);
                 if (result.requiresOtp) {
+                    trackEvent('auth', 'signup_success', 'otp_required');
                     setSuccessMsg(result.message);
                     setView('otp');
                     setOtpResendCooldown(60); // 1-minute cooldown initial
                 } else if (result.user) {
+                    trackEvent('auth', 'signup_success', 'direct');
                     onLogin(result.user);
                 }
             } else if (view === 'otp') {
@@ -357,6 +362,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         } catch (err: any) {
              const errorMsg = getFriendlyError(err);
              setError(errorMsg);
+             trackEvent('auth', view === 'login' ? 'login_fail' : view === 'signup' ? 'signup_fail' : 'auth_error', errorMsg);
              if (view === 'login' && errorMsg.includes("Email not verified")) {
                  setView('otp');
                  setSuccessMsg("Please check your email for the verification code. You can request a new one below.");

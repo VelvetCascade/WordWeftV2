@@ -33,6 +33,8 @@ import { NotificationToast } from './components/NotificationToast';
 import { WhatsNewPopup } from './components/WhatsNewPopup';
 import { WelcomeJourney } from './components/WelcomeJourney';
 import { FeedbackContext } from './contexts/FeedbackContext';
+import { AnalyticsProvider } from './contexts/AnalyticsContext';
+import { analytics } from './utils/analyticsService';
 import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
 import type { Book, User, Author } from './types';
@@ -118,6 +120,12 @@ const App: React.FC = () => {
     setIsAuthenticated(true);
     setCurrentUser(user);
 
+    // Track login event
+    analytics.trackEvent('auth', 'login_success', user.name, undefined, {
+      userId: user.id,
+      method: 'session',
+    });
+
     // Check if user should see the Welcome Journey
     const hasCompletedJourney = localStorage.getItem('ww_welcomeJourneyCompleted');
     if (!hasCompletedJourney) {
@@ -146,6 +154,10 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    // Track logout event before clearing state
+    analytics.trackEvent('auth', 'logout');
+    await analytics.flush();
+
     await api.logout();
     setIsAuthenticated(false);
     setCurrentUser(null);
@@ -365,6 +377,7 @@ const App: React.FC = () => {
   };
 
   return (
+    <AnalyticsProvider>
     <FeedbackContext.Provider value={feedbackCtx}>
       <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
         {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout}
@@ -457,6 +470,7 @@ const App: React.FC = () => {
         )}
       </div>
     </FeedbackContext.Provider>
+    </AnalyticsProvider>
   );
 };
 

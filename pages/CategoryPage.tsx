@@ -5,6 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
@@ -32,6 +33,7 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
 
 
 export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
+    const { trackEvent } = useAnalytics();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortOption, setSortOption] = useState<SortOption>('most_read');
   const [selectedGenres, setSelectedGenres] = useState<string[]>(genre ? [genre] : []);

@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 // --- Reusable Components ---
 
@@ -161,6 +162,8 @@ const Divider: React.FC = () => (
 // --- Main Page ---
 
 export const FeedbackPage: React.FC = () => {
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('support', 'feedback_view'); }, []);
     const [userType, setUserType] = useState('');
     const [overallRating, setOverallRating] = useState(0);
     const [triedFeatures, setTriedFeatures] = useState<Record<string, boolean>>({});

@@ -7,6 +7,7 @@ import { SortDropdown } from '../components/SortDropdown';
 import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
@@ -341,6 +342,7 @@ export const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
   const [genreBooks, setGenreBooks] = useState<Record<string, Book[]>>({});
+  const { trackEvent } = useAnalytics();
 
   const SORT_OPTIONS = [
     { value: 'most_read', label: 'Most Read (7 days)' },
@@ -398,8 +400,8 @@ export const HomePage: React.FC = () => {
               A next-gen platform for readers and storytellers.
             </p>
             <div className="flex justify-center lg:justify-start space-x-4">
-              <button onClick={() => window.location.hash = '/category'} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-xl border border-transparent">Start Reading</button>
-              <button onClick={() => window.location.hash = '/write'} className="bg-white/10 backdrop-blur-md font-sans font-semibold px-8 py-3 rounded-xl hover:bg-white/20 transition-transform hover:scale-105 duration-300 shadow-xl border border-white/20">Start Writing</button>
+              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Reading'); window.location.hash = '/category'; }} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-xl border border-transparent">Start Reading</button>
+              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Writing'); window.location.hash = '/write'; }} className="bg-white/10 backdrop-blur-md font-sans font-semibold px-8 py-3 rounded-xl hover:bg-white/20 transition-transform hover:scale-105 duration-300 shadow-xl border border-white/20">Start Writing</button>
             </div>
           </div>
           <div className="hidden md:flex lg:block justify-center items-center w-full z-10 mt-8 lg:mt-0 opacity-90 pb-16 lg:pb-0">
@@ -481,7 +483,7 @@ export const HomePage: React.FC = () => {
               return (
                 <div
                   key={genre.name}
-                  onClick={() => window.location.hash = `/genre/${encodeURIComponent(genre.name)}`}
+                  onClick={() => { trackEvent('navigation', 'genre_card_click', genre.name); window.location.hash = `/genre/${encodeURIComponent(genre.name)}`; }}
                   className="relative h-36 rounded-2xl p-5 flex flex-col justify-end text-white font-sans cursor-pointer overflow-hidden group transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg"
                 >
                   <div className={`absolute inset-0 transition-all duration-500 ${gradients[idx % gradients.length]} group-hover:brightness-110`}></div>

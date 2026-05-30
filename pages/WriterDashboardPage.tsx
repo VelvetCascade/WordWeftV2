@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { User, Book } from '../types';
 import { PlusIcon, CloudArrowUpIcon, CloudArrowDownIcon, ChartBarIcon, PencilSquareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WriterQuickStart } from '../components/WriterQuickStart';
 
 interface WriterDashboardProps {
@@ -101,6 +102,8 @@ const CreateNewBookCard: React.FC = () => (
 export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUser, onUserUpdate }) => {
     const drafts = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'draft') ?? [];
     const published = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'published') ?? [];
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('writing', 'writer_dashboard_view'); }, []);
 
     const handleUnpublishBook = async (bookId: string) => {
         if (!window.confirm("Are you sure you want to unpublish this book? It will be moved to your drafts.")) return;

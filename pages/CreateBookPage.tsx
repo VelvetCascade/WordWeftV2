@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { User, Book } from '../types';
 import { ArrowLeftIcon, PhotoIcon, XMarkIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
 
 interface CreateBookPageProps {
@@ -11,6 +12,7 @@ interface CreateBookPageProps {
 }
 
 export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onUserUpdate }) => {
+    const { trackEvent } = useAnalytics();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
