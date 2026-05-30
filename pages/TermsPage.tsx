@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 const Section: React.FC<{ number: string; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
     <section className="mb-10">
@@ -33,6 +34,8 @@ const SubSection: React.FC<{ title: string; children: React.ReactNode }> = ({ ti
 );
 
 export const TermsPage: React.FC = () => {
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('content', 'policy_view', 'terms'); }, []);
     return (
         <div>
             {/* Hero Header */}

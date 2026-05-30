@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { User, Chapter, Book } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { CharacterList } from '../components/CharacterList';
 import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
@@ -217,6 +218,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
 
 
 export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentUser, bookId, onUserUpdate }) => {
+    const { trackEvent } = useAnalytics();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('chapters');

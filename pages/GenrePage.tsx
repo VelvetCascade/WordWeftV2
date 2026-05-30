@@ -5,6 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { SortDropdown } from '../components/SortDropdown';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
 
@@ -16,6 +17,7 @@ const SORT_OPTIONS = [
 ];
 
 export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
+    const { trackEvent } = useAnalytics();
     const [books, setBooks] = useState<Book[]>([]);
     const [sortOption, setSortOption] = useState<SortOption>('most_read');
     const [page, setPage] = useState(0);

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Footer } from '../components/Footer';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WritingDemoModal } from '../components/WritingDemoModal';
 import { SparklesIcon } from '../components/icons/Icons';
 
@@ -407,6 +408,8 @@ const KanbanIcon = () => (
 export const FeaturesPage: React.FC = () => {
     const [heroRef, heroVisible] = useReveal();
     const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('content', 'features_view'); }, []);
 
     return (
         <div className="ft-page">

@@ -5,6 +5,7 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
@@ -210,6 +211,7 @@ interface BookDetailsPageProps {
 
 export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, currentUser, onUserUpdate }) => {
     const { triggerFeedback } = useFeedback();
+    const { trackEvent } = useAnalytics();
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
@@ -280,6 +282,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         api.getBookById(bookId).then(fetchedBook => {
             setBook(fetchedBook);
             if (fetchedBook) {
+                trackEvent('content', 'book_view', fetchedBook.title, undefined, { bookId, authorId: fetchedBook.author.id, genre: fetchedBook.genres[0] });
                 api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(setAuthorBooks);
             }
             setIsLoading(false);
@@ -342,6 +345,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const handleReadClick = () => {
         if (!book) return;
         const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
+        trackEvent('reading', 'start_reading', book.title, undefined, { bookId: book.id, chapterIndex: startChapter });
         window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
     };
 
@@ -355,6 +359,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser || userRating === 0 || !userComment) return;
 
         const updatedReviews = await api.submitReview(currentUser.id, bookId, userRating, userComment);
+        trackEvent('social', 'write_review', book?.title, userRating, { bookId, reviewLength: userComment.length });
         setAllReviews(updatedReviews);
         setIsEditingReview(false);
     };
