@@ -70,7 +70,7 @@ export const FeatureSparkle: React.FC<FeatureSparkleProps> = ({
                                 handleDismiss();
                             }}
                         >
-                            ✕
+                            X
                         </button>
                     </div>
                 )}

@@ -543,9 +543,9 @@ export const HomePage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowPersonalizedModal(false)}>
           <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
             <div className="text-4xl mb-4">✨</div>
-            <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery Coming Soon</h3>
+            <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery</h3>
             <p className="text-text-body dark:text-dark-text-body mb-6">
-              We are building a thoughtful recommendation system. For now, explore stories using transparent ranking and genre filters.
+              Explore stories using transparent ranking and genre filters to find your next great read.
             </p>
             <button
               onClick={() => setShowPersonalizedModal(false)}
