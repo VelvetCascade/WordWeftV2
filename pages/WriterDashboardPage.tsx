@@ -72,7 +72,7 @@ const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) =>
                 </div>
             </div>
             <div className="w-full sm:w-auto mt-2 sm:mt-auto flex flex-wrap items-center justify-end gap-2 pt-2 sm:self-end border-t border-gray-100 sm:border-0 dark:border-dark-border">
-                <button onClick={() => alert('Stats page coming soon!')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="View Stats">
+                <button onClick={() => { window.location.hash = '/write/analytics'; }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="View Analytics">
                     <ChartBarIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                 </button>
                 <button onClick={() => onUnpublish(book.id)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Unpublish Book">

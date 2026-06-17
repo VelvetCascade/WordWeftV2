@@ -364,7 +364,6 @@ const UpcomingCard: React.FC<UpcomingCardProps> = ({ icon, title, desc, highligh
     const [ref, visible] = useReveal();
     return (
         <div ref={ref} className={`ft-upcoming-card ${visible ? 'ft-upcoming-card-visible' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
-            <div className="ft-upcoming-badge">Coming Soon</div>
             <div className="ft-upcoming-icon">{icon}</div>
             <h4 className="ft-upcoming-title">{title}</h4>
             <p className="ft-upcoming-desc">{desc}</p>

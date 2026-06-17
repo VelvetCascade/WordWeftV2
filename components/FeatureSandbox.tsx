@@ -37,7 +37,7 @@ const SpoilerSandbox: React.FC = () => {
                         }}
                         disabled={!selectedText}
                     >
-                        👁️‍🗨️ Mark as Spoiler
+                        Mark as Spoiler
                     </button>
                 </div>
 
@@ -70,7 +70,7 @@ const SpoilerSandbox: React.FC = () => {
 
             {spoilerApplied && revealed && (
                 <div className="sandbox-success">
-                    ✅ You've learned how spoilers work! Writers mark text, readers click to reveal.
+                    You've learned how spoilers work! Writers mark text, readers click to reveal.
                 </div>
             )}
         </div>
@@ -80,12 +80,12 @@ const SpoilerSandbox: React.FC = () => {
 // ─── Sandbox: Mood ─────────────────────────────────────────────
 const MoodSandbox: React.FC = () => {
     const moods = [
-        { name: 'Romantic', emoji: '🌹', bg: 'linear-gradient(135deg, #C44D73, #8D6E63)' },
-        { name: 'Tense', emoji: '⚡', bg: 'linear-gradient(135deg, #B71C1C, #5D4037)' },
-        { name: 'Melancholy', emoji: '🌧️', bg: 'linear-gradient(135deg, #5B86E5, #4E342E)' },
-        { name: 'Triumphant', emoji: '🎉', bg: 'linear-gradient(135deg, #D4A017, #8D6E63)' },
-        { name: 'Eerie', emoji: '👻', bg: 'linear-gradient(135deg, #3E2723, #1B0E0A)' },
-        { name: 'Serene', emoji: '🍃', bg: 'linear-gradient(135deg, #A1887F, #5D4037)' },
+        { name: 'Romantic', emoji: '', bg: 'linear-gradient(135deg, #C44D73, #8D6E63)' },
+        { name: 'Tense', emoji: '', bg: 'linear-gradient(135deg, #B71C1C, #5D4037)' },
+        { name: 'Melancholy', emoji: '', bg: 'linear-gradient(135deg, #5B86E5, #4E342E)' },
+        { name: 'Triumphant', emoji: '', bg: 'linear-gradient(135deg, #D4A017, #8D6E63)' },
+        { name: 'Eerie', emoji: '', bg: 'linear-gradient(135deg, #3E2723, #1B0E0A)' },
+        { name: 'Serene', emoji: '', bg: 'linear-gradient(135deg, #A1887F, #5D4037)' },
     ];
     const [active, setActive] = useState<number | null>(null);
 
@@ -180,7 +180,7 @@ const MentionSandbox: React.FC = () => {
 
             {inserted && (
                 <div className="sandbox-success">
-                    ✅ Character linked! Readers will see a clickable mention with a preview card.
+                    Character linked! Readers will see a clickable mention with a preview card.
                 </div>
             )}
         </div>
@@ -226,7 +226,7 @@ const PullQuoteSandbox: React.FC = () => (
         </div>
 
         <div className="sandbox-success" style={{ marginTop: '16px' }}>
-            ✨ Use the Pull Quote button in the editor toolbar to create these beautiful epigraphs!
+            Use the Pull Quote button in the editor toolbar to create these beautiful epigraphs!
         </div>
     </div>
 );
@@ -280,7 +280,7 @@ export const FeatureSandbox: React.FC<FeatureSandboxProps> = ({ isOpen, type, on
 
                     <div className="sandbox-footer">
                         <button className="sandbox-done-btn" onClick={onClose}>
-                            Got It! ✓
+                            Got It!
                         </button>
                     </div>
                 </motion.div>

@@ -25,6 +25,7 @@ import { GenrePage } from './pages/GenrePage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { FeaturesPage } from './pages/FeaturesPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { FeatureDevelopmentPage } from './pages/FeatureDevelopmentPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -279,11 +280,47 @@ const App: React.FC = () => {
 
   const renderPage = () => {
     if (!isInitialAuthCheckDone) {
-      return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background dark:bg-dark-background">
+          <div className="flex flex-col items-center">
+            <div className="font-sans text-3xl font-bold tracking-tight text-text-rich dark:text-dark-text-rich mb-6">
+              Word<span className="text-accent">Weft</span>
+            </div>
+            <div className="flex gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-accent/60" style={{ animation: 'pulse 1.4s ease-in-out infinite' }}></div>
+              <div className="w-2 h-2 rounded-full bg-accent/60" style={{ animation: 'pulse 1.4s ease-in-out 0.2s infinite' }}></div>
+              <div className="w-2 h-2 rounded-full bg-accent/60" style={{ animation: 'pulse 1.4s ease-in-out 0.4s infinite' }}></div>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile' || page.name === 'reader')) {
-      return null;
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-background dark:bg-dark-background">
+          <div className="max-w-md w-full text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+            </div>
+            <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Sign in to continue</h2>
+            <p className="text-text-body dark:text-dark-text-body mb-8 leading-relaxed">
+              This page requires authentication. Sign in to access your personalized WordWeft experience.
+            </p>
+            <button
+              onClick={() => { window.location.hash = '/auth'; }}
+              className="inline-flex items-center gap-2 bg-primary text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-accent transition-colors shadow-sm"
+            >
+              Sign In
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      );
     }
 
     switch (page.name) {
@@ -304,25 +341,9 @@ const App: React.FC = () => {
       case 'writer-edit-chapter':
         return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
       case 'writer-analytics':
-        return (
-          <div className="writer-coming-soon">
-            <div className="writer-coming-soon-icon">📊</div>
-            <span className="writer-coming-soon-badge">Coming Soon</span>
-            <h2>Analytics Dashboard</h2>
-            <p>Track your readership, engagement, and growth. Detailed insights into views, ratings, comments, and reader demographics — all in one place.</p>
-            <button className="writer-coming-soon-btn" onClick={() => { window.location.hash = '/write'; }}>← Back to My Books</button>
-          </div>
-        );
+        return <FeatureDevelopmentPage featureName="Writer Analytics" description="We're actively building this page. It will provide deep insights into your story's performance, readership statistics, and engagement metrics." />;
       case 'writer-settings':
-        return (
-          <div className="writer-coming-soon">
-            <div className="writer-coming-soon-icon">⚙️</div>
-            <span className="writer-coming-soon-badge">Coming Soon</span>
-            <h2>Writer Settings</h2>
-            <p>Customize your writing environment, manage publishing preferences, notification settings, and more. Your portal, your rules.</p>
-            <button className="writer-coming-soon-btn" onClick={() => { window.location.hash = '/write'; }}>← Back to My Books</button>
-          </div>
-        );
+        return <FeatureDevelopmentPage featureName="Writer Settings" description="Fine-grained controls for your stories and pen name are coming here. You'll be able to manage your publishing preferences and writer profile." />;
       case 'profile':
         return <ProfilePage user={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'edit-profile':
@@ -433,7 +454,7 @@ const App: React.FC = () => {
         />
         {isAuthenticated && <WhatsNewPopup />}
 
-        {/* Welcome Journey — Full-screen onboarding for new users */}
+        {/* Welcome Journey - Full-screen onboarding for new users */}
         {showWelcomeJourney && currentUser && (
           <WelcomeJourney
             userName={currentUser.name}
@@ -454,10 +475,10 @@ const App: React.FC = () => {
         {showForYouModal && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForYouModal(false)}>
             <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
-              <div className="text-4xl mb-4">✨</div>
-              <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery Coming Soon</h3>
+              <div className="text-4xl mb-4"></div>
+              <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery</h3>
               <p className="text-text-body dark:text-dark-text-body mb-6">
-                We are building a thoughtful recommendation experience. For now, explore stories by genre and transparent ranking.
+                Explore stories by genre, trending rankings, and curated collections to find your next great read.
               </p>
               <button
                 onClick={() => setShowForYouModal(false)}
