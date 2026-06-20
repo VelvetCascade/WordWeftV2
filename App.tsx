@@ -25,6 +25,7 @@ import { GenrePage } from './pages/GenrePage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { FeaturesPage } from './pages/FeaturesPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { AboutPage } from './pages/AboutPage';
 import { FeatureDevelopmentPage } from './pages/FeatureDevelopmentPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
@@ -64,6 +65,7 @@ export type Page =
   | { name: 'notifications' }
   | { name: 'search'; query: string }
   | { name: 'features' }
+  | { name: 'about' }
   | { name: 'genre-page'; genre: string }
   | { name: 'reset-password'; token: string };
 
@@ -98,6 +100,7 @@ const App: React.FC = () => {
       case 'contact': window.location.hash = '/contact'; break;
       case 'feedback': window.location.hash = '/feedback'; break;
       case 'features': window.location.hash = '/features'; break;
+      case 'about': window.location.hash = '/about'; break;
       default: window.location.hash = '/'; break;
     }
   };
@@ -184,8 +187,55 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isInitialAuthCheckDone) return; // Wait until initial auth check is complete
 
+    // Returns the effective route string from hash or pathname.
+    // Hash navigation takes priority (existing behaviour).
+    // Falls back to pathname so pre-rendered clean URLs (e.g. /features)
+    // resolve to the correct page without breaking any existing links.
+    const getEffectiveHash = (): string => {
+      const h = window.location.hash;
+      if (h && h.length > 2) return h.replace('#/', '');
+      // Clean URL support: /features -> 'features', / -> ''
+      return window.location.pathname.replace(/^\//, '');
+    };
+
+    // Updates <title>, <meta name="description">, and <link rel="canonical">
+    // for every page change so crawlers index accurate, unique metadata.
+    const updatePageMeta = (p: Page) => {
+      type MetaEntry = { title: string; description: string; canonical: string };
+      const base = 'https://wordweftstudio.com';
+      const metaMap: Partial<Record<Page['name'], MetaEntry>> = {
+        home:           { title: 'WordWeft — Where Stories Come Alive | Immersive Fiction Platform', description: 'WordWeft gives writers superpowers and readers immersive experiences. Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit.', canonical: base + '/' },
+        features:       { title: 'Features — WordWeft | Atmosphere Engine, Spoiler Guard & More', description: 'Discover WordWeft\'s powerful storytelling features: Atmosphere Engine, Spoiler Guard, Immersive Reader, Character Universe, and World-Building Toolkit.', canonical: base + '/features' },
+        category:       { title: 'Browse Books by Genre — WordWeft', description: 'Explore thousands of stories across Fantasy, Romance, Sci-Fi, Mystery, Horror and more on WordWeft.', canonical: base + '/category' },
+        terms:          { title: 'Terms of Service — WordWeft', description: 'Read the WordWeft Terms of Service — your rights and responsibilities as a reader or writer on our platform.', canonical: base + '/terms' },
+        privacy:        { title: 'Privacy Policy — WordWeft', description: 'Learn how WordWeft collects, uses, and protects your personal data.', canonical: base + '/privacy' },
+        safety:         { title: 'Community Safety Rules — WordWeft', description: 'WordWeft\'s content guidelines and community safety rules for a respectful storytelling environment.', canonical: base + '/safety' },
+        contact:        { title: 'Contact Us — WordWeft', description: 'Get in touch with the WordWeft team. We\'d love to hear from you.', canonical: base + '/contact' },
+        feedback:       { title: 'Share Feedback — WordWeft', description: 'Help us make WordWeft better. Share your thoughts, ideas, and suggestions.', canonical: base + '/feedback' },
+        auth:           { title: 'Sign In or Join — WordWeft', description: 'Create a free WordWeft account to start reading or publishing your own stories.', canonical: base + '/auth' },
+      };
+      const entry = metaMap[p.name];
+      if (!entry) return;
+      document.title = entry.title;
+      const desc = document.querySelector('meta[name="description"]');
+      if (desc) desc.setAttribute('content', entry.description);
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', entry.title);
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', entry.description);
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.setAttribute('content', entry.canonical);
+      let canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute('href', entry.canonical);
+    };
+
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#/', '');
+      const hash = getEffectiveHash();
       let targetPage: Page;
 
       if (hash.startsWith('book/')) {
@@ -250,6 +300,8 @@ const App: React.FC = () => {
         targetPage = { name: 'terms' };
       } else if (hash.startsWith('features')) {
         targetPage = { name: 'features' };
+      } else if (hash.startsWith('about')) {
+        targetPage = { name: 'about' };
       } else {
         targetPage = { name: 'home' };
       }
@@ -269,10 +321,14 @@ const App: React.FC = () => {
 
       window.scrollTo(0, 0);
       setPage(targetPage);
+      updatePageMeta(targetPage);
+      // Signal to @prerenderer/renderer-puppeteer that the page is fully rendered.
+      // In normal browser usage this event is ignored.
+      document.dispatchEvent(new Event('render-event'));
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initial check for the current hash
+    handleHashChange(); // Initial check for the current hash or pathname
 
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [isAuthenticated, isInitialAuthCheckDone]);
@@ -381,6 +437,8 @@ const App: React.FC = () => {
         return <SearchResultsPage />;
       case 'features':
         return <FeaturesPage />;
+      case 'about':
+        return <AboutPage />;
       case 'reset-password':
         return <ResetPasswordPage token={page.token} />;
       default:

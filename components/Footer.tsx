@@ -24,12 +24,19 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
           <div className="col-span-1">
+            <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich mb-4">Company</h4>
+            <ul className="space-y-2 text-sm">
+              <li><a href="#/about" className="hover:text-accent transition-colors">About Us</a></li>
+              <li><a href="#/contact" className="hover:text-accent transition-colors">Contact Us</a></li>
+              <li><a href="#/feedback" className="hover:text-accent transition-colors">Feedback</a></li>
+            </ul>
+          </div>
+          <div className="col-span-1">
             <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich mb-4">Legal</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#/terms" className="hover:text-accent transition-colors">Terms & Conditions</a></li>
+              <li><a href="#/terms" className="hover:text-accent transition-colors">Terms &amp; Conditions</a></li>
               <li><a href="#/privacy" className="hover:text-accent transition-colors">Privacy Policy</a></li>
-              <li><a href="#/safety" className="hover:text-accent transition-colors">Safety & Content Rules</a></li>
-              <li><a href="#/contact" className="hover:text-accent transition-colors">Contact Us</a></li>
+              <li><a href="#/safety" className="hover:text-accent transition-colors">Safety &amp; Content Rules</a></li>
             </ul>
           </div>
           {/* <div className="col-span-1">
