@@ -25,3 +25,4 @@ dist-ssr
 /backend/target/
 /backend/tokens/
 /.env
+scratch/

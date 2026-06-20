@@ -33,11 +33,11 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        User mainAuthor = new User("Elara Vance", "elara@wordweft.com", encoder.encode("password"));
+        User mainAuthor = new User("Elara Vance", "elara@wordweftstudio.com", encoder.encode("password"));
         mainAuthor.setBio("Elara Vance is a celebrated author of speculative fiction, known for weaving intricate worlds and compelling characters.");
         userRepository.save(mainAuthor);
 
-        User author2 = new User("Jaxson Reed", "jaxson@wordweft.com", encoder.encode("password"));
+        User author2 = new User("Jaxson Reed", "jaxson@wordweftstudio.com", encoder.encode("password"));
         author2.setBio("Jaxson Reed writes thrilling sci-fi adventures.");
         userRepository.save(author2);
     }

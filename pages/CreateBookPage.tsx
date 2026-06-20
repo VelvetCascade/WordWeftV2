@@ -198,7 +198,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isAIGenerated ? 'translate-x-6' : ''}`}></div>
                             </div>
                             <div className="ml-3 text-text-body dark:text-dark-text-body">
-                                <p className="font-sans font-bold flex items-center gap-2">✨ AI Generated Content</p>
+                                <p className="font-sans font-bold flex items-center gap-2">AI Generated Content</p>
                                 <p className="text-xs text-gray-500 mt-1">Check this if your book utilizes AI to generate text or structure.</p>
                             </div>
                         </label>
