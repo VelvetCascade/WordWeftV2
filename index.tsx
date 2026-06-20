@@ -17,12 +17,4 @@ const appContent = (
   </React.StrictMode>
 );
 
-// react-snap pre-fills #root with server-rendered HTML before React hydrates.
-// In dev/non-prerendered mode the root is empty → use createRoot (normal SPA).
-// In production after prerender → #root has children → use hydrateRoot to attach
-// React to the existing DOM without replacing it (prevents content flash).
-if (rootElement.hasChildNodes()) {
-  ReactDOM.hydrateRoot(rootElement, appContent);
-} else {
-  ReactDOM.createRoot(rootElement).render(appContent);
-}
+ReactDOM.createRoot(rootElement).render(appContent);

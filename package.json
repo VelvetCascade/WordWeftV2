@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "react-snap",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -39,26 +38,5 @@
     "react-snap": "^1.23.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
-  },
-  "reactSnap": {
-    "source": "dist",
-    "include": [
-      "/",
-      "/features",
-      "/category",
-      "/terms",
-      "/privacy",
-      "/safety",
-      "/contact",
-      "/feedback"
-    ],
-    "renderAfterDocumentEvent": "render-event",
-    "puppeteerArgs": [
-      "--no-sandbox",
-      "--disable-setuid-sandbox"
-    ],
-    "headless": true,
-    "inlineCss": false,
-    "saveAs": "html"
   }
 }
