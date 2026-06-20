@@ -25,6 +25,7 @@ import { GenrePage } from './pages/GenrePage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { FeaturesPage } from './pages/FeaturesPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { AboutPage } from './pages/AboutPage';
 import { FeatureDevelopmentPage } from './pages/FeatureDevelopmentPage';
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
@@ -64,6 +65,7 @@ export type Page =
   | { name: 'notifications' }
   | { name: 'search'; query: string }
   | { name: 'features' }
+  | { name: 'about' }
   | { name: 'genre-page'; genre: string }
   | { name: 'reset-password'; token: string };
 
@@ -98,6 +100,7 @@ const App: React.FC = () => {
       case 'contact': window.location.hash = '/contact'; break;
       case 'feedback': window.location.hash = '/feedback'; break;
       case 'features': window.location.hash = '/features'; break;
+      case 'about': window.location.hash = '/about'; break;
       default: window.location.hash = '/'; break;
     }
   };
@@ -250,6 +253,8 @@ const App: React.FC = () => {
         targetPage = { name: 'terms' };
       } else if (hash.startsWith('features')) {
         targetPage = { name: 'features' };
+      } else if (hash.startsWith('about')) {
+        targetPage = { name: 'about' };
       } else {
         targetPage = { name: 'home' };
       }
@@ -381,6 +386,8 @@ const App: React.FC = () => {
         return <SearchResultsPage />;
       case 'features':
         return <FeaturesPage />;
+      case 'about':
+        return <AboutPage />;
       case 'reset-password':
         return <ResetPasswordPage token={page.token} />;
       default:
