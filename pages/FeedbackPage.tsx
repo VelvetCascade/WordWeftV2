@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 // --- Reusable Components ---
 
@@ -466,6 +467,8 @@ export const FeedbackPage: React.FC = () => {
                     </div>
                 </form>
             </div>
+
+            <AdUnit format="horizontal" />
 
             <Footer />
         </div>

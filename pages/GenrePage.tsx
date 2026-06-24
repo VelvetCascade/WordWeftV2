@@ -6,6 +6,7 @@ import { Footer } from '../components/Footer';
 import { SortDropdown } from '../components/SortDropdown';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
 
@@ -102,6 +103,8 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
                         </button>
                     </div>
                 )}
+
+                <AdUnit format="horizontal" />
             </div>
             <Footer />
         </div>

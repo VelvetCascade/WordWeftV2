@@ -10,6 +10,7 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
 import { ShareModal } from '../components/ShareModal';
+import AdUnit from '../components/AdUnit';
 import { FeatureSparkle } from '../components/FeatureSparkle';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
@@ -645,6 +646,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     )}
                 </div>
 
+                <AdUnit format="article" />
 
                 {/* More from author */}
                 {authorBooks.length > 0 && (

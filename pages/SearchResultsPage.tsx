@@ -4,6 +4,7 @@ import type { SearchBookResult, SearchAuthorResult, SearchFullResponse } from '.
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { StarIcon } from '../components/icons/Icons';
+import AdUnit from '../components/AdUnit';
 
 type SearchTab = 'all' | 'books' | 'authors';
 
@@ -197,6 +198,8 @@ export const SearchResultsPage: React.FC = () => {
                         )}
                     </>
                 )}
+
+                <AdUnit format="horizontal" />
             </div>
         </div>
     );
