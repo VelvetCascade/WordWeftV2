@@ -4,6 +4,7 @@ import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WritingDemoModal } from '../components/WritingDemoModal';
 import { SparklesIcon } from '../components/icons/Icons';
+import AdUnit from '../components/AdUnit';
 
 /* ═══════════════════════════════════════════════════════════════
    FEATURES PAGE — Warm earth-tone themed, immersive showcase
@@ -457,6 +458,8 @@ export const FeaturesPage: React.FC = () => {
                 </div>
             </section>
 
+            <AdUnit format="horizontal" />
+
             {/* ── FEATURE SECTIONS ─────────────────────────────────── */}
 
             <FeatureSection
@@ -644,6 +647,8 @@ export const FeaturesPage: React.FC = () => {
                     />
                 </div>
             </section>
+
+            <AdUnit format="horizontal" />
 
             {/* ── FINAL CTA ────────────────────────────────────────── */}
             <section className="ft-cta-section">

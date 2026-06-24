@@ -8,6 +8,7 @@ import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
@@ -413,6 +414,8 @@ export const HomePage: React.FC = () => {
       {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
       <HeroSearch onScrolledPast={setHeroSearchPast} />
 
+      <AdUnit format="horizontal" />
+
       {/* Explore Books */}
       <section className="container mx-auto px-6 mb-24 mt-4 md:mt-8">
         <div className="flex items-center justify-between gap-4 mb-6">
@@ -497,6 +500,8 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       )}
+
+      <AdUnit format="horizontal" />
 
       {/* Genre-wise Book Sections */}
       {Object.keys(genreBooks).length > 0 && Object.entries(genreBooks).map(([genre, gBooks]) => (

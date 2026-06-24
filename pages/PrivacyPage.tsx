@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 const Section: React.FC<{ number: string; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
     <section className="mb-10">
@@ -258,6 +259,8 @@ export const PrivacyPage: React.FC = () => {
                     </p>
                 </Section>
 
+                <AdUnit format="article" />
+
                 <Section number="8" title="Account Deletion">
                     <p>You may request deletion anytime. After deletion:</p>
                     <BulletList items={[
@@ -333,6 +336,8 @@ export const PrivacyPage: React.FC = () => {
                         </p>
                     </div>
                 </Section>
+
+                <AdUnit format="horizontal" />
 
             </div>
 

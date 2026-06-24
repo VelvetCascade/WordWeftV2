@@ -6,6 +6,7 @@ import { Footer } from '../components/Footer';
 import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
@@ -216,6 +217,8 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             ))}
           </div>
         )}
+
+        <AdUnit format="horizontal" />
       </div>
       <FilterDrawer />
       <Footer />

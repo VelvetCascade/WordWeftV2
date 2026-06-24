@@ -12,6 +12,7 @@ import { FeatureSparkle } from '../components/FeatureSparkle';
 import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
+import AdUnit from '../components/AdUnit';
 import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
@@ -662,6 +663,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         </a>
                     </div>
                 </div>
+
+                <AdUnit format="horizontal" />
             </main>
 
             {/* Discussion Section (Bottom) */}
