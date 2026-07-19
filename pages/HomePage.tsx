@@ -10,6 +10,75 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
 
+// ─── Adsterra Banner Ad ───────────────────────────────────────────────────────
+const AdsterraBanner: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Clear any previous content to prevent duplicate ads on re-mount
+    container.innerHTML = '';
+
+    // Inject the atOptions config script
+    const configScript = document.createElement('script');
+    configScript.type = 'text/javascript';
+    configScript.text = [
+      "atOptions = {",
+      "  'key' : '064361f39002b446b9d0387294fb5f36',",
+      "  'format' : 'iframe',",
+      "  'height' : 60,",
+      "  'width' : 468,",
+      "  'params' : {}",
+      "};",
+    ].join('\n');
+    container.appendChild(configScript);
+
+    // Inject the ad invoke script
+    const invokeScript = document.createElement('script');
+    invokeScript.type = 'text/javascript';
+    invokeScript.src = 'https://www.highperformanceformat.com/064361f39002b446b9d0387294fb5f36/invoke.js';
+    invokeScript.async = true;
+    container.appendChild(invokeScript);
+
+    return () => {
+      // Cleanup on unmount
+      if (container) container.innerHTML = '';
+    };
+  }, []);
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        padding: '8px 16px',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        minHeight: '76px',
+      }}
+      aria-label="Advertisement"
+    >
+      <div
+        ref={containerRef}
+        style={{
+          maxWidth: '468px',
+          width: '100%',
+          height: '60px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+        }}
+      />
+    </div>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -410,6 +479,9 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Adsterra Horizontal Banner Ad — placed at top per integration guidelines */}
+      <AdsterraBanner />
 
       {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
       <HeroSearch onScrolledPast={setHeroSearchPast} />
