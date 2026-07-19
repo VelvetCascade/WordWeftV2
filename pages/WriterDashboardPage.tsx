@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { User, Book } from '../types';
-import { PlusIcon, CloudArrowUpIcon, CloudArrowDownIcon, ChartBarIcon, PencilSquareIcon } from '../components/icons/Icons';
+import { PlusIcon, CloudArrowUpIcon, CloudArrowDownIcon, ChartBarIcon, PencilSquareIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WriterQuickStart } from '../components/WriterQuickStart';
+import { ShareModal } from '../components/ShareModal';
 
 interface WriterDashboardProps {
   currentUser: User;
@@ -45,6 +46,7 @@ const DraftBookListItem: React.FC<{ book: Book }> = ({ book }) => {
 const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) => void; }> = ({ book, onUnpublish }) => {
     const publishedChapters = book.chapters.filter(c => c.status === 'published').length;
     const totalChapters = book.chapters.length;
+    const [isShareOpen, setIsShareOpen] = useState(false);
     
     const handleManageChapters = () => {
         window.location.hash = `/write/book/${book.id}/manage`;
@@ -75,13 +77,26 @@ const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) =>
                 <button onClick={() => { window.location.hash = '/write/analytics'; }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="View Analytics">
                     <ChartBarIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                 </button>
+                <button onClick={(e) => { e.stopPropagation(); setIsShareOpen(true); }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Share Book">
+                    <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
+                </button>
                 <button onClick={() => onUnpublish(book.id)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Unpublish Book">
                     <CloudArrowDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
+                </button>
+                <button onClick={handlePublishNewChapter} className="flex-1 sm:flex-none justify-center text-sm font-sans font-semibold text-accent border border-accent px-3 py-1.5 rounded-lg hover:bg-accent hover:text-white transition-colors flex items-center gap-1.5">
+                   <CloudArrowUpIcon className="w-4 h-4" /> Add Chapter
                 </button>
                 <button onClick={handleManageChapters} className="flex-1 sm:flex-none justify-center text-sm font-sans font-semibold text-white bg-accent px-3 py-1.5 rounded-lg hover:bg-primary transition-colors flex items-center gap-1.5">
                    <PencilSquareIcon className="w-4 h-4" /> Chapters
                 </button>
             </div>
+            <ShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                book={book}
+                url={`${window.location.origin}/#/book/${book.id}`}
+                shareTextOverride={`Read my book '${book.title}' on WordWeft — ${book.chapters.length} chapters of ${book.genres[0] || 'fiction'}. Check it out!`}
+            />
         </div>
     );
 };

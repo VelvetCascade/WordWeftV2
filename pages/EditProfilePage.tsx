@@ -58,6 +58,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [instagram, setInstagram] = useState(user.socials?.instagram || '');
   const [threads, setThreads] = useState(user.socials?.threads || '');
   const [socialErrors, setSocialErrors] = useState<{ twitter?: string, instagram?: string, threads?: string }>({});
+  
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   // Genres
   const [selectedGenres, setSelectedGenres] = useState<string[]>(user.favoriteGenres || []);
@@ -117,21 +120,30 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     const igErr = validateUrl(instagram, 'instagram');
     const thErr = validateUrl(threads, 'threads');
 
+    setSaveError(null);
+    setSaveSuccess(null);
+
     if (twErr || igErr || thErr) {
       setSocialErrors({ twitter: twErr, instagram: igErr, threads: thErr });
       return;
     }
 
-    await onUpdateProfile({
-      name,
-      avatarUrl,
-      avatarFileId,
-      bio,
-      location,
-      website,
-      socials: { twitter, instagram, threads },
-      favoriteGenres: selectedGenres
-    });
+    try {
+      await onUpdateProfile({
+        name,
+        avatarUrl,
+        avatarFileId,
+        bio,
+        location,
+        website,
+        socials: { twitter, instagram, threads },
+        favoriteGenres: selectedGenres
+      });
+      setSaveSuccess("Profile updated successfully!");
+      setTimeout(() => setSaveSuccess(null), 3000);
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to update profile.");
+    }
   };
 
   const validatePassword = (pw: string) => {
@@ -367,21 +379,27 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               />
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
-                className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Save Changes
-              </button>
+            <div className="flex justify-between items-center pt-4 w-full">
+              <div>
+                {saveError && <p className="text-sm text-danger font-sans">{saveError}</p>}
+                {saveSuccess && <p className="text-sm text-success font-sans">{saveSuccess}</p>}
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
+                  className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </form>
 

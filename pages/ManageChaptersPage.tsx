@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import type { User, Chapter, Book } from '../types';
-import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { CharacterList } from '../components/CharacterList';
 import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
+import { ShareModal } from '../components/ShareModal';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -178,7 +179,7 @@ const ConfirmDialog: React.FC<{
     );
 };
 
-const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onDelete: () => void }> = ({ chapter, bookId, index, onPublishToggle, onDelete }) => (
+const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, onPublishToggle, onDelete, onShare }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
         <div className="flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
@@ -205,6 +206,15 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             >
                 {chapter.status === 'published' ? 'Unpublish' : 'Publish'}
             </button>
+            {chapter.status === 'published' && (
+                <button
+                    onClick={onShare}
+                    className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                    title="Share chapter"
+                >
+                    <ShareIcon className="w-4 h-4" /> Share
+                </button>
+            )}
             <button
                 onClick={onDelete}
                 className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
@@ -224,6 +234,11 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [activeTab, setActiveTab] = useState<Tab>('chapters');
     const [deleteChapterTarget, setDeleteChapterTarget] = useState<{ id: string; title: string } | null>(null);
     const [showDeleteBookConfirm, setShowDeleteBookConfirm] = useState(false);
+    // W4: Chapter share state
+    const [shareChapter, setShareChapter] = useState<Chapter | null>(null);
+    // W2: Book publish celebration state
+    const [showPublishCelebration, setShowPublishCelebration] = useState(false);
+    const [bookShareOpen, setBookShareOpen] = useState(false);
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
@@ -267,6 +282,10 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             const updatedUser = await api.setBookStatus(currentUser.id, bookId, newStatus);
             onUserUpdate(updatedUser);
             setErrorMsg(null);
+            // W2: Show celebration on first publish
+            if (newStatus === 'published') {
+                setShowPublishCelebration(true);
+            }
         } catch (e: any) {
             setErrorMsg(e.message);
             setTimeout(() => setErrorMsg(null), 5000);
@@ -385,6 +404,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                         index={i}
                                         onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
                                         onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
+                                        onShare={() => setShareChapter(chapter)}
                                     />
                                 ))
                             ) : (
@@ -436,6 +456,58 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 onConfirm={handleDeleteBook}
                 onCancel={() => setShowDeleteBookConfirm(false)}
             />
+
+            {/* W4: Chapter-level share modal */}
+            {shareChapter && (
+            <ShareModal
+                    isOpen={!!shareChapter}
+                    onClose={() => setShareChapter(null)}
+                    book={book}
+                    chapter={shareChapter}
+                    url={`${window.location.origin}/#/book/${book.id}`}
+                    shareTextOverride={`New chapter alert: '${shareChapter.title}' from '${book.title}'. Read it on WordWeft!`}
+                />
+            )}
+
+            {/* W2: Book publish celebration */}
+            {showPublishCelebration && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-8 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                            <CheckCircleIcon className="w-10 h-10 text-green-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-2">Your book is published!</h3>
+                        <p className="text-text-body dark:text-dark-text-body mb-6">
+                            '{book.title}' is now live. Let the world discover your story.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => { setShowPublishCelebration(false); setBookShareOpen(true); }}
+                                className="w-full py-3 rounded-xl font-bold text-white bg-accent hover:bg-primary transition-colors flex items-center justify-center gap-2"
+                            >
+                                <ShareIcon className="w-5 h-5" /> Share Your Book
+                            </button>
+                            <button
+                                onClick={() => setShowPublishCelebration(false)}
+                                className="w-full py-2.5 rounded-xl font-semibold text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich transition-colors"
+                            >
+                                Later
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* W2: Book-level share modal */}
+            {bookShareOpen && (
+                <ShareModal
+                    isOpen={bookShareOpen}
+                    onClose={() => setBookShareOpen(false)}
+                    book={book}
+                    url={`${window.location.origin}/#/book/${book.id}`}
+                    shareTextOverride={`I just published '${book.title}' on WordWeft! Check it out.`}
+                />
+            )}
         </div>
     );
 };
