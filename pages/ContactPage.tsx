@@ -5,6 +5,7 @@ import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import type { User } from '../types';
+import AdUnit from '../components/AdUnit';
 
 const ContactChannelCard: React.FC<{
     icon: string;
@@ -338,6 +339,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
                     </div>
                 </div>
             </div>
+
+            <AdUnit format="horizontal" />
 
             <Footer />
         </div>

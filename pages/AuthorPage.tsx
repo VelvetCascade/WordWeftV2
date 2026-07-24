@@ -7,6 +7,7 @@ import { UserGroupIcon, PlusIcon, CheckCircleIcon, BookOpenIcon, StarIcon, EyeIc
 import { ConnectionsModal } from '../components/ConnectionsModal';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 // ── Inline icons not in the shared set ──
 
@@ -328,6 +329,8 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
                 {/* Bottom border with gradient */}
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-dark-border to-transparent" />
             </div>
+
+            <AdUnit format="horizontal" />
 
             {/* ═══════════  Tab Navigation  ═══════════ */}
             <div className="sticky top-[72px] z-30 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md border-b border-gray-100 dark:border-dark-border">

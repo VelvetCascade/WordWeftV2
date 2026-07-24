@@ -11,7 +11,7 @@
     <meta name="tdm-reservation" content="1" />
 
     <!-- SEO -->
-    <title>WordWeft — Where Stories Come Alive | Read & Write Immersive Fiction</title>
+    <title>WordWeft — Where Stories Come Alive | Read &amp; Write Immersive Fiction</title>
     <meta name="description" content="WordWeft gives writers superpowers and readers immersive experiences. Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit — all in one beautiful platform." />
     <meta name="keywords" content="wordweft, stories, reading, writing, fiction, self-publishing, immersive reader, mood themes, spoiler guard, world building" />
     <link rel="canonical" href="https://wordweftstudio.com/" />
@@ -44,8 +44,8 @@
     }
     </script>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2048279980945962"
-     crossorigin="anonymous"></script>
+    <!-- AdSense script is loaded per-page by the React AdUnit component, NOT globally.
+         This prevents ads from appearing on empty/thin/auth pages which violates AdSense policy. -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -144,186 +144,89 @@
 </head>
   <body class="bg-background dark:bg-dark-background font-serif text-text-body dark:text-dark-text-body">
     <div id="root">
-      <!-- Static fallback — visible to crawlers; React replaces this on mount -->
-      <style>
-        .ww-fb{font-family:'Inter','Literata',sans-serif;color:#795548;background:#FBF9F6;margin:0}
-        .ww-fb *{box-sizing:border-box}
-        .ww-fb-nav{position:sticky;top:0;z-index:40;background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;max-width:100%}
-        .ww-fb-logo{font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:800;color:#4E342E;letter-spacing:-0.02em;text-decoration:none}
-        .ww-fb-logo span{color:#8D6E63}
-        .ww-fb-nav-links{display:flex;align-items:center;gap:24px}
-        .ww-fb-nav-links a{font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none;transition:color 0.2s}
-        .ww-fb-nav-links a:hover{color:#5D4037}
-        .ww-fb-join{background:linear-gradient(135deg,#5D4037,#8D6E63);color:#fff!important;padding:8px 20px;border-radius:10px;font-weight:600;font-size:0.875rem;transition:transform 0.2s,box-shadow 0.2s}
-        .ww-fb-join:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(93,64,55,0.3)}
-        .ww-fb-hero{min-height:85vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;background:linear-gradient(180deg,#FBF9F6 0%,#f3ece6 50%,#ede4db 100%);position:relative;overflow:hidden}
-        .ww-fb-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(141,110,99,0.08) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(93,64,55,0.06) 0%,transparent 60%);pointer-events:none}
-        .ww-fb-eyebrow{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#8D6E63;margin-bottom:20px;position:relative}
-        .ww-fb-headline{font-family:'Inter',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.05;color:#4E342E;margin:0 0 24px;position:relative}
-        .ww-fb-headline span{background:linear-gradient(135deg,#8D6E63,#5D4037,#8D6E63);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .ww-fb-sub{max-width:640px;font-size:1.125rem;line-height:1.7;color:#795548;margin:0 auto 36px;position:relative}
-        .ww-fb-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;position:relative;margin-bottom:48px}
-        .ww-fb-cta-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#5D4037,#8D6E63);color:#fff;padding:14px 32px;border-radius:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 15px rgba(93,64,55,0.25)}
-        .ww-fb-cta-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(93,64,55,0.35)}
-        .ww-fb-cta-secondary{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.8);color:#5D4037;padding:14px 28px;border-radius:12px;font-family:'Inter',sans-serif;font-weight:600;font-size:1rem;text-decoration:none;border:1px solid rgba(93,64,55,0.15);transition:transform 0.2s,border-color 0.2s}
-        .ww-fb-cta-secondary:hover{transform:translateY(-1px);border-color:rgba(93,64,55,0.3)}
-        .ww-fb-stats{display:flex;align-items:center;gap:24px;position:relative}
-        .ww-fb-stat{text-align:center}
-        .ww-fb-stat strong{display:block;font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:900;color:#4E342E}
-        .ww-fb-stat span{font-size:0.8rem;color:#8D6E63;font-weight:500}
-        .ww-fb-stat-div{width:1px;height:32px;background:rgba(93,64,55,0.15)}
-        .ww-fb-features{max-width:1100px;margin:0 auto;padding:80px 24px}
-        .ww-fb-section-title{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#8D6E63;text-align:center;margin-bottom:12px}
-        .ww-fb-section-headline{font-family:'Inter',sans-serif;font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:#4E342E;text-align:center;margin:0 0 48px}
-        .ww-fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-        .ww-fb-card{background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px;transition:transform 0.25s,box-shadow 0.25s}
-        .ww-fb-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(93,64,55,0.1)}
-        .ww-fb-card-icon{font-size:2rem;margin-bottom:16px}
-        .ww-fb-card h3{font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px}
-        .ww-fb-card p{font-size:0.925rem;line-height:1.65;color:#795548;margin:0}
-        .ww-fb-cta-section{background:linear-gradient(135deg,#5D4037,#6D4C41,#8D6E63);padding:80px 24px;text-align:center;margin-top:64px}
-        .ww-fb-cta-section h2{font-family:'Inter',sans-serif;font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:#fff;margin:0 0 16px}
-        .ww-fb-cta-section p{color:rgba(255,255,255,0.8);font-size:1.05rem;margin:0 auto 32px;max-width:500px}
-        .ww-fb-cta-section a{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#5D4037;padding:14px 36px;border-radius:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s}
-        .ww-fb-cta-section a:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.2)}
-        .ww-fb-footer{background:#fff;border-top:1px solid rgba(0,0,0,0.06);padding:48px 24px 32px}
-        .ww-fb-footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px}
-        .ww-fb-footer-brand{font-family:'Inter',sans-serif;font-size:1.25rem;font-weight:800;color:#4E342E;margin-bottom:12px}
-        .ww-fb-footer-brand span{color:#8D6E63}
-        .ww-fb-footer-desc{font-size:0.875rem;line-height:1.6;color:#795548;max-width:320px}
-        .ww-fb-footer h4{font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4E342E;margin:0 0 16px}
-        .ww-fb-footer ul{list-style:none;margin:0;padding:0}
-        .ww-fb-footer li{margin-bottom:10px}
-        .ww-fb-footer li a{font-size:0.875rem;color:#795548;text-decoration:none;transition:color 0.2s}
-        .ww-fb-footer li a:hover{color:#8D6E63}
-        .ww-fb-footer-bottom{max-width:1100px;margin:32px auto 0;padding-top:24px;border-top:1px solid rgba(0,0,0,0.06);text-align:center;font-size:0.75rem;color:#9e9e9e}
-        @media(max-width:768px){
-          .ww-fb-nav-links a:not(.ww-fb-join){display:none}
-          .ww-fb-hero{min-height:70vh;padding:60px 20px 40px}
-          .ww-fb-stats{flex-direction:column;gap:12px}
-          .ww-fb-stat-div{width:40px;height:1px}
-          .ww-fb-grid{grid-template-columns:1fr}
-          .ww-fb-footer-inner{grid-template-columns:1fr;gap:32px}
-        }
-      </style>
-      <div class="ww-fb">
-        <!-- Navigation -->
-        <nav class="ww-fb-nav">
-          <a href="#/" class="ww-fb-logo">Word<span>Weft</span></a>
-          <div class="ww-fb-nav-links">
-            <a href="#/features">Features</a>
-            <a href="#/category">Browse</a>
-            <a href="#/contact">Contact</a>
-            <a href="#/auth" class="ww-fb-join">Join WordWeft</a>
+      <!-- Static fallback — visible to crawlers before JS loads; React replaces this on mount -->
+      <div style="font-family:'Inter','Literata',sans-serif;color:#795548;background:#FBF9F6;margin:0">
+        <nav style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between">
+          <a href="/" style="font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:800;color:#4E342E;text-decoration:none">Word<span style="color:#8D6E63">Weft</span></a>
+          <div style="display:flex;align-items:center;gap:24px">
+            <a href="/features" style="font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none">Features</a>
+            <a href="/category" style="font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none">Browse</a>
+            <a href="/contact" style="font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none">Contact</a>
           </div>
         </nav>
-
-        <!-- Hero -->
-        <section class="ww-fb-hero">
-          <p class="ww-fb-eyebrow">The Future of Storytelling</p>
-          <h1 class="ww-fb-headline">Where Stories<br/><span>Come Alive</span></h1>
-          <p class="ww-fb-sub">
+        <section style="min-height:85vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;background:linear-gradient(180deg,#FBF9F6 0%,#f3ece6 50%,#ede4db 100%)">
+          <p style="font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#8D6E63;margin-bottom:20px">The Future of Storytelling</p>
+          <h1 style="font-family:'Inter',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.05;color:#4E342E;margin:0 0 24px">Where Stories Come Alive</h1>
+          <p style="max-width:640px;font-size:1.125rem;line-height:1.7;color:#795548;margin:0 auto 36px">
             WordWeft gives writers superpowers and readers immersive experiences.
             Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit
-            &mdash; all in one beautiful platform.
+            — all in one beautiful platform.
           </p>
-          <div class="ww-fb-ctas">
-            <a href="#/auth" class="ww-fb-cta-primary">
-              &#9998; Start Writing
-            </a>
-            <a href="#/category" class="ww-fb-cta-secondary">
-              &#128214; Explore Library
-            </a>
-          </div>
-          <div class="ww-fb-stats">
-            <div class="ww-fb-stat"><strong>8+</strong><span>Unique Features</span></div>
-            <div class="ww-fb-stat-div"></div>
-            <div class="ww-fb-stat"><strong>6</strong><span>Mood Themes</span></div>
-            <div class="ww-fb-stat-div"></div>
-            <div class="ww-fb-stat"><strong>&infin;</strong><span>Stories to Tell</span></div>
-          </div>
         </section>
-
-        <!-- Features -->
-        <section class="ww-fb-features">
-          <p class="ww-fb-section-title">Platform Highlights</p>
-          <h2 class="ww-fb-section-headline">Everything You Need to Read &amp; Write</h2>
-          <div class="ww-fb-grid">
-            <div class="ww-fb-card">
-              <div class="ww-fb-card-icon">&#127912;</div>
-              <h3>Atmosphere Engine</h3>
-              <p>Tag sections with moods — romantic, tense, eerie — and readers experience subtle, immersive color shifts that match the narrative's emotion.</p>
+        <section style="max-width:1100px;margin:0 auto;padding:80px 24px">
+          <p style="font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#8D6E63;text-align:center;margin-bottom:12px">Platform Highlights</p>
+          <h2 style="font-family:'Inter',sans-serif;font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:#4E342E;text-align:center;margin:0 0 48px">Everything You Need to Read &amp; Write</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Atmosphere Engine</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Tag sections with moods — romantic, tense, eerie — and readers experience subtle, immersive color shifts that match the narrative's emotion.</p>
             </div>
-            <div class="ww-fb-card">
-              <div class="ww-fb-card-icon">&#128065;</div>
-              <h3>Spoiler Guard</h3>
-              <p>Mark any paragraph as a spoiler. Readers see a beautiful blur overlay they can tap to reveal — no accidental plot reveals.</p>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Spoiler Guard</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Mark any paragraph as a spoiler. Readers see a beautiful blur overlay they can tap to reveal — no accidental plot reveals.</p>
             </div>
-            <div class="ww-fb-card">
-              <div class="ww-fb-card-icon">&#128214;</div>
-              <h3>Immersive Reader</h3>
-              <p>Multiple reading themes, adjustable typography, a progress tracker, and inline comments — a distraction-free reading experience.</p>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Immersive Reader</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Multiple reading themes, adjustable typography, a progress tracker, and inline comments — a distraction-free reading experience.</p>
             </div>
-            <div class="ww-fb-card">
-              <div class="ww-fb-card-icon">&#128100;</div>
-              <h3>Character Universe</h3>
-              <p>@mention characters to surface bio cards mid-read. Build a cast of characters with portraits, roles, and backstories.</p>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Character Universe</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">@mention characters to surface bio cards mid-read. Build a cast of characters with portraits, roles, and backstories.</p>
             </div>
-            <div class="ww-fb-card">
-              <div class="ww-fb-card-icon">&#127758;</div>
-              <h3>World Building</h3>
-              <p>A sidebar toolkit to manage characters, scenes, and lore notes — all linked to your chapters and accessible while you write.</p>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">World Building</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">A sidebar toolkit to manage characters, scenes, and lore notes — all linked to your chapters and accessible while you write.</p>
             </div>
-            <div class="ww-fb-card">
-              <div class="ww-fb-card-icon">&#128269;</div>
-              <h3>Smart Search</h3>
-              <p>Search across books, authors, genres, and characters with real-time autocomplete and relevance-ranked results.</p>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Smart Search</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Search across books, authors, genres, and characters with real-time autocomplete and relevance-ranked results.</p>
             </div>
           </div>
         </section>
-
-        <!-- CTA -->
-        <section class="ww-fb-cta-section">
-          <h2>Ready to Begin Your Story?</h2>
-          <p>Join thousands of writers and readers on the most immersive storytelling platform.</p>
-          <a href="#/auth">Start Writing Free &rarr;</a>
-        </section>
-
-        <!-- Footer -->
-        <footer class="ww-fb-footer">
-          <div class="ww-fb-footer-inner">
+        <footer style="background:#fff;border-top:1px solid rgba(0,0,0,0.06);padding:48px 24px 32px">
+          <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px">
             <div>
-              <div class="ww-fb-footer-brand">Word<span>Weft</span></div>
-              <p class="ww-fb-footer-desc">A next-gen platform for readers and storytellers. Discover your next favorite book or share your own story with the world.</p>
+              <div style="font-family:'Inter',sans-serif;font-size:1.25rem;font-weight:800;color:#4E342E;margin-bottom:12px">Word<span style="color:#8D6E63">Weft</span></div>
+              <p style="font-size:0.875rem;line-height:1.6;color:#795548;max-width:320px">A next-gen platform for readers and storytellers. Discover your next favorite book or share your own story with the world.</p>
             </div>
             <div>
-              <h4>Platform</h4>
-              <ul>
-                <li><a href="#/">Discover</a></li>
-                <li><a href="#/category">Genres</a></li>
-                <li><a href="#/features">Features</a></li>
-                <li><a href="#/feedback">Feedback</a></li>
+              <h4 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4E342E;margin:0 0 16px">Platform</h4>
+              <ul style="list-style:none;margin:0;padding:0">
+                <li style="margin-bottom:10px"><a href="/" style="font-size:0.875rem;color:#795548;text-decoration:none">Discover</a></li>
+                <li style="margin-bottom:10px"><a href="/category" style="font-size:0.875rem;color:#795548;text-decoration:none">Genres</a></li>
+                <li style="margin-bottom:10px"><a href="/features" style="font-size:0.875rem;color:#795548;text-decoration:none">Features</a></li>
+                <li style="margin-bottom:10px"><a href="/feedback" style="font-size:0.875rem;color:#795548;text-decoration:none">Feedback</a></li>
               </ul>
             </div>
             <div>
-              <h4>Legal</h4>
-              <ul>
-                <li><a href="#/terms">Terms &amp; Conditions</a></li>
-                <li><a href="#/privacy">Privacy Policy</a></li>
-                <li><a href="#/safety">Safety &amp; Content Rules</a></li>
-                <li><a href="#/contact">Contact Us</a></li>
+              <h4 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4E342E;margin:0 0 16px">Legal</h4>
+              <ul style="list-style:none;margin:0;padding:0">
+                <li style="margin-bottom:10px"><a href="/terms" style="font-size:0.875rem;color:#795548;text-decoration:none">Terms &amp; Conditions</a></li>
+                <li style="margin-bottom:10px"><a href="/privacy" style="font-size:0.875rem;color:#795548;text-decoration:none">Privacy Policy</a></li>
+                <li style="margin-bottom:10px"><a href="/safety" style="font-size:0.875rem;color:#795548;text-decoration:none">Safety &amp; Content Rules</a></li>
+                <li style="margin-bottom:10px"><a href="/contact" style="font-size:0.875rem;color:#795548;text-decoration:none">Contact Us</a></li>
               </ul>
             </div>
           </div>
-          <div class="ww-fb-footer-bottom">&copy; 2025 WordWeft. All rights reserved.</div>
+          <div style="max-width:1100px;margin:32px auto 0;padding-top:24px;border-top:1px solid rgba(0,0,0,0.06);text-align:center;font-size:0.75rem;color:#9e9e9e">&copy; 2025 WordWeft. All rights reserved.</div>
         </footer>
       </div>
-      <noscript>
-        <div style="padding:20px;text-align:center;font-family:Inter,sans-serif;color:#795548;background:#FBF9F6">
-          WordWeft requires JavaScript for the full interactive experience. Please enable JavaScript in your browser.
-        </div>
-      </noscript>
     </div>
+    <noscript>
+      <div style="padding:20px;text-align:center;font-family:Inter,sans-serif;color:#795548;background:#FBF9F6">
+        WordWeft requires JavaScript for the full interactive experience. Please enable JavaScript in your browser.
+      </div>
+    </noscript>
     <script type="module" src="/index.tsx"></script>
     <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
     <script>

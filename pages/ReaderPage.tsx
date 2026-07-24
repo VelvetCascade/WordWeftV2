@@ -683,6 +683,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                     {/* Author Revenue-Share Ad Unit */}
                     <AdSenseBanner format="auto" className="my-6" />
                 </div>
+
+                <AdUnit format="horizontal" />
             </main>
 
             {/* Discussion Section (Bottom) */}

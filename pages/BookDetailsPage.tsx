@@ -10,6 +10,7 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
 import { ShareModal } from '../components/ShareModal';
+import AdUnit from '../components/AdUnit';
 import { FeatureSparkle } from '../components/FeatureSparkle';
 import { AdSenseBanner } from '../components/AdSenseBanner';
 
@@ -649,6 +650,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     )}
                 </div>
 
+                <AdUnit format="article" />
 
                 {/* More from author */}
                 {authorBooks.length > 0 && (
