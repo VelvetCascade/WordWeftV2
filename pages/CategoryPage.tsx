@@ -7,6 +7,7 @@ import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, Star
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { AdSenseBanner } from '../components/AdSenseBanner';
+import AdUnit from '../components/AdUnit';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';

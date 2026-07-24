@@ -200,6 +200,8 @@ export const SearchResultsPage: React.FC = () => {
                         <AdSenseBanner format="horizontal" className="my-8" />
                     </>
                 )}
+
+                <AdUnit format="horizontal" />
             </div>
         </div>
     );
