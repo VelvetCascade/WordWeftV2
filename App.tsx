@@ -83,7 +83,7 @@ const App: React.FC = () => {
   // Helper to navigate by converting Page to hash URL
   const navigateTo = (target: Page) => {
     switch (target.name) {
-      case 'home': window.location.hash = '/home'; break;
+      case 'home': window.location.hash = '/'; break;
       case 'category': window.location.hash = '/category'; break;
       case 'book-details': window.location.hash = `/book/${target.bookId}`; break;
       case 'reader': window.location.hash = `/read/book/${target.bookId}/chapter/${target.chapterIndex}`; break;
@@ -300,15 +300,18 @@ const App: React.FC = () => {
         targetPage = { name: 'terms' };
       } else if (hash.startsWith('features')) {
         targetPage = { name: 'features' };
-      } else if (hash.startsWith('home')) {
-        targetPage = { name: 'home' };
+      } else if (hash.startsWith('about')) {
+        targetPage = { name: 'about' };
       } else {
-        // Root landing: unauthenticated visitors land on Features page by default, while HomePage remains 100% public
-        targetPage = isAuthenticated ? { name: 'home' } : { name: 'features' };
+        targetPage = { name: 'home' };
       }
 
-      // Allow both logged-in and guest users to experience the main HomePage
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications'];
+      // For logged-out users, the root landing page is the Features page
+      if (!isAuthenticated && targetPage.name === 'home') {
+        targetPage = { name: 'features' };
+      }
+
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications', 'reader'];
 
       if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
         setIntendedPage(targetPage);
