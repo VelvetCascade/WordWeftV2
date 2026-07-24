@@ -11,6 +11,7 @@ import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
 import { ShareModal } from '../components/ShareModal';
 import { FeatureSparkle } from '../components/FeatureSparkle';
+import { AdSenseBanner } from '../components/AdSenseBanner';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
@@ -526,6 +527,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 </section>
 
                 {/* Tab Navigation */}
+                {/* Author Revenue-Share Ad Unit */}
+                <AdSenseBanner format="auto" className="max-w-4xl mx-auto my-8" />
+
                 <div className="flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
                     {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => {
                         const btn = (

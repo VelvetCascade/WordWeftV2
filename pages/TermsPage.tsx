@@ -210,26 +210,49 @@ export const TermsPage: React.FC = () => {
                     <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">We may manually adjust discoverability.</p>
                 </Section>
 
-                <Section number="11" title="AI Usage Policy">
-                    <p>Unless explicitly permitted:</p>
-                    <BulletList items={[
-                        "Fully AI-generated books must be labeled",
-                        "AI spam publishing is prohibited",
-                        "AI impersonation of real authors is prohibited",
-                        "AI-generated covers may be restricted"
-                    ]} />
-                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">We may request proof of authorship.</p>
+                <Section number="11" title="AI Policy & Prohibition of Scraping / Training">
+                    <SubSection title="A. Author AI Publishing Rules">
+                        <BulletList items={[
+                            "Fully AI-generated stories must be clearly labeled",
+                            "Bulk AI spam publishing is strictly prohibited",
+                            "AI impersonation of real authors is zero-tolerance forbidden",
+                            "AI-generated covers may be restricted or flagged"
+                        ]} />
+                    </SubSection>
+
+                    <SubSection title="B. Strict Prohibition of Data Mining, Web Scraping & AI Training">
+                        <p className="mt-2 font-semibold text-text-rich dark:text-dark-text-rich">
+                            WordWeft strictly protects the intellectual property of authors hosted on our platform.
+                        </p>
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-xl p-4 mt-3">
+                            <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-2">
+                                🚫 Unsanctioned AI Model Training & Data Mining Prohibited:
+                            </p>
+                            <BulletList items={[
+                                "You may NOT use automated spiders, bots, scrapers, or scripts to extract, mine, or harvest text, stories, chapters, or user data from WordWeft.",
+                                "You may NOT use any story, chapter, character, or text published on WordWeft for the purpose of training, fine-tuning, evaluating, or developing artificial intelligence, machine learning, or large language models (LLMs) without explicit written consent from the author and WordWeft.",
+                                "WordWeft reserves the right to block, rate-limit, and pursue civil and legal remedies against any entity or automated process violating this anti-scraping policy."
+                            ]} />
+                        </div>
+                    </SubSection>
                 </Section>
 
-                <Section number="12" title="Intellectual Property Complaints (DMCA-style)">
-                    <p>To report infringement, send:</p>
-                    <BulletList items={[
-                        "Proof of ownership",
-                        "Link to content",
-                        "Identity verification"
-                    ]} />
-                    <p className="mt-3">We may remove content immediately during investigation.</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">False claims may result in account suspension.</p>
+                <Section number="12" title="Intellectual Property Complaints & DMCA Procedure">
+                    <p>WordWeft respects author intellectual property and acts swiftly on valid copyright infringement notices.</p>
+                    <SubSection title="Submitting a Copyright Takedown Request">
+                        <p>If you believe your copyrighted work has been posted on WordWeft without authorization, please send a written request to <a href="mailto:wordweftstudio@gmail.com" className="text-accent font-semibold hover:underline">wordweftstudio@gmail.com</a> including:</p>
+                        <BulletList items={[
+                            "Proof of copyright ownership or authorized representation",
+                            "Exact URL(s) or link to the infringing material on WordWeft",
+                            "Description of the copyrighted work claimed to be infringed",
+                            "Your full contact information (name, email, phone number)",
+                            "A statement of good faith belief that the use is unauthorized",
+                            "A statement under penalty of perjury that the notice is accurate"
+                        ]} />
+                    </SubSection>
+                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 italic">
+                        We investigate all valid notices and will remove or disable access to infringing material promptly. Repeat infringers will face permanent account termination.
+                    </p>
                 </Section>
 
                 <Section number="13" title="Privacy & Data">

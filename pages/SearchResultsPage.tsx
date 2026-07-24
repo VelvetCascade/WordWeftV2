@@ -4,6 +4,7 @@ import type { SearchBookResult, SearchAuthorResult, SearchFullResponse } from '.
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { StarIcon } from '../components/icons/Icons';
+import { AdSenseBanner } from '../components/AdSenseBanner';
 
 type SearchTab = 'all' | 'books' | 'authors';
 
@@ -195,6 +196,8 @@ export const SearchResultsPage: React.FC = () => {
                                 </button>
                             </div>
                         )}
+                        {/* Platform Monetization Ad Banner */}
+                        <AdSenseBanner format="horizontal" className="my-8" />
                     </>
                 )}
             </div>

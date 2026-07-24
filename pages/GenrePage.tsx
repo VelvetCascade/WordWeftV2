@@ -6,6 +6,7 @@ import { Footer } from '../components/Footer';
 import { SortDropdown } from '../components/SortDropdown';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { AdSenseBanner } from '../components/AdSenseBanner';
 
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
 
@@ -102,6 +103,8 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
                         </button>
                     </div>
                 )}
+                {/* Platform Monetization Ad Banner */}
+                <AdSenseBanner format="horizontal" className="my-8" />
             </div>
             <Footer />
         </div>
