@@ -8,7 +8,8 @@ import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
-import AdUnit from '../components/AdUnit';
+
+import { AdSenseBanner } from '../components/AdSenseBanner';
 
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
@@ -410,6 +411,9 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Google AdSense Banner — Non-intrusive placement */}
+      <AdSenseBanner format="horizontal" className="my-4" />
 
       {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
       <HeroSearch onScrolledPast={setHeroSearchPast} />
