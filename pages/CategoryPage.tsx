@@ -6,7 +6,6 @@ import { Footer } from '../components/Footer';
 import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
-import { AdSenseBanner } from '../components/AdSenseBanner';
 import AdUnit from '../components/AdUnit';
 
 type ViewMode = 'grid' | 'list';
@@ -218,8 +217,8 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             ))}
           </div>
         )}
-        {/* Platform Monetization Ad Banner */}
-        <AdSenseBanner format="horizontal" className="mt-12 mb-4" />
+
+        <AdUnit format="horizontal" />
       </div>
       <FilterDrawer />
       <Footer />

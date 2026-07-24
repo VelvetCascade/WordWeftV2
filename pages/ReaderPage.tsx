@@ -12,7 +12,7 @@ import { FeatureSparkle } from '../components/FeatureSparkle';
 import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
-import { AdSenseBanner } from '../components/AdSenseBanner';
+import AdUnit from '../components/AdUnit';
 import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
@@ -376,10 +376,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     };
 
     const openCommentDrawer = (index: number | null) => {
-        if (!currentUser) {
-            window.location.hash = '/auth';
-            return;
-        }
         setActiveParagraphIndex(index);
         setIsCommentDrawerOpen(true);
     };
@@ -593,10 +589,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         >
                             {chapter.isLiked ? <HeartIconSolid className="w-6 h-6" /> : <HeartIcon className="w-6 h-6" />}
                         </button>
-                        <button onClick={() => {
-                            if (!currentUser) { window.location.hash = '/auth'; return; }
-                            setIsBookmarked(!isBookmarked);
-                        }}>
+                        <button onClick={() => setIsBookmarked(!isBookmarked)}>
                             <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
                         </button>
                         <button onClick={() => setIsShareModalOpen(true)}>
@@ -669,19 +662,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                             Buy us a Coffee ☕
                         </a>
                     </div>
-
-                    {/* Copyright & Anti-AI Protection Notice */}
-                    <div className="w-full text-center py-4 px-6 border-t border-b border-gray-200/60 dark:border-dark-border/40 my-6">
-                        <p className="font-sans text-xs font-semibold text-text-rich dark:text-dark-text-rich mb-1">
-                            &copy; {new Date().getFullYear()} {book.author.name} &mdash; All Rights Reserved.
-                        </p>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-lg mx-auto leading-normal">
-                            This story is published on WordWeft and is strictly protected against unauthorized copying, distribution, and automated AI model training.
-                        </p>
-                    </div>
-
-                    {/* Author Revenue-Share Ad Unit */}
-                    <AdSenseBanner format="auto" className="my-6" />
                 </div>
 
                 <AdUnit format="horizontal" />
