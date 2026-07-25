@@ -202,9 +202,12 @@ public class BookService {
         map.put("isLiked", false);
 
         map.put("genres", book.getGenres());
+        map.put("category", book.getCategory());
         map.put("tags", book.getTags());
         map.put("summary", book.getSummary());
         map.put("description", book.getDescription());
+        map.put("coverFileId", book.getCoverFileId());
+        map.put("authorId", book.getAuthorId());
 
         // Enrich Chapters
         List<Map<String, Object>> enrichedChapters = book.getChapters().stream().map(ch -> {

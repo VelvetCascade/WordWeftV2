@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Character } from '../types';
-import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon, ShareIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
@@ -17,6 +17,7 @@ import { PublishCharacterReviewModal } from '../components/PublishCharacterRevie
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
 import { FeatureSparkle } from '../components/FeatureSparkle';
+import { ShareModal } from '../components/ShareModal';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -124,6 +125,10 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [pendingPublish, setPendingPublish] = useState<{content: string, title: string} | null>(null);
+    const [showPublishSuccess, setShowPublishSuccess] = useState(false);
+    const [publishedChapterTitle, setPublishedChapterTitle] = useState('');
+    const [publishedChapterId, setPublishedChapterId] = useState<string | null>(null);
+    const [isChapterShareOpen, setIsChapterShareOpen] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
     // Show Demo Modal on first visit if not seen
@@ -204,7 +209,13 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
             if (status === 'published') {
                 triggerFeedback('PUBLISH_FLOW');
-                window.location.hash = `/write/book/${bookId}/manage`;
+                // Determine the final saved chapter ID (either existing or newly created)
+                const savedChapterId = chapterId !== 'new'
+                    ? chapterId
+                    : updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === finalTitle)?.id ?? null;
+                setPublishedChapterTitle(finalTitle);
+                setPublishedChapterId(savedChapterId);
+                setShowPublishSuccess(true);
             }
         } catch (error) {
             console.error("Failed to save chapter:", error);
@@ -285,6 +296,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     if (!book) return <div className="p-8">Book not found.</div>;
 
     return (
+        <>
         <div className="flex bg-white dark:bg-dark-surface h-screen overflow-hidden">
             {/* Main Content */}
             <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${isSidebarOpen ? 'mr-0' : ''}`}>
@@ -466,5 +478,53 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 onApplyReplacedHtml={handleApplyReplacedHtml}
             />
         </div>
+
+        {/* W1: Post-publish chapter celebration modal */}
+        {showPublishSuccess && book && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                        <CheckCircleIcon className="w-10 h-10 text-green-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-2">Chapter Published!</h3>
+                    <p className="font-semibold text-text-body dark:text-dark-text-body mb-1">'{publishedChapterTitle}' is now live.</p>
+                    <p className="text-sm text-text-body dark:text-dark-text-body mb-6">Let your readers know there's a new chapter to read.</p>
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={() => { setShowPublishSuccess(false); setIsChapterShareOpen(true); }}
+                            className="w-full py-3 rounded-xl font-bold text-white bg-accent hover:bg-primary transition-colors flex items-center justify-center gap-2"
+                        >
+                            <ShareIcon className="w-5 h-5" /> Share this Chapter
+                        </button>
+                        <button
+                            onClick={() => { setShowPublishSuccess(false); window.location.hash = `/write/book/${bookId}/manage`; }}
+                            className="w-full py-2.5 rounded-xl font-semibold text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich transition-colors"
+                        >
+                            Go to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {isChapterShareOpen && book && (() => {
+            const sharedChapter = publishedChapterId
+                ? book.chapters.find(c => c.id === publishedChapterId)
+                : book.chapters.find(c => c.title === publishedChapterTitle);
+            const publicUrl = sharedChapter
+                ? `${window.location.origin}/#/book/${book.id}`
+                : window.location.href;
+            return (
+                <ShareModal
+                    isOpen={isChapterShareOpen}
+                    onClose={() => { setIsChapterShareOpen(false); window.location.hash = `/write/book/${bookId}/manage`; }}
+                    book={book}
+                    chapter={sharedChapter}
+                    url={publicUrl}
+                    shareTextOverride={`I just published a new chapter: '${publishedChapterTitle}' in ${book.title}. Read it on WordWeft!`}
+                />
+            );
+        })()}
+        </>
     );
 };

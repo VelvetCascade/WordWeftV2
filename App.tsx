@@ -200,9 +200,10 @@ const App: React.FC = () => {
 
     // Updates <title>, <meta name="description">, and <link rel="canonical">
     // for every page change so crawlers index accurate, unique metadata.
-    const updatePageMeta = (p: Page) => {
+    const updatePageMeta = (p: Page, bookCoverUrl?: string) => {
       type MetaEntry = { title: string; description: string; canonical: string };
       const base = 'https://wordweftstudio.com';
+      const defaultOgImage = `${base}/og-banner.png`;
       const metaMap: Partial<Record<Page['name'], MetaEntry>> = {
         home:           { title: 'WordWeft — Where Stories Come Alive | Immersive Fiction Platform', description: 'WordWeft gives writers superpowers and readers immersive experiences. Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit.', canonical: base + '/' },
         features:       { title: 'Features — WordWeft | Atmosphere Engine, Spoiler Guard & More', description: 'Discover WordWeft\'s powerful storytelling features: Atmosphere Engine, Spoiler Guard, Immersive Reader, Character Universe, and World-Building Toolkit.', canonical: base + '/features' },
@@ -225,6 +226,11 @@ const App: React.FC = () => {
       if (ogDesc) ogDesc.setAttribute('content', entry.description);
       const ogUrl = document.querySelector('meta[property="og:url"]');
       if (ogUrl) ogUrl.setAttribute('content', entry.canonical);
+      // Update og:image — use book cover for book/reader pages, default banner otherwise
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.setAttribute('content', bookCoverUrl || defaultOgImage);
+      const twImage = document.querySelector('meta[name="twitter:image"]');
+      if (twImage) twImage.setAttribute('content', bookCoverUrl || defaultOgImage);
       let canonical = document.querySelector('link[rel="canonical"]');
       if (!canonical) {
         canonical = document.createElement('link');
@@ -233,6 +239,7 @@ const App: React.FC = () => {
       }
       canonical.setAttribute('href', entry.canonical);
     };
+
 
     const handleHashChange = () => {
       const hash = getEffectiveHash();
@@ -482,7 +489,7 @@ const App: React.FC = () => {
             {renderPage()}
           </WriterLayout>
         ) : (
-          <main className={showNavbar ? `pb-24 md:pb-0 md:pt-20 ${page.name === 'home' || page.name === 'features' ? '' : 'pt-20'}` : ""}>
+          <main className={showNavbar ? `pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'md:pt-20'}` : ""}>
             {renderPage()}
           </main>
         )}

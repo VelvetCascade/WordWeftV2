@@ -3,11 +3,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { Author, Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { UserGroupIcon, PlusIcon, CheckCircleIcon, BookOpenIcon, StarIcon, EyeIcon, HeartIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
+import { UserGroupIcon, PlusIcon, CheckCircleIcon, BookOpenIcon, StarIcon, EyeIcon, HeartIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon, ChatBubbleLeftIcon, ShareIcon } from '../components/icons/Icons';
 import { ConnectionsModal } from '../components/ConnectionsModal';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
+import { ShareModal } from '../components/ShareModal';
+import { AuthorShareModal } from '../components/AuthorShareModal';
 
 // ── Inline icons not in the shared set ──
 
@@ -78,6 +80,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
     const [activeTab, setActiveTab] = useState<'published' | 'about'>('published');
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     useEffect(() => {
         setIsLoading(true);
@@ -232,6 +235,13 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
                                             <PlusIcon className="w-4 h-4" /> Follow
                                         </>
                                     )}
+                                </button>
+                                <button
+                                    onClick={() => setIsShareOpen(true)}
+                                    className="p-2.5 rounded-full border border-gray-200 dark:border-dark-border hover:border-accent hover:text-accent text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
+                                    title="Share Profile"
+                                >
+                                    <ShareIcon className="w-5 h-5" />
                                 </button>
                             </div>
 
@@ -512,6 +522,17 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
             />
             
             <Footer />
+
+            {/* Author profile share modal */}
+            {author && (
+                <AuthorShareModal
+                    isOpen={isShareOpen}
+                    onClose={() => setIsShareOpen(false)}
+                    author={author}
+                    authorBooks={authorBooks}
+                    url={window.location.href}
+                />
+            )}
         </div>
     );
 };

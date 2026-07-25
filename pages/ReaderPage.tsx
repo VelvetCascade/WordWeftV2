@@ -215,11 +215,22 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
+    const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+    const [showAutoSharePopup, setShowAutoSharePopup] = useState(false);
+    const [autoShareDismissed, setAutoShareDismissed] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     const [comments, setComments] = useState<Comment[]>([]);
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
+
+    // Quote sharing state
+    const [selectedQuote, setSelectedQuote] = useState('');
+    const [quoteTooltipPos, setQuoteTooltipPos] = useState<{ x: number; y: number } | null>(null);
+    const [shareInitialTab, setShareInitialTab] = useState<'quick' | 'story' | 'quote'>('quick');
+
+    // Share nudge state
+    const [showLikeNudge, setShowLikeNudge] = useState(false);
 
     // Character Mention State
     const [characters, setCharacters] = useState<Character[]>([]);
@@ -241,9 +252,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const chapter = book?.chapters[currentChapterIndex];
 
     const contentThemeClasses: Record<ContentTheme, string> = {
-        light: 'bg-background text-text-body',
-        dark: 'bg-[#261F1D] text-[#BCAAA4]',
-        sepia: 'bg-[#FBF0D9] text-[#5B4636]',
+        light: 'reader-theme-light',
+        dark: 'reader-theme-dark',
+        sepia: 'reader-theme-sepia',
     };
 
     useEffect(() => {
@@ -269,13 +280,31 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, [bookId, chapter]);
 
+    // Default reading mode on load based on user's site theme
     useEffect(() => {
         if (globalTheme === 'dark') {
             setContentTheme('dark');
         } else {
             setContentTheme('light');
         }
-    }, [globalTheme]);
+    }, []);
+
+    // Scroll to bottom detection for share popup
+    useEffect(() => {
+        const handleScroll = () => {
+            // Check if we are near the bottom of the page (within 300px)
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+                if (!hasScrolledToBottom) {
+                    setHasScrolledToBottom(true);
+                    if (!autoShareDismissed) {
+                        setShowAutoSharePopup(true);
+                    }
+                }
+            }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [hasScrolledToBottom, autoShareDismissed]);
 
     const saveProgress = useCallback(() => {
         if (!currentUser || !book || !chapter) return;
@@ -370,6 +399,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const goToChapter = (index: number) => {
         if (!book || (index < 0 || index >= book.chapters.length)) return;
         saveProgress();
+        setHasScrolledToBottom(false);
+        setShowAutoSharePopup(false);
         trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setCurrentChapterIndex(index);
         window.location.hash = `/read/book/${book.id}/chapter/${index}`;
@@ -419,6 +450,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             chapters: updatedChapters,
             likesCount: book.likesCount + likeDiff
         });
+
+        // R1: Show share nudge when liking (not unliking)
+        if (!prevIsLiked) {
+            setTimeout(() => {
+                setShowLikeNudge(true);
+                setTimeout(() => setShowLikeNudge(false), 8000);
+            }, 600);
+        } else {
+            setShowLikeNudge(false);
+        }
 
         try {
             await api.toggleChapterLike(book.id, chapter.id);
@@ -552,9 +593,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     };
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
-    if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
-
     // Reset block index
     blockIndex = 0;
 
@@ -605,15 +643,21 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             {/* Content */}
             <main 
                 ref={contentRef} 
-                className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10 select-none"
+                className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10"
                 onCopy={(e) => e.preventDefault()}
                 onCut={(e) => e.preventDefault()}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{
-                    WebkitUserSelect: 'none',
-                    MozUserSelect: 'none',
-                    msUserSelect: 'none',
-                    userSelect: 'none',
+                onMouseUp={() => {
+                    const selection = window.getSelection();
+                    const text = selection?.toString().trim() || '';
+                    if (text.length >= 10 && text.length <= 280) {
+                        const range = selection!.getRangeAt(0);
+                        const rect = range.getBoundingClientRect();
+                        setSelectedQuote(text);
+                        setQuoteTooltipPos({ x: rect.left + rect.width / 2, y: rect.top + window.scrollY - 44 });
+                    } else {
+                        setQuoteTooltipPos(null);
+                    }
                 }}
             >
                 <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
@@ -642,7 +686,64 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                 {chapter.likesCount}
                             </span>
                         </button>
+
+                        {/* R1: Post-like share nudge */}
+                        {showLikeNudge && (
+                            <div className="mt-4 flex items-center gap-3 bg-accent/5 border border-accent/20 rounded-xl px-4 py-3 animate-fade-in max-w-sm">
+                                <p className="text-sm text-text-body dark:text-dark-text-body flex-1">Loved this chapter? Let others discover it.</p>
+                                <button
+                                    onClick={() => { setShowLikeNudge(false); setShareInitialTab('quick'); setIsShareModalOpen(true); }}
+                                    className="text-sm font-bold text-accent hover:underline whitespace-nowrap flex-shrink-0"
+                                >
+                                    Share
+                                </button>
+                            </div>
+                        )}
                     </div>
+
+                    {/* R4: Chapter-end share card (always visible, replaced by R3 on last chapter) */}
+                    {currentChapterIndex < book.chapters.length - 1 ? (
+                        <div className="w-full bg-gradient-to-br from-accent/5 to-primary/5 border border-accent/15 rounded-2xl p-6 flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                <p className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">Enjoying {book.title}?</p>
+                                <p className="text-sm text-text-body dark:text-dark-text-body mt-0.5">Share it with your friends and help the story grow.</p>
+                            </div>
+                            <button
+                                onClick={() => { setShareInitialTab('quick'); setIsShareModalOpen(true); }}
+                                className="flex-shrink-0 px-5 py-2.5 bg-accent text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-md"
+                            >
+                                Share
+                            </button>
+                        </div>
+                    ) : (
+                        // R3: Book completion milestone (last chapter)
+                        <div className="w-full relative overflow-hidden bg-gradient-to-br from-accent/10 via-primary/10 to-accent/5 border border-accent/20 dark:border-accent/10 rounded-2xl p-8 shadow-soft text-center">
+                            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
+                            <div className="relative z-10">
+                                <div className="mx-auto w-16 h-16 bg-accent/15 rounded-full flex items-center justify-center mb-4">
+                                    <HeartIconSolid className="w-8 h-8 text-accent" />
+                                </div>
+                                <h3 className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich mb-2">You finished {book.title}!</h3>
+                                <p className="text-text-body dark:text-dark-text-body mb-6 max-w-md mx-auto">
+                                    Share your accomplishment and help the author reach new readers.
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <button
+                                        onClick={() => { setShareInitialTab('story'); setIsShareModalOpen(true); }}
+                                        className="px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-md"
+                                    >
+                                        Download Story Poster
+                                    </button>
+                                    <button
+                                        onClick={() => { setShareInitialTab('quote'); setIsShareModalOpen(true); }}
+                                        className="px-6 py-3 bg-white dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border text-text-rich dark:text-dark-text-rich font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-dark-border transition-colors"
+                                    >
+                                        Download Quote Card
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Support WordWeft CTA */}
                     <div className="w-full bg-gradient-to-br from-white to-[#FDFBF7] dark:from-dark-surface-alt dark:to-dark-surface border border-accent/20 dark:border-accent/10 rounded-2xl p-8 shadow-soft text-center group transition-all duration-300 hover:shadow-lifted">
@@ -696,9 +797,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         <p className="text-center text-gray-500 py-8">No general comments yet.</p>
                     ) : (
                         comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
-                            // Snippet logic is tricky with HTML. For now, we skip snippet for general display or strip tags if needed.
-                            // But here we are iterating generally.
-
                             return (
                                 <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors" onClick={() => openCommentDrawer(comment.paragraphIndex)}>
                                     <div className="flex items-start gap-4">
@@ -728,7 +826,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                                         In response to paragraph #{comment.paragraphIndex + 1}
                                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Jump to paragraph ↗</span>
                                                     </p>
-                                                    {/* Snippet display skipped for cleaner HTML handling for now, or could use stripTags */}
                                                 </button>
                                             )}
 
@@ -779,6 +876,28 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold">A+</button>
             </div>
 
+            {/* Auto Share Popup (Triggered at end of chapter) */}
+            {showAutoSharePopup && (
+                <div className="fixed bottom-24 right-4 z-40 bg-white dark:bg-dark-surface border border-accent/20 dark:border-dark-border rounded-xl shadow-2xl p-4 w-72 animate-slide-in-bottom">
+                    <button onClick={() => { setShowAutoSharePopup(false); setAutoShareDismissed(true); }} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <XMarkIcon className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center">
+                            <ShareIcon className="w-4 h-4 text-accent" />
+                        </div>
+                        <h4 className="font-bold text-text-rich dark:text-dark-text-rich">Loved this chapter?</h4>
+                    </div>
+                    <p className="text-xs text-text-body dark:text-dark-text-body mb-3">Share it with your friends and help the author grow.</p>
+                    <button 
+                        onClick={() => { setShowAutoSharePopup(false); setShareInitialTab('story'); setIsShareModalOpen(true); }} 
+                        className="w-full bg-accent text-white font-bold py-2 rounded-lg text-sm hover:bg-primary transition-colors"
+                    >
+                        Download Poster
+                    </button>
+                </div>
+            )}
+
             <CommentDrawer
                 isOpen={isCommentDrawerOpen}
                 onClose={() => setIsCommentDrawerOpen(false)}
@@ -799,7 +918,25 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 onClose={() => setIsShareModalOpen(false)} 
                 book={book} 
                 chapter={chapter}
+                initialTab={shareInitialTab}
+                quoteText={selectedQuote || undefined}
             />
+
+            {/* Floating Quote Share Tooltip */}
+            {quoteTooltipPos && selectedQuote && (
+                <button
+                    style={{ position: 'absolute', left: quoteTooltipPos.x, top: quoteTooltipPos.y, transform: 'translateX(-50%)' }}
+                    className="z-50 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:bg-primary transition-colors whitespace-nowrap"
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        setShareInitialTab('quote');
+                        setIsShareModalOpen(true);
+                        setQuoteTooltipPos(null);
+                    }}
+                >
+                    Share as Quote
+                </button>
+            )}
         </div>
     );
 };

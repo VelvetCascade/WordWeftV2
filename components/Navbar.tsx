@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon, HeartIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
@@ -62,6 +62,9 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   };
 
   const [activeRoute, setActiveRoute] = useState(getActiveRoute());
+
+  // True only when on the homepage AND not yet scrolled — drives hero-overlay styling
+  const isOnHero = activeRoute === 'home' && !isScrolled;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,14 +172,14 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   return (
     <>
       {/* Desktop Navbar */}
-      <header className={`fixed top-0 left-0 right-0 z-50 hidden md:block transition-all duration-300 ${isScrolled ? 'bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-lg shadow-soft dark:border-b dark:border-dark-border' : 'bg-transparent'}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 hidden md:block transition-all duration-300 ${isOnHero ? 'bg-black/20 backdrop-blur-sm' : 'bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-lg shadow-soft dark:border-b dark:border-dark-border'}`}>
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }}>
             <WordWeftLogo className="w-12 h-12 md:w-14 md:h-14" />
           </a>
           <nav className="flex items-center space-x-8">
             {desktopNavLinks.map((link) => (
-              <a key={link.label} href="#" onClick={(e) => { e.preventDefault(); link.action(); }} className="font-sans text-sm font-medium text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent transition-colors">
+              <a key={link.label} href="#" onClick={(e) => { e.preventDefault(); link.action(); }} className={`font-sans text-sm font-medium transition-colors ${isOnHero ? 'text-white/90 hover:text-white' : 'text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent'}`}>
                 {link.label}
               </a>
             ))}
@@ -185,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
             {/* Search Button */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className={`search-navbar-btn ${!heroSearchVisible ? 'search-navbar-btn-morph' : ''}`}
+              className={`search-navbar-btn ${!heroSearchVisible ? 'search-navbar-btn-morph' : ''} ${!isScrolled ? 'search-navbar-btn-light' : ''}`}
               title="Search (Ctrl+K)"
             >
               <SearchIcon />
@@ -198,27 +201,29 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
               href="https://ko-fi.com/wordweftstudio" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors group hidden sm:block"
+              className="p-2 rounded-full hover:bg-white/20 transition-colors group hidden sm:block"
               title="Support WordWeft on Ko-fi"
             >
-              <HeartIcon className="w-6 h-6 text-gray-500 dark:text-dark-text-body group-hover:text-red-500 transition-colors" />
+              <HeartIcon className={`w-6 h-6 group-hover:text-red-400 transition-colors ${isOnHero ? 'text-white/80' : 'text-gray-500 dark:text-dark-text-body'}`} />
             </a>
 
-            <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-              {theme === 'light' ? <MoonIcon className="w-6 h-6 text-text-body" /> : <SunIcon className="w-6 h-6 text-dark-text-body" />}
+            <button onClick={toggleTheme} className={`p-2 rounded-full transition-colors ${isOnHero ? 'hover:bg-white/20' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}>
+              {theme === 'light'
+                ? <MoonIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-text-body'}`} />
+                : <SunIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-dark-text-body'}`} />}
             </button>
             {isAuthenticated ? (
               <>
                 {notificationBell}
-                <button onClick={() => { window.location.hash = '/profile'; }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                  <UserCircleIcon className="w-6 h-6 text-text-body dark:text-dark-text-body" />
+                <button onClick={() => { window.location.hash = '/profile'; }} className={`p-2 rounded-full transition-colors ${isOnHero ? 'hover:bg-white/20' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}>
+                  <UserCircleIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-text-body dark:text-dark-text-body'}`} />
                 </button>
-                <button onClick={onLogout} title="Logout" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                  <ArrowRightOnRectangleIcon className="w-6 h-6 text-text-body dark:text-dark-text-body" />
+                <button onClick={onLogout} title="Logout" className={`p-2 rounded-full transition-colors ${isOnHero ? 'hover:bg-white/20' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}>
+                  <ArrowRightOnRectangleIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-text-body dark:text-dark-text-body'}`} />
                 </button>
               </>
             ) : (
-              <button onClick={() => { window.location.hash = '/auth'; }} className="font-sans text-sm font-semibold bg-accent text-white px-4 py-2 rounded-lg hover:bg-primary transition-colors">
+              <button onClick={() => { window.location.hash = '/auth'; }} className={`font-sans text-sm font-semibold px-4 py-2 rounded-lg transition-colors ${isOnHero ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25 backdrop-blur-sm' : 'bg-accent text-white hover:bg-primary'}`}>
                 Login / Sign Up
               </button>
             )}

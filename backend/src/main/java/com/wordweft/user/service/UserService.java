@@ -89,9 +89,15 @@ public class UserService {
         }
         map.put("stats", stats);
 
-        // Populate Written Books
+        // Populate Written Books — use BookService to enrich each book so the
+        // nested `author` object (id, name, avatarUrl, bio) is included.
+        // Raw Book entities only store authorId, not the resolved author object.
         List<Book> written = bookRepository.findByAuthorId(user.getId());
-        map.put("writtenBooks", written);
+        List<Map<String, Object>> writtenEnriched = written.stream()
+                .map(b -> bookService.getBookById(b.getId(), false))
+                .filter(b -> b != null)
+                .collect(Collectors.toList());
+        map.put("writtenBooks", writtenEnriched);
 
         // Populate Library
         List<LibraryEntry> entries = libraryRepository.findByUserId(user.getId());

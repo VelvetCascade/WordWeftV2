@@ -227,6 +227,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [hoverRating, setHoverRating] = useState(0);
     const [userComment, setUserComment] = useState('');
     const [isEditingReview, setIsEditingReview] = useState(false);
+    // Share nudge state
+    const [showLibraryNudge, setShowLibraryNudge] = useState(false);
+    const [showReviewShareNudge, setShowReviewShareNudge] = useState(false);
 
     const currentUserReview = useMemo(() => {
         if (!currentUser) return null;
@@ -332,9 +335,15 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (customShelves.length > 0) {
             openManageShelvesModal();
         } else {
+            const wasInLibrary = isBookInLibrary;
             const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
             onUserUpdate(updatedUser);
             triggerFeedback('FIRST_EXPERIENCE');
+            // R5: Show share nudge when adding (not removing)
+            if (!wasInLibrary) {
+                setShowLibraryNudge(true);
+                setTimeout(() => setShowLibraryNudge(false), 6000);
+            }
         }
     };
 
@@ -363,6 +372,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         trackEvent('social', 'write_review', book?.title, userRating, { bookId, reviewLength: userComment.length });
         setAllReviews(updatedReviews);
         setIsEditingReview(false);
+        // R2: Show share nudge after review is submitted
+        setShowReviewShareNudge(true);
+        setTimeout(() => setShowReviewShareNudge(false), 10000);
     };
 
     const handleDeleteReview = async () => {
@@ -522,7 +534,27 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                 {isBookInLibrary ? <CheckCircleIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
                                 {isBookInLibrary ? 'In Your Library' : 'Add to Library'}
                             </button>
+                            <button
+                                onClick={() => setIsShareModalOpen(true)}
+                                className="w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border transition-colors flex items-center justify-center gap-2"
+                            >
+                                <ShareIcon className="w-5 h-5" />
+                                Share
+                            </button>
                         </div>
+
+                        {/* R5: Add-to-library share nudge */}
+                        {showLibraryNudge && (
+                            <div className="mt-4 flex items-center justify-between gap-3 bg-accent/5 border border-accent/20 rounded-xl px-4 py-3 animate-fade-in">
+                                <p className="text-sm text-text-body dark:text-dark-text-body">Added! Recommend it to friends?</p>
+                                <button
+                                    onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}
+                                    className="text-sm font-bold text-accent hover:underline whitespace-nowrap flex-shrink-0"
+                                >
+                                    Share
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -716,6 +748,34 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 onClose={() => setIsShareModalOpen(false)} 
                 book={book} 
             />
+
+            {/* R2: Post-review share nudge */}
+            {showReviewShareNudge && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border shadow-lifted rounded-2xl px-5 py-4 flex items-start gap-4 animate-fade-in">
+                    <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-text-rich dark:text-dark-text-rich">Your review is live!</p>
+                        <p className="text-xs text-text-body dark:text-dark-text-body mt-0.5">Help {book.title} reach more readers.</p>
+                        <div className="flex gap-3 mt-2">
+                            <button
+                                onClick={() => { setShowReviewShareNudge(false); setIsShareModalOpen(true); }}
+                                className="text-sm font-bold text-accent hover:underline"
+                            >
+                                Share this Book
+                            </button>
+                            <button
+                                onClick={() => setShowReviewShareNudge(false)}
+                                className="text-sm text-gray-400 hover:text-text-body dark:hover:text-dark-text-body"
+                            >
+                                Maybe Later
+                            </button>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowReviewShareNudge(false)} className="text-gray-400 hover:text-text-body flex-shrink-0">
+                        <XMarkIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
 
             <Footer />
         </div>
