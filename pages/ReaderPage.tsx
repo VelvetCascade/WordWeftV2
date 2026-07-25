@@ -662,6 +662,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                             Buy us a Coffee ☕
                         </a>
                     </div>
+
+                    {/* Copyright & Anti-AI Protection Notice */}
+                    <div className="w-full text-center py-4 px-6 border-t border-b border-gray-200/60 dark:border-dark-border/40 my-6">
+                        <p className="font-sans text-xs font-semibold text-text-rich dark:text-dark-text-rich mb-1">
+                            &copy; {new Date().getFullYear()} {book.author.name} &mdash; All Rights Reserved.
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-lg mx-auto leading-normal">
+                            This story is published on WordWeft and is strictly protected against unauthorized copying, distribution, and automated AI model training.
+                        </p>
+                    </div>
                 </div>
 
                 <AdUnit format="horizontal" />
