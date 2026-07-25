@@ -828,7 +828,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     {activeTab === 'story' && (
                         <div className="animate-fade-in flex flex-col items-center">
                             <p className="text-center text-sm text-text-body dark:text-dark-text-body mb-4">
-                                Generate a beautiful poster for Instagram Stories or social media feeds.
+                                Download a beautiful poster for Instagram Stories or social media feeds.
                             </p>
 
                             {/* Theme Picker */}
@@ -863,7 +863,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 disabled={isGenerating}
                                 className="mt-6 w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {isGenerating ? 'Generating...' : 'Share Poster'}
+                                {isGenerating ? 'Generating...' : 'Download Poster'}
                             </button>
                         </div>
                     )}
@@ -872,7 +872,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     {activeTab === 'quote' && quoteText && (
                         <div className="animate-fade-in flex flex-col items-center">
                             <p className="text-center text-sm text-text-body dark:text-dark-text-body mb-4">
-                                Share a memorable passage as a beautiful quote card.
+                                Download a memorable passage as a beautiful quote card.
                             </p>
 
                             {/* Theme Picker */}
@@ -907,7 +907,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 disabled={isGenerating}
                                 className="mt-6 w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {isGenerating ? 'Generating...' : 'Share Quote Card'}
+                                {isGenerating ? 'Generating...' : 'Download Quote Card'}
                             </button>
                         </div>
                     )}

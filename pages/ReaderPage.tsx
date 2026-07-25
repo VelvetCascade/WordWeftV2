@@ -252,9 +252,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const chapter = book?.chapters[currentChapterIndex];
 
     const contentThemeClasses: Record<ContentTheme, string> = {
-        light: 'bg-background text-text-body',
-        dark: 'bg-[#261F1D] text-[#BCAAA4]',
-        sepia: 'bg-[#FBF0D9] text-[#5B4636]',
+        light: 'reader-theme-light',
+        dark: 'reader-theme-dark',
+        sepia: 'reader-theme-sepia',
     };
 
     useEffect(() => {
@@ -280,13 +280,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, [bookId, chapter]);
 
+    // Default reading mode on load based on user's site theme
     useEffect(() => {
         if (globalTheme === 'dark') {
             setContentTheme('dark');
         } else {
             setContentTheme('light');
         }
-    }, [globalTheme]);
+    }, []);
 
     // Scroll to bottom detection for share popup
     useEffect(() => {
@@ -731,13 +732,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                         onClick={() => { setShareInitialTab('story'); setIsShareModalOpen(true); }}
                                         className="px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-md"
                                     >
-                                        Create a Story Poster
+                                        Download Story Poster
                                     </button>
                                     <button
                                         onClick={() => { setShareInitialTab('quote'); setIsShareModalOpen(true); }}
                                         className="px-6 py-3 bg-white dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border text-text-rich dark:text-dark-text-rich font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-dark-border transition-colors"
                                     >
-                                        Share a Favorite Quote
+                                        Download Quote Card
                                     </button>
                                 </div>
                             </div>
@@ -761,6 +762,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         >
                             Buy us a Coffee ☕
                         </a>
+                    </div>
+
+                    {/* Copyright & Anti-AI Protection Notice */}
+                    <div className="w-full text-center py-4 px-6 border-t border-b border-gray-200/60 dark:border-dark-border/40 my-6">
+                        <p className="font-sans text-xs font-semibold text-text-rich dark:text-dark-text-rich mb-1">
+                            &copy; {new Date().getFullYear()} {book.author.name} &mdash; All Rights Reserved.
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-lg mx-auto leading-normal">
+                            This story is published on WordWeft and is strictly protected against unauthorized copying, distribution, and automated AI model training.
+                        </p>
                     </div>
                 </div>
 
@@ -882,7 +893,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         onClick={() => { setShowAutoSharePopup(false); setShareInitialTab('story'); setIsShareModalOpen(true); }} 
                         className="w-full bg-accent text-white font-bold py-2 rounded-lg text-sm hover:bg-primary transition-colors"
                     >
-                        Share Poster
+                        Download Poster
                     </button>
                 </div>
             )}

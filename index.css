@@ -137,6 +137,72 @@
     color: inherit;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Reader Specific Content Themes (Light, Sepia, Dark)
+   Forces exact background and high-contrast text colors
+   regardless of site-wide global dark mode.
+   ───────────────────────────────────────────────────────────── */
+
+.reader-theme-light {
+    background-color: #FDFBF7 !important;
+    color: #2C1D11 !important;
+}
+.reader-theme-light h1,
+.reader-theme-light h2,
+.reader-theme-light h3,
+.reader-theme-light .ww-prose,
+.reader-theme-light .ww-prose p,
+.reader-theme-light .ww-prose span:not(.mention),
+.reader-theme-light .ww-prose h1,
+.reader-theme-light .ww-prose h2,
+.reader-theme-light .ww-prose h3,
+.reader-theme-light .ww-prose strong,
+.reader-theme-light .ww-prose em,
+.reader-theme-light .ww-prose li,
+.reader-theme-light .ww-prose blockquote {
+    color: #2C1D11 !important;
+}
+
+.reader-theme-sepia {
+    background-color: #FBF0D9 !important;
+    color: #4A3525 !important;
+}
+.reader-theme-sepia h1,
+.reader-theme-sepia h2,
+.reader-theme-sepia h3,
+.reader-theme-sepia .ww-prose,
+.reader-theme-sepia .ww-prose p,
+.reader-theme-sepia .ww-prose span:not(.mention),
+.reader-theme-sepia .ww-prose h1,
+.reader-theme-sepia .ww-prose h2,
+.reader-theme-sepia .ww-prose h3,
+.reader-theme-sepia .ww-prose strong,
+.reader-theme-sepia .ww-prose em,
+.reader-theme-sepia .ww-prose li,
+.reader-theme-sepia .ww-prose blockquote {
+    color: #4A3525 !important;
+}
+
+.reader-theme-dark {
+    background-color: #181311 !important;
+    color: #E4D7CE !important;
+}
+.reader-theme-dark h1,
+.reader-theme-dark h2,
+.reader-theme-dark h3,
+.reader-theme-dark .ww-prose,
+.reader-theme-dark .ww-prose p,
+.reader-theme-dark .ww-prose span:not(.mention),
+.reader-theme-dark .ww-prose h1,
+.reader-theme-dark .ww-prose h2,
+.reader-theme-dark .ww-prose h3,
+.reader-theme-dark .ww-prose strong,
+.reader-theme-dark .ww-prose em,
+.reader-theme-dark .ww-prose li,
+.reader-theme-dark .ww-prose blockquote {
+    color: #E4D7CE !important;
+}
+
 /* Editor-only spacing */
 .rte-content {
     padding: 24px 32px;
