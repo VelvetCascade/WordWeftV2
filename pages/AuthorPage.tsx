@@ -178,7 +178,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
     const initial = author.name ? author.name.charAt(0).toUpperCase() : '?';
 
     return (
-        <div>
+        <div className="ww-author-page">
             {/* ═══════════  Hero Header  ═══════════ */}
             <div className="relative overflow-hidden">
                 {/* Background gradient banner */}

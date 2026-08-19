@@ -245,6 +245,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     // Derived state
     const publishedChapterCount = book?.chapters.filter(c => c.status === 'published').length || 0;
     const isBookPublished = book?.publicationStatus === 'published';
+    const totalWords = book?.chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0) || 0;
 
     const handlePublishChapterToggle = async (chapterId: string) => {
         const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
@@ -302,133 +303,93 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-background pb-20">
-            {/* Header / Dashboard Area */}
-            <div className="bg-white dark:bg-dark-surface border-b dark:border-dark-border pt-8 pb-12 px-6 shadow-sm">
-                <div className="container mx-auto max-w-4xl">
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="ww-manage-book-page">
+            <section className="ww-manage-hero">
+                <div className="ww-manage-hero-inner">
+                    <div className="ww-manage-cover group">
+                        <img src={book.coverUrl} alt={book.title} />
+                        <button onClick={() => setIsEditModalOpen(true)}>Change cover</button>
+                    </div>
 
-                        <div className="relative group flex-shrink-0 mx-auto md:mx-0">
-                            <img src={book.coverUrl} alt={book.title} className="w-32 h-48 object-cover rounded-xl shadow-lg" />
-                            <button
-                                onClick={() => setIsEditModalOpen(true)}
-                                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
-                            >
-                                <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-full">Edit Cover</span>
-                            </button>
+                    <div className="ww-manage-copy">
+                        <div className="ww-manage-status-row">
+                            <span className={`ww-manage-status ${isBookPublished ? 'published' : 'draft'}`}>
+                                {isBookPublished ? <CheckCircleIcon className="w-4 h-4" /> : <i />}
+                                {isBookPublished ? 'Published' : 'Private draft'}
+                            </span>
+                            {book.category && <span className="ww-manage-category">{book.category}</span>}
                         </div>
-
-                        <div className="flex-1 w-full flex flex-col justify-center">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 md:gap-4">
-                                <div className="text-center md:text-left">
-                                    <h1 className="font-sans text-3xl font-extrabold text-text-rich dark:text-dark-text-rich leading-tight mb-2">
-                                        {book.title}
-                                    </h1>
-                                    <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
-                                        {book.genres.map(g => (
-                                            <span key={g} className="text-xs font-semibold bg-gray-100 dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
-                                                {g}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <p className="text-sm text-text-body dark:text-dark-text-body line-clamp-2 max-w-xl mb-4 mx-auto md:mx-0">
-                                        {book.description || "No description provided."}
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0 w-full md:w-auto">
-                                    <div className={`px-3 py-1 rounded-full flex items-center gap-2 text-sm font-bold ${isBookPublished ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                                        {isBookPublished ? <CheckCircleIcon className="w-4 h-4" /> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
-                                        {isBookPublished ? 'PUBLISHED' : 'DRAFT MODE'}
-                                    </div>
-                                    <button
-                                        onClick={handleBookPublishToggle}
-                                        className={`w-full md:w-auto px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex justify-center ${isBookPublished ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-success text-white hover:bg-opacity-90'}`}
-                                    >
-                                        {isBookPublished ? 'Unpublish Book' : 'Publish Book'}
-                                    </button>
-                                    <div className="flex items-center gap-4 mt-2">
-                                        <button onClick={() => setIsEditModalOpen(true)} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
-                                            <Cog6ToothIcon className="w-3 h-3" /> Edit Details
-                                        </button>
-                                        <button onClick={() => setShowDeleteBookConfirm(true)} className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1">
-                                            <TrashIcon className="w-3 h-3" /> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <h1>{book.title}</h1>
+                        <p>{book.description || 'Add a short description to give this story a clear direction.'}</p>
+                        <div className="ww-manage-genres">
+                            {book.genres.map(g => <span key={g}>{g}</span>)}
+                        </div>
+                        <div className="ww-manage-stats">
+                            <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
+                            <div><strong>{totalWords.toLocaleString()}</strong><span>Words</span></div>
+                            <div><strong>{publishedChapterCount}</strong><span>Live</span></div>
+                            <div><strong>{book.viewCount?.toLocaleString() || 0}</strong><span>Reads</span></div>
                         </div>
                     </div>
-                    {errorMsg && (
-                        <div className="mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium animate-slide-in-bottom">
-                            {errorMsg}
-                        </div>
-                    )}
+
+                    <div className="ww-manage-actions">
+                        <button className="ww-manage-primary" onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}>
+                            <PlusIcon className="w-4 h-4" /> New chapter
+                        </button>
+                        <button className="ww-manage-publish" onClick={handleBookPublishToggle}>
+                            {isBookPublished ? 'Return to draft' : 'Publish story'}
+                        </button>
+                        <button onClick={() => setIsEditModalOpen(true)}><Cog6ToothIcon className="w-4 h-4" /> Story details</button>
+                        <button className="danger" onClick={() => setShowDeleteBookConfirm(true)}><TrashIcon className="w-4 h-4" /> Delete story</button>
+                    </div>
                 </div>
-            </div>
+                {errorMsg && <div className="ww-manage-error">{errorMsg}</div>}
+            </section>
 
-            {/* Content Area */}
-            <div className="container mx-auto max-w-4xl px-4 md:px-6 py-8">
-
-                {/* Tabs */}
-                <div className="flex gap-6 border-b border-border dark:border-dark-border mb-8 overflow-x-auto">
+            <div className="ww-manage-workspace">
+                <nav className="ww-manage-tabs" aria-label="Story workspace">
                     {(['chapters', 'characters', 'scenes', 'notes'] as Tab[]).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`pb-3 px-2 font-medium transition-colors border-b-2 capitalize whitespace-nowrap ${activeTab === tab
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-text-muted hover:text-text-body dark:hover:text-dark-text-body'
-                                }`}
-                        >
-                            {tab}
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={activeTab === tab ? 'active' : ''}>
+                            <span>{tab}</span>
+                            {tab === 'chapters' && <small>{book.chapters.length}</small>}
                         </button>
                     ))}
-                </div>
+                </nav>
 
                 {activeTab === 'chapters' && (
-                    <>
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Table of Contents</h2>
-                            <span className="text-sm text-gray-500 font-medium">
-                                {publishedChapterCount} / {book.chapters.length} Published
-                            </span>
+                    <section className="ww-manage-chapters">
+                        <div className="ww-manage-section-head">
+                            <div><span>Manuscript</span><h2>Chapters</h2></div>
+                            <p>{publishedChapterCount} of {book.chapters.length} published</p>
                         </div>
-
-                        <div className="space-y-3">
-                            {book.chapters.length > 0 ? (
-                                book.chapters.map((chapter, i) => (
-                                    <ChapterListItem
-                                        key={chapter.id}
-                                        chapter={chapter}
-                                        bookId={book.id}
-                                        index={i}
-                                        onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
-                                        onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
-                                        onShare={() => setShareChapter(chapter)}
-                                    />
-                                ))
-                            ) : (
-                                <div className="text-center py-16 border-2 border-dashed rounded-xl bg-white dark:bg-dark-surface dark:border-dark-border">
-                                    <p className="text-gray-500 dark:text-gray-400 font-medium mb-2">No chapters yet</p>
-                                    <p className="text-sm text-gray-400">Start writing your story to bring it to life.</p>
+                        <div className="ww-manage-chapter-list">
+                            {book.chapters.length > 0 ? book.chapters.map((chapter, i) => (
+                                <ChapterListItem
+                                    key={chapter.id}
+                                    chapter={chapter}
+                                    bookId={book.id}
+                                    index={i}
+                                    onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
+                                    onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
+                                    onShare={() => setShareChapter(chapter)}
+                                />
+                            )) : (
+                                <div className="ww-manage-empty">
+                                    <span>01</span>
+                                    <h3>Every story starts with a blank page.</h3>
+                                    <p>Create the opening chapter. It stays private until you decide to publish it.</p>
+                                    <button onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}>
+                                        Start the first chapter <span>→</span>
+                                    </button>
                                 </div>
                             )}
                         </div>
-                        {/* Floating Action Button for Chapters only */}
-                        <button
-                            onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}
-                            className="fixed bottom-8 right-8 w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary hover:scale-105 transition-all z-20 group"
-                            title="Add New Chapter"
-                        >
-                            <PlusIcon className="w-7 h-7 transition-transform group-hover:rotate-90" />
-                        </button>
-                    </>
+                    </section>
                 )}
 
                 {activeTab === 'characters' && <CharacterList bookId={bookId} />}
                 {activeTab === 'scenes' && <SceneList bookId={bookId} chapters={book.chapters} />}
                 {activeTab === 'notes' && <NoteList bookId={bookId} />}
-
             </div>
 
             <EditBookModal

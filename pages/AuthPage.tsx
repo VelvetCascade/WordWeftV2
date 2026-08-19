@@ -497,12 +497,28 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
-            <div className="w-full max-w-md">
-                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="flex justify-center mb-6">
+        <div className="ww-auth-page min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
+            <div className="ww-auth-layout">
+            <aside className="ww-auth-story">
+                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-story-brand">
+                    <span><WordWeftLogo className="w-9 h-9" /></span><strong>WordWeft</strong>
+                </a>
+                <div className="ww-auth-story-copy">
+                    <span>A place for the story-minded</span>
+                    <h1>Read deeply.<br />Write bravely.</h1>
+                    <p>Keep your library, reading progress, drafts, characters, and worlds together in one considered space.</p>
+                </div>
+                <div className="ww-auth-story-points">
+                    <div><strong>01</strong><span>Build a library that remembers where you left off.</span></div>
+                    <div><strong>02</strong><span>Write beside your characters, scenes, and story notes.</span></div>
+                    <div><strong>03</strong><span>Publish into a reader designed for long-form fiction.</span></div>
+                </div>
+            </aside>
+            <div className="ww-auth-form-shell w-full max-w-md">
+                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6">
                     <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
                 </a>
-                <div className="relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
                     <button
                         onClick={() => window.location.hash = '/'}
                         className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
@@ -676,6 +692,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         </p>
                     )}
                 </div>
+            </div>
             </div>
 
             <LegalModal

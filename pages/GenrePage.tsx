@@ -47,8 +47,9 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
     };
 
     return (
-        <div className="min-h-screen">
-            <div className="container mx-auto px-4 sm:px-6 py-8">
+        <div className="ww-library-page min-h-screen">
+            <div className="ww-library-container container mx-auto px-4 sm:px-6 py-8">
+                <span className="ww-page-eyebrow">Browse by genre</span>
                 <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4">
                     {decodeURIComponent(genre)}
                 </h1>

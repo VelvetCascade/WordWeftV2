@@ -114,11 +114,11 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   }, [isMobileMenuOpen]);
 
   const desktopNavLinks = [
-    { label: 'Home', action: () => { window.location.hash = '/'; } },
-    { label: 'Genres', action: () => { window.location.hash = '/category'; } },
-    { label: 'For You', action: () => { if (onForYouClick) onForYouClick(); } },
-    { label: 'Library', action: () => { window.location.hash = '/profile'; } },
-    { label: 'Write', action: () => { window.location.hash = '/write'; } },
+    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/'; } },
+    { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; } },
+    { label: 'For you', route: 'for-you', action: () => { if (onForYouClick) onForYouClick(); } },
+    { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; } },
+    { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; } },
   ];
 
   const mobileNavLinks = [
@@ -172,24 +172,32 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   return (
     <>
       {/* Desktop Navbar */}
-      <header className={`fixed top-0 left-0 right-0 z-50 hidden md:block transition-all duration-300 ${isOnHero ? 'bg-black/20 backdrop-blur-sm' : 'bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-lg shadow-soft dark:border-b dark:border-dark-border'}`}>
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }}>
-            <WordWeftLogo className="w-12 h-12 md:w-14 md:h-14" />
+      <header className={`ww-site-header fixed top-0 left-0 right-0 z-50 hidden md:block ${isOnHero ? 'ww-site-header-hero' : 'ww-site-header-solid'}`}>
+        <div className="ww-site-header-inner container mx-auto px-6 flex justify-between items-center">
+          <a className="ww-brand-lockup" href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
+            <span className="ww-brand-mark"><WordWeftLogo className="w-9 h-9" /></span>
+            <span className="ww-brand-name">Word<span>Weft</span></span>
           </a>
-          <nav className="flex items-center space-x-8">
+          <nav className="ww-desktop-nav" aria-label="Primary navigation">
             {desktopNavLinks.map((link) => (
-              <a key={link.label} href="#" onClick={(e) => { e.preventDefault(); link.action(); }} className={`font-sans text-sm font-medium transition-colors ${isOnHero ? 'text-white/90 hover:text-white' : 'text-text-body dark:text-dark-text-body hover:text-accent dark:hover:text-accent'}`}>
+              <a
+                key={link.label}
+                href="#"
+                onClick={(e) => { e.preventDefault(); link.action(); }}
+                className={`ww-desktop-nav-link ${activeRoute === link.route ? 'ww-desktop-nav-link-active' : ''}`}
+                aria-current={activeRoute === link.route ? 'page' : undefined}
+              >
                 {link.label}
               </a>
             ))}
           </nav>
-          <div className="flex items-center space-x-3">
+          <div className="ww-header-actions flex items-center">
             {/* Search Button */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className={`search-navbar-btn ${!heroSearchVisible ? 'search-navbar-btn-morph' : ''} ${!isScrolled ? 'search-navbar-btn-light' : ''}`}
+              className={`search-navbar-btn ${!heroSearchVisible ? 'search-navbar-btn-morph' : ''}`}
               title="Search (Ctrl+K)"
+              aria-label="Search books and authors"
             >
               <SearchIcon />
               <span className="search-navbar-label">Search</span>
@@ -201,38 +209,59 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
               href="https://ko-fi.com/wordweftstudio" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="p-2 rounded-full hover:bg-white/20 transition-colors group hidden sm:block"
+              className="ww-icon-button group hidden sm:flex"
               title="Support WordWeft on Ko-fi"
             >
-              <HeartIcon className={`w-6 h-6 group-hover:text-red-400 transition-colors ${isOnHero ? 'text-white/80' : 'text-gray-500 dark:text-dark-text-body'}`} />
+              <HeartIcon className="w-5 h-5" />
             </a>
 
-            <button onClick={toggleTheme} className={`p-2 rounded-full transition-colors ${isOnHero ? 'hover:bg-white/20' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}>
+            <button onClick={toggleTheme} className="ww-icon-button" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
               {theme === 'light'
-                ? <MoonIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-text-body'}`} />
-                : <SunIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-dark-text-body'}`} />}
+                ? <MoonIcon className="w-5 h-5" />
+                : <SunIcon className="w-5 h-5" />}
             </button>
             {isAuthenticated ? (
               <>
                 {notificationBell}
-                <button onClick={() => { window.location.hash = '/profile'; }} className={`p-2 rounded-full transition-colors ${isOnHero ? 'hover:bg-white/20' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}>
-                  <UserCircleIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-text-body dark:text-dark-text-body'}`} />
+                <button onClick={() => { window.location.hash = '/profile'; }} className="ww-icon-button" aria-label="Open profile">
+                  <UserCircleIcon className="w-5 h-5" />
                 </button>
-                <button onClick={onLogout} title="Logout" className={`p-2 rounded-full transition-colors ${isOnHero ? 'hover:bg-white/20' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}>
-                  <ArrowRightOnRectangleIcon className={`w-6 h-6 ${isOnHero ? 'text-white/90' : 'text-text-body dark:text-dark-text-body'}`} />
+                <button onClick={onLogout} title="Logout" className="ww-icon-button" aria-label="Log out">
+                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
                 </button>
               </>
             ) : (
-              <button onClick={() => { window.location.hash = '/auth'; }} className={`font-sans text-sm font-semibold px-4 py-2 rounded-lg transition-colors ${isOnHero ? 'bg-white/15 text-white border border-white/30 hover:bg-white/25 backdrop-blur-sm' : 'bg-accent text-white hover:bg-primary'}`}>
-                Login / Sign Up
+              <button onClick={() => { window.location.hash = '/auth'; }} className="ww-header-cta">
+                Join WordWeft
               </button>
             )}
           </div>
         </div>
       </header>
 
+      {/* Mobile Top Bar */}
+      <header className="ww-mobile-topbar md:hidden">
+        <a className="ww-mobile-brand" href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
+          <WordWeftLogo className="w-7 h-7" />
+          <span>Word<span>Weft</span></span>
+        </a>
+        <div className="ww-mobile-actions">
+          <button onClick={() => setIsSearchOpen(true)} className="ww-icon-button" aria-label="Search books and authors"><SearchIcon /></button>
+          <button onClick={toggleTheme} className="ww-icon-button" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+            {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5" />}
+          </button>
+          {isAuthenticated && currentUser ? (
+            <button className="ww-mobile-avatar" onClick={() => { window.location.hash = '/profile'; }} aria-label="Open profile">
+              {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} alt="" /> : <span>{userInitial}</span>}
+            </button>
+          ) : (
+            <button className="ww-mobile-join" onClick={() => { window.location.hash = '/auth'; }}>Join</button>
+          )}
+        </div>
+      </header>
+
       {/* Mobile Bottom Navbar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
+      <div className="ww-mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
         <nav className="h-full flex justify-around items-center">
           {mobileNavLinks.map((link) => (
             <button

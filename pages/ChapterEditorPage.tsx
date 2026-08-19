@@ -16,7 +16,6 @@ import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
 import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
-import { FeatureSparkle } from '../components/FeatureSparkle';
 import { ShareModal } from '../components/ShareModal';
 
 interface ChapterEditorPageProps {
@@ -161,6 +160,9 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         const text = content.replace(/<[^>]*>/g, ' ');
         return text.split(/\s+/).filter(Boolean).length;
     }, [content]);
+    const chapterNumber = isNewChapter
+        ? (book?.chapters.length || 0) + 1
+        : Math.max(1, (book?.chapters.findIndex(c => c.id === chapterId) ?? 0) + 1);
 
     useEffect(() => {
         api.getCharactersByBookId(bookId).then(setCharacters);
@@ -297,85 +299,53 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     return (
         <>
-        <div className="flex bg-white dark:bg-dark-surface h-screen overflow-hidden">
-            {/* Main Content */}
-            <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${isSidebarOpen ? 'mr-0' : ''}`}>
-                <header className="flex-shrink-0 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b dark:border-dark-border z-10">
-                    <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <button
-                                onClick={() => window.location.hash = `/write/book/${bookId}/manage`}
-                                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors flex-shrink-0"
-                            >
-                                <ArrowLeftIcon className="w-5 h-5" />
-                            </button>
-                            <div className="min-w-0 relative">
-                                <p className="text-xs text-text-body dark:text-dark-text-body truncate">{book.title}</p>
-                                <input
-                                    ref={titleInputRef}
-                                    type="text"
-                                    value={title}
-                                    onChange={e => handleTitleChange(e.target.value)}
-                                    placeholder="Chapter Title"
-                                    className="font-sans font-bold text-md bg-transparent border-none focus:ring-0 p-0 w-full dark:text-dark-text-rich"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                            <button
-                                onClick={() => setShowDemoModal(true)}
-                                className="px-2 sm:px-3 py-1.5 rounded-lg text-sm font-sans font-semibold text-accent hover:bg-accent/10 transition-colors flex items-center justify-center"
-                                title="View Demo"
-                            >
-                                <BookOpenIcon className="w-5 h-5 sm:hidden" />
-                                <span className="hidden sm:inline-block">View Demo</span>
-                            </button>
-                            <p className="hidden sm:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
-                            <FeatureSparkle featureId="reader-preview" tooltip="See exactly what readers will see" position="bottom">
-                                <button
-                                    onClick={() => setIsPreviewOpen(true)}
-                                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors flex items-center justify-center"
-                                    title="Preview"
-                                >
-                                    <EyeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                                </button>
-                            </FeatureSparkle>
-                            <FeatureSparkle featureId="world-building" tooltip="Organize your characters, scenes & lore here" position="bottom">
-                                <button
-                                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                    className={`p-2 rounded-lg transition-colors flex items-center justify-center ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt text-gray-600 dark:text-gray-400'}`}
-                                    title="World Building"
-                                >
-                                    <SwatchIcon className="w-5 h-5" />
-                                </button>
-                            </FeatureSparkle>
-                            <FeatureSparkle featureId="chapter-scanner" tooltip="Auto-detect and link character names" position="bottom">
-                                <button
-                                    onClick={() => setIsScannerOpen(true)}
-                                    className="p-2 rounded-lg hover:bg-accent/10 transition-colors flex items-center justify-center"
-                                    title="Scan Chapter (Auto-Link)"
-                                >
-                                    <SparklesIcon className="w-5 h-5 text-accent" />
-                                </button>
-                            </FeatureSparkle>
-                            <button
-                                onClick={() => handleSave('draft', content, title)}
-                                className="hidden lg:inline-block bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-border transition-colors text-sm"
-                            >
-                                Save Draft
-                            </button>
-                            <button
-                                onClick={() => handleSave('published', content, title)}
-                                className="bg-accent text-white font-sans font-semibold px-3 sm:px-4 py-2 rounded-lg hover:bg-primary transition-colors text-sm"
-                            >
-                                Publish
-                            </button>
-                        </div>
+        <div className="ww-editor-shell">
+            <div className="ww-editor-main">
+                <header className="ww-editor-topbar">
+                    <div className="ww-editor-context">
+                        <button onClick={() => window.location.hash = `/write/book/${bookId}/manage`} aria-label="Back to story studio">
+                            <ArrowLeftIcon className="w-5 h-5" />
+                        </button>
+                        <div><span>{book.title}</span><strong>Chapter {chapterNumber}</strong></div>
+                    </div>
+
+                    <div className={`ww-editor-save-state ${saveState}`}>
+                        <i /> {getSaveText()}
+                    </div>
+
+                    <div className="ww-editor-actions">
+                        <button onClick={() => setShowDemoModal(true)} title="Writing tools tour">
+                            <BookOpenIcon className="w-4 h-4" /><span>Tour</span>
+                        </button>
+                        <button onClick={() => setIsPreviewOpen(true)} title="Reader preview">
+                            <EyeIcon className="w-4 h-4" /><span>Preview</span>
+                        </button>
+                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={isSidebarOpen ? 'active' : ''} title="Story bible">
+                            <SwatchIcon className="w-4 h-4" /><span>Story bible</span>
+                        </button>
+                        <button onClick={() => setIsScannerOpen(true)} title="Scan chapter for characters">
+                            <SparklesIcon className="w-4 h-4" /><span>Scan</span>
+                        </button>
+                        <span className="ww-editor-action-divider" />
+                        <button className="ww-editor-save-button" onClick={() => handleSave('draft', content, title)}>Save draft</button>
+                        <button className="ww-editor-publish-button" onClick={() => handleSave('published', content, title)}>Publish</button>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto">
-                    <div className="container mx-auto px-4 sm:px-6 py-8 h-full relative">
+                <main className="ww-editor-stage">
+                    <article className="ww-editor-paper">
+                        <div className="ww-editor-title-block">
+                            <span>Chapter {String(chapterNumber).padStart(2, '0')}</span>
+                            <input
+                                ref={titleInputRef}
+                                type="text"
+                                value={title}
+                                onChange={e => handleTitleChange(e.target.value)}
+                                placeholder="Untitled chapter"
+                                aria-label="Chapter title"
+                            />
+                            <div><span>{wordCount.toLocaleString()} words</span><i /><span>{Math.max(1, Math.ceil(wordCount / 220))} min read</span></div>
+                        </div>
 
                         <RichTextEditor
                             value={content}
@@ -387,11 +357,8 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                             characters={characters}
                             onLargePaste={handleLargePaste}
                         />
-                    </div>
+                    </article>
                 </main>
-                <footer className="flex-shrink-0 container mx-auto px-4 sm:px-6 h-8 flex items-center justify-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">{wordCount.toLocaleString()} words</p>
-                </footer>
             </div>
 
             {/* Sidebar */}

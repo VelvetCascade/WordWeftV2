@@ -8,7 +8,6 @@ import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
-import AdUnit from '../components/AdUnit';
 
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
@@ -387,22 +386,23 @@ export const HomePage: React.FC = () => {
   }, [heroSearchPast]);
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="ww-home-page overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[65vh] md:h-screen md:min-h-[600px] flex items-center text-white overflow-hidden py-28 md:py-0">
+      <section className="ww-home-hero relative min-h-[65vh] md:h-screen md:min-h-[600px] flex items-center text-white overflow-hidden py-28 md:py-0">
         <div className="absolute inset-0 bg-animated-gradient animate-gradient-shift"></div>
         <div className="absolute inset-0 bg-primary/30"></div>
         <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 lg:gap-8 items-center h-full">
-          <div className="text-center lg:text-left z-20 flex flex-col items-center lg:items-start">
+          <div className="ww-home-hero-copy text-center lg:text-left z-20 flex flex-col items-center lg:items-start">
+            <span className="ww-home-eyebrow">Your next chapter starts here</span>
             <h1 className="font-sans text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tighter mb-4 drop-shadow-md">
-              Discover. Write. Publish.
+              Find a story.<br />Leave with a world.
             </h1>
             <p className="text-lg md:text-xl max-w-lg text-gray-100 mb-8 drop-shadow">
-              A next-gen platform for readers and storytellers.
+              Discover immersive fiction, follow the voices you love, or shape a story of your own.
             </p>
-            <div className="flex justify-center lg:justify-start space-x-4">
-              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Reading'); window.location.hash = '/category'; }} className="bg-accent font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-xl border border-transparent">Start Reading</button>
-              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Writing'); window.location.hash = '/write'; }} className="bg-white/10 backdrop-blur-md font-sans font-semibold px-8 py-3 rounded-xl hover:bg-white/20 transition-transform hover:scale-105 duration-300 shadow-xl border border-white/20">Start Writing</button>
+            <div className="ww-home-actions flex justify-center lg:justify-start space-x-4">
+              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Reading'); window.location.hash = '/category'; }} className="ww-home-primary">Explore the library</button>
+              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Writing'); window.location.hash = '/write'; }} className="ww-home-secondary">Open writer studio</button>
             </div>
           </div>
           <div className="hidden md:flex lg:block justify-center items-center w-full z-10 mt-8 lg:mt-0 opacity-90 pb-16 lg:pb-0">
@@ -414,10 +414,34 @@ export const HomePage: React.FC = () => {
       {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
       <HeroSearch onScrolledPast={setHeroSearchPast} />
 
-      <AdUnit format="horizontal" />
+      {books[0] && (
+        <section className="ww-home-feature container mx-auto px-6">
+          <div className="ww-home-feature-cover">
+            <img src={books[0].coverUrl} alt={`Cover of ${books[0].title}`} />
+            <span>Editor&rsquo;s shelf</span>
+          </div>
+          <div className="ww-home-feature-copy">
+            <span className="ww-page-eyebrow">A story worth meeting</span>
+            <h2>{books[0].title}</h2>
+            <p className="ww-home-feature-author">by <button onClick={() => window.location.hash = `/author/${books[0].author.id}`}>{books[0].author.name}</button></p>
+            <p className="ww-home-feature-summary">{books[0].summary || books[0].description}</p>
+            <div className="ww-home-feature-meta">
+              <span><StarIcon className="w-4 h-4" /> {books[0].rating || 'New'}</span>
+              <span>{books[0].chapters.length} chapters</span>
+              <span>{books[0].readingStatus}</span>
+              {books[0].genres.slice(0, 2).map(genre => <span key={genre}>{genre}</span>)}
+            </div>
+            <div className="ww-home-feature-actions">
+              <button onClick={() => window.location.hash = `/book/${books[0].id}`}>Open story <span>→</span></button>
+              <button onClick={() => window.location.hash = '/category'}>Browse all stories</button>
+            </div>
+          </div>
+          <div className="ww-home-feature-note"><span>&ldquo;</span><p>Stories are how we rehearse being human.</p><small>WordWeft reading room</small></div>
+        </section>
+      )}
 
       {/* Explore Books */}
-      <section className="container mx-auto px-6 mb-24 mt-4 md:mt-8">
+      <section className="ww-content-section container mx-auto px-6 mb-24 mt-4 md:mt-8">
         <div className="flex items-center justify-between gap-4 mb-6">
           <h2 className="font-sans text-2xl sm:text-3xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">Explore Books</h2>
           <div className="flex-shrink-0">
@@ -500,8 +524,6 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       )}
-
-      <AdUnit format="horizontal" />
 
       {/* Genre-wise Book Sections */}
       {Object.keys(genreBooks).length > 0 && Object.entries(genreBooks).map(([genre, gBooks]) => (
