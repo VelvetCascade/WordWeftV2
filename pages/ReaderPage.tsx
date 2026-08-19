@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User, Book, BookProgress, Comment, Character  } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
@@ -8,14 +8,14 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
-import { FeatureSparkle } from '../components/FeatureSparkle';
 import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
-import AdUnit from '../components/AdUnit';
 import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
+type ReaderFont = 'literary' | 'modern';
+type ReaderWidth = 'narrow' | 'standard' | 'wide';
 
 interface ReaderPageProps {
     bookId: string;
@@ -210,14 +210,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
     const [fontSize, setFontSize] = useState(18);
     const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
+    const [readerFont, setReaderFont] = useState<ReaderFont>('literary');
+    const [readerWidth, setReaderWidth] = useState<ReaderWidth>('standard');
+    const [lineHeight, setLineHeight] = useState(1.85);
+    const [scrollProgress, setScrollProgress] = useState(0);
+    const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
-    const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
-    const [showAutoSharePopup, setShowAutoSharePopup] = useState(false);
-    const [autoShareDismissed, setAutoShareDismissed] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     const [comments, setComments] = useState<Comment[]>([]);
@@ -229,9 +231,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [quoteTooltipPos, setQuoteTooltipPos] = useState<{ x: number; y: number } | null>(null);
     const [shareInitialTab, setShareInitialTab] = useState<'quick' | 'story' | 'quote'>('quick');
 
-    // Share nudge state
-    const [showLikeNudge, setShowLikeNudge] = useState(false);
-
     // Character Mention State
     const [characters, setCharacters] = useState<Character[]>([]);
     const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
@@ -239,7 +238,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const lastScrollY = useRef(0);
     const contentRef = useRef<HTMLDivElement>(null);
     const moodContentRef = useRef<HTMLDivElement>(null);
-    const settingsPanelRef = useRef<HTMLDivElement>(null);
     const saveProgressTimeoutRef = useRef<number | null>(null);
     const hasRecordedView = useRef<string | null>(null);
     const lastSaveTimeRef = useRef<number>(0);
@@ -289,22 +287,23 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, []);
 
-    // Scroll to bottom detection for share popup
+    // Device-local reader preferences: no server or account changes required.
     useEffect(() => {
-        const handleScroll = () => {
-            // Check if we are near the bottom of the page (within 300px)
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-                if (!hasScrolledToBottom) {
-                    setHasScrolledToBottom(true);
-                    if (!autoShareDismissed) {
-                        setShowAutoSharePopup(true);
-                    }
-                }
-            }
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [hasScrolledToBottom, autoShareDismissed]);
+        try {
+            const saved = JSON.parse(localStorage.getItem('ww_reader_preferences') || '{}');
+            if (typeof saved.fontSize === 'number') setFontSize(Math.min(32, Math.max(12, saved.fontSize)));
+            if (['light', 'sepia', 'dark'].includes(saved.contentTheme)) setContentTheme(saved.contentTheme);
+            if (['literary', 'modern'].includes(saved.readerFont)) setReaderFont(saved.readerFont);
+            if (['narrow', 'standard', 'wide'].includes(saved.readerWidth)) setReaderWidth(saved.readerWidth);
+            if ([1.65, 1.85, 2.05].includes(saved.lineHeight)) setLineHeight(saved.lineHeight);
+        } catch {
+            // Ignore malformed local preferences and use the comfortable defaults.
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('ww_reader_preferences', JSON.stringify({ fontSize, contentTheme, readerFont, readerWidth, lineHeight }));
+    }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight]);
 
     const saveProgress = useCallback(() => {
         if (!currentUser || !book || !chapter) return;
@@ -368,6 +367,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
+            const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+            setScrollProgress(Math.min(100, Math.max(0, (currentScrollY / maxScroll) * 100)));
 
             if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
                 setIsToolbarVisible(false);
@@ -395,12 +396,32 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         };
     }, [saveProgress]);
 
+    useEffect(() => {
+        const handleReaderShortcuts = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement;
+            if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+            if (event.key.toLowerCase() === 'f') {
+                setIsFocusMode(mode => !mode);
+            } else if (event.key === 'Escape') {
+                setIsFocusMode(false);
+                setIsSettingsPanelVisible(false);
+                setIsTocVisible(false);
+            } else if (event.key === '[') {
+                setFontSize(size => Math.max(12, size - 1));
+            } else if (event.key === ']') {
+                setFontSize(size => Math.min(32, size + 1));
+            }
+        };
+
+        window.addEventListener('keydown', handleReaderShortcuts);
+        return () => window.removeEventListener('keydown', handleReaderShortcuts);
+    }, []);
+
 
     const goToChapter = (index: number) => {
         if (!book || (index < 0 || index >= book.chapters.length)) return;
         saveProgress();
-        setHasScrolledToBottom(false);
-        setShowAutoSharePopup(false);
         trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setCurrentChapterIndex(index);
         window.location.hash = `/read/book/${book.id}/chapter/${index}`;
@@ -451,16 +472,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             likesCount: book.likesCount + likeDiff
         });
 
-        // R1: Show share nudge when liking (not unliking)
-        if (!prevIsLiked) {
-            setTimeout(() => {
-                setShowLikeNudge(true);
-                setTimeout(() => setShowLikeNudge(false), 8000);
-            }, 600);
-        } else {
-            setShowLikeNudge(false);
-        }
-
         try {
             await api.toggleChapterLike(book.id, chapter.id);
         } catch (e) {
@@ -477,18 +488,23 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         if (!book) return null;
         return (
             <div
-                className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`}
+                className={`reader-toc-overlay fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'reader-toc-overlay-open' : 'pointer-events-none opacity-0'}`}
                 onClick={() => setIsTocVisible(false)}
             >
                 <div
-                    className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`}
+                    className={`reader-toc-panel absolute top-0 left-0 bottom-0 transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`}
                     onClick={e => e.stopPropagation()}
                 >
-                    <div className="p-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
-                        <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
+                    <div className="reader-toc-header">
+                        <div>
+                            <span>Contents</span>
+                            <h3>{book.title}</h3>
+                            <p>{book.chapters.length} chapters · Chapter {currentChapterIndex + 1} now</p>
+                        </div>
+                        <button onClick={() => setIsTocVisible(false)} aria-label="Close contents"><XMarkIcon className="w-5 h-5" /></button>
                     </div>
-                    <ul className="overflow-y-auto h-[calc(100%-65px)]">
+                    <div className="reader-toc-overall"><span style={{ width: `${((currentChapterIndex + scrollProgress / 100) / Math.max(1, book.chapters.length)) * 100}%` }} /></div>
+                    <ul className="reader-toc-list">
                         {book.chapters.map((chap, index) => (
                             <li key={chap.id}>
                                 <button
@@ -496,11 +512,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                         goToChapter(index);
                                         setIsTocVisible(false);
                                     }}
-                                    className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                                    className={`reader-toc-item ${index === currentChapterIndex ? 'reader-toc-item-active' : ''} ${chap.status !== 'published' ? 'reader-toc-item-locked' : ''}`}
                                     disabled={chap.status !== 'published'}
                                 >
-                                    <span className="block truncate">{chap.title}</span>
-                                    {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
+                                    <span className="reader-toc-number">{String(index + 1).padStart(2, '0')}</span>
+                                    <span className="reader-toc-title"><strong>{chap.title}</strong><small>{index === currentChapterIndex ? `${Math.round(scrollProgress)}% read` : chap.status !== 'published' ? 'Not released' : index < currentChapterIndex ? 'Completed' : 'Ready to read'}</small></span>
+                                    <ChevronRightIcon className="w-4 h-4" />
                                 </button>
                             </li>
                         ))}
@@ -593,11 +610,15 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     };
 
+    const plainChapterText = chapter.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim();
+    const wordCount = plainChapterText ? plainChapterText.split(/\s+/).length : 0;
+    const readingMinutes = Math.max(1, Math.ceil(wordCount / 230));
+
     // Reset block index
     blockIndex = 0;
 
     return (
-        <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
+        <div className={`reader-experience transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''}`}>
             {/* Contextual Reader Onboarding */}
             <ReaderDiscoveryCoach 
                 hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')} 
@@ -609,41 +630,39 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
             <TableOfContents />
 
+            <div className="reader-progress-track" aria-hidden="true"><span style={{ width: `${scrollProgress}%` }} /></div>
+
             {/* Header */}
-            <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border text-dark-text-body' : 'bg-background/80 border-gray-200 text-text-body'} backdrop-blur-md border-b`}>
-                <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
+            <header className={`reader-header fixed top-0 left-0 right-0 z-20 ${isToolbarVisible ? 'reader-header-visible' : 'reader-header-hidden'}`}>
+                <div className="reader-header-inner">
+                    <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }} className="reader-back-button" aria-label={`Back to ${book.title}`}>
                         <ChevronLeftIcon className="w-5 h-5" />
-                        <span>{book.title}</span>
+                        <span><small>Back to story</small><strong>{book.title}</strong></span>
                     </button>
-                    <div className="text-center">
-                        <h2 className="font-sans font-semibold truncate text-text-rich dark:text-dark-text-rich">{chapter.title}</h2>
+                    <div className="reader-header-chapter">
+                        <span>{String(currentChapterIndex + 1).padStart(2, '0')} / {String(book.chapters.length).padStart(2, '0')}</span>
+                        <strong>{chapter.title}</strong>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={handleToggleLike}
-                            className={`transition-colors duration-200 ${chapter.isLiked ? 'text-danger scale-110' : 'text-gray-400 dark:text-gray-500 hover:text-danger'}`}
-                            title={chapter.isLiked ? "Unlike" : "Like"}
-                        >
-                            {chapter.isLiked ? <HeartIconSolid className="w-6 h-6" /> : <HeartIcon className="w-6 h-6" />}
+                    <div className="reader-header-actions">
+                        <button onClick={() => setIsBookmarked(!isBookmarked)} className={isBookmarked ? 'reader-action-active' : ''} aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark chapter'}>
+                            <BookmarkIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={() => setIsBookmarked(!isBookmarked)}>
-                            <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
-                        </button>
-                        <button onClick={() => setIsShareModalOpen(true)}>
-                            <ShareIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
-                        </button>
-                        <button onClick={() => setIsTocVisible(true)} className="text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent transition-colors">
-                            <Bars3Icon className="w-5 h-5" />
-                        </button>
+                        <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
+                        <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </header>
 
+            {isFocusMode && (
+                <button className="reader-focus-exit" onClick={() => setIsFocusMode(false)}>
+                    Exit focus <kbd>F</kbd>
+                </button>
+            )}
+
             {/* Content */}
             <main 
                 ref={contentRef} 
-                className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10"
+                className={`reader-manuscript reader-width-${readerWidth} mx-auto flex-1 relative z-10`}
                 onCopy={(e) => e.preventDefault()}
                 onCut={(e) => e.preventDefault()}
                 onContextMenu={(e) => e.preventDefault()}
@@ -660,122 +679,41 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                     }
                 }}
             >
-                <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
+                <div className="reader-chapter-intro">
+                    <span>Chapter {String(currentChapterIndex + 1).padStart(2, '0')}</span>
+                    <h1>{chapter.title}</h1>
+                    <div className="reader-chapter-meta"><span>{readingMinutes} min read</span><i /><span>{wordCount.toLocaleString()} words</span><i /><span>{Math.round(scrollProgress)}% complete</span></div>
+                </div>
                 <div
                     ref={moodContentRef}
-                    className="ww-prose"
-                    style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
+                    className={`ww-prose reader-copy reader-font-${readerFont}`}
+                    style={{ fontSize: `${fontSize}px`, lineHeight }}
                 >
                     {parse(chapter.content, parseOptions)}
                 </div>
 
-                {/* Post-Chapter Engagement */}
-                <div className="mt-16 mb-8 flex flex-col items-center space-y-12 w-full max-w-2xl mx-auto">
-                    <div className="flex flex-col items-center">
-                        <div className="h-px w-24 bg-gray-300 dark:bg-dark-border mb-8"></div>
-                        <button
-                            onClick={handleToggleLike}
-                            className={`group flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${chapter.isLiked
-                                ? 'bg-danger text-white ring-4 ring-danger/20'
-                                : 'bg-white dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:border-danger hover:text-danger'
-                                }`}
-                        >
-                            {chapter.isLiked ? <HeartIconSolid className="w-6 h-6 animate-pulse" /> : <HeartIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />}
-                            <span className="font-sans font-bold text-lg">{chapter.isLiked ? 'Liked' : 'Like this Chapter'}</span>
-                            <span className={`text-sm font-medium ml-1 ${chapter.isLiked ? 'text-white/90' : 'text-gray-400 group-hover:text-danger/60'}`}>
-                                {chapter.likesCount}
-                            </span>
-                        </button>
-
-                        {/* R1: Post-like share nudge */}
-                        {showLikeNudge && (
-                            <div className="mt-4 flex items-center gap-3 bg-accent/5 border border-accent/20 rounded-xl px-4 py-3 animate-fade-in max-w-sm">
-                                <p className="text-sm text-text-body dark:text-dark-text-body flex-1">Loved this chapter? Let others discover it.</p>
-                                <button
-                                    onClick={() => { setShowLikeNudge(false); setShareInitialTab('quick'); setIsShareModalOpen(true); }}
-                                    className="text-sm font-bold text-accent hover:underline whitespace-nowrap flex-shrink-0"
-                                >
-                                    Share
-                                </button>
-                            </div>
+                {/* A calm chapter ending: react, continue, or return to the story. */}
+                <section className="reader-chapter-end">
+                    <span className="reader-end-kicker">{currentChapterIndex < book.chapters.length - 1 ? 'End of chapter' : 'Story complete'}</span>
+                    <h2>{currentChapterIndex < book.chapters.length - 1 ? book.chapters[currentChapterIndex + 1].title : `You finished ${book.title}`}</h2>
+                    <p>{currentChapterIndex < book.chapters.length - 1 ? 'Ready when you are. Your place in this chapter has been saved.' : `You reached the final page of ${book.author.name}'s story.`}</p>
+                    <div className="reader-end-primary-actions">
+                        {currentChapterIndex < book.chapters.length - 1 ? (
+                            <button onClick={() => goToChapter(currentChapterIndex + 1)}>Read next chapter <ChevronRightIcon className="w-5 h-5" /></button>
+                        ) : (
+                            <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }}>Return to story <ChevronRightIcon className="w-5 h-5" /></button>
                         )}
                     </div>
-
-                    {/* R4: Chapter-end share card (always visible, replaced by R3 on last chapter) */}
-                    {currentChapterIndex < book.chapters.length - 1 ? (
-                        <div className="w-full bg-gradient-to-br from-accent/5 to-primary/5 border border-accent/15 rounded-2xl p-6 flex items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                                <p className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">Enjoying {book.title}?</p>
-                                <p className="text-sm text-text-body dark:text-dark-text-body mt-0.5">Share it with your friends and help the story grow.</p>
-                            </div>
-                            <button
-                                onClick={() => { setShareInitialTab('quick'); setIsShareModalOpen(true); }}
-                                className="flex-shrink-0 px-5 py-2.5 bg-accent text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-md"
-                            >
-                                Share
-                            </button>
-                        </div>
-                    ) : (
-                        // R3: Book completion milestone (last chapter)
-                        <div className="w-full relative overflow-hidden bg-gradient-to-br from-accent/10 via-primary/10 to-accent/5 border border-accent/20 dark:border-accent/10 rounded-2xl p-8 shadow-soft text-center">
-                            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
-                            <div className="relative z-10">
-                                <div className="mx-auto w-16 h-16 bg-accent/15 rounded-full flex items-center justify-center mb-4">
-                                    <HeartIconSolid className="w-8 h-8 text-accent" />
-                                </div>
-                                <h3 className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich mb-2">You finished {book.title}!</h3>
-                                <p className="text-text-body dark:text-dark-text-body mb-6 max-w-md mx-auto">
-                                    Share your accomplishment and help the author reach new readers.
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                                    <button
-                                        onClick={() => { setShareInitialTab('story'); setIsShareModalOpen(true); }}
-                                        className="px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-md"
-                                    >
-                                        Download Story Poster
-                                    </button>
-                                    <button
-                                        onClick={() => { setShareInitialTab('quote'); setIsShareModalOpen(true); }}
-                                        className="px-6 py-3 bg-white dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border text-text-rich dark:text-dark-text-rich font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-dark-border transition-colors"
-                                    >
-                                        Download Quote Card
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Support WordWeft CTA */}
-                    <div className="w-full bg-gradient-to-br from-white to-[#FDFBF7] dark:from-dark-surface-alt dark:to-dark-surface border border-accent/20 dark:border-accent/10 rounded-2xl p-8 shadow-soft text-center group transition-all duration-300 hover:shadow-lifted">
-                        <div className="mx-auto w-14 h-14 bg-accent/10 dark:bg-accent/20 rounded-full flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-accent/20 transition-all duration-300">
-                            <HeartIcon className="w-7 h-7 text-accent" />
-                        </div>
-                        <h3 className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich mb-3">Support WordWeft</h3>
-                        <p className="text-text-body dark:text-dark-text-body mb-8 leading-relaxed max-w-md mx-auto">
-                            Enjoying the reading experience? Consider buying us a coffee on Ko-fi. Your support helps keep WordWeft completely ad-free and fuels future development.
-                        </p>
-                        <a 
-                            href="https://ko-fi.com/wordweftstudio" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-accent text-white font-sans font-semibold px-8 py-3.5 rounded-full hover:bg-primary transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                        >
-                            Buy us a Coffee ☕
-                        </a>
+                    <div className="reader-end-secondary-actions">
+                        <button onClick={handleToggleLike} className={chapter.isLiked ? 'active' : ''}>
+                            {chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}
+                            <span>{chapter.isLiked ? 'Liked' : 'Like chapter'}</span><small>{chapter.likesCount}</small>
+                        </button>
+                        <button onClick={() => { setShareInitialTab('quick'); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" /><span>Share</span></button>
+                        <button onClick={() => openCommentDrawer(null)}><ChatBubbleLeftIcon className="w-5 h-5" /><span>Discuss</span><small>{comments.length}</small></button>
                     </div>
-
-                    {/* Copyright & Anti-AI Protection Notice */}
-                    <div className="w-full text-center py-4 px-6 border-t border-b border-gray-200/60 dark:border-dark-border/40 my-6">
-                        <p className="font-sans text-xs font-semibold text-text-rich dark:text-dark-text-rich mb-1">
-                            &copy; {new Date().getFullYear()} {book.author.name} &mdash; All Rights Reserved.
-                        </p>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-lg mx-auto leading-normal">
-                            This story is published on WordWeft and is strictly protected against unauthorized copying, distribution, and automated AI model training.
-                        </p>
-                    </div>
-                </div>
-
-                <AdUnit format="horizontal" />
+                    <p className="reader-copyright">&copy; {new Date().getFullYear()} {book.author.name}. All rights reserved. Protected from unauthorized distribution and model training.</p>
+                </section>
             </main>
 
             {/* Discussion Section (Bottom) */}
@@ -849,54 +787,54 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 </div>
             </section>
 
-            {/* Footer Navigation */}
-            <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20">
-                <div className={`flex items-center justify-center gap-4 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-2xl shadow-lg p-2`}>
-                    <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronLeftIcon className="w-5 h-5" /></button>
-                    <span className="font-sans text-sm w-20 text-center dark:text-dark-text-body">{currentChapterIndex + 1} / {book.chapters.length}</span>
-                    <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronRightIcon className="w-5 h-5" /></button>
+            {/* Reader Settings Sheet */}
+            <div className={`reader-settings-backdrop ${isSettingsPanelVisible ? 'reader-settings-backdrop-open' : ''}`} onClick={() => setIsSettingsPanelVisible(false)} />
+            <section className={`reader-settings-panel ${isSettingsPanelVisible ? 'reader-settings-panel-open' : ''}`} aria-label="Reading preferences">
+                <div className="reader-settings-heading">
+                    <div><span>Reading preferences</span><p>Saved automatically on this device</p></div>
+                    <button onClick={() => setIsSettingsPanelVisible(false)} aria-label="Close preferences"><XMarkIcon className="w-5 h-5" /></button>
                 </div>
-            </footer>
-
-            {/* Settings Toolbar */}
-            <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
-                <div ref={settingsPanelRef} className="relative">
-                    <FeatureSparkle featureId="reading-theme" tooltip="Customize your reading experience" position="left">
-                        <button onClick={() => setIsSettingsPanelVisible(prev => !prev)} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors flex items-center justify-center">
-                            <PaintBrushIcon className="w-5 h-5" />
-                        </button>
-                    </FeatureSparkle>
-                    <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                        <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600" /></button>
-                        <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
-                        <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`}><MoonIcon className="w-5 h-5 text-gray-700" /></button>
-                    </div>
-                </div>
-                <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold">A-</button>
-                <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold">A+</button>
-            </div>
-
-            {/* Auto Share Popup (Triggered at end of chapter) */}
-            {showAutoSharePopup && (
-                <div className="fixed bottom-24 right-4 z-40 bg-white dark:bg-dark-surface border border-accent/20 dark:border-dark-border rounded-xl shadow-2xl p-4 w-72 animate-slide-in-bottom">
-                    <button onClick={() => { setShowAutoSharePopup(false); setAutoShareDismissed(true); }} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <XMarkIcon className="w-4 h-4" />
-                    </button>
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center">
-                            <ShareIcon className="w-4 h-4 text-accent" />
+                <div className="reader-setting-grid">
+                    <div className="reader-setting-group">
+                        <label>Theme</label>
+                        <div className="reader-theme-options">
+                            <button onClick={() => setContentTheme('light')} className={contentTheme === 'light' ? 'active' : ''}><i className="reader-swatch-light" /><span>Paper</span></button>
+                            <button onClick={() => setContentTheme('sepia')} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
+                            <button onClick={() => setContentTheme('dark')} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
                         </div>
-                        <h4 className="font-bold text-text-rich dark:text-dark-text-rich">Loved this chapter?</h4>
                     </div>
-                    <p className="text-xs text-text-body dark:text-dark-text-body mb-3">Share it with your friends and help the author grow.</p>
-                    <button 
-                        onClick={() => { setShowAutoSharePopup(false); setShareInitialTab('story'); setIsShareModalOpen(true); }} 
-                        className="w-full bg-accent text-white font-bold py-2 rounded-lg text-sm hover:bg-primary transition-colors"
-                    >
-                        Download Poster
-                    </button>
+                    <div className="reader-setting-group">
+                        <label>Type size</label>
+                        <div className="reader-stepper"><button onClick={() => setFontSize(size => Math.max(12, size - 1))}>A−</button><strong>{fontSize}px</strong><button onClick={() => setFontSize(size => Math.min(32, size + 1))}>A+</button></div>
+                    </div>
+                    <div className="reader-setting-group">
+                        <label>Typeface</label>
+                        <div className="reader-segmented"><button onClick={() => setReaderFont('literary')} className={readerFont === 'literary' ? 'active' : ''}>Literary</button><button onClick={() => setReaderFont('modern')} className={readerFont === 'modern' ? 'active' : ''}>Modern</button></div>
+                    </div>
+                    <div className="reader-setting-group">
+                        <label>Page width</label>
+                        <div className="reader-segmented reader-width-options"><button onClick={() => setReaderWidth('narrow')} className={readerWidth === 'narrow' ? 'active' : ''}>Narrow</button><button onClick={() => setReaderWidth('standard')} className={readerWidth === 'standard' ? 'active' : ''}>Standard</button><button onClick={() => setReaderWidth('wide')} className={readerWidth === 'wide' ? 'active' : ''}>Wide</button></div>
+                    </div>
+                    <div className="reader-setting-group reader-setting-group-wide">
+                        <label>Line spacing</label>
+                        <div className="reader-segmented"><button onClick={() => setLineHeight(1.65)} className={lineHeight === 1.65 ? 'active' : ''}>Compact</button><button onClick={() => setLineHeight(1.85)} className={lineHeight === 1.85 ? 'active' : ''}>Comfortable</button><button onClick={() => setLineHeight(2.05)} className={lineHeight === 2.05 ? 'active' : ''}>Airy</button></div>
+                    </div>
                 </div>
-            )}
+                <div className="reader-shortcuts"><span><kbd>F</kbd> Focus</span><span><kbd>[</kbd><kbd>]</kbd> Text size</span><span><kbd>Esc</kbd> Close panels</span></div>
+            </section>
+
+            {/* Unified Reader Dock */}
+            <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
+                <button onClick={() => setIsTocVisible(true)} data-label="Contents"><Bars3Icon className="w-5 h-5" /></button>
+                <span className="reader-dock-divider" />
+                <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} data-label="Previous"><ChevronLeftIcon className="w-5 h-5" /></button>
+                <span className="reader-dock-progress"><strong>{currentChapterIndex + 1}</strong><i><span style={{ width: `${scrollProgress}%` }} /></i><small>{book.chapters.length}</small></span>
+                <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} data-label="Next"><ChevronRightIcon className="w-5 h-5" /></button>
+                <span className="reader-dock-divider" />
+                <button onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'active' : ''} data-label="Appearance"><span className="reader-aa">Aa</span></button>
+                <button onClick={() => openCommentDrawer(null)} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
+                <button onClick={() => setIsFocusMode(true)} data-label="Focus"><EyeIcon className="w-5 h-5" /></button>
+            </nav>
 
             <CommentDrawer
                 isOpen={isCommentDrawerOpen}

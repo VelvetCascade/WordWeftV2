@@ -49,21 +49,21 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-text-header dark:text-dark-text-header">Characters</h3>
+        <div className="ww-story-tool ww-characters-tool">
+            <div className="ww-story-tool-heading">
+                <div><span>Story bible</span><h3>Characters</h3><p>Keep motivations, roles, and relationships close to the manuscript.</p></div>
                 {!readOnly && (
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                        className="ww-story-tool-add"
                     >
-                        Add Character
+                        <span>+</span> Add character
                     </button>
                 )}
             </div>
 
             {isCreating && (
-                <div className="p-6 md:p-8 bg-white dark:bg-dark-surface rounded-3xl shadow-xl shadow-accent/5 lg:shadow-2xl lg:shadow-accent/5 border border-gray-100 dark:border-dark-border mb-8 animate-in slide-in-from-top-4 fade-in duration-300 relative overflow-hidden">
+                <div className="ww-story-tool-form p-6 md:p-8 bg-white dark:bg-dark-surface rounded-3xl border border-gray-100 dark:border-dark-border mb-8 animate-in slide-in-from-top-4 fade-in duration-300 relative overflow-hidden">
                     {/* Decorative Background Blob */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 dark:bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
 
@@ -174,7 +174,16 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {!isCreating && characters.length === 0 && (
+                <div className="ww-tool-empty">
+                    <span>Cast</span>
+                    <h4>Who carries this story?</h4>
+                    <p>Start with the person whose choices move the plot. Add their goal now; the rest can evolve as you write.</p>
+                    {!readOnly && <button onClick={() => setIsCreating(true)}>Create the first character <span>→</span></button>}
+                </div>
+            )}
+
+            <div className="ww-story-tool-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {characters.map((char) => (
                     <div 
                         key={char.id} 

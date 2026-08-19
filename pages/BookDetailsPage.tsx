@@ -444,7 +444,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         : 'Read from Start';
 
     return (
-        <div className="bg-white dark:bg-dark-surface">
+        <div className="ww-story-page bg-white dark:bg-dark-surface">
             {/* Sticky Header */}
             <div className="sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
                 <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
@@ -467,11 +467,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
             <div className="container mx-auto px-4 sm:px-6 py-12">
                 {/* Book Summary Section */}
-                <section className="grid md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12 mb-16">
-                    <div className="md:col-span-1 lg:col-span-1">
+                <section className="ww-story-hero grid md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12 mb-16">
+                    <div className="ww-story-cover md:col-span-1 lg:col-span-1">
                         <img src={book.coverUrl} alt={book.title} className="w-full h-auto rounded-2xl shadow-lifted" />
                     </div>
-                    <div className="md:col-span-2 lg:col-span-3">
+                    <div className="ww-story-intro md:col-span-2 lg:col-span-3">
+                        <span className="ww-page-eyebrow">A WordWeft story</span>
                         <h1 className="font-sans text-4xl lg:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich leading-tight mb-2">{book.title}</h1>
                         <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <button onClick={handleAuthorClick} className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</button></p>
 
@@ -520,6 +521,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </div>
 
                         <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed mb-8">{book.summary}</p>
+                        <div className="ww-story-facts">
+                            <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
+                            <div><strong>{book.readingStatus}</strong><span>Story status</span></div>
+                            <div><strong>{book.reviewsCount.toLocaleString()}</strong><span>Reader reviews</span></div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button onClick={handleReadClick} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-opacity-80 transition-all hover:scale-105 duration-300 shadow-lg">
                                 {mainButtonText}
@@ -559,7 +565,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 </section>
 
                 {/* Tab Navigation */}
-                <div className="flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
+                <div className="ww-story-tabs flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
                     {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => {
                         const btn = (
                             <button
@@ -584,7 +590,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     })}
                 </div>
 
-                <div className="max-w-4xl mx-auto mb-16 min-h-[400px]">
+                <div className="ww-story-tab-content max-w-4xl mx-auto mb-16 min-h-[400px]">
                     {activeTab === 'Chapters' && (
                         <section className="animate-fade-in">
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Chapters</h3>

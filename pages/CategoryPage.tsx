@@ -3,10 +3,9 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon } from '../components/icons/Icons';
+import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon, SearchIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
-import AdUnit from '../components/AdUnit';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
@@ -45,6 +44,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [allGenres, setAllGenres] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [genreSearch, setGenreSearch] = useState('');
+  const [libraryQuery, setLibraryQuery] = useState('');
 
   const genreDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
@@ -93,6 +93,12 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
+  const handleLibrarySearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!libraryQuery.trim()) return;
+    window.location.hash = `/search?q=${encodeURIComponent(libraryQuery.trim())}`;
+  };
+
   const FilterDrawer: React.FC = () => (
     <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isFilterOpen ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} onClick={() => setIsFilterOpen(false)}>
       <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-surface rounded-t-3xl p-6 shadow-2xl transform transition-transform duration-300 ${isFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
@@ -124,17 +130,31 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   );
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 py-8">
+    <div className="ww-library-page min-h-screen">
+      <div className="ww-library-container container mx-auto px-4 sm:px-6 py-8">
+        <span className="ww-page-eyebrow">The WordWeft library</span>
         <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4">
           {genre || 'All Books'}
         </h1>
         <p className="text-lg text-text-body dark:text-dark-text-body max-w-2xl mb-8">
           Browse our curated collection of books. Filter by genre and sort to find your next great read.
         </p>
+        <div className="ww-library-discovery">
+          <form onSubmit={handleLibrarySearch} className="ww-library-search">
+            <SearchIcon className="w-5 h-5" />
+            <input value={libraryQuery} onChange={event => setLibraryQuery(event.target.value)} placeholder="Search by title, author, world, or theme…" aria-label="Search the library" />
+            <button type="submit">Search</button>
+          </form>
+          {allGenres.length > 0 && (
+            <div className="ww-library-quick-genres">
+              <span>Start with</span>
+              {allGenres.slice(0, 6).map(item => <button key={item} onClick={() => toggleGenre(item)} className={selectedGenres.includes(item) ? 'active' : ''}>{item}</button>)}
+            </div>
+          )}
+        </div>
 
         {/* Sticky Filter Bar */}
-        <div className="sticky top-[72px] z-30 bg-background/80 dark:bg-dark-background/80 backdrop-blur-md -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-8 border-b border-gray-200 dark:border-dark-border">
+        <div className="ww-library-filter sticky top-[72px] z-30 bg-background/80 dark:bg-dark-background/80 backdrop-blur-md -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-8 border-b border-gray-200 dark:border-dark-border">
           <div className="flex justify-between items-center">
             {/* Desktop Filters */}
             <div className="hidden md:flex items-center gap-4">
@@ -218,7 +238,6 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           </div>
         )}
 
-        <AdUnit format="horizontal" />
       </div>
       <FilterDrawer />
       <Footer />

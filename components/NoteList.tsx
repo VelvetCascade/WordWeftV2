@@ -36,19 +36,19 @@ export const NoteList: React.FC<NoteListProps> = ({ bookId }) => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-text-header dark:text-dark-text-header">Notes</h3>
+        <div className="ww-story-tool ww-notes-tool">
+            <div className="ww-story-tool-heading">
+                <div><span>Private notebook</span><h3>Notes</h3><p>Collect lore, research, loose lines, and questions without interrupting the draft.</p></div>
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    className="ww-story-tool-add"
                 >
-                    Add Note
+                    <span>+</span> Add note
                 </button>
             </div>
 
             {isCreating && (
-                <div className="p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border space-y-4">
+                <div className="ww-story-tool-form p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border space-y-4">
                     <input
                         type="text"
                         placeholder="Title (Optional)"
@@ -79,7 +79,16 @@ export const NoteList: React.FC<NoteListProps> = ({ bookId }) => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!isCreating && notes.length === 0 && (
+                <div className="ww-tool-empty">
+                    <span>Scratchpad</span>
+                    <h4>Save the thought before it disappears.</h4>
+                    <p>Keep a fragment, research link, continuity reminder, or future plot turn beside the story.</p>
+                    <button onClick={() => setIsCreating(true)}>Write the first note <span>→</span></button>
+                </div>
+            )}
+
+            <div className="ww-story-tool-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                 {notes.map((note) => (
                     <div key={note.id} className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200 dark:border-yellow-900/30 shadow-sm relative group">
                         <button

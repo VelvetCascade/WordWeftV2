@@ -65,7 +65,7 @@ export const WriterLayout: React.FC<WriterLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-background">
+    <div className="ww-writer-shell min-h-screen bg-gray-50 dark:bg-dark-background">
       {/* Writer Top Bar */}
       <div className="writer-topbar">
         <div className="writer-topbar-inner">
@@ -102,7 +102,7 @@ export const WriterLayout: React.FC<WriterLayoutProps> = ({ children }) => {
       </div>
 
       {/* Main Content */}
-      <main>
+      <main className="ww-writer-main">
         {children}
       </main>
     </div>

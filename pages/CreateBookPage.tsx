@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import type { User, Book } from '../types';
-import { ArrowLeftIcon, PhotoIcon, XMarkIcon } from '../components/icons/Icons';
+import type { User } from '../types';
+import { ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
@@ -78,136 +78,101 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-background">
-            <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
-                <div className="flex items-center gap-4 mb-8">
-                    <button
-                        onClick={() => window.location.hash = '/write'}
-                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors"
-                    >
-                        <ArrowLeftIcon className="w-6 h-6" />
+        <div className="ww-create-book-page">
+            <div className="ww-create-book-shell">
+                <header className="ww-create-book-heading">
+                    <button onClick={() => window.location.hash = '/write'} className="ww-create-back" aria-label="Back to my books">
+                        <ArrowLeftIcon className="w-5 h-5" />
                     </button>
-                    <h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">
-                        Create a New Book
-                    </h1>
-                </div>
-
-                <form onSubmit={handleSubmit} className="bg-white dark:bg-dark-surface p-8 rounded-2xl border dark:border-dark-border space-y-6">
                     <div>
-                        <label htmlFor="title" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Book Title</label>
-                        <input type="text" id="title" value={title} onChange={e => setTitle(e.target.value)} required className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich" placeholder="e.g., The Last Sky-Sailor" />
+                        <span className="ww-create-eyebrow">New story</span>
+                        <h1>Begin a new world.</h1>
+                        <p>Give the project a clear identity now. You can refine every detail as the story grows.</p>
                     </div>
-                    <div>
-                        <label htmlFor="description" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Book Description</label>
-                        <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} required rows={5} className="w-full p-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich" placeholder="A short, compelling summary of your story."></textarea>
-                    </div>
-                    <ImageUpload 
-                        value={coverUrl}
-                        onChange={(url, fileId) => {
-                            setCoverUrl(url);
-                            setCoverFileId(fileId);
-                        }}
-                        label="Book Cover"
-                        fallbackUrl="https://picsum.photos/seed/newbook/400/600"
-                        aspectRatio={2/3}
-                        cropShape="rect"
-                    />
+                </header>
 
-                    {/* Book Category */}
-                    <div>
-                        <label htmlFor="category" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Book Category</label>
-                        <select
-                            id="category"
-                            value={category}
-                            onChange={e => setCategory(e.target.value)}
-                            className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
-                        >
-                            <option value="">Select a category...</option>
-                            {BOOK_CATEGORIES.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">What kind of book is this?</p>
-                        
-                        {category === 'Other' && (
-                            <div className="mt-3">
-                                <label htmlFor="customCategory" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Custom Category</label>
-                                <input 
-                                    type="text" 
-                                    id="customCategory" 
-                                    value={customCategory} 
-                                    onChange={e => setCustomCategory(e.target.value)} 
-                                    required 
-                                    className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich" 
-                                    placeholder="e.g., LitRPG" 
-                                />
+                <form onSubmit={handleSubmit} className="ww-create-form">
+                    <div className="ww-create-main">
+                        <section className="ww-create-section">
+                            <div className="ww-create-section-heading">
+                                <span>01</span>
+                                <div><h2>Story essentials</h2><p>The title and promise readers see first.</p></div>
                             </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-2">Genres</label>
-                        {selectedGenres.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mb-3">
-                                {selectedGenres.map(g => (
-                                    <span key={g} onClick={() => toggleGenre(g)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors">
-                                        {g} <span className="text-white/70">×</span>
-                                    </span>
-                                ))}
+                            <div className="ww-create-field">
+                                <label htmlFor="title">Book title</label>
+                                <input type="text" id="title" value={title} onChange={e => setTitle(e.target.value)} required placeholder="The Last Sky-Sailor" autoFocus />
                             </div>
-                        )}
-                        <input
-                            type="text"
-                            placeholder="Search genres..."
-                            value={genreSearch}
-                            onChange={e => setGenreSearch(e.target.value)}
-                            className="w-full h-10 px-4 mb-2 rounded-xl text-sm font-sans border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
-                        />
-                        <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto pr-1">
-                            {isLoadingGenres ? (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Loading genres...</p>
-                            ) : (
-                                filteredGenres.map(g => (
-                                    <button key={g} type="button" onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-border'}`}>
-                                        {g}
-                                    </button>
-                                ))
+                            <div className="ww-create-field">
+                                <div className="ww-create-label-row"><label htmlFor="description">Story description</label><span>{description.length} characters</span></div>
+                                <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} required rows={6} placeholder="What makes this story impossible to put down?" />
+                            </div>
+                        </section>
+
+                        <section className="ww-create-section">
+                            <div className="ww-create-section-heading">
+                                <span>02</span>
+                                <div><h2>Place it on the shelf</h2><p>Help the right readers discover it.</p></div>
+                            </div>
+                            <div className="ww-create-field">
+                                <label htmlFor="category">Format</label>
+                                <select id="category" value={category} onChange={e => setCategory(e.target.value)}>
+                                    <option value="">Select a format</option>
+                                    {BOOK_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
+                            </div>
+                            {category === 'Other' && (
+                                <div className="ww-create-field">
+                                    <label htmlFor="customCategory">Custom format</label>
+                                    <input type="text" id="customCategory" value={customCategory} onChange={e => setCustomCategory(e.target.value)} required placeholder="e.g., LitRPG" />
+                                </div>
                             )}
-                            {!isLoadingGenres && filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match your search.</p>}
+                            <div className="ww-create-field">
+                                <div className="ww-create-label-row"><label htmlFor="genre-search">Genres</label><span>{selectedGenres.length} selected</span></div>
+                                <input id="genre-search" type="search" placeholder="Search genres" value={genreSearch} onChange={e => setGenreSearch(e.target.value)} />
+                                <div className="ww-create-genres">
+                                    {isLoadingGenres ? <p>Loading genres…</p> : filteredGenres.map(g => (
+                                        <button key={g} type="button" onClick={() => toggleGenre(g)} className={selectedGenres.includes(g) ? 'selected' : ''}>
+                                            {selectedGenres.includes(g) && <span>✓</span>}{g}
+                                        </button>
+                                    ))}
+                                    {!isLoadingGenres && filteredGenres.length === 0 && <p>No genres match your search.</p>}
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <aside className="ww-create-aside">
+                        <section className="ww-create-cover">
+                            <div className="ww-create-section-heading compact">
+                                <span>03</span>
+                                <div><h2>Cover</h2><p>Set the first impression.</p></div>
+                            </div>
+                            <ImageUpload
+                                value={coverUrl}
+                                onChange={(url, fileId) => { setCoverUrl(url); setCoverFileId(fileId); }}
+                                label=""
+                                fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                                aspectRatio={2/3}
+                                cropShape="rect"
+                            />
+                        </section>
+
+                        <label htmlFor="isAIGenerated" className="ww-create-disclosure">
+                            <input type="checkbox" id="isAIGenerated" checked={isAIGenerated} onChange={e => setIsAIGenerated(e.target.checked)} />
+                            <span className="ww-create-check" />
+                            <span><strong>AI-assisted content</strong><small>Disclose if generation tools shaped the text or structure.</small></span>
+                        </label>
+
+                        <div className="ww-create-preview-note">
+                            <span>Next step</span>
+                            <p>We’ll open your story studio so you can create the first chapter.</p>
                         </div>
-                    </div>
-                    {/* <div className="flex items-center justify-between pt-4">
-                        <label htmlFor="isMature" className="flex items-center cursor-pointer">
-                            <div className="relative">
-                                <input type="checkbox" id="isMature" className="sr-only" checked={isMature} onChange={e => setIsMature(e.target.checked)} />
-                                <div className={`block w-14 h-8 rounded-full transition-colors ${isMature ? 'bg-danger' : 'bg-gray-200 dark:bg-dark-surface-alt'}`}></div>
-                                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${isMature ? 'translate-x-6' : ''}`}></div>
-                            </div>
-                            <div className="ml-3 text-text-body dark:text-dark-text-body">
-                                <p className="font-sans font-medium">Mature Content</p>
-                                <p className="text-xs">This book is intended for audiences 18+</p>
-                            </div>
-                        </label>
-                    </div> */}
+                    </aside>
 
-                    <div className="flex items-center justify-between pt-2 border-t dark:border-dark-border">
-                        <label htmlFor="isAIGenerated" className="flex items-center cursor-pointer py-2">
-                            <div className="relative">
-                                <input type="checkbox" id="isAIGenerated" className="sr-only" checked={isAIGenerated} onChange={e => setIsAIGenerated(e.target.checked)} />
-                                <div className={`block w-12 h-6 rounded-full transition-colors ${isAIGenerated ? 'bg-accent' : 'bg-gray-200 dark:bg-dark-surface-alt'}`}></div>
-                                <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isAIGenerated ? 'translate-x-6' : ''}`}></div>
-                            </div>
-                            <div className="ml-3 text-text-body dark:text-dark-text-body">
-                                <p className="font-sans font-bold flex items-center gap-2">AI Generated Content</p>
-                                <p className="text-xs text-gray-500 mt-1">Check this if your book utilizes AI to generate text or structure.</p>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div className="flex justify-end gap-4 pt-4">
-                        <button type="button" onClick={() => window.location.hash = '/write'} className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors">Cancel</button>
-                        <button type="submit" className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400" disabled={!title || !description}>Create Book & Add Chapters</button>
-                    </div>
+                    <footer className="ww-create-actions">
+                        <button type="button" onClick={() => window.location.hash = '/write'}>Save for later</button>
+                        <button type="submit" disabled={!title || !description}>Create story <span>→</span></button>
+                    </footer>
                 </form>
             </div>
         </div>

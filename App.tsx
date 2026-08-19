@@ -463,7 +463,7 @@ const App: React.FC = () => {
   return (
     <AnalyticsProvider>
     <FeedbackContext.Provider value={feedbackCtx}>
-      <div className="min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20">
+      <div className={`ww-app ww-route-${page.name} min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20`}>
         {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout}
           notificationBell={
             isAuthenticated ? (
@@ -489,7 +489,7 @@ const App: React.FC = () => {
             {renderPage()}
           </WriterLayout>
         ) : (
-          <main className={showNavbar ? `pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'md:pt-20'}` : ""}>
+          <main className={`ww-app-main ww-page-${page.name} ${showNavbar ? `ww-app-main-with-nav pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'md:pt-20'}` : ""}`}>
             {renderPage()}
           </main>
         )}
