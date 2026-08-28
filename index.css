@@ -813,48 +813,36 @@
     border-left-color: rgba(141, 110, 99, 0.5);
 }
 
-/* Reader / Preview: blurred text with click-to-reveal */
+/* Reader / Preview: the same soft blur used by the Spoiler Guard demo. */
 .ww-prose .spoiler-text {
     position: relative;
-    color: transparent;
-    text-shadow: 0 0 12px rgba(78, 52, 46, 0.7);
-    background: rgba(141, 110, 99, 0.08);
-    padding: 2px 6px;
-    border-radius: 6px;
+    padding: 0 2px;
+    border-radius: 4px;
     cursor: pointer;
     user-select: none;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    display: inline-block;
-    border: 1px solid rgba(141, 110, 99, 0.15);
+    transition: filter 0.4s ease, background 0.4s ease, color 0.4s ease;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.ww-prose .spoiler-text:not(.revealed):not([data-revealed='true']),
+.ww-prose .spoiler-text:not(.revealed):not([data-revealed='true']) * {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+.ww-prose .spoiler-text:not(.revealed):not([data-revealed='true']) {
+    background: #A1887F !important;
+    filter: blur(5px);
+}
+
+.ww-prose .spoiler-text:not(.revealed):not([data-revealed='true']) * {
+    pointer-events: none;
 }
 
 .ww-prose .spoiler-text:focus-visible {
     outline: 2px solid #8D6E63;
     outline-offset: 3px;
-}
-
-/* Subtle pulsing hint so readers know it's interactive */
-.ww-prose .spoiler-text::after {
-    content: 'tap to reveal';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.65em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8D6E63;
-    text-shadow: none;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    white-space: nowrap;
-}
-
-.ww-prose .spoiler-text:hover::after {
-    opacity: 1;
 }
 
 /* Revealed state */
@@ -863,15 +851,10 @@
     color: inherit !important;
     -webkit-text-fill-color: currentColor !important;
     text-shadow: none !important;
-    background: rgba(141, 110, 99, 0.04);
-    border-color: rgba(141, 110, 99, 0.08);
+    filter: blur(0);
+    background: rgba(141, 110, 99, 0.12);
     cursor: pointer;
     user-select: text;
-}
-
-.ww-prose .spoiler-text.revealed::after,
-.ww-prose .spoiler-text[data-revealed='true']::after {
-    display: none;
 }
 
 /* Gapcursor */
@@ -1557,22 +1540,17 @@ body[data-active-mood="serene"] .ww-prose {
     border-left-color: rgba(188, 170, 164, 0.45);
 }
 
-.dark .ww-prose .spoiler-text {
-    text-shadow: 0 0 12px rgba(239, 235, 233, 0.5);
-    background: rgba(93, 64, 55, 0.3);
-    border-color: rgba(93, 64, 55, 0.4);
+.dark .ww-prose .spoiler-text:not(.revealed):not([data-revealed='true']) {
+    background: #795548 !important;
 }
 
-.dark .ww-prose .spoiler-text::after {
-    color: #BCAAA4;
-}
-
-.dark .ww-prose .spoiler-text.revealed {
+.dark .ww-prose .spoiler-text.revealed,
+.dark .ww-prose .spoiler-text[data-revealed='true'] {
     color: inherit !important;
     -webkit-text-fill-color: currentColor !important;
     text-shadow: none !important;
-    background: rgba(93, 64, 55, 0.1);
-    border-color: rgba(93, 64, 55, 0.15);
+    filter: blur(0);
+    background: rgba(161, 136, 127, 0.18);
 }
 
 /* Dark Footnotes */

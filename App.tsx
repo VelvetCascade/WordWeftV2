@@ -41,6 +41,7 @@ import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
+import { replaceHash } from './utils/navigation';
 
 export type Page =
   | { name: 'home' }
@@ -172,7 +173,7 @@ const App: React.FC = () => {
     if (currentUser) {
       const updatedUser = await api.updateUserProfile(currentUser.id, updatedData);
       setCurrentUser(updatedUser);
-      window.location.hash = '/profile';
+      replaceHash('/profile');
     }
   };
 

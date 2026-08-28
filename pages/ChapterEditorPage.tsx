@@ -17,6 +17,7 @@ import { PublishCharacterReviewModal } from '../components/PublishCharacterRevie
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
 import { ShareModal } from '../components/ShareModal';
+import { goBackOrReplace, replaceHash } from '../utils/navigation';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -311,7 +312,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             <div className="ww-editor-main">
                 <header className="ww-editor-topbar">
                     <div className="ww-editor-context">
-                        <button onClick={() => window.location.hash = `/write/book/${bookId}/manage`} aria-label="Back to story studio">
+                        <button onClick={() => goBackOrReplace(`/write/book/${bookId}/manage`)} aria-label="Back to story studio">
                             <ArrowLeftIcon className="w-5 h-5" />
                         </button>
                         <div><span>{book.title}</span><strong>Chapter {chapterNumber}</strong></div>
@@ -483,7 +484,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                             <ShareIcon className="w-5 h-5" /> Share this Chapter
                         </button>
                         <button
-                            onClick={() => { setShowPublishSuccess(false); window.location.hash = `/write/book/${bookId}/manage`; }}
+                            onClick={() => { setShowPublishSuccess(false); replaceHash(`/write/book/${bookId}/manage`); }}
                             className="w-full py-2.5 rounded-xl font-semibold text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich transition-colors"
                         >
                             Go to Dashboard
@@ -503,7 +504,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             return (
                 <ShareModal
                     isOpen={isChapterShareOpen}
-                    onClose={() => { setIsChapterShareOpen(false); window.location.hash = `/write/book/${bookId}/manage`; }}
+                    onClose={() => { setIsChapterShareOpen(false); replaceHash(`/write/book/${bookId}/manage`); }}
                     book={book}
                     chapter={sharedChapter}
                     url={publicUrl}

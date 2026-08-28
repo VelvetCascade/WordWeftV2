@@ -14,6 +14,7 @@ import { ShareModal } from '../components/ShareModal';
 import { ChapterDisclaimerModal } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
 import parse, { domToReact } from 'html-react-parser';
+import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -439,7 +440,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         saveProgress();
         trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setCurrentChapterIndex(index);
-        window.location.hash = `/read/book/${book.id}/chapter/${index}`;
+        replaceReaderChapter(book.id, index);
+    };
+
+    const handleReturnToStory = () => {
+        if (!book) return;
+        saveProgress();
+        returnToStory(book.id);
     };
 
     const openCommentDrawer = (index: number | null) => {
@@ -656,7 +663,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             {/* Header */}
             <header className={`reader-header fixed top-0 left-0 right-0 z-20 ${isToolbarVisible ? 'reader-header-visible' : 'reader-header-hidden'}`}>
                 <div className="reader-header-inner">
-                    <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }} className="reader-back-button" aria-label={`Back to ${book.title}`}>
+                    <button onClick={handleReturnToStory} className="reader-back-button" aria-label={`Back to ${book.title}`}>
                         <ChevronLeftIcon className="w-5 h-5" />
                         <span><small>Back to story</small><strong>{book.title}</strong></span>
                     </button>
@@ -723,7 +730,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         {currentChapterIndex < book.chapters.length - 1 ? (
                             <button onClick={() => goToChapter(currentChapterIndex + 1)}>Read next chapter <ChevronRightIcon className="w-5 h-5" /></button>
                         ) : (
-                            <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }}>Return to story <ChevronRightIcon className="w-5 h-5" /></button>
+                            <button onClick={handleReturnToStory}>Return to story <ChevronRightIcon className="w-5 h-5" /></button>
                         )}
                     </div>
                     <div className="reader-end-secondary-actions">
@@ -890,7 +897,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 warnings={[...(book.contentWarnings || []), ...(chapter.contentWarnings || [])].filter((warning, index, all) => all.indexOf(warning) === index)}
                 note={chapter.disclaimerNote || book.customDisclaimer}
                 onContinue={() => { sessionStorage.setItem(disclaimerKey, 'accepted'); setIsDisclaimerOpen(false); }}
-                onLeave={() => window.location.hash = `/book/${book.id}`}
+                onLeave={handleReturnToStory}
             />
             {reportTarget && <ReportModal isOpen onClose={() => setReportTarget(null)} targetType={reportTarget.type} targetId={reportTarget.id} targetTitle={reportTarget.title} />}
 
