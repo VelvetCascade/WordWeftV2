@@ -24,6 +24,8 @@ export const Spoiler = Mark.create({
     parseHTML() {
         return [
             { tag: 'span[data-spoiler]' },
+            // Compatibility with chapters saved by older editor builds.
+            { tag: 'span.spoiler-text' },
         ];
     },
 

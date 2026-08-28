@@ -52,6 +52,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [bio, setBio] = useState(user.bio || '');
   const [location, setLocation] = useState(user.location || '');
   const [website, setWebsite] = useState(user.website || '');
+  const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth || '');
+  const [allowMatureContent, setAllowMatureContent] = useState(user.allowMatureContent || false);
 
   // Socials
   const [twitter, setTwitter] = useState(user.socials?.twitter || '');
@@ -136,6 +138,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         bio,
         location,
         website,
+        dateOfBirth,
+        allowMatureContent,
         socials: { twitter, instagram, threads },
         favoriteGenres: selectedGenres
       });
@@ -378,6 +382,17 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm bg-gray-100 dark:bg-dark-surface-alt/50 dark:border-dark-border dark:text-dark-text-body cursor-not-allowed"
               />
             </div>
+
+            <section className="rounded-2xl border border-gray-200 dark:border-dark-border p-5 bg-gray-50 dark:bg-dark-surface-alt/40">
+              <h3 className="font-sans font-bold text-text-rich dark:text-dark-text-rich">Content preferences</h3>
+              <p className="text-sm text-text-body dark:text-dark-text-body mt-1 mb-4">Your birthday is private and is used to enforce age-appropriate access.</p>
+              <label htmlFor="dateOfBirth" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Date of birth</label>
+              <input type="date" id="dateOfBirth" value={dateOfBirth} onChange={e => { setDateOfBirth(e.target.value); setAllowMatureContent(false); }} className="w-full h-11 px-4 rounded-xl border-gray-300 dark:bg-dark-surface dark:border-dark-border" />
+              <label className="mt-4 flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={allowMatureContent} disabled={!dateOfBirth || (() => { const d = new Date(dateOfBirth); const now = new Date(); let age = now.getFullYear() - d.getFullYear(); if (now < new Date(now.getFullYear(), d.getMonth(), d.getDate())) age--; return age < 18; })()} onChange={e => setAllowMatureContent(e.target.checked)} />
+                <span><strong className="block text-sm text-text-rich dark:text-dark-text-rich">Include mature stories</strong><small className="text-xs text-text-body dark:text-dark-text-body">Show 18+/21+ stories in discovery when your age permits. You’ll still see chapter-specific warnings.</small></span>
+              </label>
+            </section>
 
             <div className="flex justify-between items-center pt-4 w-full">
               <div>

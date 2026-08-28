@@ -2,6 +2,7 @@ import React from 'react';
 import type { Book } from '../types';
 import { StarIcon, EyeIcon } from './icons/Icons';
 import { AIBadge } from './AIBadge';
+import { AgeRatingBadge } from './AgeRatingBadge';
 
 interface BookCardProps {
   book: Book;
@@ -36,6 +37,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         />
         <div className="ww-book-cover-shade" />
         {primaryGenre && <span className="ww-book-genre">{primaryGenre}</span>}
+        <div className="ww-book-age"><AgeRatingBadge rating={book.ageRating} compact /></div>
         {book.isAIGenerated && <div className="ww-book-ai"><AIBadge /></div>}
         <span className="ww-book-open">View story <span aria-hidden="true">→</span></span>
       </div>

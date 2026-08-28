@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 
@@ -37,6 +39,10 @@ public class AuthDtos {
         @NotBlank
         @Size(min = 8, max = 40)
         private String password;
+
+        @NotNull
+        @Past
+        private LocalDate dateOfBirth;
     }
 
     @Data
@@ -73,6 +79,9 @@ public class AuthDtos {
         private String website;
         private Map<String, String> socials;
         private List<String> favoriteGenres;
+        @Past
+        private LocalDate dateOfBirth;
+        private Boolean allowMatureContent;
     }
 
     @Data

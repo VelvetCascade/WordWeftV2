@@ -6,6 +6,7 @@ import com.wordweft.book.repository.*;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
 import com.wordweft.security.services.UserDetailsImpl;
+import com.wordweft.exception.ContentRestrictedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,8 @@ public class BookService {
     NoteRepository noteRepository;
     @Autowired
     LibraryRepository libraryRepository;
+    @Autowired
+    ContentAccessService contentAccessService;
 
     public void deleteBook(String bookId) {
         // Delete the book document
@@ -60,7 +63,9 @@ public class BookService {
     }
 
     public Map<String, Object> getAllBooks(String sort, String genre, int page, int size) {
-        List<Book> books = bookRepository.findByPublicationStatus("published");
+        List<Book> books = bookRepository.findByPublicationStatus("published").stream()
+                .filter(contentAccessService::canDiscover)
+                .collect(Collectors.toList());
 
         // Genre filter
         if (genre != null && !genre.isBlank()) {
@@ -149,6 +154,10 @@ public class BookService {
 
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
+            if (!contentAccessService.canAccess(book)) {
+                AgeRating rating = contentAccessService.effectiveRating(book);
+                throw new ContentRestrictedException("This story is rated " + rating.getMinimumAge() + "+. Sign in and enable mature content in your profile if you are eligible.");
+            }
             if (incrementView) {
                 // Track page loads
                 book.setViewCount((book.getViewCount() == null ? 0 : book.getViewCount()) + 1);
@@ -166,6 +175,7 @@ public class BookService {
         String currentUserId = getCurrentUserId();
         // Use repository method for efficient filtering
         return bookRepository.findByAuthorIdAndPublicationStatus(authorId, "published").stream()
+                .filter(contentAccessService::canDiscover)
                 .map(b -> enrichBook(b, currentUserId))
                 .collect(Collectors.toList());
     }
@@ -224,6 +234,8 @@ public class BookService {
             cMap.put("likesCount", ch.getLikes() != null ? ch.getLikes().size() : 0);
             cMap.put("isLiked",
                     currentUserId != null && ch.getLikes() != null && ch.getLikes().contains(currentUserId));
+            cMap.put("contentWarnings", ch.getContentWarnings() != null ? ch.getContentWarnings() : List.of());
+            cMap.put("disclaimerNote", ch.getDisclaimerNote());
 
             return cMap;
         }).collect(Collectors.toList());
@@ -239,6 +251,9 @@ public class BookService {
         map.put("readCountLast7Days", book.getReadCountLast7Days() != null ? book.getReadCountLast7Days() : 0);
         map.put("viewCountLast7Days", book.getViewCountLast7Days() != null ? book.getViewCountLast7Days() : 0);
         map.put("isMature", book.isMature());
+        map.put("ageRating", contentAccessService.effectiveRating(book));
+        map.put("contentWarnings", book.getContentWarnings() != null ? book.getContentWarnings() : List.of());
+        map.put("customDisclaimer", book.getCustomDisclaimer());
         map.put("isAIGenerated", book.isAIGenerated());
 
         // Enrich Author
@@ -274,7 +289,9 @@ public class BookService {
     }
 
     public List<Map<String, Object>> getGenresRanked() {
-        List<Book> publishedBooks = bookRepository.findByPublicationStatus("published");
+        List<Book> publishedBooks = bookRepository.findByPublicationStatus("published").stream()
+                .filter(contentAccessService::canDiscover)
+                .collect(Collectors.toList());
         Map<String, Long> genreBookCount = new HashMap<>();
         Map<String, Long> genreReadCount = new HashMap<>();
         for (Book b : publishedBooks) {
@@ -341,6 +358,7 @@ public class BookService {
 
     public Map<String, Object> getBooksByGenre(String genre, String sort, int page, int size) {
         List<Book> books = bookRepository.findByPublicationStatus("published").stream()
+                .filter(contentAccessService::canDiscover)
                 .filter(b -> b.getGenres().stream().anyMatch(g -> g.equalsIgnoreCase(genre)))
                 .collect(Collectors.toList());
 

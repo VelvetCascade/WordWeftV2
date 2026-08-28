@@ -45,6 +45,8 @@ public class User {
     private String website;
 
     private LocalDate joinDate;
+    private LocalDate dateOfBirth;
+    private boolean allowMatureContent = false;
 
     // Writing Demo State
     private boolean hasSeenWritingDemo = false;

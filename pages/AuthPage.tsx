@@ -341,7 +341,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 if (age < 13 || age > 100) throw new Error("For your safety, you must be at least 13 years old to create an account on WordWeft.");
                 if (!termsAccepted || !privacyAccepted) throw new Error("Please accept the Terms and Privacy Policy.");
 
-                const result = await api.signup(username, email, password);
+                const result = await api.signup(username, email, password, birthday);
                 if (result.requiresOtp) {
                     trackEvent('auth', 'signup_success', 'otp_required');
                     setSuccessMsg(result.message);
@@ -515,20 +515,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 </div>
             </aside>
             <div className="ww-auth-form-shell w-full max-w-md">
-                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6">
+                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6" aria-label="WordWeft home">
                     <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
                 </a>
                 <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
                     <button
+                        type="button"
                         onClick={() => window.location.hash = '/'}
-                        className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
-                        aria-label="Close"
+                        className="ww-auth-close absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
+                        aria-label="Close sign in"
                     >
                         <XMarkIcon className="w-6 h-6" />
                     </button>
 
                     {view === 'forgot' && (
-                        <button onClick={() => resetForm('login')} className="absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors">
+                        <button type="button" onClick={() => resetForm('login')} className="ww-auth-back absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors" aria-label="Back to sign in">
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                     )}

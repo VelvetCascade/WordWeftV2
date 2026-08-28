@@ -12,6 +12,9 @@ import { AIBadge } from '../components/AIBadge';
 import { ShareModal } from '../components/ShareModal';
 import AdUnit from '../components/AdUnit';
 import { FeatureSparkle } from '../components/FeatureSparkle';
+import { AgeRatingBadge } from '../components/AgeRatingBadge';
+import { warningLabel } from '../components/ChapterDisclaimerModal';
+import { ReportModal } from '../components/ReportModal';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
@@ -219,6 +222,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
 
     const [allReviews, setAllReviews] = useState<Review[]>([]);
@@ -455,6 +459,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <h2 className="font-sans font-bold text-lg line-clamp-2 leading-tight dark:text-dark-text-rich">{book.title}</h2>
                     </div>
                     <div className="flex items-center gap-4">
+                        {currentUser?.id !== book.author.id && <button onClick={() => currentUser ? setIsReportModalOpen(true) : window.location.hash = '/auth'} className="text-xs font-semibold text-gray-500 hover:text-danger">Report</button>}
                         <button onClick={() => setIsShareModalOpen(true)}>
                             <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
                         </button>
@@ -516,6 +521,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 mb-6">
+                            <AgeRatingBadge rating={book.ageRating} />
                             {book.isAIGenerated && <AIBadge />}
                             {book.genres.map(g => <span key={g} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full">{g}</span>)}
                         </div>
@@ -526,6 +532,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             <div><strong>{book.readingStatus}</strong><span>Story status</span></div>
                             <div><strong>{book.reviewsCount.toLocaleString()}</strong><span>Reader reviews</span></div>
                         </div>
+
+                        {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance">
+                            <strong>Content guidance</strong>
+                            {book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(w => <span key={w}>{warningLabel(w)}</span>)}</div>}
+                            {book.customDisclaimer && <p>{book.customDisclaimer}</p>}
+                        </div>}
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button onClick={handleReadClick} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-opacity-80 transition-all hover:scale-105 duration-300 shadow-lg">
                                 {mainButtonText}
@@ -754,6 +766,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 onClose={() => setIsShareModalOpen(false)} 
                 book={book} 
             />
+            <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} targetType="BOOK" targetId={book.id} targetTitle={book.title} />
 
             {/* R2: Post-review share nudge */}
             {showReviewShareNudge && (

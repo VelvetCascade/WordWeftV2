@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +17,8 @@ public class Chapter {
     private int wordCount;
     private String content; 
     private String status = "draft"; // "draft" or "published"
+    private List<String> contentWarnings = new ArrayList<>();
+    private String disclaimerNote;
     
     // Stats
     private int viewCount = 0;

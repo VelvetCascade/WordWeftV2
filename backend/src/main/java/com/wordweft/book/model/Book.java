@@ -57,6 +57,10 @@ public class Book {
     private LocalDate publishedDate;
     private LocalDate lastUpdatedAt;
     private LocalDate createdAt;
+    private AgeRating ageRating = AgeRating.ALL_AGES;
+    private List<String> contentWarnings = new ArrayList<>();
+    @Size(max = 1000)
+    private String customDisclaimer;
     @JsonProperty("isMature")
     private boolean isMature = false;
     @JsonProperty("isAIGenerated")

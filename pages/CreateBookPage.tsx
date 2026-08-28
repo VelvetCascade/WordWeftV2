@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import type { User } from '../types';
+import type { User, AgeRating, ContentWarning } from '../types';
 import { ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
@@ -17,7 +17,9 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const [description, setDescription] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [category, setCategory] = useState('');
-    const [isMature, setIsMature] = useState(false);
+    const [ageRating, setAgeRating] = useState<AgeRating>('TEEN_13');
+    const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>([]);
+    const [customDisclaimer, setCustomDisclaimer] = useState('');
     const [isAIGenerated, setIsAIGenerated] = useState(false);
     const [coverUrl, setCoverUrl] = useState('');
     const [coverFileId, setCoverFileId] = useState<string | null>(null);
@@ -31,6 +33,13 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         'Anthology', 'Memoir', 'Biography', 'Self-Help', 'Graphic Novel',
         'Light Novel', 'Web Novel', 'Fan Fiction', 'Screenplay', 'Play',
         'Journal', 'Guide', 'Other'
+    ];
+    const WARNING_OPTIONS: { value: ContentWarning; label: string }[] = [
+        { value: 'VIOLENCE', label: 'Violence' }, { value: 'GORE', label: 'Gore' },
+        { value: 'STRONG_LANGUAGE', label: 'Strong language' }, { value: 'SEXUAL_CONTENT', label: 'Sexual content' },
+        { value: 'ABUSE', label: 'Abuse' }, { value: 'SELF_HARM', label: 'Self-harm' },
+        { value: 'SUBSTANCE_USE', label: 'Substance use' }, { value: 'GRIEF', label: 'Grief' },
+        { value: 'DISCRIMINATION', label: 'Discrimination' }, { value: 'OTHER', label: 'Other' },
     ];
 
     useEffect(() => {
@@ -60,7 +69,9 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
             genres: selectedGenres,
             category: finalCategory,
             tags: selectedGenres,
-            isMature,
+            ageRating,
+            contentWarnings,
+            customDisclaimer,
             isAIGenerated,
         };
 
@@ -139,12 +150,39 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 </div>
                             </div>
                         </section>
+
+                        <section className="ww-create-section">
+                            <div className="ww-create-section-heading">
+                                <span>03</span>
+                                <div><h2>Reader guidance</h2><p>Set an honest rating and flag sensitive material.</p></div>
+                            </div>
+                            <div className="ww-create-field">
+                                <label htmlFor="ageRating">Age rating</label>
+                                <select id="ageRating" value={ageRating} onChange={e => setAgeRating(e.target.value as AgeRating)}>
+                                    <option value="ALL_AGES">Everyone — suitable for all ages</option>
+                                    <option value="TEEN_13">Teen 13+ — moderate themes</option>
+                                    <option value="MATURE_18">Mature 18+ — explicit adult themes</option>
+                                    <option value="ADULT_21">Adult 21+ — highly explicit material</option>
+                                </select>
+                                <small>Choose based on the strongest material anywhere in the story. Mature stories are hidden unless an eligible reader opts in.</small>
+                            </div>
+                            <div className="ww-create-field">
+                                <label>Content warnings</label>
+                                <div className="ww-create-genres">
+                                    {WARNING_OPTIONS.map(item => <button key={item.value} type="button" className={contentWarnings.includes(item.value) ? 'selected' : ''} onClick={() => setContentWarnings(prev => prev.includes(item.value) ? prev.filter(w => w !== item.value) : [...prev, item.value])}>{contentWarnings.includes(item.value) && <span>✓</span>}{item.label}</button>)}
+                                </div>
+                            </div>
+                            <div className="ww-create-field">
+                                <label htmlFor="customDisclaimer">Author’s content note <span className="text-gray-400">(optional)</span></label>
+                                <textarea id="customDisclaimer" rows={3} maxLength={1000} value={customDisclaimer} onChange={e => setCustomDisclaimer(e.target.value)} placeholder="Add context without spoiling the story." />
+                            </div>
+                        </section>
                     </div>
 
                     <aside className="ww-create-aside">
                         <section className="ww-create-cover">
                             <div className="ww-create-section-heading compact">
-                                <span>03</span>
+                                <span>04</span>
                                 <div><h2>Cover</h2><p>Set the first impression.</p></div>
                             </div>
                             <ImageUpload
