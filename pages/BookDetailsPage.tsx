@@ -15,6 +15,7 @@ import { FeatureSparkle } from '../components/FeatureSparkle';
 import { AgeRatingBadge } from '../components/AgeRatingBadge';
 import { warningLabel } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
+import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
@@ -320,11 +321,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     }, [currentUser, bookId]);
 
     const handleBack = () => {
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            window.location.hash = '/category';
-        }
+        goBackOrReplace('/category');
     };
 
     const handleToggleLibrary = async () => {
@@ -360,12 +357,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!book) return;
         const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
         trackEvent('reading', 'start_reading', book.title, undefined, { bookId: book.id, chapterIndex: startChapter });
-        window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
+        openReaderFromStory(book.id, startChapter);
     };
 
     const handleReadChapterClick = (chapterIndex: number) => {
         if (!book) return;
-        window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
+        openReaderFromStory(book.id, chapterIndex);
     }
 
     const handleSubmitReview = async (e: React.FormEvent) => {

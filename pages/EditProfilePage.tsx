@@ -5,6 +5,7 @@ import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
+import { goBackOrReplace } from '../utils/navigation';
 
 interface EditProfilePageProps {
   user: User;
@@ -193,7 +194,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
 
   const handleCancel = () => {
-    window.location.hash = '/profile';
+    goBackOrReplace('/profile');
   };
 
   const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));

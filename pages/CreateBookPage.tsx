@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
+import { goBackOrReplace, replaceHash } from '../utils/navigation';
 
 interface CreateBookPageProps {
     currentUser: User;
@@ -80,9 +81,9 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
 
         const newBookId = updatedUser.writtenBooks?.find(b => b.title === title)?.id;
         if (newBookId) {
-            window.location.hash = `/write/book/${newBookId}/manage`;
+            replaceHash(`/write/book/${newBookId}/manage`);
         } else {
-            window.location.hash = '/write';
+            replaceHash('/write');
         }
     };
 
@@ -92,7 +93,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         <div className="ww-create-book-page">
             <div className="ww-create-book-shell">
                 <header className="ww-create-book-heading">
-                    <button onClick={() => window.location.hash = '/write'} className="ww-create-back" aria-label="Back to my books">
+                    <button onClick={() => goBackOrReplace('/write')} className="ww-create-back" aria-label="Back to my books">
                         <ArrowLeftIcon className="w-5 h-5" />
                     </button>
                     <div>
@@ -208,7 +209,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                     </aside>
 
                     <footer className="ww-create-actions">
-                        <button type="button" onClick={() => window.location.hash = '/write'}>Save for later</button>
+                        <button type="button" onClick={() => goBackOrReplace('/write')}>Save for later</button>
                         <button type="submit" disabled={!title || !description}>Create story <span>→</span></button>
                     </footer>
                 </form>
