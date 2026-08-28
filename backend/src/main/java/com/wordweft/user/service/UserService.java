@@ -60,6 +60,10 @@ public class UserService {
         map.put("socials", user.getSocials());
         map.put("favoriteGenres", user.getFavoriteGenres());
         map.put("hasSeenWritingDemo", user.isHasSeenWritingDemo());
+        if (user.getId().equals(currentViewerId)) {
+            map.put("dateOfBirth", user.getDateOfBirth());
+            map.put("allowMatureContent", user.isAllowMatureContent());
+        }
 
         // Stats Logic
         Map<String, Object> stats = new HashMap<>();

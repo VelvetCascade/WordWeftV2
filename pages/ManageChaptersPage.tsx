@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { User, Chapter, Book } from '../types';
+import type { User, Chapter, Book, AgeRating, ContentWarning } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
@@ -33,6 +33,9 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [genres, setGenres] = useState<string[]>(book.genres || []);
     const [allGenres, setAllGenres] = useState<string[]>([]);
     const [genreSearch, setGenreSearch] = useState('');
+    const [ageRating, setAgeRating] = useState<AgeRating>(book.ageRating || 'ALL_AGES');
+    const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>(book.contentWarnings || []);
+    const [customDisclaimer, setCustomDisclaimer] = useState(book.customDisclaimer || '');
 
     useEffect(() => {
         if (isOpen) {
@@ -50,6 +53,9 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             coverFileId,
             category,
             genres,
+            ageRating,
+            contentWarnings,
+            customDisclaimer,
             isAIGenerated
         });
         onClose();
@@ -130,6 +136,18 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                                 ))}
                                 {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match your search.</p>}
                             </div>
+                        </div>
+                        <div className="pt-2 border-t dark:border-dark-border mt-4">
+                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Age rating</label>
+                            <select value={ageRating} onChange={e => setAgeRating(e.target.value as AgeRating)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
+                                <option value="ALL_AGES">Everyone</option><option value="TEEN_13">Teen 13+</option><option value="MATURE_18">Mature 18+</option><option value="ADULT_21">Adult 21+</option>
+                            </select>
+                            <label className="block text-sm font-bold mt-4 mb-2 dark:text-dark-text-body">Content warnings</label>
+                            <div className="flex flex-wrap gap-2">
+                                {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button key={w} type="button" onClick={() => setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])} className={`px-3 py-1 rounded-full text-xs ${contentWarnings.includes(w) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt'}`}>{w.replaceAll('_',' ')}</button>)}
+                            </div>
+                            <label className="block text-sm font-bold mt-4 mb-1 dark:text-dark-text-body">Author’s content note</label>
+                            <textarea value={customDisclaimer} onChange={e => setCustomDisclaimer(e.target.value)} maxLength={1000} rows={3} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" placeholder="Optional context for readers" />
                         </div>
                         <div className="pt-2 border-t dark:border-dark-border mt-4">
                             <label htmlFor="editIsAIGenerated" className="flex items-center cursor-pointer py-2">

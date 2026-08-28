@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import type { User, Character } from '../types';
+import type { User, Character, ContentWarning } from '../types';
 import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon, ShareIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
@@ -65,7 +65,13 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
                 )
             }
             // Handle Spoiler / Hidden Text
-            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
+            if (
+                domNode.type === 'tag' &&
+                domNode.name === 'span' &&
+                domNode.attribs &&
+                (Object.prototype.hasOwnProperty.call(domNode.attribs, 'data-spoiler') ||
+                    (domNode.attribs.class || '').split(/\s+/).includes('spoiler-text'))
+            ) {
                 return (
                     <SpoilerReveal>{domToReact(domNode.children, options)}</SpoilerReveal>
                 );
@@ -114,6 +120,8 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const [title, setTitle] = useState(chapter?.title || '');
     const [content, setContent] = useState(chapter?.content || '');
+    const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>(chapter?.contentWarnings || []);
+    const [disclaimerNote, setDisclaimerNote] = useState(chapter?.disclaimerNote || '');
     const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -196,7 +204,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         setSaveState('saving');
 
         try {
-            const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: finalTitle, content: currentContent }, status);
+            const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: finalTitle, content: currentContent, contentWarnings, disclaimerNote }, status);
             onUserUpdate(updatedUser);
 
             // If it was a new chapter, find its newly created ID and update state
@@ -346,6 +354,17 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                             />
                             <div><span>{wordCount.toLocaleString()} words</span><i /><span>{Math.max(1, Math.ceil(wordCount / 220))} min read</span></div>
                         </div>
+
+                        <details className="chapter-disclosure-editor">
+                            <summary>Content guidance <span>{contentWarnings.length ? `${contentWarnings.length} warnings` : 'Optional'}</span></summary>
+                            <div>
+                                <p>Flag sensitive material specific to this chapter. These warnings appear before the reader opens it.</p>
+                                <div className="chapter-warning-options">
+                                    {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button type="button" key={w} className={contentWarnings.includes(w) ? 'selected' : ''} onClick={() => { setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w]); setSaveState('unsaved'); }}>{w.replaceAll('_', ' ').toLowerCase()}</button>)}
+                                </div>
+                                <label>Author’s note <small>Optional, avoid spoilers</small><textarea rows={2} maxLength={1000} value={disclaimerNote} onChange={e => { setDisclaimerNote(e.target.value); setSaveState('unsaved'); }} placeholder="Add context that helps readers decide whether to continue." /></label>
+                            </div>
+                        </details>
 
                         <RichTextEditor
                             value={content}

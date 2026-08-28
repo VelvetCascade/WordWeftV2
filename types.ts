@@ -71,7 +71,12 @@ export interface Chapter {
   likesCount: number;
   commentCount: number;
   isLiked: boolean;
+  contentWarnings: ContentWarning[];
+  disclaimerNote?: string;
 }
+
+export type AgeRating = 'ALL_AGES' | 'TEEN_13' | 'MATURE_18' | 'ADULT_21';
+export type ContentWarning = 'VIOLENCE' | 'GORE' | 'STRONG_LANGUAGE' | 'SEXUAL_CONTENT' | 'ABUSE' | 'SELF_HARM' | 'SUBSTANCE_USE' | 'GRIEF' | 'DISCRIMINATION' | 'FLASHING_IMAGES' | 'OTHER';
 
 export interface Book {
   id: string;
@@ -96,6 +101,9 @@ export interface Book {
   publicationStatus: 'draft' | 'published';
   publishedDate?: string;
   isMature: boolean;
+  ageRating: AgeRating;
+  contentWarnings: ContentWarning[];
+  customDisclaimer?: string;
   isAIGenerated: boolean;
   description: string;
 }
@@ -137,6 +145,22 @@ export interface User {
   library: Shelf[];
   writtenBooks?: Book[];
   hasSeenWritingDemo?: boolean;
+  dateOfBirth?: string;
+  allowMatureContent?: boolean;
+}
+
+export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER';
+export type ReportCategory = 'SPAM' | 'HARASSMENT' | 'PLAGIARISM' | 'SEXUAL_CONTENT' | 'HATE_SPEECH' | 'VIOLENCE' | 'COPYRIGHT' | 'MISINFORMATION' | 'OTHER';
+export interface ContentReport {
+  id: string;
+  ticketNumber: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  targetTitle: string;
+  category: ReportCategory;
+  description: string;
+  status: 'PENDING' | 'REVIEWED' | 'ACTIONED' | 'DISMISSED';
+  createdAt: string;
 }
 
 export interface Shelf {
@@ -207,7 +231,8 @@ export type NotificationType =
   | 'AUTHOR_NEW_CHAPTER'
   | 'AUTHOR_NEW_STORY'
   | 'BOOK_UPDATE'
-  | 'SYSTEM_UPDATE';
+  | 'SYSTEM_UPDATE'
+  | 'CONTENT_REPORT_NOTICE';
 
 export interface AppNotification {
   id: string;

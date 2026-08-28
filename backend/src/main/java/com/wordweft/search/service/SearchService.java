@@ -8,12 +8,16 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import com.wordweft.book.model.AgeRating;
+import com.wordweft.book.service.ContentAccessService;
 
 @Service
 public class SearchService {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private ContentAccessService contentAccessService;
 
     private static final String BOOKS_COLLECTION = "books";
     private static final String USERS_COLLECTION = "users";
@@ -47,6 +51,8 @@ public class SearchService {
                         .append("coverUrl", 1)
                         .append("genres", 1)
                         .append("authorId", 1)
+                        .append("ageRating", 1)
+                        .append("isMature", 1)
                         .append("rating", 1)
                         .append("score", new Document("$meta", "searchScore"))));
 
@@ -54,7 +60,7 @@ public class SearchService {
                 .aggregate(pipeline).into(new ArrayList<>());
 
         // Enrich with author names
-        return results.stream().map(doc -> {
+        return results.stream().filter(this::isAllowedBookResult).map(doc -> {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", doc.getString("id"));
             map.put("title", doc.getString("title"));
@@ -174,12 +180,14 @@ public class SearchService {
                         .append("readingStatus", 1)
                         .append("authorId", 1)
                         .append("publishedDate", 1)
+                        .append("ageRating", 1)
+                        .append("isMature", 1)
                         .append("score", new Document("$meta", "searchScore"))));
 
         List<Document> results = mongoTemplate.getCollection(BOOKS_COLLECTION)
                 .aggregate(dataPipeline).into(new ArrayList<>());
 
-        List<Map<String, Object>> enriched = results.stream().map(doc -> {
+        List<Map<String, Object>> enriched = results.stream().filter(this::isAllowedBookResult).map(doc -> {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", doc.getString("id"));
             map.put("title", doc.getString("title"));
@@ -223,6 +231,17 @@ public class SearchService {
         response.put("page", page);
         response.put("totalPages", (int) Math.ceil((double) total / size));
         return response;
+    }
+
+    private boolean isAllowedBookResult(Document doc) {
+        String value = doc.getString("ageRating");
+        AgeRating rating;
+        try {
+            rating = value != null ? AgeRating.valueOf(value) : (Boolean.TRUE.equals(doc.getBoolean("isMature")) ? AgeRating.MATURE_18 : AgeRating.ALL_AGES);
+        } catch (IllegalArgumentException ignored) {
+            rating = AgeRating.ALL_AGES;
+        }
+        return contentAccessService.allowedRatings().contains(rating);
     }
 
     private Map<String, Object> searchAuthorsFull(String query, int page, int size) {

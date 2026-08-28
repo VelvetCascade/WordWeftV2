@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -48,11 +48,11 @@ export async function login(email: string, password_used: string): Promise<User 
     return null;
 }
 
-export async function signup(username: string, email: string, password: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
+export async function signup(username: string, email: string, password: string, dateOfBirth: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
+        body: JSON.stringify({ username, email, password, dateOfBirth })
     });
 
     const data = await handleResponse(response);
@@ -81,7 +81,7 @@ export async function verifyOtp(email: string, otp: string): Promise<User> {
 
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
-        return mapBackendUserToFrontend(data);
+        return (await getMe()) || mapBackendUserToFrontend(data);
     }
     throw new Error("OTP Verification failed");
 }
@@ -474,7 +474,7 @@ export async function saveChapter(userId: string, bookId: string, chapterId: any
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify({ data, status })
+        body: JSON.stringify({ data, status, contentWarnings: data.contentWarnings || [], disclaimerNote: data.disclaimerNote || '' })
     });
     return mapBackendUserToFrontend(await handleResponse(response));
 }
@@ -735,7 +735,9 @@ function mapBackendUserToFrontend(backendData: any): User {
             })
         })),
         writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend),
-        hasSeenWritingDemo: backendData.hasSeenWritingDemo ?? false
+        hasSeenWritingDemo: backendData.hasSeenWritingDemo ?? false,
+        dateOfBirth: backendData.dateOfBirth,
+        allowMatureContent: backendData.allowMatureContent ?? false
     };
 }
 
@@ -745,7 +747,20 @@ function mapBackendBookToFrontend(backendBook: any): Book {
         ...backendBook,
         isAIGenerated: backendBook.isAIGenerated ?? backendBook.aIGenerated ?? backendBook.aigenerated ?? backendBook.aiGenerated ?? false,
         isMature: backendBook.isMature ?? backendBook.mature ?? false,
+        ageRating: backendBook.ageRating ?? ((backendBook.isMature ?? backendBook.mature) ? 'MATURE_18' : 'ALL_AGES'),
+        contentWarnings: backendBook.contentWarnings || [],
+        chapters: (backendBook.chapters || []).map((chapter: any) => ({ ...chapter, contentWarnings: chapter.contentWarnings || [] })),
     };
+}
+
+export async function submitReport(data: { targetType: ReportTargetType; targetId: string; category: ReportCategory; description: string }): Promise<ContentReport> {
+    const response = await fetch(`${API_BASE_URL}/reports`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+    return await handleResponse(response);
+}
+
+export async function getMyReports(): Promise<ContentReport[]> {
+    const response = await fetch(`${API_BASE_URL}/reports/mine`, { headers: getHeaders() });
+    return await handleResponse(response);
 }
 
 

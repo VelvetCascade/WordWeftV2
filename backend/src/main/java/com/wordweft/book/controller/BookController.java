@@ -3,6 +3,7 @@ package com.wordweft.book.controller;
 
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
+import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.notification.service.NotificationService;
@@ -137,6 +138,8 @@ public class BookController {
         book.setAuthorId(userDetails.getId());
         book.setPublicationStatus("draft");
         book.setCreatedAt(LocalDate.now());
+        if (book.getAgeRating() == null) book.setAgeRating(AgeRating.ALL_AGES);
+        book.setMature(book.getAgeRating().getMinimumAge() >= 18);
         if (book.getCoverUrl() == null || book.getCoverUrl().isEmpty()) {
             book.setCoverUrl("https://picsum.photos/seed/" + System.currentTimeMillis() + "/400/600");
         }
@@ -171,8 +174,14 @@ public class BookController {
         }
         if (updates.getGenres() != null)
             book.setGenres(updates.getGenres());
-        if (updates.isMature() != book.isMature())
-            book.setMature(updates.isMature());
+        if (updates.getAgeRating() != null) {
+            book.setAgeRating(updates.getAgeRating());
+            book.setMature(updates.getAgeRating().getMinimumAge() >= 18);
+        }
+        if (updates.getContentWarnings() != null)
+            book.setContentWarnings(updates.getContentWarnings());
+        if (updates.getCustomDisclaimer() != null)
+            book.setCustomDisclaimer(updates.getCustomDisclaimer());
         if (updates.isAIGenerated() != book.isAIGenerated())
             book.setAIGenerated(updates.isAIGenerated());
 
@@ -206,6 +215,12 @@ public class BookController {
 
         chapter.setTitle(data.get("title"));
         chapter.setContent(data.get("content"));
+        Object warningValue = payload.get("contentWarnings");
+        if (warningValue instanceof List<?>) {
+            chapter.setContentWarnings(((List<?>) warningValue).stream().map(String::valueOf).toList());
+        }
+        Object disclaimerValue = payload.get("disclaimerNote");
+        if (disclaimerValue != null) chapter.setDisclaimerNote(String.valueOf(disclaimerValue));
         chapter.updateWordCount();
 
         // If changing to published

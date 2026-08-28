@@ -23,6 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
@@ -97,6 +99,10 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        int age = Period.between(signUpRequest.getDateOfBirth(), LocalDate.now()).getYears();
+        if (age < 13 || age > 100) {
+            return ResponseEntity.badRequest().body("You must be between 13 and 100 years old to create an account.");
+        }
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity.badRequest().body("This username is already taken. Please choose another one.");
         }
@@ -108,6 +114,7 @@ public class AuthController {
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
+        user.setDateOfBirth(signUpRequest.getDateOfBirth());
 
         // Generate and set OTP
         String otp = generateOtp();

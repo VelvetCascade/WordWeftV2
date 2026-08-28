@@ -11,6 +11,8 @@ import { MoodAtmosphere } from '../components/MoodAtmosphere';
 import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
+import { ChapterDisclaimerModal } from '../components/ChapterDisclaimerModal';
+import { ReportModal } from '../components/ReportModal';
 import parse, { domToReact } from 'html-react-parser';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
@@ -27,8 +29,9 @@ const CommentItem: React.FC<{
     comment: Comment;
     allComments: Comment[];
     onReply: (parentId: string, content: string) => Promise<void>;
+    onReport: (comment: Comment) => void;
     depth: number
-}> = ({ comment, allComments, onReply, depth }) => {
+}> = ({ comment, allComments, onReply, onReport, depth }) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +76,8 @@ const CommentItem: React.FC<{
                     </div>
                 </div>
 
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-end gap-3 mt-2">
+                    <button onClick={() => onReport(comment)} className="text-xs font-semibold text-gray-400 hover:text-danger">Report</button>
                     <button
                         onClick={() => setIsReplying(!isReplying)}
                         className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent flex items-center gap-1"
@@ -113,6 +117,7 @@ const CommentItem: React.FC<{
                         comment={reply}
                         allComments={allComments}
                         onReply={onReply}
+                        onReport={onReport}
                         depth={depth + 1}
                     />
                 ))}
@@ -128,7 +133,8 @@ const CommentDrawer: React.FC<{
     paragraphIndex: number | null;
     paragraphText?: string;
     onAddComment: (content: string, parentId?: string | null) => Promise<void>;
-}> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment }) => {
+    onReportComment: (comment: Comment) => void;
+}> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment, onReportComment }) => {
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -175,6 +181,7 @@ const CommentDrawer: React.FC<{
                                 comment={c}
                                 allComments={comments}
                                 onReply={async (parentId, content) => await onAddComment(content, parentId)}
+                                onReport={onReportComment}
                                 depth={0}
                             />
                         ))
@@ -221,6 +228,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+    const [reportTarget, setReportTarget] = useState<{ type: 'CHAPTER' | 'COMMENT'; id: string; title: string } | null>(null);
 
     const [comments, setComments] = useState<Comment[]>([]);
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
@@ -248,6 +257,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
+    const disclaimerRequired = !!(book && chapter && ((book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21') || book.contentWarnings?.length || chapter.contentWarnings?.length || book.customDisclaimer || chapter.disclaimerNote));
+    const disclaimerKey = chapter ? `ww_disclaimer_${bookId}_${chapter.id}` : '';
 
     const contentThemeClasses: Record<ContentTheme, string> = {
         light: 'reader-theme-light',
@@ -267,16 +278,20 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     }, [bookId]);
 
     useEffect(() => {
+        if (chapter) setIsDisclaimerOpen(disclaimerRequired && sessionStorage.getItem(disclaimerKey) !== 'accepted');
+    }, [chapter?.id, disclaimerRequired, disclaimerKey]);
+
+    useEffect(() => {
         if (book && chapter) {
             api.getChapterComments(bookId, chapter.id).then(setComments);
 
-            if (hasRecordedView.current !== chapter.id) {
+            if ((!disclaimerRequired || sessionStorage.getItem(disclaimerKey) === 'accepted') && hasRecordedView.current !== chapter.id) {
                 api.recordChapterView(bookId, chapter.id);
                 trackEvent('reading', 'chapter_read_start', chapter.title, undefined, { bookId, chapterId: chapter.id, chapterIndex: currentChapterIndex });
                 hasRecordedView.current = chapter.id;
             }
         }
-    }, [bookId, chapter]);
+    }, [bookId, chapter, isDisclaimerOpen, disclaimerRequired, disclaimerKey]);
 
     // Default reading mode on load based on user's site theme
     useEffect(() => {
@@ -566,7 +581,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             }
 
             // Handle Spoiler / Hidden Text
-            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
+            if (
+                domNode.type === 'tag' &&
+                domNode.name === 'span' &&
+                domNode.attribs &&
+                (Object.prototype.hasOwnProperty.call(domNode.attribs, 'data-spoiler') ||
+                    (domNode.attribs.class || '').split(/\s+/).includes('spoiler-text'))
+            ) {
                 return (
                     <SpoilerReveal>{domToReact(domNode.children, parseOptions)}</SpoilerReveal>
                 );
@@ -622,7 +643,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             {/* Contextual Reader Onboarding */}
             <ReaderDiscoveryCoach 
                 hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')} 
-                hasSpoilers={chapter?.content?.includes('spoiler-text')} 
+                hasSpoilers={chapter?.content?.includes('data-spoiler') || chapter?.content?.includes('spoiler-text')}
             />
 
             {/* Mood Atmosphere — page-level immersive overlay */}
@@ -648,6 +669,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                             <BookmarkIcon className="w-5 h-5" />
                         </button>
                         <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
+                        <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button">!</button>
                         <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>
                     </div>
                 </div>
@@ -843,6 +865,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 paragraphIndex={activeParagraphIndex}
                 paragraphText={activeParagraphIndex !== null && chapter.content ? 'Paragraph ' + (activeParagraphIndex + 1) : undefined}
                 onAddComment={handleAddComment}
+                onReportComment={(comment) => currentUser ? setReportTarget({ type: 'COMMENT', id: comment.id, title: `Comment by ${comment.user.name}` }) : window.location.hash = '/auth'}
             />
 
             <CharacterPreview
@@ -859,6 +882,17 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 initialTab={shareInitialTab}
                 quoteText={selectedQuote || undefined}
             />
+            <ChapterDisclaimerModal
+                isOpen={isDisclaimerOpen}
+                storyTitle={book.title}
+                chapterTitle={chapter.title}
+                rating={book.ageRating}
+                warnings={[...(book.contentWarnings || []), ...(chapter.contentWarnings || [])].filter((warning, index, all) => all.indexOf(warning) === index)}
+                note={chapter.disclaimerNote || book.customDisclaimer}
+                onContinue={() => { sessionStorage.setItem(disclaimerKey, 'accepted'); setIsDisclaimerOpen(false); }}
+                onLeave={() => window.location.hash = `/book/${book.id}`}
+            />
+            {reportTarget && <ReportModal isOpen onClose={() => setReportTarget(null)} targetType={reportTarget.type} targetId={reportTarget.id} targetTitle={reportTarget.title} />}
 
             {/* Floating Quote Share Tooltip */}
             {quoteTooltipPos && selectedQuote && (
