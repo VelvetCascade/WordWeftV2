@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { SearchBookResult, SearchAuthorResult } from '../types';
 import * as api from '../api/client';
 import { StarIcon } from './icons/Icons';
+import { createLatestRequestGate } from '../utils/runtimeLifecycle';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -17,20 +18,33 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
+    const requestGateRef = useRef<ReturnType<typeof createLatestRequestGate> | null>(null);
+    if (!requestGateRef.current) requestGateRef.current = createLatestRequestGate();
 
     const totalResults = books.length + authors.length;
 
     // Focus input when overlay opens
     useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100);
+            focusTimer.current = setTimeout(() => inputRef.current?.focus(), 100);
             setQuery('');
             setBooks([]);
             setAuthors([]);
             setSelectedIndex(-1);
+        } else {
+            requestGateRef.current?.invalidate();
         }
+        return () => {
+            if (focusTimer.current) clearTimeout(focusTimer.current);
+        };
     }, [isOpen]);
+
+    useEffect(() => () => {
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        requestGateRef.current?.invalidate();
+    }, []);
 
     // Lock body scroll when open
     useEffect(() => {
@@ -55,17 +69,22 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         if (q.trim().length < 2) {
             setBooks([]);
             setAuthors([]);
+            setIsLoading(false);
             return;
         }
+        const requestId = requestGateRef.current!.begin();
         setIsLoading(true);
         try {
             const result = await api.searchAutocomplete(q);
+            if (!requestGateRef.current?.isLatest(requestId)) return;
             setBooks(result.books || []);
             setAuthors(result.authors || []);
         } catch (e) {
-            console.error('Autocomplete error:', e);
+            if (requestGateRef.current?.isLatest(requestId)) {
+                console.error('Autocomplete error:', e);
+            }
         } finally {
-            setIsLoading(false);
+            if (requestGateRef.current?.isLatest(requestId)) setIsLoading(false);
         }
     }, []);
 
@@ -73,6 +92,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         const val = e.target.value;
         setQuery(val);
         setSelectedIndex(-1);
+        requestGateRef.current?.invalidate();
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => fetchAutocomplete(val), 300);
     };

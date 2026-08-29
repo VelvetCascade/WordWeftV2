@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AppNotification } from '../types';
 import * as api from '../api/client';
+import { createReconnectController } from '../utils/runtimeLifecycle';
 
 interface UseNotificationsReturn {
     notifications: AppNotification[];
@@ -71,7 +72,10 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
     useEffect(() => {
         if (!isLoggedIn) return;
 
-        const connectSSE = () => {
+        let connectSSE: () => void;
+        const reconnectController = createReconnectController(() => connectSSE(), 5000);
+
+        connectSSE = () => {
             const url = api.getNotificationStreamUrl();
             const es = new EventSource(url);
             eventSourceRef.current = es;
@@ -104,16 +108,18 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
 
             es.onerror = () => {
                 es.close();
-                // Reconnect after 5 seconds
-                setTimeout(connectSSE, 5000);
+                if (eventSourceRef.current === es) eventSourceRef.current = null;
+                reconnectController.schedule();
             };
         };
 
         connectSSE();
 
         return () => {
+            reconnectController.dispose();
             if (eventSourceRef.current) {
                 eventSourceRef.current.close();
+                eventSourceRef.current = null;
             }
             if (toastTimeoutRef.current) {
                 clearTimeout(toastTimeoutRef.current);

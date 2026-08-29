@@ -37,7 +37,7 @@ export const analyzeMentions = (html: string, characters: Character[]): { newHtm
             regex.lastIndex = 0;
 
             let match;
-            const fragments: (Node | string)[] = [];
+            const fragments: Node[] = [];
             let lastIndex = 0;
 
             while ((match = regex.exec(text)) !== null) {

@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { TextSelection } from '@tiptap/pm/state';
 
 /**
  * Pull Quote / Epigraph Extension — decorative typography block.
@@ -58,9 +59,7 @@ export const PullQuote = Node.create({
                     const endPos = $from.end(pullQuoteDepth) + 1;
                     const { tr } = state;
                     tr.insert(endPos, state.schema.nodes.paragraph.create());
-                    tr.setSelection(
-                        state.selection.constructor.near(tr.doc.resolve(endPos + 1))
-                    );
+                    tr.setSelection(TextSelection.near(tr.doc.resolve(endPos + 1)));
                     editor.view.dispatch(tr);
                     return true;
                 }
@@ -97,9 +96,7 @@ export const PullQuote = Node.create({
                     const from = $from.before(pullQuoteDepth);
                     const to = $from.after(pullQuoteDepth);
                     tr.replaceWith(from, to, state.schema.nodes.paragraph.create());
-                    tr.setSelection(
-                        state.selection.constructor.near(tr.doc.resolve(from + 1))
-                    );
+                    tr.setSelection(TextSelection.near(tr.doc.resolve(from + 1)));
                     editor.view.dispatch(tr);
                     return true;
                 }
