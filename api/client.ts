@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -352,10 +352,15 @@ export async function toggleChapterLike(bookId: string, chapterId: string): Prom
 }
 
 export async function recordChapterView(bookId: string, chapterId: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/view`, {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/view`, {
         method: 'POST',
-        headers: getHeaders()
+        headers: getHeaders(),
+        body: JSON.stringify({
+            sessionId: getOrCreateReaderSession(),
+            referrer: document.referrer || ''
+        })
     });
+    await handleResponse(response);
 }
 
 // --- Library & Progress API ---
@@ -499,6 +504,29 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
         headers: getHeaders()
     });
     return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function scheduleChapter(bookId: string, chapterId: string, scheduledAt: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ scheduledAt })
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function cancelChapterSchedule(bookId: string, chapterId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function getWriterAnalytics(bookId?: string): Promise<WriterAnalytics> {
+    const query = bookId ? `?bookId=${encodeURIComponent(bookId)}` : '';
+    const response = await fetch(`${API_BASE_URL}/writer/analytics${query}`, { headers: getHeaders() });
+    return await handleResponse(response);
 }
 
 export async function deleteBook(bookId: string): Promise<User> {
@@ -754,6 +782,15 @@ function mapBackendBookToFrontend(backendBook: any): Book {
         contentWarnings: backendBook.contentWarnings || [],
         chapters: (backendBook.chapters || []).map((chapter: any) => ({ ...chapter, contentWarnings: chapter.contentWarnings || [] })),
     };
+}
+
+function getOrCreateReaderSession(): string {
+    const key = 'wordweft_reader_session';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const sessionId = crypto.randomUUID();
+    localStorage.setItem(key, sessionId);
+    return sessionId;
 }
 
 export async function submitReport(data: { targetType: ReportTargetType; targetId: string; category: ReportCategory; description: string }): Promise<ContentReport> {

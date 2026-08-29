@@ -68,7 +68,9 @@ export interface Chapter {
   title: string;
   wordCount: number;
   content: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'scheduled' | 'published';
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
   // Stats
   viewCount: number;
   likesCount: number;
@@ -103,6 +105,7 @@ export interface Book {
   readingStatus: 'Completed' | 'Ongoing';
   publicationStatus: 'draft' | 'published';
   publishedDate?: string;
+  nextScheduledReleaseAt?: string;
   isMature: boolean;
   ageRating: AgeRating;
   contentWarnings: ContentWarning[];
@@ -152,6 +155,71 @@ export interface User {
   hasSeenWritingDemo?: boolean;
   dateOfBirth?: string;
   allowMatureContent?: boolean;
+}
+
+export interface WriterAnalyticsSummary {
+  uniqueReaders: number;
+  views: number;
+  completedReaders: number;
+  completionRate: number;
+  returningReaders: number;
+  averageCompletion: number;
+  likes: number;
+  comments: number;
+}
+
+export interface WriterStoryAnalytics {
+  bookId: string;
+  title: string;
+  coverUrl?: string;
+  uniqueReaders: number;
+  views: number;
+  completedReaders: number;
+  completionRate: number;
+  likes: number;
+  comments: number;
+}
+
+export interface ChapterFunnelRow {
+  bookId: string;
+  chapterId: string;
+  title: string;
+  chapterNumber: number;
+  views: number;
+  reachedReaders: number;
+  completedReaders: number;
+  completionRate: number;
+  continuationRate: number;
+  likes: number;
+  comments: number;
+}
+
+export interface DailyTrendPoint {
+  date: string;
+  readers: number;
+  views: number;
+}
+
+export interface AnalyticsReferrer {
+  source: string;
+  readers: number;
+  views: number;
+}
+
+export interface ReleaseMarker {
+  bookId: string;
+  chapterId: string;
+  chapterTitle: string;
+  publishedAt: string;
+}
+
+export interface WriterAnalytics {
+  summary: WriterAnalyticsSummary;
+  stories: WriterStoryAnalytics[];
+  chapterFunnel: ChapterFunnelRow[];
+  dailyTrend: DailyTrendPoint[];
+  referrers: AnalyticsReferrer[];
+  releaseMarkers: ReleaseMarker[];
 }
 
 export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER' | 'COMMUNITY_POST' | 'COMMUNITY_COMMENT';
