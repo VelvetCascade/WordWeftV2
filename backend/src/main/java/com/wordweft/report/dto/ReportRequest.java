@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class ReportRequest {
     @NotBlank
-    @Pattern(regexp = "BOOK|CHAPTER|COMMENT|USER")
+    @Pattern(regexp = "BOOK|CHAPTER|COMMENT|USER|COMMUNITY_POST|COMMUNITY_COMMENT")
     private String targetType;
     @NotBlank
     private String targetId;

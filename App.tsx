@@ -14,6 +14,8 @@ import { ChapterEditorPage } from './pages/ChapterEditorPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthorPage } from './pages/AuthorPage';
+import { CommunityPage } from './pages/CommunityPage';
+import { CommunityPostPage } from './pages/CommunityPostPage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
@@ -42,6 +44,7 @@ import { useNotifications } from './hooks/useNotifications';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
 import { replaceHash } from './utils/navigation';
+import { communityReturnLink } from './utils/community';
 
 export type Page =
   | { name: 'home' }
@@ -57,6 +60,8 @@ export type Page =
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; authorId: string }
+  | { name: 'community'; circleSlug?: string; query?: string }
+  | { name: 'community-post'; postId: string }
   | { name: 'edit-profile' }
   | { name: 'terms' }
   | { name: 'privacy' }
@@ -90,6 +95,8 @@ const App: React.FC = () => {
       case 'reader': window.location.hash = `/read/book/${target.bookId}/chapter/${target.chapterIndex}`; break;
       case 'writer-dashboard': window.location.hash = '/write'; break;
       case 'author': window.location.hash = `/author/${target.authorId}`; break;
+      case 'community': window.location.hash = `/community${target.circleSlug ? `/circle/${encodeURIComponent(target.circleSlug)}` : ''}${target.query ? `?${target.query}` : ''}`; break;
+      case 'community-post': window.location.hash = `/community/post/${encodeURIComponent(target.postId)}`; break;
       case 'profile': window.location.hash = '/profile'; break;
       case 'auth': window.location.hash = '/auth'; break;
       case 'edit-profile': window.location.hash = '/edit-profile'; break;
@@ -135,15 +142,16 @@ const App: React.FC = () => {
     const hasCompletedJourney = localStorage.getItem('ww_welcomeJourneyCompleted');
     if (!hasCompletedJourney) {
       setShowWelcomeJourney(true);
-      // Still navigate to home so URL is correct when journey closes
+      // Keep the intended route until onboarding completes or is skipped.
       window.location.hash = '/';
-      setIntendedPage(null);
       return;
     }
 
     const targetPage = intendedPage || { name: 'home' };
 
-    if (targetPage.name === 'book-details') {
+    if (targetPage.name === 'community' || targetPage.name === 'community-post') {
+      navigateTo(targetPage);
+    } else if (targetPage.name === 'book-details') {
       window.location.hash = `/book/${targetPage.bookId}`;
     } else if (targetPage.name === 'author') {
       window.location.hash = `/author/${targetPage.authorId}`;
@@ -246,7 +254,15 @@ const App: React.FC = () => {
       const hash = getEffectiveHash();
       let targetPage: Page;
 
-      if (hash.startsWith('book/')) {
+      if (hash.startsWith('community/post/')) {
+        const postId = hash.split('?')[0].split('/')[2];
+        targetPage = postId ? { name: 'community-post', postId } : { name: 'community' };
+      } else if (hash.startsWith('community')) {
+        const route = hash.split('?')[0].split('/');
+        let circleSlug = route[1] === 'circle' ? route[2] : undefined;
+        try { if (circleSlug) circleSlug = decodeURIComponent(circleSlug); } catch { circleSlug = undefined; }
+        targetPage = { name: 'community', circleSlug, query: hash.split('?')[1] || undefined };
+      } else if (hash.startsWith('book/')) {
         const bookId = hash.split('/')[1];
         targetPage = bookId ? { name: 'book-details', bookId } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
@@ -423,7 +439,11 @@ const App: React.FC = () => {
       case 'feedback':
         return <FeedbackPage />;
       case 'author':
-        return <AuthorPage authorId={page.authorId} />;
+        return <AuthorPage authorId={page.authorId} currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
+      case 'community':
+        return <CommunityPage currentUser={currentUser} circleSlug={page.circleSlug} query={page.query} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
+      case 'community-post':
+        return <CommunityPostPage postId={page.postId} currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'notifications':
         return <NotificationsPage
           currentUser={currentUser}
@@ -525,8 +545,12 @@ const App: React.FC = () => {
             onComplete={(role) => {
               setShowWelcomeJourney(false);
               localStorage.setItem('ww_userRole', role);
+              const communityReturn = communityReturnLink(intendedPage);
+              setIntendedPage(null);
               // Navigate based on role
-              if (role === 'writer') {
+              if (communityReturn) {
+                window.location.hash = communityReturn;
+              } else if (role === 'writer') {
                 window.location.hash = '/write';
               } else {
                 window.location.hash = '/';

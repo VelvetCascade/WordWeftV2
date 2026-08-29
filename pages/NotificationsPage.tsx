@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { AppNotification, User, NavigateTo, NotificationPreferences } from '../types';
 import type { Page } from '../App';
+import { communityNotificationPostId } from '../utils/community';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 
@@ -20,12 +21,16 @@ interface NotificationsPageProps {
 const FILTER_TABS = [
     { key: 'ALL', label: 'All' },
     { key: 'SOCIAL', label: 'Social' },
+    { key: 'COMMUNITY', label: 'Community' },
     { key: 'STORIES', label: 'Stories' },
     { key: 'SYSTEM', label: 'System' },
 ];
 
 const getNotificationIcon = (type: string): string => {
     switch (type) {
+        case 'COMMUNITY_COMMENT': return '💬';
+        case 'COMMUNITY_REPLY': return '↩️';
+        case 'COMMUNITY_RELEASE': return '📚';
         case 'NEW_FOLLOWER': return '👤';
         case 'NEW_COMMENT': return '💬';
         case 'COMMENT_REPLY': return '↩️';
@@ -52,12 +57,15 @@ const getTimeAgo = (dateStr: string): string => {
 };
 
 const getTypeCategory = (type: string): string => {
+    if (type.startsWith('COMMUNITY_')) return 'COMMUNITY';
     if (['NEW_FOLLOWER', 'NEW_COMMENT', 'COMMENT_REPLY'].includes(type)) return 'SOCIAL';
     if (['AUTHOR_NEW_CHAPTER', 'AUTHOR_NEW_STORY', 'BOOK_UPDATE'].includes(type)) return 'STORIES';
     return 'SYSTEM';
 };
 
 const getNotificationTarget = (n: AppNotification): Page | null => {
+    const postId = communityNotificationPostId(n);
+    if (postId) return { name: 'community-post', postId };
     switch (n.type) {
         case 'NEW_FOLLOWER':
             return { name: 'author', authorId: n.entityId };

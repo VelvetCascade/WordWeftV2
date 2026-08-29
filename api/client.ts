@@ -22,8 +22,7 @@ const handleResponse = async (response: Response) => {
         const errorData = await response.text();
         throw new Error(errorData || response.statusText);
     }
-    try {
-        return await response.json();
+    try {        return await response.json();
     } catch (e) {
         // Some endpoints might return empty body on success
         return null;
@@ -322,6 +321,8 @@ export async function getAuthorById(id: string): Promise<Author | null> {
         followersCount: data.followersCount || 0,
         followingCount: data.followingCount || 0,
         isFollowing: data.isFollowing ?? false,
+        communityInterests: data.communityInterests || [],
+        communityBadges: data.communityBadges || [],
     };
 }
 
@@ -720,6 +721,8 @@ function mapBackendUserToFrontend(backendData: any): User {
         },
         socials: backendData.socials || {},
         favoriteGenres: backendData.favoriteGenres || [],
+        communityInterests: backendData.communityInterests || [],
+        communityBadges: backendData.communityBadges || [],
         following: backendData.following || [], // Should be list of IDs
         followersCount: backendData.followersCount || 0,
         followingCount: backendData.followingCount || 0,

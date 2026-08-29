@@ -12,6 +12,9 @@ import com.wordweft.report.repository.ReportRepository;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
+import com.wordweft.community.service.CommunityService;
+import com.wordweft.community.model.CommunityPost;
+import com.wordweft.community.model.CommunityComment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class ReportService {
     @Autowired private CommentRepository commentRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private NotificationService notificationService;
+    @Autowired private CommunityService communityService;
 
     public Report create(ReportRequest request) {
         UserDetailsImpl principal = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -63,6 +67,7 @@ public class ReportService {
         metadata.put("ticketNumber", report.getTicketNumber());
         metadata.put("category", report.getCategory());
         metadata.put("targetTitle", report.getTargetTitle());
+        if (target.postId != null) metadata.put("postId", target.postId);
         notificationService.createNotification(target.userId, null, "CONTENT_REPORT_NOTICE", request.getTargetType(), request.getTargetId(),
                 "A policy report was received regarding " + target.title + ". The reporter's identity is confidential.", metadata);
         return report;
@@ -93,14 +98,27 @@ public class ReportService {
                 yield target(comment.getUserId(), "Comment: “" + snippet + "”");
             }
             case "USER" -> target(id, "Profile");
+            case "COMMUNITY_POST" -> {
+                UserDetailsImpl actor = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                CommunityPost post = communityService.readablePost(actor.getId(), id);
+                Target owner = target(post.getAuthorId(), post.getTitle() == null ? "Community post" : post.getTitle());
+                yield new Target(owner.userId, owner.username, owner.title, post.getId());
+            }
+            case "COMMUNITY_COMMENT" -> {
+                UserDetailsImpl actor = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                CommunityComment comment = communityService.activeComment(id);
+                communityService.readablePost(actor.getId(), comment.getPostId());
+                Target owner = target(comment.getAuthorId(), "Community comment");
+                yield new Target(owner.userId, owner.username, owner.title, comment.getPostId());
+            }
             default -> throw new IllegalArgumentException("Unsupported report target.");
         };
     }
 
     private Target target(String userId, String title) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Account not found."));
-        return new Target(userId, user.getUsername(), "Profile".equals(title) ? "Profile: " + user.getUsername() : title);
+        return new Target(userId, user.getUsername(), "Profile".equals(title) ? "Profile: " + user.getUsername() : title, null);
     }
 
-    private record Target(String userId, String username, String title) {}
+    private record Target(String userId, String username, String title, String postId) {}
 }

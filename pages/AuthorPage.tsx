@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Author, Book } from '../types';
+import type { Author, Book, User } from '../types';
+import { CommunityFeed } from '../components/community/CommunityFeed';
+import { CommunitySession } from '../components/community/CommunityShared';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { UserGroupIcon, PlusIcon, CheckCircleIcon, BookOpenIcon, StarIcon, EyeIcon, HeartIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon, ChatBubbleLeftIcon, ShareIcon } from '../components/icons/Icons';
@@ -73,31 +75,38 @@ const formatJoinDate = (dateStr?: string) => {
 
 // ── Main Component ──
 
-export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
+export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null; onSignIn?: () => void }> = ({ authorId, currentUser = null, onSignIn = () => { window.location.hash = '/auth'; } }) => {
     const { trackEvent } = useAnalytics();
     const [author, setAuthor] = useState<Author | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
-    const [activeTab, setActiveTab] = useState<'published' | 'about'>('published');
+    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'activity'>('published');
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
 
     useEffect(() => {
+        let active = true;
         setIsLoading(true);
         Promise.all([
             api.getAuthorById(authorId),
             api.getBooksByAuthor(authorId)
         ]).then(([fetchedAuthor, fetchedBooks]) => {
+            if (!active) return;
             setAuthor(fetchedAuthor);
             setAuthorBooks(fetchedBooks);
-            setIsLoading(false);
-        });
+        }).catch(() => {
+            if (!active) return;
+            setAuthor(null);
+            setAuthorBooks([]);
+        }).finally(() => { if (active) setIsLoading(false); });
+        return () => { active = false; };
     }, [authorId]);
 
     const handleFollowToggle = async () => {
         if (!author) return;
+        if (!currentUser) { onSignIn(); return; }
         
         // Optimistic UI update
         const prevAuthor = { ...author };
@@ -118,9 +127,6 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
         } catch (error) {
             // Revert on failure
             setAuthor(prevAuthor);
-            if(!localStorage.getItem('wordweft_jwt')) {
-                window.location.hash = '/auth';
-            }
         } finally {
             setIsFollowLoading(false);
         }
@@ -178,6 +184,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
     const hasFavoriteGenres = author.favoriteGenres && author.favoriteGenres.length > 0;
     const hasAboutContent = author.bio || joinDate || author.location || author.website || hasSocials || hasFavoriteGenres || author.stats;
     const initial = author.name ? author.name.charAt(0).toUpperCase() : '?';
+    const isOwnProfile = currentUser?.id === author.id;
 
     return (
         <div className="ww-author-page">
@@ -215,11 +222,12 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
 
                         {/* Profile Info */}
                         <div className="flex-1 text-center md:text-left min-w-0">
+                            {(author.communityBadges?.length || author.communityInterests?.length) ? <div className="community-author-identity">{author.communityBadges?.map(badge => <span key={badge}>{badge === 'VERIFIED_CREATOR' ? 'Verified creator' : badge === 'EDITORIAL_STAFF' ? 'Editorial staff' : 'Community moderator'}</span>)}{author.communityInterests?.map(interest => <span key={interest}>{({ READING: 'Reader', WEBNOVEL_WRITING: 'Web-novel writer', EBOOK_PUBLISHING: 'E-book writer', WRITING_CRAFT: 'Writing craft', CRITIQUE: 'Critique' })[interest]}</span>)}</div> : null}
                             <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-3">
                                 <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich tracking-tight leading-tight">
                                     {author.name}
                                 </h1>
-                                <button
+                                {isOwnProfile ? <a href="#/edit-profile" className="px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit profile</a> : <button
                                     onClick={handleFollowToggle}
                                     disabled={isFollowLoading}
                                     className={`px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95 flex-shrink-0 ${
@@ -237,7 +245,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
                                             <PlusIcon className="w-4 h-4" /> Follow
                                         </>
                                     )}
-                                </button>
+                                </button>}
                                 <button
                                     onClick={() => setIsShareOpen(true)}
                                     className="p-2.5 rounded-full border border-gray-200 dark:border-dark-border hover:border-accent hover:text-accent text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
@@ -245,7 +253,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
                                 >
                                     <ShareIcon className="w-5 h-5" />
                                 </button>
-                                <button onClick={() => localStorage.getItem('wordweft_jwt') ? setIsReportOpen(true) : window.location.hash = '/auth'} className="px-3 py-2.5 rounded-full text-xs font-semibold text-gray-500 hover:text-danger" title="Report profile">Report</button>
+                                {!isOwnProfile && <button onClick={() => currentUser ? setIsReportOpen(true) : onSignIn()} className="px-3 py-2.5 rounded-full text-xs font-semibold text-gray-500 hover:text-danger" title="Report profile">Report</button>}
                             </div>
 
                             {/* Bio */}
@@ -362,6 +370,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
                                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
                             )}
                         </button>
+                        <button onClick={() => setActiveTab('activity')} className={`relative px-6 py-4 font-sans font-semibold text-sm transition-colors ${activeTab === 'activity' ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}>Activity{activeTab === 'activity' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />}</button>
                         {hasAboutContent && (
                             <button
                                 onClick={() => setActiveTab('about')}
@@ -383,6 +392,7 @@ export const AuthorPage: React.FC<{ authorId: string }> = ({ authorId }) => {
 
             {/* ═══════════  Content  ═══════════ */}
             <div className="container mx-auto px-6 py-10">
+                {activeTab === 'activity' && <CommunitySession user={currentUser} onSignIn={onSignIn}><div className="community-author-feed"><CommunityFeed query={{ mode: 'discover', authorId }} /></div></CommunitySession>}
                 {activeTab === 'published' && (
                     <>
                         {/* Genre tags for the author's works */}
