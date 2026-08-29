@@ -94,6 +94,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users/*/profile").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/discovery/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/growth/events").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/growth/events").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/growth/events/*").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers("/api/community/moderation/**").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers("/api/community/members/*/badges").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/community/circles", "/api/community/feed",

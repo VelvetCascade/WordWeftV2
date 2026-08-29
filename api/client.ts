@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -379,6 +379,30 @@ export async function saveReaderTaste(favoriteGenres: string[]): Promise<string[
     });
     const result = await handleResponse(response);
     return result.favoriteGenres || [];
+}
+
+export async function getReadingChallenges(): Promise<ReadingChallenge[]> {
+    const response = await fetch(`${API_BASE_URL}/growth/challenges`, { headers: getHeaders() });
+    return handleResponse(response);
+}
+
+export async function joinReadingChallenge(challengeId: string): Promise<ReadingChallenge> {
+    const response = await fetch(`${API_BASE_URL}/growth/challenges/${encodeURIComponent(challengeId)}/join`, {
+        method: 'POST', headers: getHeaders(),
+    });
+    return handleResponse(response);
+}
+
+export async function getGenreEvents(): Promise<GenreEvent[]> {
+    const response = await fetch(`${API_BASE_URL}/growth/events`, { headers: getHeaders() });
+    return handleResponse(response);
+}
+
+export async function submitStoryToGenreEvent(eventId: string, bookId: string): Promise<GenreEvent> {
+    const response = await fetch(`${API_BASE_URL}/growth/events/${encodeURIComponent(eventId)}/submissions/${encodeURIComponent(bookId)}`, {
+        method: 'POST', headers: getHeaders(),
+    });
+    return handleResponse(response);
 }
 
 // --- Library & Progress API ---

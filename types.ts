@@ -257,6 +257,39 @@ export interface HookFeedResponse {
   personalized: boolean;
 }
 
+export interface ReadingChallenge {
+  id: string;
+  title: string;
+  description: string;
+  metric: 'chapters' | 'minutes' | 'books';
+  target: number;
+  progress: number;
+  progressPercent: number;
+  joined: boolean;
+  completed: boolean;
+  joinedAt?: string;
+}
+
+export interface GenreEventStory {
+  bookId: string;
+  title: string;
+  coverUrl?: string;
+  authorId: string;
+  authorName: string;
+}
+
+export interface GenreEvent {
+  id: string;
+  title: string;
+  genre: string;
+  prompt: string;
+  description: string;
+  startAt: string;
+  endAt: string;
+  timing: 'upcoming' | 'active' | 'ended';
+  stories: GenreEventStory[];
+}
+
 export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER' | 'COMMUNITY_POST' | 'COMMUNITY_COMMENT';
 export type ReportCategory = 'SPAM' | 'HARASSMENT' | 'PLAGIARISM' | 'SEXUAL_CONTENT' | 'HATE_SPEECH' | 'VIOLENCE' | 'COPYRIGHT' | 'MISINFORMATION' | 'OTHER';
 export interface ContentReport {
