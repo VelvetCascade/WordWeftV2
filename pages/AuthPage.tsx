@@ -556,7 +556,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                             <div className="flex items-center my-6">
                                 <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
-                                <span className="flex-shrink mx-4 text-xs text-gray-400 dark:text-gray-500 font-sans uppercase">Or continue with Email</span>
+                                <span className="flex-shrink mx-4 text-xs text-gray-500 dark:text-gray-400 font-sans uppercase">Or continue with Email</span>
                                 <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
                             </div>
                         </>

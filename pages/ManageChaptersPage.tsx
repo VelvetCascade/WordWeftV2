@@ -198,12 +198,12 @@ const ConfirmDialog: React.FC<{
 };
 
 const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, onPublishToggle, onDelete, onShare }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
-        <div className="flex items-center gap-4">
+    <div className="ww-manage-chapter-card flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
+        <div className="ww-manage-chapter-main flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
-            <div>
+            <div className="ww-manage-chapter-copy">
                 <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{chapter.title}</h4>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="ww-manage-chapter-meta flex items-center gap-2 mt-1">
                     <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm flex-shrink-0 ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
                         {chapter.status}
                     </span>
@@ -211,7 +211,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
                 </div>
             </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap sm:opacity-0 group-hover:opacity-100 transition-opacity pl-10 sm:pl-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 dark:border-dark-border">
+        <div className="ww-manage-chapter-actions flex items-center gap-2 flex-wrap sm:opacity-0 group-hover:opacity-100 transition-opacity pl-10 sm:pl-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 dark:border-dark-border">
             <button
                 onClick={() => window.location.hash = `/write/book/${bookId}/chapter/${chapter.id}/edit`}
                 className="flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-text-body dark:text-dark-text-body"

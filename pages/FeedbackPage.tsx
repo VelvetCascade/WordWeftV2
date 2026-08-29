@@ -10,7 +10,7 @@ import AdUnit from '../components/AdUnit';
 const SectionHeader: React.FC<{ number: number; title: string; subtitle?: string }> = ({ number, title, subtitle }) => (
     <div className="mb-5">
         <div className="flex items-baseline gap-3 mb-1">
-            <span className="text-xs font-mono text-gray-400 dark:text-gray-500 tabular-nums">{String(number).padStart(2, '0')}</span>
+            <span className="text-xs font-mono text-gray-500 dark:text-gray-400 tabular-nums">{String(number).padStart(2, '0')}</span>
             <h3 className="font-sans text-lg font-bold text-text-rich dark:text-dark-text-rich">{title}</h3>
         </div>
         {subtitle && <p className="text-sm text-text-body dark:text-dark-text-body ml-4 sm:ml-8">{subtitle}</p>}
@@ -135,14 +135,14 @@ const TagInput: React.FC<{
                     </span>
                 ))}
             </div>
-            <div className="flex gap-2">
+            <div className="ww-feedback-tag-row flex gap-2">
                 <input
                     type="text"
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                     placeholder={placeholder}
-                    className="flex-1 h-11 px-4 rounded-xl text-sm border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich focus:ring-2 focus:ring-accent focus:border-accent transition-all"
+                    className="min-w-0 flex-1 h-11 px-4 rounded-xl text-sm border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich focus:ring-2 focus:ring-accent focus:border-accent transition-all"
                 />
                 <button
                     type="button"

@@ -175,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   return (
     <>
       {/* Desktop Navbar */}
-      <header className={`ww-site-header fixed top-0 left-0 right-0 z-50 hidden md:block ${isOnHero ? 'ww-site-header-hero' : 'ww-site-header-solid'}`}>
+      <header className={`ww-site-header fixed top-0 left-0 right-0 z-50 hidden lg:block ${isOnHero ? 'ww-site-header-hero' : 'ww-site-header-solid'}`}>
         <div className="ww-site-header-inner container mx-auto px-6 flex justify-between items-center">
           <a className="ww-brand-lockup" href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
             <span className="ww-brand-mark"><WordWeftLogo className="w-9 h-9" /></span>
@@ -243,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
       </header>
 
       {/* Mobile Top Bar */}
-      <header className="ww-mobile-topbar md:hidden">
+      <header className="ww-mobile-topbar lg:hidden">
         <a className="ww-mobile-brand" href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
           <WordWeftLogo className="w-7 h-7" />
           <span>Word<span>Weft</span></span>
@@ -264,7 +264,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
       </header>
 
       {/* Mobile Bottom Navbar */}
-      <div className="ww-mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
+      <div className="ww-mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
         <nav className="h-full flex justify-around items-center">
           {mobileNavLinks.map((link) => (
             <button
@@ -297,9 +297,9 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
       {/* Mobile More Drawer */}
       {isMobileMenuOpen && (
         <>
-          <div className="mobile-more-backdrop md:hidden" onClick={closeMobileMenu} />
+          <div className="mobile-more-backdrop lg:hidden" onClick={closeMobileMenu} />
           <div 
-            className="mobile-more-drawer md:hidden"
+            className="mobile-more-drawer lg:hidden"
             style={{ 
               transform: touchOffsetY > 0 ? `translateY(${touchOffsetY}px)` : undefined, 
               transition: touchStartY === null ? 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' : 'none' 
@@ -463,7 +463,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
       {/* Mobile Search FAB */}
       <button
-        className="search-mobile-fab md:hidden"
+        className="search-mobile-fab lg:hidden"
         onClick={() => setIsSearchOpen(true)}
         aria-label="Search"
       >

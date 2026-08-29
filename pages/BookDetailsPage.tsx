@@ -25,13 +25,23 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
     return (
         <div 
             onClick={() => { if (chapter.status === 'published') onRead(); }}
-            className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group ${chapter.status === 'published' ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors' : ''}`}
+            className={`ww-reader-chapter-row flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group ${chapter.status === 'published' ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors' : ''}`}
         >
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="ww-reader-chapter-main flex items-center gap-4 flex-1 min-w-0">
                 {isCompleted ? <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0" /> : <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center flex-shrink-0">{index + 1}</span>}
                 <div className="flex-1 min-w-0 pr-2">
-                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich line-clamp-2 leading-tight">{chapter.title}</h4>
-                    <div className="flex items-center gap-4 mt-2">
+                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich line-clamp-2 leading-tight">
+                        {chapter.status === 'published' ? (
+                            <button
+                                type="button"
+                                className="text-left hover:text-accent focus-visible:text-accent transition-colors"
+                                onClick={(event) => { event.stopPropagation(); onRead(); }}
+                            >
+                                {chapter.title}
+                            </button>
+                        ) : chapter.title}
+                    </h4>
+                    <div className="ww-reader-chapter-meta flex items-center gap-4 mt-2">
                         {/* Progress Bar */}
                         <div className="w-24 bg-gray-200 dark:bg-dark-border rounded-full h-1.5 overflow-hidden flex-shrink-0">
                             <div
@@ -41,14 +51,17 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                         </div>
 
                         {/* Chapter Stats */}
-                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="ww-reader-chapter-stats flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                             <span className="flex items-center gap-1" title="Views">
                                 <EyeIcon className="w-3.5 h-3.5" /> {chapter.viewCount}
                             </span>
                             <button
+                                type="button"
                                 onClick={(e) => { e.stopPropagation(); onToggleLike(chapter.id); }}
                                 className={`flex items-center gap-1 hover:text-danger transition-colors ${chapter.isLiked ? 'text-danger' : ''}`}
                                 title={chapter.isLiked ? "Unlike Chapter" : "Like Chapter"}
+                                aria-label={`${chapter.isLiked ? 'Unlike' : 'Like'} ${chapter.title}`}
+                                aria-pressed={chapter.isLiked}
                             >
                                 {chapter.isLiked ? <HeartIconSolid className="w-3.5 h-3.5" /> : <HeartIcon className="w-3.5 h-3.5" />}
                                 {chapter.likesCount}
@@ -61,7 +74,7 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                 </div>
             </div>
             {chapter.status === 'published' ? (
-                <div className="flex items-center gap-2">
+                <div className="ww-reader-chapter-cta flex items-center gap-2">
                     <span className="hidden sm:block font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
                         {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Read'}
                     </span>
@@ -88,6 +101,8 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
                         onClick={() => setRating(starValue)}
                         onMouseEnter={() => setHoverRating(starValue)}
                         className="p-1"
+                        aria-label={`Rate ${starValue} out of 5 stars`}
+                        aria-pressed={rating === starValue}
                     >
                         <StarIcon className={`w-6 h-6 transition-colors ${starValue <= (hoverRating || rating) ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />
                     </button>
@@ -223,6 +238,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
     const [isBookmarked, setIsBookmarked] = useState(false);
+    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
@@ -444,24 +460,25 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const mainButtonText = hasStartedReading
         ? `Continue Reading (Ch. ${readingProgress.lastReadChapterIndex + 1})`
         : 'Read from Start';
+    const storySummary = book.description?.trim() || book.summary;
 
     return (
         <div className="ww-story-page bg-white dark:bg-dark-surface">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
-                <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-                    <button onClick={handleBack} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent transition-colors">
+            <div className="ww-story-header sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
+                <div className="ww-story-header-inner container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+                    <button onClick={handleBack} className="ww-story-back flex items-center gap-2 text-sm font-sans font-medium hover:text-accent transition-colors">
                         <ArrowLeftIcon className="w-5 h-5" /> Back
                     </button>
                     <div className="flex-1 min-w-0 text-center px-4 flex items-center justify-center">
-                        <h2 className="font-sans font-bold text-lg line-clamp-2 leading-tight dark:text-dark-text-rich">{book.title}</h2>
+                        <h2 className="ww-story-header-title font-sans font-bold text-lg line-clamp-2 leading-tight dark:text-dark-text-rich">{book.title}</h2>
                     </div>
-                    <div className="flex items-center gap-4">
-                        {currentUser?.id !== book.author.id && <button onClick={() => currentUser ? setIsReportModalOpen(true) : window.location.hash = '/auth'} className="text-xs font-semibold text-gray-500 hover:text-danger">Report</button>}
-                        <button onClick={() => setIsShareModalOpen(true)}>
+                    <div className="ww-story-header-actions flex items-center gap-4">
+                        {currentUser?.id !== book.author.id && <button aria-label="Report this book" onClick={() => currentUser ? setIsReportModalOpen(true) : window.location.hash = '/auth'} className="ww-story-report text-xs font-semibold text-gray-500 hover:text-danger">Report</button>}
+                        <button className="ww-story-header-icon" aria-label="Share this book" onClick={() => setIsShareModalOpen(true)}>
                             <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
                         </button>
-                        <button onClick={() => setIsBookmarked(!isBookmarked)}>
+                        <button className="ww-story-header-icon" aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this book'} aria-pressed={isBookmarked} onClick={() => setIsBookmarked(!isBookmarked)}>
                             <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
                         </button>
                     </div>
@@ -524,7 +541,18 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             {book.genres.map(g => <span key={g} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full">{g}</span>)}
                         </div>
 
-                        <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed mb-8">{book.summary}</p>
+                        <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}>
+                            <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed">{storySummary}</p>
+                            {storySummary.length > 180 && (
+                                <button
+                                    type="button"
+                                    aria-expanded={isSummaryExpanded}
+                                    onClick={() => setIsSummaryExpanded(value => !value)}
+                                >
+                                    {isSummaryExpanded ? 'Show less' : 'Read full summary'}
+                                </button>
+                            )}
+                        </div>
                         <div className="ww-story-facts">
                             <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
                             <div><strong>{book.readingStatus}</strong><span>Story status</span></div>
