@@ -174,6 +174,10 @@ const App: React.FC = () => {
       window.location.hash = `/author/${targetPage.authorId}`;
     } else if (targetPage.name === 'reader') {
       window.location.hash = `/read/book/${targetPage.bookId}/chapter/${targetPage.chapterIndex}`;
+    } else if (targetPage.name === 'hook-feed') {
+      window.location.hash = '/hooks';
+    } else if (targetPage.name === 'reading-growth') {
+      window.location.hash = '/events';
     } else if (targetPage.name !== 'home' && targetPage.name !== 'auth') {
       window.location.hash = `/${targetPage.name}`;
     } else {
@@ -572,11 +576,15 @@ const App: React.FC = () => {
             onComplete={(role) => {
               setShowWelcomeJourney(false);
               localStorage.setItem('ww_userRole', role);
+              const destination = intendedPage;
               const communityReturn = communityReturnLink(intendedPage);
               setIntendedPage(null);
-              // Navigate based on role
+              // Preserve a public acquisition destination through first-time onboarding.
               if (communityReturn) {
                 window.location.hash = communityReturn;
+              } else if (destination?.name === 'hook-feed' || destination?.name === 'reading-growth'
+                || destination?.name === 'book-details' || destination?.name === 'author' || destination?.name === 'reader') {
+                navigateTo(destination);
               } else if (role === 'writer') {
                 window.location.hash = '/write';
               } else {
