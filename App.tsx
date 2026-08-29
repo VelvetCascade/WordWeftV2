@@ -11,6 +11,7 @@ const WriterDashboardPage = lazy(() => import('./pages/WriterDashboardPage').the
 const CreateBookPage = lazy(() => import('./pages/CreateBookPage').then(module => ({ default: module.CreateBookPage })));
 const ManageChaptersPage = lazy(() => import('./pages/ManageChaptersPage').then(module => ({ default: module.ManageChaptersPage })));
 const ChapterEditorPage = lazy(() => import('./pages/ChapterEditorPage').then(module => ({ default: module.ChapterEditorPage })));
+const WriterAnalyticsPage = lazy(() => import('./pages/WriterAnalyticsPage').then(module => ({ default: module.WriterAnalyticsPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
 const AuthorPage = lazy(() => import('./pages/AuthorPage').then(module => ({ default: module.AuthorPage })));
@@ -429,7 +430,7 @@ const App: React.FC = () => {
       case 'writer-edit-chapter':
         return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
       case 'writer-analytics':
-        return <FeatureDevelopmentPage featureName="Writer Analytics" description="We're actively building this page. It will provide deep insights into your story's performance, readership statistics, and engagement metrics." />;
+        return <WriterAnalyticsPage />;
       case 'writer-settings':
         return <FeatureDevelopmentPage featureName="Writer Settings" description="Fine-grained controls for your stories and pen name are coming here. You'll be able to manage your publishing preferences and writer profile." />;
       case 'profile':
