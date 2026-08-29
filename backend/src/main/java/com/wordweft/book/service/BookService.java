@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -180,7 +181,12 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    private Map<String, Object> enrichBook(Book book, String currentUserId) {
+    Map<String, Object> enrichBook(Book book, String currentUserId) {
+        boolean isOwner = currentUserId != null && currentUserId.equals(book.getAuthorId());
+        List<Chapter> allChapters = book.getChapters() != null ? book.getChapters() : List.of();
+        List<Chapter> visibleChapters = isOwner
+                ? allChapters
+                : allChapters.stream().filter(chapter -> "published".equals(chapter.getStatus())).toList();
         Map<String, Object> map = new HashMap<>();
         map.put("id", book.getId());
         map.put("title", book.getTitle());
@@ -189,19 +195,19 @@ public class BookService {
         map.put("reviewsCount", book.getReviewsCount());
 
         // AGGREGATE VIEWS: Sum of all chapter views
-        int totalChapterViews = book.getChapters().stream()
+        int totalChapterViews = visibleChapters.stream()
                 .mapToInt(Chapter::getViewCount)
                 .sum();
         map.put("viewCount", totalChapterViews);
 
         // AGGREGATE LIKES: Sum of all chapter likes
-        int totalChapterLikes = book.getChapters().stream()
+        int totalChapterLikes = visibleChapters.stream()
                 .mapToInt(c -> c.getLikes() != null ? c.getLikes().size() : 0)
                 .sum();
         map.put("likesCount", totalChapterLikes);
 
         // AGGREGATE COMMENTS: Sum of all chapter comments
-        int totalChapterComments = book.getChapters().stream()
+        int totalChapterComments = visibleChapters.stream()
                 .mapToInt(Chapter::getCommentCount)
                 .sum();
         map.put("commentCount", totalChapterComments);
@@ -220,7 +226,7 @@ public class BookService {
         map.put("authorId", book.getAuthorId());
 
         // Enrich Chapters
-        List<Map<String, Object>> enrichedChapters = book.getChapters().stream().map(ch -> {
+        List<Map<String, Object>> enrichedChapters = visibleChapters.stream().map(ch -> {
             Map<String, Object> cMap = new HashMap<>();
             cMap.put("id", ch.getId());
             cMap.put("title", ch.getTitle());
@@ -236,11 +242,22 @@ public class BookService {
                     currentUserId != null && ch.getLikes() != null && ch.getLikes().contains(currentUserId));
             cMap.put("contentWarnings", ch.getContentWarnings() != null ? ch.getContentWarnings() : List.of());
             cMap.put("disclaimerNote", ch.getDisclaimerNote());
+            if (isOwner) {
+                cMap.put("scheduledAt", ch.getScheduledAt());
+                cMap.put("publishedAt", ch.getPublishedAt());
+            }
 
             return cMap;
         }).collect(Collectors.toList());
 
         map.put("chapters", enrichedChapters);
+        allChapters.stream()
+                .filter(chapter -> "scheduled".equals(chapter.getStatus()))
+                .map(Chapter::getScheduledAt)
+                .filter(Objects::nonNull)
+                .filter(release -> release.isAfter(Instant.now()))
+                .min(Instant::compareTo)
+                .ifPresent(release -> map.put("nextScheduledReleaseAt", release));
 
         map.put("readingStatus", book.getReadingStatus());
         map.put("publicationStatus", book.getPublicationStatus());

@@ -6,6 +6,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
+import com.wordweft.book.service.ChapterPublishingService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.service.UserService;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +35,8 @@ public class BookController {
     UserService userService;
     @Autowired
     NotificationService notificationService;
+    @Autowired
+    ChapterPublishingService chapterPublishingService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
 
@@ -129,6 +133,27 @@ public class BookController {
         return ResponseEntity.ok().build();
     }
 
+    public record ScheduleChapterRequest(Instant scheduledAt) {}
+
+    @PutMapping("/{bookId}/chapters/{chapterId}/schedule")
+    public ResponseEntity<?> scheduleChapter(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @RequestBody ScheduleChapterRequest request) {
+        String userId = getCurrentUserId();
+        chapterPublishingService.schedule(userId, bookId, chapterId, request.scheduledAt());
+        return ResponseEntity.ok(userService.getUserProfile(userId));
+    }
+
+    @DeleteMapping("/{bookId}/chapters/{chapterId}/schedule")
+    public ResponseEntity<?> cancelChapterSchedule(
+            @PathVariable String bookId,
+            @PathVariable String chapterId) {
+        String userId = getCurrentUserId();
+        chapterPublishingService.cancelSchedule(userId, bookId, chapterId);
+        return ResponseEntity.ok(userService.getUserProfile(userId));
+    }
+
     // --- Writer Endpoints ---
 
     @PostMapping
@@ -223,19 +248,16 @@ public class BookController {
         if (disclaimerValue != null) chapter.setDisclaimerNote(String.valueOf(disclaimerValue));
         chapter.updateWordCount();
 
-        // If changing to published
-        if ("published".equals(status) && !"published".equals(chapter.getStatus())) {
-            chapter.setStatus("published");
-            // If the book is already public, bump the published date so it appears as
-            // "Updated"
-            if ("published".equals(book.getPublicationStatus())) {
-                book.setPublishedDate(LocalDate.now());
-            }
-        } else if ("draft".equals(status)) {
+        boolean publishAfterSave = "published".equals(status) && !"published".equals(chapter.getStatus());
+        if (publishAfterSave || "draft".equals(status)) {
             chapter.setStatus("draft");
+            chapter.setScheduledAt(null);
         }
 
         bookRepository.save(book);
+        if (publishAfterSave) {
+            chapterPublishingService.publishNow(userDetails.getId(), bookId, chapter.getId());
+        }
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
 
@@ -291,27 +313,12 @@ public class BookController {
 
         Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst()
                 .orElseThrow();
-        String newStatus = "published".equals(chapter.getStatus()) ? "draft" : "published";
-        chapter.setStatus(newStatus);
-
-        // If we just published a chapter and the book is public, bump the date
-        if ("published".equals(newStatus) && "published".equals(book.getPublicationStatus())) {
-            book.setPublishedDate(LocalDate.now());
-            book.setLastUpdatedAt(LocalDate.now());
-        }
-
-        bookRepository.save(book);
-
-        // Notify followers about new chapter
-        if ("published".equals(newStatus) && "published".equals(book.getPublicationStatus())) {
-            java.util.Map<String, String> meta = new java.util.HashMap<>();
-            meta.put("bookTitle", book.getTitle());
-            meta.put("bookId", bookId);
-            meta.put("chapterTitle", chapter.getTitle());
-            meta.put("coverUrl", book.getCoverUrl() != null ? book.getCoverUrl() : "");
-            notificationService.notifyFollowers(
-                    userDetails.getId(), "AUTHOR_NEW_CHAPTER", "CHAPTER", chapterId,
-                    "published a new chapter \"" + chapter.getTitle() + "\" in " + book.getTitle(), meta);
+        if ("published".equals(chapter.getStatus())) {
+            chapter.setStatus("draft");
+            chapter.setScheduledAt(null);
+            bookRepository.save(book);
+        } else {
+            chapterPublishingService.publishNow(userDetails.getId(), bookId, chapterId);
         }
 
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));

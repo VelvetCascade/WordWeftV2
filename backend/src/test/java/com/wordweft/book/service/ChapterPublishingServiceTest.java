@@ -126,6 +126,17 @@ class ChapterPublishingServiceTest {
     }
 
     @Test
+    void publishNowAllowsDraftStoryPreparationWithoutNotifyingFollowers() {
+        book.setPublicationStatus("draft");
+
+        service.publishNow("author-1", "book-1", "chapter-1");
+
+        assertEquals("published", chapter.getStatus());
+        assertEquals(NOW, chapter.getPublishedAt());
+        verifyNoInteractions(notifications);
+    }
+
+    @Test
     void publishDueTransitionsOnlyChaptersWhoseTimeHasArrived() {
         Chapter later = new Chapter();
         later.setId("chapter-2");

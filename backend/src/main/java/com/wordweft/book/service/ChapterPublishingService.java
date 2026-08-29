@@ -77,13 +77,14 @@ public class ChapterPublishingService {
             return book;
         }
 
-        requirePublishedStory(book);
         requireCompleteChapter(chapter);
         Instant publishedAt = clock.instant();
         publishChapter(chapter, publishedAt);
         markStoryUpdated(book, publishedAt);
         Book saved = books.save(book);
-        notifyFollowers(saved, chapter);
+        if ("published".equals(saved.getPublicationStatus())) {
+            notifyFollowers(saved, chapter);
+        }
         return saved;
     }
 
