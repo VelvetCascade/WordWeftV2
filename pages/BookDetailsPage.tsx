@@ -559,6 +559,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             <div><strong>{book.reviewsCount.toLocaleString()}</strong><span>Reader reviews</span></div>
                         </div>
 
+                        {book.nextScheduledReleaseAt && (
+                            <div className="ww-next-release" aria-label="Next chapter release">
+                                <span>Next chapter</span>
+                                <strong>{new Date(book.nextScheduledReleaseAt).toLocaleString()}</strong>
+                                <small>Scheduled by {book.author.name}</small>
+                            </div>
+                        )}
+
                         {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance">
                             <strong>Content guidance</strong>
                             {book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(w => <span key={w}>{warningLabel(w)}</span>)}</div>}
