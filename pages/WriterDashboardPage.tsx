@@ -104,6 +104,15 @@ const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) =>
 const CreateNewBookCard: React.FC = () => (
     <article
         onClick={() => window.location.hash = '/write/book/create'} 
+        onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                window.location.hash = '/write/book/create';
+            }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Start a new story"
         className="ww-create-book-card bg-white dark:bg-dark-surface h-full rounded-xl border-2 border-dashed dark:border-dark-border flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent transition-colors group"
     >
         <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-dark-surface-alt flex items-center justify-center mb-4 transition-colors group-hover:bg-accent/10">

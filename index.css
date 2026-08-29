@@ -9,11 +9,12 @@
     --ww-paper-strong: #ffffff;
     --ww-ink: #2d201b;
     --ww-copy: #705c53;
-    --ww-muted: #9d8980;
+    --ww-muted: #7f6a61;
     --ww-line: rgba(74, 51, 42, 0.12);
     --ww-brand: #7c5144;
     --ww-brand-strong: #57372e;
     --ww-brand-soft: #eadbd0;
+    --ww-on-brand: #fffaf6;
     --ww-gold: #bb8a4a;
     --ww-shadow-sm: 0 1px 2px rgba(47, 31, 25, 0.04), 0 8px 24px rgba(47, 31, 25, 0.06);
     --ww-shadow-lg: 0 24px 70px rgba(47, 31, 25, 0.14);
@@ -83,11 +84,12 @@
     --ww-paper-strong: #302824;
     --ww-ink: #f6eee8;
     --ww-copy: #cbbab1;
-    --ww-muted: #9f8d84;
+    --ww-muted: #b5a097;
     --ww-line: rgba(245, 234, 226, 0.11);
     --ww-brand: #c59a84;
     --ww-brand-strong: #efd3c2;
     --ww-brand-soft: #44342e;
+    --ww-on-brand: #211713;
     --ww-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 30px rgba(0, 0, 0, 0.18);
     --ww-shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
@@ -8215,7 +8217,8 @@ html {
 }
 
 body {
-    min-width: 320px;
+    min-width: 0;
+    width: 100%;
     background:
         radial-gradient(circle at 8% 2%, rgba(187, 138, 74, 0.07), transparent 24rem),
         var(--ww-canvas) !important;
@@ -9713,7 +9716,7 @@ body {
     .reader-copy > p:first-child::first-letter { font-size: 3.6em; }
     .reader-chapter-end { padding: 34px 22px; border-radius: 22px; }
     .reader-dock { bottom: max(10px, env(safe-area-inset-bottom)); max-width: calc(100% - 18px); }
-    .reader-dock button { width: 36px; height: 38px; }
+    .reader-dock button { width: 44px; height: 44px; }
     .reader-dock button[data-label='Focus'] { display: none; }
     .reader-dock-divider { margin-inline: 1px; }
     .reader-dock-progress { grid-template-columns: 14px 46px 14px; gap: 5px; padding-inline: 3px; }
@@ -10390,4 +10393,230 @@ body {
     .ww-editor-context > div span { max-width: 90px; }
     .ww-editor-actions button:nth-child(1),
     .ww-editor-actions button:nth-child(4) { display: none; }
+}
+
+/* ======================================================================
+   Cross-device resilience and theme-accessibility pass
+   ====================================================================== */
+
+/* Keep custom brand buttons legible when the dark theme uses a light accent. */
+.ww-header-cta,
+.ww-mobile-avatar,
+.ww-mobile-join,
+.ww-library-search > button,
+.ww-writer-new-story,
+.ww-create-actions button:last-child,
+.ww-manage-actions .ww-manage-primary,
+.ww-manage-empty button,
+.ww-editor-actions .ww-editor-publish-button,
+.ww-editor-paper .rte-toolbar-btn-active,
+.ww-story-tool-add,
+.reader-end-primary-actions button {
+    color: var(--ww-on-brand) !important;
+}
+
+/* Reader controls follow the reader's theme, independently of the site theme. */
+.reader-experience { --reader-muted: #78635a; }
+.reader-experience.reader-theme-sepia { --reader-muted: #735d4c; }
+.reader-experience.reader-theme-dark { --reader-muted: #ae988d; }
+
+.ww-page-reader .reader-header {
+    color: var(--reader-copy) !important;
+    background: var(--reader-panel) !important;
+    border-color: var(--reader-line) !important;
+}
+
+.ww-page-reader main.reader-manuscript {
+    width: 100%;
+    padding: 144px 28px 150px !important;
+}
+.ww-page-reader main.reader-manuscript.reader-width-narrow { max-width: 640px !important; }
+.ww-page-reader main.reader-manuscript.reader-width-standard { max-width: 760px !important; }
+.ww-page-reader main.reader-manuscript.reader-width-wide { max-width: 900px !important; }
+.ww-page-reader .reader-focus-mode main.reader-manuscript { padding-top: 92px !important; }
+
+.reader-back-button,
+.reader-header-actions button,
+.reader-toc-header button,
+.reader-settings-heading button {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Story-detail header and expandable summary. */
+.ww-story-header {
+    top: 72px !important;
+    color: var(--ww-copy);
+    background: color-mix(in srgb, var(--ww-paper) 94%, transparent) !important;
+    border-color: var(--ww-line) !important;
+}
+.ww-story-header-inner {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+}
+.ww-story-back,
+.ww-story-report { color: var(--ww-copy) !important; }
+.ww-story-back:hover,
+.ww-story-report:hover { color: var(--ww-brand-strong) !important; }
+.ww-story-header-title { min-width: 0; color: var(--ww-ink) !important; }
+.ww-story-header-actions { gap: 2px !important; }
+.ww-story-header-actions > button {
+    min-width: 42px;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+}
+.ww-story-header-actions > button:hover { background: var(--ww-brand-soft); }
+.ww-story-header-actions svg { color: var(--ww-muted) !important; }
+.ww-story-header-actions button:hover svg { color: var(--ww-brand-strong) !important; }
+
+.ww-story-summary { max-width: 48rem; margin-bottom: 2rem; }
+.ww-story-summary > p { margin: 0; }
+.ww-story-summary > button {
+    display: none;
+    min-height: 40px;
+    margin-top: 6px;
+    color: var(--ww-brand-strong);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 750;
+}
+
+/* Native controls keep readable values and placeholders in dark mode. */
+.dark :is(input, textarea, select) {
+    color: var(--ww-ink);
+    caret-color: var(--ww-brand-strong);
+}
+.dark :is(input, textarea)::placeholder { color: var(--ww-muted); opacity: 0.9; }
+
+/* Writer workspace: stable alignment for long titles and dense action rows. */
+.ww-manage-chapter-main,
+.ww-manage-chapter-copy { min-width: 0; }
+.ww-manage-chapter-copy { flex: 1; }
+.ww-manage-chapter-copy h4 { overflow-wrap: anywhere; }
+.ww-manage-chapter-actions button { min-height: 40px; }
+
+/* Touch targets that previously inherited compact desktop sizing. */
+.ww-library-quick-genres button { min-height: 36px; }
+.ww-auth-card button,
+.ww-page-feedback button { min-height: 36px; }
+
+@media (max-width: 720px) {
+    .ww-story-header { top: 62px !important; }
+    .ww-page-reader main.reader-manuscript { padding: 112px 22px 132px !important; }
+    .reader-header-inner { padding-inline: 8px; }
+    .reader-back-button { gap: 5px; }
+    .reader-back-button strong { max-width: clamp(86px, 29vw, 145px); }
+    .reader-header-actions { gap: 0; }
+    .reader-header-actions button { width: 40px; min-width: 40px; }
+    .reader-toc-panel { width: min(360px, 94vw); }
+
+    .ww-story-page > .container { padding-top: 26px !important; }
+    .ww-story-hero {
+        gap: 24px !important;
+        margin-bottom: 48px !important;
+        padding: 18px !important;
+        border-radius: 22px !important;
+    }
+    .ww-story-cover { width: min(260px, 82vw); margin-inline: auto; }
+    .ww-story-intro { min-width: 0; padding-top: 4px; }
+    .ww-story-intro h1 { font-size: clamp(2.65rem, 13vw, 3.6rem) !important; line-height: 0.95 !important; }
+    .ww-story-summary:not(.is-expanded) > p {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 5;
+    }
+    .ww-story-summary > button { display: inline-flex; align-items: center; }
+    .ww-story-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ww-story-facts > div { min-width: 0; padding: 0 10px; }
+    .ww-story-facts strong { overflow-wrap: anywhere; }
+
+    .ww-reader-chapter-row { align-items: flex-start !important; gap: 8px; padding: 15px 13px !important; }
+    .ww-reader-chapter-main { align-items: flex-start !important; gap: 10px !important; }
+    .ww-reader-chapter-meta { align-items: flex-start !important; flex-direction: column; gap: 8px !important; }
+    .ww-reader-chapter-stats { width: 100%; flex-wrap: wrap; row-gap: 6px !important; }
+    .ww-reader-chapter-cta { min-width: 20px; padding-top: 2px; }
+    .ww-reader-chapter-cta svg { opacity: 1 !important; }
+
+    .writer-topbar-inner {
+        display: grid;
+        grid-template-columns: 1fr;
+        padding: 7px 10px 9px;
+    }
+    .writer-topbar-left { min-height: 42px; }
+    .writer-back-btn { width: 42px; height: 42px; justify-content: center; padding: 0; }
+    .writer-tabs { min-width: 0; }
+    .writer-tab { min-height: 42px; }
+
+    .ww-manage-section-head { align-items: flex-start; flex-direction: column; gap: 6px; }
+    .ww-manage-chapter-card { width: 100%; gap: 12px !important; }
+    .ww-manage-chapter-main { width: 100%; align-items: flex-start !important; gap: 10px !important; }
+    .ww-manage-chapter-main > span { flex: 0 0 28px; padding-top: 2px; }
+    .ww-manage-chapter-meta { flex-wrap: wrap; }
+    .ww-manage-chapter-actions {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px !important;
+        padding: 12px 0 0 !important;
+        opacity: 1 !important;
+    }
+    .ww-manage-chapter-actions button { width: 100%; min-height: 44px; padding-inline: 10px !important; }
+
+    .ww-editor-actions button { min-width: 40px; width: 40px; min-height: 40px; }
+    .ww-editor-actions .ww-editor-publish-button { min-width: 74px; width: auto; }
+    .ww-editor-context > button { min-width: 40px; min-height: 40px; }
+    .ww-create-back { width: 42px; height: 42px; }
+    .ww-create-actions { bottom: max(10px, env(safe-area-inset-bottom)); }
+}
+
+@media (min-width: 721px) and (max-width: 1023px) {
+    .ww-mobile-topbar { display: flex !important; }
+    .ww-page-home .ww-home-hero { padding-top: 96px !important; }
+    .ww-app-main-with-nav:not(.ww-page-home):not(.ww-page-features) { padding-top: 62px !important; }
+    .ww-app-main:not(.ww-page-reader):not(.ww-page-auth) { padding-bottom: 100px !important; }
+    .search-mobile-fab { display: none !important; }
+    .ww-story-header { top: 62px !important; }
+}
+
+@media (max-width: 480px) {
+    .ww-story-header-inner { height: 68px !important; padding-inline: 10px !important; gap: 2px; }
+    .ww-story-back { min-width: 44px; min-height: 44px; font-size: 0; gap: 0; justify-content: center; }
+    .ww-story-back svg { width: 21px; height: 21px; }
+    .ww-story-header-inner > div:nth-child(2) { padding-inline: 4px !important; }
+    .ww-story-header-title { font-size: 0.78rem !important; -webkit-line-clamp: 2; }
+    .ww-story-header-actions > button { min-width: 40px; min-height: 40px; }
+    .ww-story-report { min-width: 48px; padding-inline: 5px; font-size: 0.65rem; }
+    .ww-story-cover { width: min(232px, 76vw); }
+    .ww-story-facts strong { font-size: 1rem; }
+    .ww-story-facts span { font-size: 0.49rem; }
+    .ww-story-tabs button { min-width: 0; padding-inline: 9px !important; }
+
+    .ww-create-book-heading { grid-template-columns: 42px minmax(0, 1fr); }
+    .ww-create-book-heading h1 { font-size: clamp(2.55rem, 14vw, 3.2rem) !important; }
+    .ww-create-label-row { align-items: flex-end; }
+    .ww-create-actions { flex-wrap: wrap; }
+    .ww-create-actions button { min-width: min(130px, 100%); }
+
+    .ww-manage-hero-inner { grid-template-columns: 76px minmax(0, 1fr); gap: 14px; }
+    .ww-manage-cover img { width: 76px; }
+    .ww-manage-copy h1 { font-size: clamp(2.35rem, 12vw, 3rem) !important; }
+    .ww-manage-actions { gap: 8px; }
+    .ww-manage-tabs { scroll-snap-type: x proximity; }
+    .ww-manage-tabs button { min-width: 96px; scroll-snap-align: start; }
+    .ww-feedback-tag-row { flex-direction: column; }
+    .ww-feedback-tag-row > input { min-width: 0; width: 100%; }
+    .ww-feedback-tag-row > button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .ww-book-card,
+    .ww-story-cover img,
+    .reader-header,
+    .reader-dock { transition-duration: 0.01ms !important; }
 }

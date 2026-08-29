@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Flag } from 'lucide-react';
 import type { User, Book, BookProgress, Comment, Character  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -677,7 +678,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                             <BookmarkIcon className="w-5 h-5" />
                         </button>
                         <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
-                        <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button">!</button>
+                        <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button"><Flag className="w-4 h-4" /></button>
                         <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>
                     </div>
                 </div>
@@ -767,7 +768,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                     ) : (
                         comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
                             return (
-                                <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors" onClick={() => openCommentDrawer(comment.paragraphIndex)}>
+                                <div
+                                    key={comment.id}
+                                    className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors"
+                                    onClick={() => openCommentDrawer(comment.paragraphIndex)}
+                                >
                                     <div className="flex items-start gap-4">
                                         <img
                                             src={comment.user.avatarUrl}
@@ -806,6 +811,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                                     {comments.filter(r => r.parentId === comment.id).length} Replies
                                                 </div>
                                             )}
+
+                                            <button
+                                                type="button"
+                                                className="mt-3 text-xs font-semibold text-accent hover:underline"
+                                                onClick={(event) => { event.stopPropagation(); openCommentDrawer(comment.paragraphIndex); }}
+                                            >
+                                                Open discussion
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -856,15 +869,15 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
             {/* Unified Reader Dock */}
             <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
-                <button onClick={() => setIsTocVisible(true)} data-label="Contents"><Bars3Icon className="w-5 h-5" /></button>
+                <button aria-label="Open contents" onClick={() => setIsTocVisible(true)} data-label="Contents"><Bars3Icon className="w-5 h-5" /></button>
                 <span className="reader-dock-divider" />
-                <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} data-label="Previous"><ChevronLeftIcon className="w-5 h-5" /></button>
+                <button aria-label="Previous chapter" onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} data-label="Previous"><ChevronLeftIcon className="w-5 h-5" /></button>
                 <span className="reader-dock-progress"><strong>{currentChapterIndex + 1}</strong><i><span style={{ width: `${scrollProgress}%` }} /></i><small>{book.chapters.length}</small></span>
-                <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} data-label="Next"><ChevronRightIcon className="w-5 h-5" /></button>
+                <button aria-label="Next chapter" onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} data-label="Next"><ChevronRightIcon className="w-5 h-5" /></button>
                 <span className="reader-dock-divider" />
-                <button onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'active' : ''} data-label="Appearance"><span className="reader-aa">Aa</span></button>
-                <button onClick={() => openCommentDrawer(null)} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
-                <button onClick={() => setIsFocusMode(true)} data-label="Focus"><EyeIcon className="w-5 h-5" /></button>
+                <button aria-label="Open reading appearance settings" onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'active' : ''} data-label="Appearance"><span className="reader-aa">Aa</span></button>
+                <button aria-label="Open chapter discussion" onClick={() => openCommentDrawer(null)} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
+                <button aria-label="Enter focus mode" onClick={() => setIsFocusMode(true)} data-label="Focus"><EyeIcon className="w-5 h-5" /></button>
             </nav>
 
             <CommentDrawer

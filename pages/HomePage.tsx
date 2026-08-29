@@ -511,6 +511,16 @@ export const HomePage: React.FC = () => {
                 <div
                   key={genre.name}
                   onClick={() => { trackEvent('navigation', 'genre_card_click', genre.name); window.location.hash = `/genre/${encodeURIComponent(genre.name)}`; }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      trackEvent('navigation', 'genre_card_click', genre.name);
+                      window.location.hash = `/genre/${encodeURIComponent(genre.name)}`;
+                    }
+                  }}
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`Explore ${genre.name}`}
                   className="relative h-36 rounded-2xl p-5 flex flex-col justify-end text-white font-sans cursor-pointer overflow-hidden group transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg"
                 >
                   <div className={`absolute inset-0 transition-all duration-500 ${gradients[idx % gradients.length]} group-hover:brightness-110`}></div>

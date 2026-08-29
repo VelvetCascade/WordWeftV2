@@ -104,7 +104,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
       <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-surface rounded-t-3xl p-6 shadow-2xl transform transition-transform duration-300 ${isFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
-          <button onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body" /></button>
+          <button type="button" aria-label="Close filters" onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body" /></button>
         </div>
         <div>
           <h4 className="font-sans font-semibold mb-3 dark:text-dark-text-rich">Genres</h4>
@@ -201,10 +201,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             </div>
 
             <div className="flex items-center gap-2 bg-gray-100 dark:bg-dark-surface-alt p-1 rounded-lg">
-              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
+              <button type="button" aria-label="Grid view" aria-pressed={viewMode === 'grid'} onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
                 <Squares2X2Icon className="w-5 h-5" />
               </button>
-              <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
+              <button type="button" aria-label="List view" aria-pressed={viewMode === 'list'} onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
                 <Bars3Icon className="w-5 h-5" />
               </button>
             </div>
@@ -214,7 +214,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
               {selectedGenres.map(g => (
                 <div key={g} className="flex items-center gap-1 bg-accent/10 text-accent text-sm font-medium px-2 py-1 rounded-full">
                   <span>{g}</span>
-                  <button onClick={() => toggleGenre(g)}><XMarkIcon className="w-4 h-4" /></button>
+                  <button type="button" aria-label={`Remove ${g} filter`} onClick={() => toggleGenre(g)}><XMarkIcon className="w-4 h-4" /></button>
                 </div>
               ))}
             </div>
