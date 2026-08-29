@@ -1,5 +1,6 @@
 package com.wordweft.book.controller;
 
+import com.wordweft.analytics.service.ChapterReadEventService;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.book.service.ChapterPublishingService;
@@ -25,9 +26,13 @@ import java.util.Map;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,6 +46,7 @@ class BookSchedulingControllerTest {
     @MockBean NotificationService notificationService;
     @MockBean ImageKitService imageKitService;
     @MockBean ChapterPublishingService publishing;
+    @MockBean ChapterReadEventService readEvents;
     @MockBean UserDetailsServiceImpl userDetailsService;
     @MockBean JwtUtils jwt;
     @MockBean AuthEntryPointJwt entryPoint;
@@ -72,5 +78,18 @@ class BookSchedulingControllerTest {
                 .andExpect(status().isOk());
 
         verify(publishing).cancelSchedule("author", "book", "chapter");
+    }
+
+    @Test
+    void anonymousReaderCanRecordAChapterView() throws Exception {
+        mvc.perform(post("/api/books/book/chapters/chapter/view")
+                        .contentType("application/json")
+                        .content("{\"sessionId\":\"9f45f6dc-e555-451e-9bc9-4bf54fd715de\",\"referrer\":\"https://example.com/post\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(readEvents).record(
+                eq("book"), eq("chapter"), isNull(),
+                eq("9f45f6dc-e555-451e-9bc9-4bf54fd715de"),
+                eq("https://example.com/post"), any(Instant.class));
     }
 }

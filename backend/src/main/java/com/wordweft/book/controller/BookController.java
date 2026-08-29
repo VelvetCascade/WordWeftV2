@@ -1,6 +1,7 @@
 
 package com.wordweft.book.controller;
 
+import com.wordweft.analytics.service.ChapterReadEventService;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.AgeRating;
@@ -38,6 +39,8 @@ public class BookController {
     @Autowired
     ChapterPublishingService chapterPublishingService;
     @Autowired
+    ChapterReadEventService chapterReadEventService;
+    @Autowired
     com.wordweft.support.ImageKitService imageKitService;
 
     private String getCurrentUserId() {
@@ -46,6 +49,15 @@ public class BookController {
             return ((UserDetailsImpl) principal).getId();
         }
         throw new RuntimeException("User not authenticated");
+    }
+
+    private String getOptionalCurrentUserId() {
+        try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return principal instanceof UserDetailsImpl ? ((UserDetailsImpl) principal).getId() : null;
+        } catch (RuntimeException unauthenticated) {
+            return null;
+        }
     }
 
     @GetMapping
@@ -120,17 +132,22 @@ public class BookController {
         return ResponseEntity.ok(bookService.getBookById(bookId, false));
     }
 
+    public record ChapterViewRequest(String sessionId, String referrer) {}
+
     @PostMapping("/{bookId}/chapters/{chapterId}/view")
-    public ResponseEntity<?> incrementChapterView(@PathVariable String bookId, @PathVariable String chapterId) {
-        Book book = bookRepository.findById(bookId).orElseThrow();
-        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst()
-                .orElseThrow();
-
-        chapter.setViewCount(chapter.getViewCount() + 1);
-        book.setViewCountLast7Days((book.getViewCountLast7Days() == null ? 0 : book.getViewCountLast7Days()) + 1);
-        bookRepository.save(book);
-
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> incrementChapterView(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @RequestBody(required = false) ChapterViewRequest request) {
+        ChapterViewRequest body = request != null ? request : new ChapterViewRequest(null, null);
+        chapterReadEventService.record(
+                bookId,
+                chapterId,
+                getOptionalCurrentUserId(),
+                body.sessionId(),
+                body.referrer(),
+                Instant.now());
+        return ResponseEntity.noContent().build();
     }
 
     public record ScheduleChapterRequest(Instant scheduledAt) {}
