@@ -9,12 +9,14 @@ import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.book.service.ChapterPublishingService;
 import com.wordweft.notification.service.NotificationService;
+import com.wordweft.manuscript.service.ManuscriptImportService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 
 import java.time.Instant;
@@ -40,6 +42,8 @@ public class BookController {
     ChapterPublishingService chapterPublishingService;
     @Autowired
     ChapterReadEventService chapterReadEventService;
+    @Autowired
+    ManuscriptImportService manuscriptImportService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
 
@@ -172,6 +176,18 @@ public class BookController {
     }
 
     // --- Writer Endpoints ---
+
+    @PostMapping(value = "/{bookId}/import", consumes = "multipart/form-data")
+    public ResponseEntity<?> importManuscript(
+            @PathVariable String bookId,
+            @RequestPart("file") MultipartFile file) throws java.io.IOException {
+        String userId = getCurrentUserId();
+        ManuscriptImportService.ImportResult result = manuscriptImportService.importManuscript(
+                userId, bookId, file.getOriginalFilename(), file.getBytes());
+        return ResponseEntity.ok(Map.of(
+                "result", result,
+                "user", userService.getUserProfile(userId)));
+    }
 
     @PostMapping
     public ResponseEntity<?> createBook(@Valid @RequestBody Book book) {

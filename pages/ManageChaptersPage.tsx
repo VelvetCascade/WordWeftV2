@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User, Chapter, Book, AgeRating, ContentWarning } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -8,6 +8,7 @@ import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
 import { ShareModal } from '../components/ShareModal';
+import { validateManuscriptFile } from '../utils/manuscriptImport';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -260,6 +261,9 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     // W2: Book publish celebration state
     const [showPublishCelebration, setShowPublishCelebration] = useState(false);
     const [bookShareOpen, setBookShareOpen] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importNotice, setImportNotice] = useState('');
+    const importInputRef = useRef<HTMLInputElement>(null);
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
@@ -329,6 +333,24 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         onUserUpdate(updatedUser);
     };
 
+    const handleManuscriptImport = async (file?: File) => {
+        if (!file) return;
+        setErrorMsg(null);
+        setImportNotice('');
+        try {
+            validateManuscriptFile(file.name, file.size);
+            setIsImporting(true);
+            const result = await api.importManuscript(bookId, file);
+            onUserUpdate(result.user);
+            setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.`);
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'Could not import this manuscript.');
+        } finally {
+            setIsImporting(false);
+            if (importInputRef.current) importInputRef.current.value = '';
+        }
+    };
+
     if (!book) {
         return <div className="p-8">Book not found.</div>;
     }
@@ -367,6 +389,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                         <button className="ww-manage-primary" onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}>
                             <PlusIcon className="w-4 h-4" /> New chapter
                         </button>
+                        <button onClick={() => importInputRef.current?.click()} disabled={isImporting}>
+                            {isImporting ? 'Importing…' : 'Import manuscript'}
+                        </button>
+                        <input
+                            ref={importInputRef}
+                            className="sr-only"
+                            type="file"
+                            accept=".txt,.md,.markdown,.docx"
+                            onChange={event => handleManuscriptImport(event.target.files?.[0])}
+                        />
                         <button className="ww-manage-publish" onClick={handleBookPublishToggle}>
                             {isBookPublished ? 'Return to draft' : 'Publish story'}
                         </button>
@@ -375,6 +407,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     </div>
                 </div>
                 {errorMsg && <div className="ww-manage-error">{errorMsg}</div>}
+                {importNotice && <div className="ww-manage-import-notice" role="status">{importNotice}</div>}
             </section>
 
             <div className="ww-manage-workspace">

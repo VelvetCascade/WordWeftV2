@@ -506,6 +506,22 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
+export async function importManuscript(bookId: string, file: File): Promise<{ user: User; importedChapters: number; totalChapters: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/import`, {
+        method: 'POST',
+        headers: { 'Authorization': getHeaders().Authorization },
+        body: formData,
+    });
+    const data = await handleResponse(response);
+    return {
+        user: mapBackendUserToFrontend(data.user),
+        importedChapters: data.result.importedChapters,
+        totalChapters: data.result.totalChapters,
+    };
+}
+
 export async function scheduleChapter(bookId: string, chapterId: string, scheduledAt: string): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
         method: 'PUT',

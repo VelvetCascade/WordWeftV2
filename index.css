@@ -9383,6 +9383,7 @@ body {
 .ww-editor-schedule-button { border-color: color-mix(in srgb, var(--ww-brand-strong) 36%, transparent) !important; color: var(--ww-brand-strong) !important; }
 .ww-editor-schedule-button:disabled { cursor: not-allowed; opacity: 0.42; }
 .ww-manage-scheduled-time { color: #1d4ed8 !important; font-weight: 650; }
+.ww-manage-import-notice { margin: 12px auto 0; width: min(1180px, calc(100% - 32px)); padding: 11px 14px; border-radius: 11px; background: #ecfdf5; color: #047857; font: 680 0.82rem/1.4 'Inter', sans-serif; }
 .ww-next-release {
     display: grid;
     grid-template-columns: auto 1fr;
