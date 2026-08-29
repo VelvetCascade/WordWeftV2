@@ -18,6 +18,7 @@ import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
 import { ShareModal } from '../components/ShareModal';
 import { ScheduleChapterDialog } from '../components/ScheduleChapterDialog';
+import { ChapterVersionHistoryDialog } from '../components/ChapterVersionHistoryDialog';
 import { goBackOrReplace, replaceHash } from '../utils/navigation';
 
 interface ChapterEditorPageProps {
@@ -139,6 +140,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [publishedChapterId, setPublishedChapterId] = useState<string | null>(null);
     const [isChapterShareOpen, setIsChapterShareOpen] = useState(false);
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
     // Show Demo Modal on first visit if not seen
@@ -373,6 +375,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                         <button onClick={() => setIsScannerOpen(true)} title="Scan chapter for characters">
                             <SparklesIcon className="w-4 h-4" /><span>Scan</span>
                         </button>
+                        {!isNewChapter && <button onClick={() => setIsVersionHistoryOpen(true)} title="Open version history"><span>History</span></button>}
                         <span className="ww-editor-action-divider" />
                         <button className="ww-editor-save-button" onClick={() => handleSave('draft', content, title)}>Save draft</button>
                         <button
@@ -452,6 +455,20 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 onConfirm={handleSchedule}
                 onClose={() => setIsScheduleOpen(false)}
             />
+            {!isNewChapter && (
+                <ChapterVersionHistoryDialog
+                    isOpen={isVersionHistoryOpen}
+                    bookId={bookId}
+                    chapterId={chapterId}
+                    onClose={() => setIsVersionHistoryOpen(false)}
+                    onRestored={(updatedUser, revision) => {
+                        onUserUpdate(updatedUser);
+                        setTitle(revision.title);
+                        setContent(revision.content);
+                        setSaveState('saved');
+                    }}
+                />
+            )}
 
             <CharacterPreview
                 character={viewingCharacter}

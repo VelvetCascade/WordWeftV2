@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -534,6 +534,21 @@ export async function scheduleChapter(bookId: string, chapterId: string, schedul
 export async function cancelChapterSchedule(bookId: string, chapterId: string): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
         method: 'DELETE',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function getChapterRevisions(bookId: string, chapterId: string): Promise<ChapterRevision[]> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions`, {
+        headers: getHeaders()
+    });
+    return await handleResponse(response);
+}
+
+export async function restoreChapterRevision(bookId: string, chapterId: string, revisionId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}/restore`, {
+        method: 'POST',
         headers: getHeaders()
     });
     return mapBackendUserToFrontend(await handleResponse(response));

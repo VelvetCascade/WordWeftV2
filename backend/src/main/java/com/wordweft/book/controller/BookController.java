@@ -10,6 +10,8 @@ import com.wordweft.book.service.BookService;
 import com.wordweft.book.service.ChapterPublishingService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.manuscript.service.ManuscriptImportService;
+import com.wordweft.manuscript.model.ChapterRevision;
+import com.wordweft.manuscript.service.ChapterRevisionService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,8 @@ public class BookController {
     ChapterReadEventService chapterReadEventService;
     @Autowired
     ManuscriptImportService manuscriptImportService;
+    @Autowired
+    ChapterRevisionService chapterRevisionService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
 
@@ -271,6 +275,13 @@ public class BookController {
         Map<String, String> data = (Map<String, String>) payload.get("data");
         String status = (String) payload.get("status");
 
+        if (!isNew) {
+            String reason = "published".equals(status) ? "PUBLISH"
+                    : "draft".equals(status) ? "MANUAL_SAVE" : "AUTOSAVE";
+            chapterRevisionService.capture(
+                    userDetails.getId(), book, chapter, reason, !"preserve".equals(status));
+        }
+
         chapter.setTitle(data.get("title"));
         chapter.setContent(data.get("content"));
         Object warningValue = payload.get("contentWarnings");
@@ -346,6 +357,7 @@ public class BookController {
 
         Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst()
                 .orElseThrow();
+        chapterRevisionService.capture(userDetails.getId(), book, chapter, "STATUS_CHANGE", true);
         if ("published".equals(chapter.getStatus())) {
             chapter.setStatus("draft");
             chapter.setScheduledAt(null);
@@ -355,6 +367,23 @@ public class BookController {
         }
 
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
+
+    @GetMapping("/{bookId}/chapters/{chapterId}/revisions")
+    public ResponseEntity<List<ChapterRevision>> getChapterRevisions(
+            @PathVariable String bookId,
+            @PathVariable String chapterId) {
+        return ResponseEntity.ok(chapterRevisionService.list(getCurrentUserId(), bookId, chapterId));
+    }
+
+    @PostMapping("/{bookId}/chapters/{chapterId}/revisions/{revisionId}/restore")
+    public ResponseEntity<?> restoreChapterRevision(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @PathVariable String revisionId) {
+        String userId = getCurrentUserId();
+        chapterRevisionService.restore(userId, bookId, chapterId, revisionId);
+        return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 
     // --- Delete Endpoints ---

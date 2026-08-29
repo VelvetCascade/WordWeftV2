@@ -80,6 +80,19 @@ export interface Chapter {
   disclaimerNote?: string;
 }
 
+export interface ChapterRevision {
+  id: string;
+  authorId: string;
+  bookId: string;
+  chapterId: string;
+  title: string;
+  content: string;
+  wordCount: number;
+  reason: string;
+  plainTextPreview: string;
+  createdAt: string;
+}
+
 export type AgeRating = 'ALL_AGES' | 'TEEN_13' | 'MATURE_18' | 'ADULT_21';
 export type ContentWarning = 'VIOLENCE' | 'GORE' | 'STRONG_LANGUAGE' | 'SEXUAL_CONTENT' | 'ABUSE' | 'SELF_HARM' | 'SUBSTANCE_USE' | 'GRIEF' | 'DISCRIMINATION' | 'FLASHING_IMAGES' | 'OTHER';
 

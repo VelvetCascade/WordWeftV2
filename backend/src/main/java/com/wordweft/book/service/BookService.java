@@ -7,6 +7,7 @@ import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.exception.ContentRestrictedException;
+import com.wordweft.manuscript.repository.ChapterRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,8 @@ public class BookService {
     @Autowired
     LibraryRepository libraryRepository;
     @Autowired
+    ChapterRevisionRepository chapterRevisionRepository;
+    @Autowired
     ContentAccessService contentAccessService;
 
     public void deleteBook(String bookId) {
@@ -49,6 +52,7 @@ public class BookService {
         sceneRepository.deleteByBookId(bookId);
         noteRepository.deleteByBookId(bookId);
         libraryRepository.deleteByBookId(bookId);
+        chapterRevisionRepository.deleteByBookId(bookId);
     }
 
     private String getCurrentUserId() {

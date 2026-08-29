@@ -9399,6 +9399,28 @@ body {
 .ww-next-release strong { color: var(--ww-ink); font: 740 0.92rem/1.35 'Inter', sans-serif; }
 .ww-next-release small { color: var(--ww-muted); }
 
+/* Chapter recovery */
+.ww-version-backdrop { position: fixed; inset: 0; z-index: 82; display: grid; place-items: center; padding: 18px; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(8px); }
+.ww-version-dialog { width: min(720px, 100%); max-height: min(760px, 88vh); overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--ww-border); border-radius: 24px; padding: clamp(20px, 4vw, 30px); background: var(--ww-paper); color: var(--ww-ink); box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3); }
+.ww-version-dialog > header { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.ww-version-dialog > header span { color: var(--ww-brand-strong); font: 760 0.66rem/1 'Inter', sans-serif; letter-spacing: 0.13em; text-transform: uppercase; }
+.ww-version-dialog h2 { margin: 8px 0 0; font: 790 2rem/1 'Inter', sans-serif; letter-spacing: -0.04em; }
+.ww-version-dialog > header button { width: 40px; height: 40px; border-radius: 50%; color: var(--ww-muted); font-size: 1.6rem; }
+.ww-version-dialog > header button:hover { background: var(--ww-brand-soft); color: var(--ww-brand-strong); }
+.ww-version-dialog > p { margin: 12px 0 20px; color: var(--ww-muted); font-size: 0.82rem; line-height: 1.55; }
+.ww-version-list { overflow-y: auto; display: grid; gap: 10px; padding-right: 4px; }
+.ww-version-list article { padding: 16px; border: 1px solid var(--ww-border); border-radius: 15px; background: color-mix(in srgb, var(--ww-paper) 90%, var(--ww-brand-soft)); }
+.ww-version-list article > div,
+.ww-version-list footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ww-version-list article > div strong { color: var(--ww-brand-strong); font-size: 0.72rem; }
+.ww-version-list time,
+.ww-version-list footer span { color: var(--ww-muted); font-size: 0.68rem; }
+.ww-version-list h3 { margin: 10px 0 5px; font: 730 1rem/1.2 'Inter', sans-serif; }
+.ww-version-list article > p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin: 0 0 12px; color: var(--ww-muted); font-size: 0.78rem; line-height: 1.5; }
+.ww-version-list footer button { min-height: 38px; padding: 0 14px; border-radius: 9px; background: var(--ww-brand-soft); color: var(--ww-brand-strong); font: 720 0.75rem/1 'Inter', sans-serif; }
+.ww-version-empty { padding: 50px 18px; border: 1px dashed var(--ww-border); border-radius: 14px; color: var(--ww-muted); text-align: center; }
+.ww-version-error { margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 0.8rem; }
+
 @media (max-width: 720px) {
     .ww-editor-actions .ww-editor-schedule-button { min-width: 74px; width: auto; }
     .ww-schedule-actions { display: grid; grid-template-columns: 1fr 1fr; }

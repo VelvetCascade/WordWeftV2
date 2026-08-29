@@ -7,6 +7,7 @@ import com.wordweft.book.service.ChapterPublishingService;
 import com.wordweft.config.SecurityConfig;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.manuscript.service.ManuscriptImportService;
+import com.wordweft.manuscript.service.ChapterRevisionService;
 import com.wordweft.security.jwt.AuthEntryPointJwt;
 import com.wordweft.security.jwt.JwtUtils;
 import com.wordweft.security.services.UserDetailsImpl;
@@ -27,6 +28,7 @@ import java.util.Map;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -34,6 +36,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,6 +52,7 @@ class BookSchedulingControllerTest {
     @MockBean ChapterPublishingService publishing;
     @MockBean ChapterReadEventService readEvents;
     @MockBean ManuscriptImportService manuscriptImportService;
+    @MockBean ChapterRevisionService chapterRevisionService;
     @MockBean UserDetailsServiceImpl userDetailsService;
     @MockBean JwtUtils jwt;
     @MockBean AuthEntryPointJwt entryPoint;
@@ -93,5 +97,16 @@ class BookSchedulingControllerTest {
                 eq("book"), eq("chapter"), isNull(),
                 eq("9f45f6dc-e555-451e-9bc9-4bf54fd715de"),
                 eq("https://example.com/post"), any(Instant.class));
+    }
+
+    @Test
+    void chapterRecoveryHistoryIsPrivate() throws Exception {
+        doAnswer(invocation -> {
+            ((jakarta.servlet.http.HttpServletResponse) invocation.getArgument(1)).sendError(401);
+            return null;
+        }).when(entryPoint).commence(any(), any(), any());
+
+        mvc.perform(get("/api/books/book/chapters/chapter/revisions"))
+                .andExpect(status().isUnauthorized());
     }
 }
