@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { getImageKitAuth } from '../api/client';
 import imageCompression from 'browser-image-compression';
-import * as nsfwjs from 'nsfwjs';
 import { Upload, X, Loader2, AlertCircle } from 'lucide-react';
 import { ImageCropModal } from './ImageCropModal';
 
@@ -126,7 +125,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             img.src = URL.createObjectURL(file);
             img.onload = async () => {
                 try {
-                    const model = await nsfwjs.load();
+                    // The TensorFlow-backed safety model is several megabytes, so keep it
+                    // off the initial application path and load it only for an actual upload.
+                    const { load } = await import('nsfwjs');
+                    const model = await load();
                     const predictions = await model.classify(img);
                     URL.revokeObjectURL(img.src);
                     

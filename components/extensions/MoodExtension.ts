@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { TextSelection } from '@tiptap/pm/state';
 
 /**
  * Mood Block Extension — wraps content in an atmosphere/mood container.
@@ -72,9 +73,7 @@ export const MoodBlock = Node.create({
                     // Insert paragraph after the mood block
                     const newEndPos = tr.mapping.map(endPos);
                     tr.insert(newEndPos, state.schema.nodes.paragraph.create());
-                    tr.setSelection(
-                        state.selection.constructor.near(tr.doc.resolve(newEndPos + 1))
-                    );
+                    tr.setSelection(TextSelection.near(tr.doc.resolve(newEndPos + 1)));
                     editor.view.dispatch(tr);
                     return true;
                 }

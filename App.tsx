@@ -1,34 +1,34 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 
 import { Navbar } from './components/Navbar';
 import { WriterLayout } from './components/WriterLayout';
-import { HomePage } from './pages/HomePage';
-import { CategoryPage } from './pages/CategoryPage';
-import { BookDetailsPage } from './pages/BookDetailsPage';
-import { ReaderPage } from './pages/ReaderPage';
-import { WriterDashboardPage } from './pages/WriterDashboardPage';
-import { CreateBookPage } from './pages/CreateBookPage';
-import { ManageChaptersPage } from './pages/ManageChaptersPage';
-import { ChapterEditorPage } from './pages/ChapterEditorPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { AuthPage } from './pages/AuthPage';
-import { AuthorPage } from './pages/AuthorPage';
-import { CommunityPage } from './pages/CommunityPage';
-import { CommunityPostPage } from './pages/CommunityPostPage';
-import { EditProfilePage } from './pages/EditProfilePage';
-import { TermsPage } from './pages/TermsPage';
-import { PrivacyPage } from './pages/PrivacyPage';
-import { SafetyRulesPage } from './pages/SafetyRulesPage';
-import { ContactPage } from './pages/ContactPage';
-import { FeedbackPage } from './pages/FeedbackPage';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { GenrePage } from './pages/GenrePage';
-import { SearchResultsPage } from './pages/SearchResultsPage';
-import { FeaturesPage } from './pages/FeaturesPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { AboutPage } from './pages/AboutPage';
-import { FeatureDevelopmentPage } from './pages/FeatureDevelopmentPage';
+const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
+const CategoryPage = lazy(() => import('./pages/CategoryPage').then(module => ({ default: module.CategoryPage })));
+const BookDetailsPage = lazy(() => import('./pages/BookDetailsPage').then(module => ({ default: module.BookDetailsPage })));
+const ReaderPage = lazy(() => import('./pages/ReaderPage').then(module => ({ default: module.ReaderPage })));
+const WriterDashboardPage = lazy(() => import('./pages/WriterDashboardPage').then(module => ({ default: module.WriterDashboardPage })));
+const CreateBookPage = lazy(() => import('./pages/CreateBookPage').then(module => ({ default: module.CreateBookPage })));
+const ManageChaptersPage = lazy(() => import('./pages/ManageChaptersPage').then(module => ({ default: module.ManageChaptersPage })));
+const ChapterEditorPage = lazy(() => import('./pages/ChapterEditorPage').then(module => ({ default: module.ChapterEditorPage })));
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
+const AuthorPage = lazy(() => import('./pages/AuthorPage').then(module => ({ default: module.AuthorPage })));
+const CommunityPage = lazy(() => import('./pages/CommunityPage').then(module => ({ default: module.CommunityPage })));
+const CommunityPostPage = lazy(() => import('./pages/CommunityPostPage').then(module => ({ default: module.CommunityPostPage })));
+const EditProfilePage = lazy(() => import('./pages/EditProfilePage').then(module => ({ default: module.EditProfilePage })));
+const TermsPage = lazy(() => import('./pages/TermsPage').then(module => ({ default: module.TermsPage })));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+const SafetyRulesPage = lazy(() => import('./pages/SafetyRulesPage').then(module => ({ default: module.SafetyRulesPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(module => ({ default: module.ContactPage })));
+const FeedbackPage = lazy(() => import('./pages/FeedbackPage').then(module => ({ default: module.FeedbackPage })));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })));
+const GenrePage = lazy(() => import('./pages/GenrePage').then(module => ({ default: module.GenrePage })));
+const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
+const FeaturesPage = lazy(() => import('./pages/FeaturesPage').then(module => ({ default: module.FeaturesPage })));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then(module => ({ default: module.AboutPage })));
+const FeatureDevelopmentPage = lazy(() => import('./pages/FeatureDevelopmentPage').then(module => ({ default: module.FeatureDevelopmentPage })));
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -74,6 +74,16 @@ export type Page =
   | { name: 'about' }
   | { name: 'genre-page'; genre: string }
   | { name: 'reset-password'; token: string };
+
+const PageLoadingFallback: React.FC = () => (
+  <div className="min-h-[50vh] flex items-center justify-center" role="status" aria-label="Loading page">
+    <div className="flex gap-1.5" aria-hidden="true">
+      <span className="w-2 h-2 rounded-full bg-accent/60 animate-pulse" />
+      <span className="w-2 h-2 rounded-full bg-accent/60 animate-pulse [animation-delay:150ms]" />
+      <span className="w-2 h-2 rounded-full bg-accent/60 animate-pulse [animation-delay:300ms]" />
+    </div>
+  </div>
+);
 
 
 const App: React.FC = () => {
@@ -507,11 +517,11 @@ const App: React.FC = () => {
 
         {isWriterPage ? (
           <WriterLayout>
-            {renderPage()}
+            <Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense>
           </WriterLayout>
         ) : (
           <main className={`ww-app-main ww-page-${page.name} ${showNavbar ? `ww-app-main-with-nav pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'md:pt-20'}` : ""}`}>
-            {renderPage()}
+            <Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense>
           </main>
         )}
 
