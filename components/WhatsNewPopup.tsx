@@ -46,7 +46,7 @@ export const WhatsNewPopup: React.FC = () => {
                 {/* Dismiss trigger */}
                 <button
                     onClick={handleDismiss}
-                    className="absolute top-3 right-3 text-gray-400 hover:text-text-body dark:hover:text-dark-text-body transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="absolute top-3 right-3 z-20 text-gray-400 hover:text-text-body dark:hover:text-dark-text-body transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt focus:outline-none focus:ring-2 focus:ring-accent"
                     aria-label="Dismiss whats new popup"
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

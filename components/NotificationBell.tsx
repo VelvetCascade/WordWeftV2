@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { AppNotification, NavigateTo } from '../types';
 import type { Page } from '../App';
+import { communityNotificationPostId } from '../utils/community';
 
 // --- Icons ---
 const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -20,6 +21,9 @@ const CheckIcon: React.FC = () => (
 // --- Notification Item ---
 const getNotificationIcon = (type: string): string => {
     switch (type) {
+        case 'COMMUNITY_COMMENT': return '💬';
+        case 'COMMUNITY_REPLY': return '↩️';
+        case 'COMMUNITY_RELEASE': return '📚';
         case 'NEW_FOLLOWER': return '👤';
         case 'NEW_COMMENT': return '💬';
         case 'COMMENT_REPLY': return '↩️';
@@ -46,6 +50,8 @@ const getTimeAgo = (dateStr: string): string => {
 };
 
 const getNotificationTarget = (n: AppNotification): Page | null => {
+    const postId = communityNotificationPostId(n);
+    if (postId) return { name: 'community-post', postId };
     switch (n.type) {
         case 'NEW_FOLLOWER':
             return { name: 'author', authorId: n.entityId };

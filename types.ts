@@ -1,7 +1,10 @@
 
 import type { Page } from './App';
+import type { Badge, Interest } from './types/community';
 
 export interface Author {
+  communityInterests?: Interest[];
+  communityBadges?: Badge[];
   id: string;
   name: string;
   avatarUrl: string;
@@ -123,6 +126,8 @@ export interface UserSocials {
 }
 
 export interface User {
+  communityInterests?: Interest[];
+  communityBadges?: Badge[];
   id: string;
   name: string;
   email: string;
@@ -149,7 +154,7 @@ export interface User {
   allowMatureContent?: boolean;
 }
 
-export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER';
+export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER' | 'COMMUNITY_POST' | 'COMMUNITY_COMMENT';
 export type ReportCategory = 'SPAM' | 'HARASSMENT' | 'PLAGIARISM' | 'SEXUAL_CONTENT' | 'HATE_SPEECH' | 'VIOLENCE' | 'COPYRIGHT' | 'MISINFORMATION' | 'OTHER';
 export interface ContentReport {
   id: string;
@@ -232,6 +237,9 @@ export type NotificationType =
   | 'AUTHOR_NEW_STORY'
   | 'BOOK_UPDATE'
   | 'SYSTEM_UPDATE'
+  | 'COMMUNITY_COMMENT'
+  | 'COMMUNITY_REPLY'
+  | 'COMMUNITY_RELEASE'
   | 'CONTENT_REPORT_NOTICE';
 
 export interface AppNotification {
@@ -239,7 +247,7 @@ export interface AppNotification {
   userId: string;
   actorId: string | null;
   type: NotificationType;
-  entityType: 'USER' | 'BOOK' | 'CHAPTER' | 'SYSTEM';
+  entityType: 'USER' | 'BOOK' | 'CHAPTER' | 'SYSTEM' | 'COMMUNITY_POST';
   entityId: string;
   message: string;
   read: boolean;

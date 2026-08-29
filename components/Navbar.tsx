@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon, HeartIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
+import { MessageCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { SearchOverlay } from './SearchOverlay';
 import type { User } from '../types';
@@ -58,6 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     if (hash.startsWith('category') || hash.startsWith('genre')) return 'genres';
     if (hash.startsWith('profile') || hash.startsWith('edit-profile')) return 'library';
     if (hash.startsWith('write')) return 'write';
+    if (hash.startsWith('community')) return 'community';
     return '';
   };
 
@@ -116,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   const desktopNavLinks = [
     { label: 'Discover', route: 'home', action: () => { window.location.hash = '/'; } },
     { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; } },
-    { label: 'For you', route: 'for-you', action: () => { if (onForYouClick) onForYouClick(); } },
+    { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; } },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; } },
     { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; } },
   ];
@@ -124,6 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   const mobileNavLinks = [
     { label: 'Home', route: 'home', action: () => { window.location.hash = '/'; }, icon: HomeIcon },
     { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; }, icon: Squares2X2Icon },
+    { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
     { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
   ];

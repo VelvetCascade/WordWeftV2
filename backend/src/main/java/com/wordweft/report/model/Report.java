@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.Instant;
 
@@ -38,4 +39,8 @@ public class Report {
     @Indexed
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
+    private String resolvedBy;
+    private String resolutionReason;
+    @JsonIgnore
+    private String resolutionToken;
 }
