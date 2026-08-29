@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -361,6 +361,24 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
         })
     });
     await handleResponse(response);
+}
+
+export async function getHookFeed(excludedBookIds: string[] = [], genres: string[] = [], limit = 10): Promise<HookFeedResponse> {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (excludedBookIds.length) params.set('exclude', excludedBookIds.join(','));
+    if (genres.length) params.set('genres', genres.join(','));
+    const response = await fetch(`${API_BASE_URL}/discovery/hooks?${params}`, { headers: getHeaders() });
+    return handleResponse(response);
+}
+
+export async function saveReaderTaste(favoriteGenres: string[]): Promise<string[]> {
+    const response = await fetch(`${API_BASE_URL}/discovery/taste`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ favoriteGenres }),
+    });
+    const result = await handleResponse(response);
+    return result.favoriteGenres || [];
 }
 
 // --- Library & Progress API ---

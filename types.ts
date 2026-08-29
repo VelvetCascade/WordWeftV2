@@ -235,6 +235,28 @@ export interface WriterAnalytics {
   releaseMarkers: ReleaseMarker[];
 }
 
+export interface HookCard {
+  bookId: string;
+  chapterId: string;
+  title: string;
+  chapterTitle: string;
+  authorId: string;
+  authorName: string;
+  coverUrl?: string;
+  excerpt: string;
+  genres: string[];
+  matchedGenres: string[];
+  wordCount: number;
+  readingMinutes: number;
+  likesCount: number;
+}
+
+export interface HookFeedResponse {
+  items: HookCard[];
+  tasteGenres: string[];
+  personalized: boolean;
+}
+
 export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER' | 'COMMUNITY_POST' | 'COMMUNITY_COMMENT';
 export type ReportCategory = 'SPAM' | 'HARASSMENT' | 'PLAGIARISM' | 'SEXUAL_CONTENT' | 'HATE_SPEECH' | 'VIOLENCE' | 'COPYRIGHT' | 'MISINFORMATION' | 'OTHER';
 export interface ContentReport {

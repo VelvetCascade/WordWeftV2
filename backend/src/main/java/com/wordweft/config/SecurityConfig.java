@@ -93,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/books/*/chapters/*/view").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/profile").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/discovery/**").permitAll()
                         .requestMatchers("/api/community/moderation/**").hasAnyRole("ADMIN", "MODERATOR")
                         .requestMatchers("/api/community/members/*/badges").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/community/circles", "/api/community/feed",
