@@ -4,6 +4,7 @@ import com.wordweft.book.model.Book;
 import com.wordweft.book.repository.BookRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ public class ScheduledChapterPublisher {
     private final ChapterPublishingService publishing;
     private final Clock clock;
 
+    @Autowired
     public ScheduledChapterPublisher(BookRepository books, ChapterPublishingService publishing) {
         this(books, publishing, Clock.systemUTC());
     }

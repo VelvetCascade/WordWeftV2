@@ -5,6 +5,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.manuscript.model.ChapterRevision;
 import com.wordweft.manuscript.repository.ChapterRevisionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,6 +29,7 @@ public class ChapterRevisionService {
     private final BookRepository books;
     private final Clock clock;
 
+    @Autowired
     public ChapterRevisionService(ChapterRevisionRepository revisions, BookRepository books) {
         this(revisions, books, Clock.systemUTC());
     }

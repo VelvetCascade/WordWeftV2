@@ -4,6 +4,7 @@ import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.notification.service.NotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,6 +26,7 @@ public class ChapterPublishingService {
     private final NotificationService notifications;
     private final Clock clock;
 
+    @Autowired
     public ChapterPublishingService(BookRepository books, NotificationService notifications) {
         this(books, notifications, Clock.systemUTC());
     }
