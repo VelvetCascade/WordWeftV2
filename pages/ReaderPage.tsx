@@ -17,6 +17,7 @@ import { ChapterDisclaimerModal } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
 import parse, { domToReact } from 'html-react-parser';
 import { replaceReaderChapter, returnToStory } from '../utils/navigation';
+import { readReaderPreferences } from '../utils/runtimeLifecycle';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -215,14 +216,22 @@ const CommentDrawer: React.FC<{
 };
 
 export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, currentUser }) => {
+    const { theme: globalTheme } = useTheme();
+    const [initialReaderPreferences] = useState(() => {
+        try {
+            return readReaderPreferences(localStorage.getItem('ww_reader_preferences'), globalTheme);
+        } catch {
+            return readReaderPreferences(null, globalTheme);
+        }
+    });
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
-    const [fontSize, setFontSize] = useState(18);
-    const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
-    const [readerFont, setReaderFont] = useState<ReaderFont>('literary');
-    const [readerWidth, setReaderWidth] = useState<ReaderWidth>('standard');
-    const [lineHeight, setLineHeight] = useState(1.85);
+    const [fontSize, setFontSize] = useState(initialReaderPreferences.fontSize);
+    const [contentTheme, setContentTheme] = useState<ContentTheme>(initialReaderPreferences.contentTheme);
+    const [readerFont, setReaderFont] = useState<ReaderFont>(initialReaderPreferences.readerFont);
+    const [readerWidth, setReaderWidth] = useState<ReaderWidth>(initialReaderPreferences.readerWidth);
+    const [lineHeight, setLineHeight] = useState(initialReaderPreferences.lineHeight);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
@@ -255,7 +264,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const lastSaveTimeRef = useRef<number>(0);
     const maxPercentageRef = useRef<number>(0);
 
-    const { theme: globalTheme } = useTheme();
     const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
     const { trackEvent } = useAnalytics();
 
@@ -296,31 +304,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, [bookId, chapter, isDisclaimerOpen, disclaimerRequired, disclaimerKey]);
 
-    // Default reading mode on load based on user's site theme
-    useEffect(() => {
-        if (globalTheme === 'dark') {
-            setContentTheme('dark');
-        } else {
-            setContentTheme('light');
-        }
-    }, []);
-
-    // Device-local reader preferences: no server or account changes required.
     useEffect(() => {
         try {
-            const saved = JSON.parse(localStorage.getItem('ww_reader_preferences') || '{}');
-            if (typeof saved.fontSize === 'number') setFontSize(Math.min(32, Math.max(12, saved.fontSize)));
-            if (['light', 'sepia', 'dark'].includes(saved.contentTheme)) setContentTheme(saved.contentTheme);
-            if (['literary', 'modern'].includes(saved.readerFont)) setReaderFont(saved.readerFont);
-            if (['narrow', 'standard', 'wide'].includes(saved.readerWidth)) setReaderWidth(saved.readerWidth);
-            if ([1.65, 1.85, 2.05].includes(saved.lineHeight)) setLineHeight(saved.lineHeight);
+            localStorage.setItem('ww_reader_preferences', JSON.stringify({ fontSize, contentTheme, readerFont, readerWidth, lineHeight }));
         } catch {
-            // Ignore malformed local preferences and use the comfortable defaults.
+            // Reader preferences are optional when storage is unavailable.
         }
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem('ww_reader_preferences', JSON.stringify({ fontSize, contentTheme, readerFont, readerWidth, lineHeight }));
     }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight]);
 
     const saveProgress = useCallback(() => {
