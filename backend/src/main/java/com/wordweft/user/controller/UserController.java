@@ -75,6 +75,19 @@ public class UserController {
             user.setSocials(request.getSocials());
         if (request.getFavoriteGenres() != null)
             user.setFavoriteGenres(request.getFavoriteGenres());
+        if (request.getDateOfBirth() != null) {
+            int age = java.time.Period.between(request.getDateOfBirth(), java.time.LocalDate.now()).getYears();
+            if (age < 13 || age > 100) return ResponseEntity.badRequest().body("Date of birth must correspond to an age between 13 and 100.");
+            user.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getAllowMatureContent() != null) {
+            if (request.getAllowMatureContent()) {
+                if (user.getDateOfBirth() == null || java.time.Period.between(user.getDateOfBirth(), java.time.LocalDate.now()).getYears() < 18) {
+                    return ResponseEntity.badRequest().body("Mature content can only be enabled by users aged 18 or older.");
+                }
+            }
+            user.setAllowMatureContent(request.getAllowMatureContent());
+        }
 
         userRepository.save(user);
         return ResponseEntity.ok(userService.enrichUser(user, userId));
@@ -145,5 +158,14 @@ public class UserController {
         user.setNotificationPreferences(preferences);
         userRepository.save(user);
         return ResponseEntity.ok(preferences);
+    }
+
+    @PutMapping("/me/writing-demo")
+    public ResponseEntity<?> markWritingDemoSeen() {
+        String userId = getCurrentUserId();
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setHasSeenWritingDemo(true);
+        userRepository.save(user);
+        return ResponseEntity.ok(userService.enrichUser(user, userId));
     }
 }

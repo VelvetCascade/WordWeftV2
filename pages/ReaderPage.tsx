@@ -1,16 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User, Book, BookProgress, Comment, Character  } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, SunIcon, MoonIcon, Bars3Icon, BookmarkIcon, PaintBrushIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
+import { discussLink } from '../utils/community';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
+import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
+import { ShareModal } from '../components/ShareModal';
+import { ChapterDisclaimerModal } from '../components/ChapterDisclaimerModal';
+import { ReportModal } from '../components/ReportModal';
 import parse, { domToReact } from 'html-react-parser';
+import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
+type ReaderFont = 'literary' | 'modern';
+type ReaderWidth = 'narrow' | 'standard' | 'wide';
 
 interface ReaderPageProps {
     bookId: string;
@@ -22,8 +31,9 @@ const CommentItem: React.FC<{
     comment: Comment;
     allComments: Comment[];
     onReply: (parentId: string, content: string) => Promise<void>;
+    onReport: (comment: Comment) => void;
     depth: number
-}> = ({ comment, allComments, onReply, depth }) => {
+}> = ({ comment, allComments, onReply, onReport, depth }) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,7 +78,8 @@ const CommentItem: React.FC<{
                     </div>
                 </div>
 
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-end gap-3 mt-2">
+                    <button onClick={() => onReport(comment)} className="text-xs font-semibold text-gray-400 hover:text-danger">Report</button>
                     <button
                         onClick={() => setIsReplying(!isReplying)}
                         className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent flex items-center gap-1"
@@ -108,6 +119,7 @@ const CommentItem: React.FC<{
                         comment={reply}
                         allComments={allComments}
                         onReply={onReply}
+                        onReport={onReport}
                         depth={depth + 1}
                     />
                 ))}
@@ -123,7 +135,8 @@ const CommentDrawer: React.FC<{
     paragraphIndex: number | null;
     paragraphText?: string;
     onAddComment: (content: string, parentId?: string | null) => Promise<void>;
-}> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment }) => {
+    onReportComment: (comment: Comment) => void;
+}> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment, onReportComment }) => {
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -170,6 +183,7 @@ const CommentDrawer: React.FC<{
                                 comment={c}
                                 allComments={comments}
                                 onReply={async (parentId, content) => await onAddComment(content, parentId)}
+                                onReport={onReportComment}
                                 depth={0}
                             />
                         ))
@@ -205,15 +219,28 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
     const [fontSize, setFontSize] = useState(18);
     const [contentTheme, setContentTheme] = useState<ContentTheme>('light');
+    const [readerFont, setReaderFont] = useState<ReaderFont>('literary');
+    const [readerWidth, setReaderWidth] = useState<ReaderWidth>('standard');
+    const [lineHeight, setLineHeight] = useState(1.85);
+    const [scrollProgress, setScrollProgress] = useState(0);
+    const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+    const [reportTarget, setReportTarget] = useState<{ type: 'CHAPTER' | 'COMMENT'; id: string; title: string } | null>(null);
 
     const [comments, setComments] = useState<Comment[]>([]);
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
+
+    // Quote sharing state
+    const [selectedQuote, setSelectedQuote] = useState('');
+    const [quoteTooltipPos, setQuoteTooltipPos] = useState<{ x: number; y: number } | null>(null);
+    const [shareInitialTab, setShareInitialTab] = useState<'quick' | 'story' | 'quote'>('quick');
 
     // Character Mention State
     const [characters, setCharacters] = useState<Character[]>([]);
@@ -222,7 +249,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const lastScrollY = useRef(0);
     const contentRef = useRef<HTMLDivElement>(null);
     const moodContentRef = useRef<HTMLDivElement>(null);
-    const settingsPanelRef = useRef<HTMLDivElement>(null);
     const saveProgressTimeoutRef = useRef<number | null>(null);
     const hasRecordedView = useRef<string | null>(null);
     const lastSaveTimeRef = useRef<number>(0);
@@ -230,13 +256,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
 
     const { theme: globalTheme } = useTheme();
     const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
+    const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
+    const disclaimerRequired = !!(book && chapter && ((book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21') || book.contentWarnings?.length || chapter.contentWarnings?.length || book.customDisclaimer || chapter.disclaimerNote));
+    const disclaimerKey = chapter ? `ww_disclaimer_${bookId}_${chapter.id}` : '';
 
     const contentThemeClasses: Record<ContentTheme, string> = {
-        light: 'bg-background text-text-body',
-        dark: 'bg-[#261F1D] text-[#BCAAA4]',
-        sepia: 'bg-[#FBF0D9] text-[#5B4636]',
+        light: 'reader-theme-light',
+        dark: 'reader-theme-dark',
+        sepia: 'reader-theme-sepia',
     };
 
     useEffect(() => {
@@ -251,23 +280,47 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     }, [bookId]);
 
     useEffect(() => {
+        if (chapter) setIsDisclaimerOpen(disclaimerRequired && sessionStorage.getItem(disclaimerKey) !== 'accepted');
+    }, [chapter?.id, disclaimerRequired, disclaimerKey]);
+
+    useEffect(() => {
         if (book && chapter) {
             api.getChapterComments(bookId, chapter.id).then(setComments);
 
-            if (hasRecordedView.current !== chapter.id) {
+            if ((!disclaimerRequired || sessionStorage.getItem(disclaimerKey) === 'accepted') && hasRecordedView.current !== chapter.id) {
                 api.recordChapterView(bookId, chapter.id);
+                trackEvent('reading', 'chapter_read_start', chapter.title, undefined, { bookId, chapterId: chapter.id, chapterIndex: currentChapterIndex });
                 hasRecordedView.current = chapter.id;
             }
         }
-    }, [bookId, chapter]);
+    }, [bookId, chapter, isDisclaimerOpen, disclaimerRequired, disclaimerKey]);
 
+    // Default reading mode on load based on user's site theme
     useEffect(() => {
         if (globalTheme === 'dark') {
             setContentTheme('dark');
         } else {
             setContentTheme('light');
         }
-    }, [globalTheme]);
+    }, []);
+
+    // Device-local reader preferences: no server or account changes required.
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('ww_reader_preferences') || '{}');
+            if (typeof saved.fontSize === 'number') setFontSize(Math.min(32, Math.max(12, saved.fontSize)));
+            if (['light', 'sepia', 'dark'].includes(saved.contentTheme)) setContentTheme(saved.contentTheme);
+            if (['literary', 'modern'].includes(saved.readerFont)) setReaderFont(saved.readerFont);
+            if (['narrow', 'standard', 'wide'].includes(saved.readerWidth)) setReaderWidth(saved.readerWidth);
+            if ([1.65, 1.85, 2.05].includes(saved.lineHeight)) setLineHeight(saved.lineHeight);
+        } catch {
+            // Ignore malformed local preferences and use the comfortable defaults.
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('ww_reader_preferences', JSON.stringify({ fontSize, contentTheme, readerFont, readerWidth, lineHeight }));
+    }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight]);
 
     const saveProgress = useCallback(() => {
         if (!currentUser || !book || !chapter) return;
@@ -331,6 +384,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
+            const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+            setScrollProgress(Math.min(100, Math.max(0, (currentScrollY / maxScroll) * 100)));
 
             if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
                 setIsToolbarVisible(false);
@@ -358,12 +413,41 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         };
     }, [saveProgress]);
 
+    useEffect(() => {
+        const handleReaderShortcuts = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement;
+            if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+            if (event.key.toLowerCase() === 'f') {
+                setIsFocusMode(mode => !mode);
+            } else if (event.key === 'Escape') {
+                setIsFocusMode(false);
+                setIsSettingsPanelVisible(false);
+                setIsTocVisible(false);
+            } else if (event.key === '[') {
+                setFontSize(size => Math.max(12, size - 1));
+            } else if (event.key === ']') {
+                setFontSize(size => Math.min(32, size + 1));
+            }
+        };
+
+        window.addEventListener('keydown', handleReaderShortcuts);
+        return () => window.removeEventListener('keydown', handleReaderShortcuts);
+    }, []);
+
 
     const goToChapter = (index: number) => {
         if (!book || (index < 0 || index >= book.chapters.length)) return;
         saveProgress();
+        trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setCurrentChapterIndex(index);
-        window.location.hash = `/read/book/${book.id}/chapter/${index}`;
+        replaceReaderChapter(book.id, index);
+    };
+
+    const handleReturnToStory = () => {
+        if (!book) return;
+        saveProgress();
+        returnToStory(book.id);
     };
 
     const openCommentDrawer = (index: number | null) => {
@@ -427,18 +511,23 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         if (!book) return null;
         return (
             <div
-                className={`fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`}
+                className={`reader-toc-overlay fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'reader-toc-overlay-open' : 'pointer-events-none opacity-0'}`}
                 onClick={() => setIsTocVisible(false)}
             >
                 <div
-                    className={`absolute top-0 left-0 bottom-0 w-80 max-w-[80vw] ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-background'} shadow-lg transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`}
+                    className={`reader-toc-panel absolute top-0 left-0 bottom-0 transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`}
                     onClick={e => e.stopPropagation()}
                 >
-                    <div className="p-4 border-b border-gray-200 dark:border-dark-border">
-                        <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">Table of Contents</h3>
-                        <p className="text-sm text-text-body dark:text-dark-text-body truncate">{book.title}</p>
+                    <div className="reader-toc-header">
+                        <div>
+                            <span>Contents</span>
+                            <h3>{book.title}</h3>
+                            <p>{book.chapters.length} chapters · Chapter {currentChapterIndex + 1} now</p>
+                        </div>
+                        <button onClick={() => setIsTocVisible(false)} aria-label="Close contents"><XMarkIcon className="w-5 h-5" /></button>
                     </div>
-                    <ul className="overflow-y-auto h-[calc(100%-65px)]">
+                    <div className="reader-toc-overall"><span style={{ width: `${((currentChapterIndex + scrollProgress / 100) / Math.max(1, book.chapters.length)) * 100}%` }} /></div>
+                    <ul className="reader-toc-list">
                         {book.chapters.map((chap, index) => (
                             <li key={chap.id}>
                                 <button
@@ -446,11 +535,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                         goToChapter(index);
                                         setIsTocVisible(false);
                                     }}
-                                    className={`w-full text-left p-4 text-sm font-sans transition-colors ${index === currentChapterIndex ? 'bg-accent/10 text-accent font-semibold' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt'} ${chap.status !== 'published' ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'dark:text-dark-text-body'}`}
+                                    className={`reader-toc-item ${index === currentChapterIndex ? 'reader-toc-item-active' : ''} ${chap.status !== 'published' ? 'reader-toc-item-locked' : ''}`}
                                     disabled={chap.status !== 'published'}
                                 >
-                                    <span className="block truncate">{chap.title}</span>
-                                    {chap.status !== 'published' && <span className="text-xs">(Not Released)</span>}
+                                    <span className="reader-toc-number">{String(index + 1).padStart(2, '0')}</span>
+                                    <span className="reader-toc-title"><strong>{chap.title}</strong><small>{index === currentChapterIndex ? `${Math.round(scrollProgress)}% read` : chap.status !== 'published' ? 'Not released' : index < currentChapterIndex ? 'Completed' : 'Ready to read'}</small></span>
+                                    <ChevronRightIcon className="w-4 h-4" />
                                 </button>
                             </li>
                         ))}
@@ -499,7 +589,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             }
 
             // Handle Spoiler / Hidden Text
-            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
+            if (
+                domNode.type === 'tag' &&
+                domNode.name === 'span' &&
+                domNode.attribs &&
+                (Object.prototype.hasOwnProperty.call(domNode.attribs, 'data-spoiler') ||
+                    (domNode.attribs.class || '').split(/\s+/).includes('spoiler-text'))
+            ) {
                 return (
                     <SpoilerReveal>{domToReact(domNode.children, parseOptions)}</SpoilerReveal>
                 );
@@ -543,96 +639,112 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     };
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
-    if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
+    const plainChapterText = chapter.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim();
+    const wordCount = plainChapterText ? plainChapterText.split(/\s+/).length : 0;
+    const readingMinutes = Math.max(1, Math.ceil(wordCount / 230));
 
     // Reset block index
     blockIndex = 0;
 
     return (
-        <div className={`transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]}`}>
+        <div className={`reader-experience transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''}`}>
+            {/* Contextual Reader Onboarding */}
+            <ReaderDiscoveryCoach 
+                hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')} 
+                hasSpoilers={chapter?.content?.includes('data-spoiler') || chapter?.content?.includes('spoiler-text')}
+            />
+
             {/* Mood Atmosphere — page-level immersive overlay */}
             <MoodAtmosphere contentRef={moodContentRef} active={true} />
 
             <TableOfContents />
 
+            <div className="reader-progress-track" aria-hidden="true"><span style={{ width: `${scrollProgress}%` }} /></div>
+
             {/* Header */}
-            <header className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${isToolbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} ${globalTheme === 'dark' ? 'bg-dark-surface/80 border-dark-border text-dark-text-body' : 'bg-background/80 border-gray-200 text-text-body'} backdrop-blur-md border-b`}>
-                <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <button onClick={() => { saveProgress(); window.location.hash = `/book/${book.id}`; }} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent dark:text-dark-text-body dark:hover:text-accent">
+            <header className={`reader-header fixed top-0 left-0 right-0 z-20 ${isToolbarVisible ? 'reader-header-visible' : 'reader-header-hidden'}`}>
+                <div className="reader-header-inner">
+                    <button onClick={handleReturnToStory} className="reader-back-button" aria-label={`Back to ${book.title}`}>
                         <ChevronLeftIcon className="w-5 h-5" />
-                        <span>{book.title}</span>
+                        <span><small>Back to story</small><strong>{book.title}</strong></span>
                     </button>
-                    <div className="text-center">
-                        <h2 className="font-sans font-semibold truncate text-text-rich dark:text-dark-text-rich">{chapter.title}</h2>
+                    <div className="reader-header-chapter">
+                        <span>{String(currentChapterIndex + 1).padStart(2, '0')} / {String(book.chapters.length).padStart(2, '0')}</span>
+                        <strong>{chapter.title}</strong>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={handleToggleLike}
-                            className={`transition-colors duration-200 ${chapter.isLiked ? 'text-danger scale-110' : 'text-gray-400 dark:text-gray-500 hover:text-danger'}`}
-                            title={chapter.isLiked ? "Unlike" : "Like"}
-                        >
-                            {chapter.isLiked ? <HeartIconSolid className="w-6 h-6" /> : <HeartIcon className="w-6 h-6" />}
+                    <div className="reader-header-actions">
+                        <button onClick={() => setIsBookmarked(!isBookmarked)} className={isBookmarked ? 'reader-action-active' : ''} aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark chapter'}>
+                            <BookmarkIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={() => setIsBookmarked(!isBookmarked)}>
-                            <BookmarkIcon className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent'}`} />
-                        </button>
-                        <button onClick={() => setIsTocVisible(true)} className="text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent transition-colors">
-                            <Bars3Icon className="w-5 h-5" />
-                        </button>
+                        <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
+                        <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button">!</button>
+                        <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </header>
 
+            {isFocusMode && (
+                <button className="reader-focus-exit" onClick={() => setIsFocusMode(false)}>
+                    Exit focus <kbd>F</kbd>
+                </button>
+            )}
+
             {/* Content */}
-            <main ref={contentRef} className="max-w-prose mx-auto px-4 pt-24 pb-12 flex-1 relative z-10">
-                <h1 className="text-4xl font-serif font-bold mb-8 leading-snug">{chapter.title}</h1>
+            <main 
+                ref={contentRef} 
+                className={`reader-manuscript reader-width-${readerWidth} mx-auto flex-1 relative z-10`}
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
+                onMouseUp={() => {
+                    const selection = window.getSelection();
+                    const text = selection?.toString().trim() || '';
+                    if (text.length >= 10 && text.length <= 280) {
+                        const range = selection!.getRangeAt(0);
+                        const rect = range.getBoundingClientRect();
+                        setSelectedQuote(text);
+                        setQuoteTooltipPos({ x: rect.left + rect.width / 2, y: rect.top + window.scrollY - 44 });
+                    } else {
+                        setQuoteTooltipPos(null);
+                    }
+                }}
+            >
+                <div className="reader-chapter-intro">
+                    <span>Chapter {String(currentChapterIndex + 1).padStart(2, '0')}</span>
+                    <h1>{chapter.title}</h1>
+                    <div className="reader-chapter-meta"><span>{readingMinutes} min read</span><i /><span>{wordCount.toLocaleString()} words</span><i /><span>{Math.round(scrollProgress)}% complete</span></div>
+                </div>
                 <div
                     ref={moodContentRef}
-                    className="ww-prose"
-                    style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
+                    className={`ww-prose reader-copy reader-font-${readerFont}`}
+                    style={{ fontSize: `${fontSize}px`, lineHeight }}
                 >
                     {parse(chapter.content, parseOptions)}
                 </div>
 
-                {/* Post-Chapter Engagement */}
-                <div className="mt-16 mb-8 flex flex-col items-center space-y-12 w-full max-w-2xl mx-auto">
-                    <div className="flex flex-col items-center">
-                        <div className="h-px w-24 bg-gray-300 dark:bg-dark-border mb-8"></div>
-                        <button
-                            onClick={handleToggleLike}
-                            className={`group flex items-center gap-3 px-8 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${chapter.isLiked
-                                ? 'bg-danger text-white ring-4 ring-danger/20'
-                                : 'bg-white dark:bg-dark-surface-alt text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:border-danger hover:text-danger'
-                                }`}
-                        >
-                            {chapter.isLiked ? <HeartIconSolid className="w-6 h-6 animate-pulse" /> : <HeartIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />}
-                            <span className="font-sans font-bold text-lg">{chapter.isLiked ? 'Liked' : 'Like this Chapter'}</span>
-                            <span className={`text-sm font-medium ml-1 ${chapter.isLiked ? 'text-white/90' : 'text-gray-400 group-hover:text-danger/60'}`}>
-                                {chapter.likesCount}
-                            </span>
+                {/* A calm chapter ending: react, continue, or return to the story. */}
+                <section className="reader-chapter-end">
+                    <span className="reader-end-kicker">{currentChapterIndex < book.chapters.length - 1 ? 'End of chapter' : 'Story complete'}</span>
+                    <h2>{currentChapterIndex < book.chapters.length - 1 ? book.chapters[currentChapterIndex + 1].title : `You finished ${book.title}`}</h2>
+                    <p>{currentChapterIndex < book.chapters.length - 1 ? 'Ready when you are. Your place in this chapter has been saved.' : `You reached the final page of ${book.author.name}'s story.`}</p>
+                    <div className="reader-end-primary-actions">
+                        {currentChapterIndex < book.chapters.length - 1 ? (
+                            <button onClick={() => goToChapter(currentChapterIndex + 1)}>Read next chapter <ChevronRightIcon className="w-5 h-5" /></button>
+                        ) : (
+                            <button onClick={handleReturnToStory}>Return to story <ChevronRightIcon className="w-5 h-5" /></button>
+                        )}
+                    </div>
+                    <div className="reader-end-secondary-actions">
+                        <button onClick={handleToggleLike} className={chapter.isLiked ? 'active' : ''}>
+                            {chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}
+                            <span>{chapter.isLiked ? 'Liked' : 'Like chapter'}</span><small>{chapter.likesCount}</small>
                         </button>
+                        <button onClick={() => { setShareInitialTab('quick'); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" /><span>Share</span></button>
+                        <button onClick={() => openCommentDrawer(null)}><ChatBubbleLeftIcon className="w-5 h-5" /><span>Discuss</span><small>{comments.length}</small></button>
                     </div>
-
-                    {/* Support WordWeft CTA */}
-                    <div className="w-full bg-gradient-to-br from-white to-[#FDFBF7] dark:from-dark-surface-alt dark:to-dark-surface border border-accent/20 dark:border-accent/10 rounded-2xl p-8 shadow-soft text-center group transition-all duration-300 hover:shadow-lifted">
-                        <div className="mx-auto w-14 h-14 bg-accent/10 dark:bg-accent/20 rounded-full flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-accent/20 transition-all duration-300">
-                            <HeartIcon className="w-7 h-7 text-accent" />
-                        </div>
-                        <h3 className="font-sans font-bold text-2xl text-text-rich dark:text-dark-text-rich mb-3">Support WordWeft</h3>
-                        <p className="text-text-body dark:text-dark-text-body mb-8 leading-relaxed max-w-md mx-auto">
-                            Enjoying the reading experience? Consider buying us a coffee on Ko-fi. Your support helps keep WordWeft completely ad-free and fuels future development.
-                        </p>
-                        <a 
-                            href="https://ko-fi.com/wordweftstudio" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-accent text-white font-sans font-semibold px-8 py-3.5 rounded-full hover:bg-primary transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                        >
-                            Buy us a Coffee ☕
-                        </a>
-                    </div>
-                </div>
+                    <p className="reader-copyright">&copy; {new Date().getFullYear()} {book.author.name}. All rights reserved. Protected from unauthorized distribution and model training.</p>
+                    <a href={discussLink(book.id, chapter.id, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
+                </section>
             </main>
 
             {/* Discussion Section (Bottom) */}
@@ -654,9 +766,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         <p className="text-center text-gray-500 py-8">No general comments yet.</p>
                     ) : (
                         comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
-                            // Snippet logic is tricky with HTML. For now, we skip snippet for general display or strip tags if needed.
-                            // But here we are iterating generally.
-
                             return (
                                 <div key={comment.id} className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors" onClick={() => openCommentDrawer(comment.paragraphIndex)}>
                                     <div className="flex items-start gap-4">
@@ -686,7 +795,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                                                         In response to paragraph #{comment.paragraphIndex + 1}
                                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Jump to paragraph ↗</span>
                                                     </p>
-                                                    {/* Snippet display skipped for cleaner HTML handling for now, or could use stripTags */}
                                                 </button>
                                             )}
 
@@ -710,30 +818,54 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 </div>
             </section>
 
-            {/* Footer Navigation */}
-            <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20">
-                <div className={`flex items-center justify-center gap-4 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-2xl shadow-lg p-2`}>
-                    <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronLeftIcon className="w-5 h-5" /></button>
-                    <span className="font-sans text-sm w-20 text-center dark:text-dark-text-body">{currentChapterIndex + 1} / {book.chapters.length}</span>
-                    <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} className="p-3 disabled:opacity-50 dark:text-dark-text-body"><ChevronRightIcon className="w-5 h-5" /></button>
+            {/* Reader Settings Sheet */}
+            <div className={`reader-settings-backdrop ${isSettingsPanelVisible ? 'reader-settings-backdrop-open' : ''}`} onClick={() => setIsSettingsPanelVisible(false)} />
+            <section className={`reader-settings-panel ${isSettingsPanelVisible ? 'reader-settings-panel-open' : ''}`} aria-label="Reading preferences">
+                <div className="reader-settings-heading">
+                    <div><span>Reading preferences</span><p>Saved automatically on this device</p></div>
+                    <button onClick={() => setIsSettingsPanelVisible(false)} aria-label="Close preferences"><XMarkIcon className="w-5 h-5" /></button>
                 </div>
-            </footer>
-
-            {/* Settings Toolbar */}
-            <div className={`fixed top-1/2 -translate-y-1/2 right-4 z-20 flex flex-col gap-2 ${globalTheme === 'dark' ? 'bg-dark-surface/90 border-dark-border text-dark-text-body' : 'bg-surface/90 border-gray-200 text-text-body'} backdrop-blur-lg border rounded-full shadow-lg p-2 transition-all duration-300 ${isToolbarVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
-                <div ref={settingsPanelRef} className="relative">
-                    <button onClick={() => setIsSettingsPanelVisible(prev => !prev)} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors">
-                        <PaintBrushIcon className="w-5 h-5" />
-                    </button>
-                    <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-max ${globalTheme === 'dark' ? 'bg-dark-surface' : 'bg-surface'} shadow-md rounded-xl p-2 flex items-center gap-2 transition-all duration-200 origin-right ${isSettingsPanelVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                        <button onClick={() => setContentTheme('light')} className={`p-2 rounded-full ${contentTheme === 'light' ? 'ring-2 ring-accent' : ''}`}><SunIcon className="w-5 h-5 text-amber-600" /></button>
-                        <button onClick={() => setContentTheme('sepia')} className={`p-2 rounded-full ${contentTheme === 'sepia' ? 'ring-2 ring-accent' : ''}`}><div className="w-5 h-5 rounded-full bg-[#FBF0D9] border border-[#d3c0a5]"></div></button>
-                        <button onClick={() => setContentTheme('dark')} className={`p-2 rounded-full ${contentTheme === 'dark' ? 'ring-2 ring-accent' : ''}`}><MoonIcon className="w-5 h-5 text-gray-700" /></button>
+                <div className="reader-setting-grid">
+                    <div className="reader-setting-group">
+                        <label>Theme</label>
+                        <div className="reader-theme-options">
+                            <button onClick={() => setContentTheme('light')} className={contentTheme === 'light' ? 'active' : ''}><i className="reader-swatch-light" /><span>Paper</span></button>
+                            <button onClick={() => setContentTheme('sepia')} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
+                            <button onClick={() => setContentTheme('dark')} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
+                        </div>
+                    </div>
+                    <div className="reader-setting-group">
+                        <label>Type size</label>
+                        <div className="reader-stepper"><button onClick={() => setFontSize(size => Math.max(12, size - 1))}>A−</button><strong>{fontSize}px</strong><button onClick={() => setFontSize(size => Math.min(32, size + 1))}>A+</button></div>
+                    </div>
+                    <div className="reader-setting-group">
+                        <label>Typeface</label>
+                        <div className="reader-segmented"><button onClick={() => setReaderFont('literary')} className={readerFont === 'literary' ? 'active' : ''}>Literary</button><button onClick={() => setReaderFont('modern')} className={readerFont === 'modern' ? 'active' : ''}>Modern</button></div>
+                    </div>
+                    <div className="reader-setting-group">
+                        <label>Page width</label>
+                        <div className="reader-segmented reader-width-options"><button onClick={() => setReaderWidth('narrow')} className={readerWidth === 'narrow' ? 'active' : ''}>Narrow</button><button onClick={() => setReaderWidth('standard')} className={readerWidth === 'standard' ? 'active' : ''}>Standard</button><button onClick={() => setReaderWidth('wide')} className={readerWidth === 'wide' ? 'active' : ''}>Wide</button></div>
+                    </div>
+                    <div className="reader-setting-group reader-setting-group-wide">
+                        <label>Line spacing</label>
+                        <div className="reader-segmented"><button onClick={() => setLineHeight(1.65)} className={lineHeight === 1.65 ? 'active' : ''}>Compact</button><button onClick={() => setLineHeight(1.85)} className={lineHeight === 1.85 ? 'active' : ''}>Comfortable</button><button onClick={() => setLineHeight(2.05)} className={lineHeight === 2.05 ? 'active' : ''}>Airy</button></div>
                     </div>
                 </div>
-                <button onClick={() => setFontSize(s => Math.max(12, s - 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-xs font-bold">A-</button>
-                <button onClick={() => setFontSize(s => Math.min(32, s + 1))} className="p-3 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-full transition-colors text-lg font-bold">A+</button>
-            </div>
+                <div className="reader-shortcuts"><span><kbd>F</kbd> Focus</span><span><kbd>[</kbd><kbd>]</kbd> Text size</span><span><kbd>Esc</kbd> Close panels</span></div>
+            </section>
+
+            {/* Unified Reader Dock */}
+            <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
+                <button onClick={() => setIsTocVisible(true)} data-label="Contents"><Bars3Icon className="w-5 h-5" /></button>
+                <span className="reader-dock-divider" />
+                <button onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} data-label="Previous"><ChevronLeftIcon className="w-5 h-5" /></button>
+                <span className="reader-dock-progress"><strong>{currentChapterIndex + 1}</strong><i><span style={{ width: `${scrollProgress}%` }} /></i><small>{book.chapters.length}</small></span>
+                <button onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} data-label="Next"><ChevronRightIcon className="w-5 h-5" /></button>
+                <span className="reader-dock-divider" />
+                <button onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'active' : ''} data-label="Appearance"><span className="reader-aa">Aa</span></button>
+                <button onClick={() => openCommentDrawer(null)} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
+                <button onClick={() => setIsFocusMode(true)} data-label="Focus"><EyeIcon className="w-5 h-5" /></button>
+            </nav>
 
             <CommentDrawer
                 isOpen={isCommentDrawerOpen}
@@ -742,6 +874,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 paragraphIndex={activeParagraphIndex}
                 paragraphText={activeParagraphIndex !== null && chapter.content ? 'Paragraph ' + (activeParagraphIndex + 1) : undefined}
                 onAddComment={handleAddComment}
+                onReportComment={(comment) => currentUser ? setReportTarget({ type: 'COMMENT', id: comment.id, title: `Comment by ${comment.user.name}` }) : window.location.hash = '/auth'}
             />
 
             <CharacterPreview
@@ -749,6 +882,42 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 isOpen={!!viewingCharacter}
                 onClose={() => setViewingCharacter(null)}
             />
+
+            <ShareModal 
+                isOpen={isShareModalOpen} 
+                onClose={() => setIsShareModalOpen(false)} 
+                book={book} 
+                chapter={chapter}
+                initialTab={shareInitialTab}
+                quoteText={selectedQuote || undefined}
+            />
+            <ChapterDisclaimerModal
+                isOpen={isDisclaimerOpen}
+                storyTitle={book.title}
+                chapterTitle={chapter.title}
+                rating={book.ageRating}
+                warnings={[...(book.contentWarnings || []), ...(chapter.contentWarnings || [])].filter((warning, index, all) => all.indexOf(warning) === index)}
+                note={chapter.disclaimerNote || book.customDisclaimer}
+                onContinue={() => { sessionStorage.setItem(disclaimerKey, 'accepted'); setIsDisclaimerOpen(false); }}
+                onLeave={handleReturnToStory}
+            />
+            {reportTarget && <ReportModal isOpen onClose={() => setReportTarget(null)} targetType={reportTarget.type} targetId={reportTarget.id} targetTitle={reportTarget.title} />}
+
+            {/* Floating Quote Share Tooltip */}
+            {quoteTooltipPos && selectedQuote && (
+                <button
+                    style={{ position: 'absolute', left: quoteTooltipPos.x, top: quoteTooltipPos.y, transform: 'translateX(-50%)' }}
+                    className="z-50 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:bg-primary transition-colors whitespace-nowrap"
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        setShareInitialTab('quote');
+                        setIsShareModalOpen(true);
+                        setQuoteTooltipPos(null);
+                    }}
+                >
+                    Share as Quote
+                </button>
+            )}
         </div>
     );
 };

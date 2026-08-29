@@ -2,15 +2,59 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-ag" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WordWeft</title>
+
+    <!-- Anti-AI Scraping & Content Protection -->
+    <meta name="robots" content="max-image-preview:large, noai, noimageai" />
+    <meta name="tdm-reservation" content="1" />
+
+    <!-- SEO -->
+    <title>WordWeft — Where Stories Come Alive | Read &amp; Write Immersive Fiction</title>
+    <meta name="description" content="WordWeft gives writers superpowers and readers immersive experiences. Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit — all in one beautiful platform." />
+    <meta name="keywords" content="wordweft, stories, reading, writing, fiction, self-publishing, immersive reader, mood themes, spoiler guard, world building" />
+    <link rel="canonical" href="https://wordweftstudio.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="WordWeft — Where Stories Come Alive" />
+    <meta property="og:description" content="Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit — all in one beautiful storytelling platform." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://wordweftstudio.com/" />
+    <meta property="og:site_name" content="WordWeft" />
+    <meta property="og:image" content="https://wordweftstudio.com/og-banner.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WordWeft — Where Stories Come Alive" />
+    <meta name="twitter:description" content="Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit — all in one beautiful storytelling platform." />
+    <meta name="twitter:image" content="https://wordweftstudio.com/og-banner.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "WordWeft",
+      "url": "https://wordweftstudio.com",
+      "description": "A next-generation platform for readers and storytellers. Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://wordweftstudio.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- AdSense script is loaded per-page by the React AdUnit component, NOT globally.
+         This prevents ads from appearing on empty/thin/auth pages which violates AdSense policy. -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Literata:opsz,wght@7..72,400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Literata:opsz,wght@7..72,400;500;600;700&family=Newsreader:opsz,wght@6..72,500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -103,16 +147,90 @@
 <link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-background dark:bg-dark-background font-serif text-text-body dark:text-dark-text-body">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static fallback — visible to crawlers before JS loads; React replaces this on mount -->
+      <div style="font-family:'Inter','Literata',sans-serif;color:#795548;background:#FBF9F6;margin:0">
+        <nav style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,0.06);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between">
+          <a href="/" style="font-family:'Inter',sans-serif;font-size:1.5rem;font-weight:800;color:#4E342E;text-decoration:none">Word<span style="color:#8D6E63">Weft</span></a>
+          <div style="display:flex;align-items:center;gap:24px">
+            <a href="/features" style="font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none">Features</a>
+            <a href="/category" style="font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none">Browse</a>
+            <a href="/contact" style="font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:500;color:#795548;text-decoration:none">Contact</a>
+          </div>
+        </nav>
+        <section style="min-height:85vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;background:linear-gradient(180deg,#FBF9F6 0%,#f3ece6 50%,#ede4db 100%)">
+          <p style="font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#8D6E63;margin-bottom:20px">The Future of Storytelling</p>
+          <h1 style="font-family:'Inter',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.05;color:#4E342E;margin:0 0 24px">Where Stories Come Alive</h1>
+          <p style="max-width:640px;font-size:1.125rem;line-height:1.7;color:#795548;margin:0 auto 36px">
+            WordWeft gives writers superpowers and readers immersive experiences.
+            Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit
+            — all in one beautiful platform.
+          </p>
+        </section>
+        <section style="max-width:1100px;margin:0 auto;padding:80px 24px">
+          <p style="font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#8D6E63;text-align:center;margin-bottom:12px">Platform Highlights</p>
+          <h2 style="font-family:'Inter',sans-serif;font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:#4E342E;text-align:center;margin:0 0 48px">Everything You Need to Read &amp; Write</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Atmosphere Engine</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Tag sections with moods — romantic, tense, eerie — and readers experience subtle, immersive color shifts that match the narrative's emotion.</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Spoiler Guard</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Mark any paragraph as a spoiler. Readers see a beautiful blur overlay they can tap to reveal — no accidental plot reveals.</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Immersive Reader</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Multiple reading themes, adjustable typography, a progress tracker, and inline comments — a distraction-free reading experience.</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Character Universe</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">@mention characters to surface bio cards mid-read. Build a cast of characters with portraits, roles, and backstories.</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">World Building</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">A sidebar toolkit to manage characters, scenes, and lore notes — all linked to your chapters and accessible while you write.</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border:1px solid rgba(93,64,55,0.08);border-radius:16px;padding:32px 28px">
+              <h3 style="font-family:'Inter',sans-serif;font-size:1.15rem;font-weight:700;color:#4E342E;margin:0 0 10px">Smart Search</h3>
+              <p style="font-size:0.925rem;line-height:1.65;color:#795548;margin:0">Search across books, authors, genres, and characters with real-time autocomplete and relevance-ranked results.</p>
+            </div>
+          </div>
+        </section>
+        <footer style="background:#fff;border-top:1px solid rgba(0,0,0,0.06);padding:48px 24px 32px">
+          <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px">
+            <div>
+              <div style="font-family:'Inter',sans-serif;font-size:1.25rem;font-weight:800;color:#4E342E;margin-bottom:12px">Word<span style="color:#8D6E63">Weft</span></div>
+              <p style="font-size:0.875rem;line-height:1.6;color:#795548;max-width:320px">A next-gen platform for readers and storytellers. Discover your next favorite book or share your own story with the world.</p>
+            </div>
+            <div>
+              <h4 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4E342E;margin:0 0 16px">Platform</h4>
+              <ul style="list-style:none;margin:0;padding:0">
+                <li style="margin-bottom:10px"><a href="/" style="font-size:0.875rem;color:#795548;text-decoration:none">Discover</a></li>
+                <li style="margin-bottom:10px"><a href="/category" style="font-size:0.875rem;color:#795548;text-decoration:none">Genres</a></li>
+                <li style="margin-bottom:10px"><a href="/features" style="font-size:0.875rem;color:#795548;text-decoration:none">Features</a></li>
+                <li style="margin-bottom:10px"><a href="/feedback" style="font-size:0.875rem;color:#795548;text-decoration:none">Feedback</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4E342E;margin:0 0 16px">Legal</h4>
+              <ul style="list-style:none;margin:0;padding:0">
+                <li style="margin-bottom:10px"><a href="/terms" style="font-size:0.875rem;color:#795548;text-decoration:none">Terms &amp; Conditions</a></li>
+                <li style="margin-bottom:10px"><a href="/privacy" style="font-size:0.875rem;color:#795548;text-decoration:none">Privacy Policy</a></li>
+                <li style="margin-bottom:10px"><a href="/safety" style="font-size:0.875rem;color:#795548;text-decoration:none">Safety &amp; Content Rules</a></li>
+                <li style="margin-bottom:10px"><a href="/contact" style="font-size:0.875rem;color:#795548;text-decoration:none">Contact Us</a></li>
+              </ul>
+            </div>
+          </div>
+          <div style="max-width:1100px;margin:32px auto 0;padding-top:24px;border-top:1px solid rgba(0,0,0,0.06);text-align:center;font-size:0.75rem;color:#9e9e9e">&copy; 2025 WordWeft. All rights reserved.</div>
+        </footer>
+      </div>
+    </div>
+    <noscript>
+      <div style="padding:20px;text-align:center;font-family:Inter,sans-serif;color:#795548;background:#FBF9F6">
+        WordWeft requires JavaScript for the full interactive experience. Please enable JavaScript in your browser.
+      </div>
+    </noscript>
     <script type="module" src="/index.tsx"></script>
-    <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
-    <script>
-      kofiWidgetOverlay.draw('wordweftstudio', {
-        'type': 'floating-chat',
-        'floating-chat.donateButton.text': 'Support Us',
-        'floating-chat.donateButton.background-color': '#8D6E63',
-        'floating-chat.donateButton.text-color': '#fff'
-      });
-    </script>
   </body>
 </html>

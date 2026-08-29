@@ -1,6 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
+import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 const Section: React.FC<{ number: string; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
     <section className="mb-10">
@@ -33,6 +35,8 @@ const SubSection: React.FC<{ title: string; children: React.ReactNode }> = ({ ti
 );
 
 export const PrivacyPage: React.FC = () => {
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('content', 'policy_view', 'privacy'); }, []);
     return (
         <div>
             {/* Hero Header */}
@@ -173,16 +177,28 @@ export const PrivacyPage: React.FC = () => {
                     </div>
                 </Section>
 
-                <Section number="3" title="Cookies & Tracking">
-                    <p>We use cookies to:</p>
+                <Section number="3" title="Cookies & Advertising Partners">
+                    <p>We use cookies and similar technologies to:</p>
                     <BulletList items={[
-                        "Keep you logged in",
-                        "Remember preferences",
-                        "Prevent spam",
-                        "Improve loading speed"
+                        "Keep you securely logged in",
+                        "Remember theme and reading preferences",
+                        "Prevent spam and protect site security",
+                        "Serve relevant advertisements and measure ad performance"
                     ]} />
+
+                    <SubSection title="Google AdSense & Third-Party Advertising Cookies">
+                        <p className="mt-2 text-sm text-text-body dark:text-dark-text-body leading-relaxed">
+                            WordWeft partners with third-party advertising networks, including <strong>Google AdSense</strong>, to serve advertisements on certain pages of the platform.
+                        </p>
+                        <BulletList items={[
+                            "Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to WordWeft or other websites on the Internet.",
+                            "Google's use of advertising cookies enables it and its partners to serve ads to users based on their visit to WordWeft and/or other sites across the Web.",
+                            "Users may opt out of personalized advertising by visiting Google's Ads Settings at https://www.google.com/settings/ads or via http://www.aboutads.info."
+                        ]} />
+                    </SubSection>
+
                     <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                        You can disable cookies, but some features may not work. We do not use cross-site ad tracking cookies.
+                        You can also adjust your browser settings to decline all cookies, but some core features of the platform may not function properly without cookies enabled.
                     </p>
                 </Section>
 
@@ -254,6 +270,8 @@ export const PrivacyPage: React.FC = () => {
                         Deleted content may remain temporarily in backups.
                     </p>
                 </Section>
+
+                <AdUnit format="article" />
 
                 <Section number="8" title="Account Deletion">
                     <p>You may request deletion anytime. After deletion:</p>
@@ -330,6 +348,8 @@ export const PrivacyPage: React.FC = () => {
                         </p>
                     </div>
                 </Section>
+
+                <AdUnit format="horizontal" />
 
             </div>
 

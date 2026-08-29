@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.wordweft.community.model.CommunityEnums.CommunityInterest;
+import com.wordweft.community.model.CommunityEnums.CommunityBadge;
 
 @Data
 @NoArgsConstructor
@@ -45,6 +47,11 @@ public class User {
     private String website;
 
     private LocalDate joinDate;
+    private LocalDate dateOfBirth;
+    private boolean allowMatureContent = false;
+
+    // Writing Demo State
+    private boolean hasSeenWritingDemo = false;
 
     // Email Verification
     private boolean isEmailVerified = false;
@@ -60,6 +67,10 @@ public class User {
 
     // For future role-based access control (Reader, Author, Admin)
     private Set<String> roles = new HashSet<>();
+
+    // Interests describe identity; only roles grant permissions. Badges are staff-managed.
+    private Set<CommunityInterest> communityInterests = new HashSet<>();
+    private Set<CommunityBadge> communityBadges = new HashSet<>();
 
     // Social Graph (Storing User IDs)
     private Set<String> followers = new HashSet<>();

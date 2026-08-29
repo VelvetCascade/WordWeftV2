@@ -64,7 +64,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         // Allow all local dev origins
-        config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:*", "https://word-weft-v2.vercel.app", "https://wordweftv2-staging.onrender.com"));
+        config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:*", "https://word-weft-v2.vercel.app", "https://wordweftv2-staging.onrender.com", "https://www.wordweftstudio.com", "https://wordweftstudio.com"));
         config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
         config.setAllowCredentials(true);
@@ -76,7 +76,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler)
+                        .accessDeniedHandler((request, response, denied) -> {
+                            // Write the response directly: sendError would dispatch to protected /error and become 401.
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"message\":\"You do not have permission to perform this action.\"}");
+                        }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
@@ -85,6 +91,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/profile").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
+                        .requestMatchers("/api/community/moderation/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers("/api/community/members/*/badges").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/community/circles", "/api/community/feed",
+                                "/api/community/posts/*", "/api/community/posts/*/comments").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/notifications/stream").authenticated()
                         .anyRequest().authenticated());
 

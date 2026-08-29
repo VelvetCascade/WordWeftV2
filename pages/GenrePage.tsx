@@ -5,6 +5,8 @@ import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
 import { SortDropdown } from '../components/SortDropdown';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
+import AdUnit from '../components/AdUnit';
 
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
 
@@ -16,6 +18,7 @@ const SORT_OPTIONS = [
 ];
 
 export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
+    const { trackEvent } = useAnalytics();
     const [books, setBooks] = useState<Book[]>([]);
     const [sortOption, setSortOption] = useState<SortOption>('most_read');
     const [page, setPage] = useState(0);
@@ -44,8 +47,9 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
     };
 
     return (
-        <div className="min-h-screen">
-            <div className="container mx-auto px-4 sm:px-6 py-8">
+        <div className="ww-library-page min-h-screen">
+            <div className="ww-library-container container mx-auto px-4 sm:px-6 py-8">
+                <span className="ww-page-eyebrow">Browse by genre</span>
                 <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4">
                     {decodeURIComponent(genre)}
                 </h1>
@@ -100,6 +104,8 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
                         </button>
                     </div>
                 )}
+
+                <AdUnit format="horizontal" />
             </div>
             <Footer />
         </div>

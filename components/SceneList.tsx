@@ -56,19 +56,19 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-text-header dark:text-dark-text-header">Scenes</h3>
+        <div className="ww-story-tool ww-scenes-tool">
+            <div className="ww-story-tool-heading">
+                <div><span>Story map</span><h3>Scenes</h3><p>Plan where each turning point happens, who is present, and what changes.</p></div>
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    className="ww-story-tool-add"
                 >
-                    Add Scene
+                    <span>+</span> Add scene
                 </button>
             </div>
 
             {isCreating && (
-                <div className="p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border space-y-4">
+                <div className="ww-story-tool-form p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border space-y-4">
                     <input
                         type="text"
                         placeholder="Title"
@@ -148,7 +148,16 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
                 </div>
             )}
 
-            <div className="space-y-4">
+            {!isCreating && scenes.length === 0 && (
+                <div className="ww-tool-empty">
+                    <span>Sequence</span>
+                    <h4>Map the moments that matter.</h4>
+                    <p>Capture a setting, a conflict, or a reveal before it slips away. Link it to a chapter whenever you’re ready.</p>
+                    <button onClick={() => setIsCreating(true)}>Plan the first scene <span>→</span></button>
+                </div>
+            )}
+
+            <div className="ww-story-tool-list space-y-4">
                 {scenes.map((scene) => (
                     <div key={scene.id} className="p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border shadow-sm">
                         <div className="flex justify-between items-start">

@@ -189,10 +189,13 @@ public class NotificationService {
                 return prefs.getOrDefault("follows", true);
             case "NEW_COMMENT":
             case "COMMENT_REPLY":
+            case "COMMUNITY_COMMENT":
+            case "COMMUNITY_REPLY":
                 return prefs.getOrDefault("comments", true);
             case "AUTHOR_NEW_CHAPTER":
             case "AUTHOR_NEW_STORY":
             case "BOOK_UPDATE":
+            case "COMMUNITY_RELEASE":
                 return prefs.getOrDefault("storyUpdates", true);
             case "SYSTEM_UPDATE":
                 return prefs.getOrDefault("systemAnnouncements", true);
@@ -204,9 +207,9 @@ public class NotificationService {
     private List<String> getTypesForFilter(String filter) {
         switch (filter.toUpperCase()) {
             case "SOCIAL":
-                return List.of("NEW_FOLLOWER", "NEW_COMMENT", "COMMENT_REPLY");
+                return List.of("NEW_FOLLOWER", "NEW_COMMENT", "COMMENT_REPLY", "COMMUNITY_COMMENT", "COMMUNITY_REPLY");
             case "STORIES":
-                return List.of("AUTHOR_NEW_CHAPTER", "AUTHOR_NEW_STORY", "BOOK_UPDATE");
+                return List.of("AUTHOR_NEW_CHAPTER", "AUTHOR_NEW_STORY", "BOOK_UPDATE", "COMMUNITY_RELEASE");
             case "SYSTEM":
                 return List.of("SYSTEM_UPDATE");
             default:

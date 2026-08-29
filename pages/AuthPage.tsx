@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User } from '../types';
 import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { GoogleProfileCompletion } from '../components/GoogleProfileCompletion';
 import { ModernBirthdaySelector } from '../components/ModernBirthdaySelector';
@@ -133,6 +134,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
     const [modalContent, setModalContent] = useState<{ title: string; content: React.ReactNode } | null>(null);
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+    const { trackEvent } = useAnalytics();
 
     // Keep the callback ref always pointing to the latest handler
     const handleGoogleResponse = useCallback(async (response: any) => {
@@ -324,6 +326,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             if (view === 'login') {
                 const user = await api.login(email, password);
                 if (user) {
+                    trackEvent('auth', 'login_success', 'email');
                     onLogin(user);
                 }
             } else if (view === 'signup') {
@@ -338,12 +341,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 if (age < 13 || age > 100) throw new Error("For your safety, you must be at least 13 years old to create an account on WordWeft.");
                 if (!termsAccepted || !privacyAccepted) throw new Error("Please accept the Terms and Privacy Policy.");
 
-                const result = await api.signup(username, email, password);
+                const result = await api.signup(username, email, password, birthday);
                 if (result.requiresOtp) {
+                    trackEvent('auth', 'signup_success', 'otp_required');
                     setSuccessMsg(result.message);
                     setView('otp');
                     setOtpResendCooldown(60); // 1-minute cooldown initial
                 } else if (result.user) {
+                    trackEvent('auth', 'signup_success', 'direct');
                     onLogin(result.user);
                 }
             } else if (view === 'otp') {
@@ -357,6 +362,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         } catch (err: any) {
              const errorMsg = getFriendlyError(err);
              setError(errorMsg);
+             trackEvent('auth', view === 'login' ? 'login_fail' : view === 'signup' ? 'signup_fail' : 'auth_error', errorMsg);
              if (view === 'login' && errorMsg.includes("Email not verified")) {
                  setView('otp');
                  setSuccessMsg("Please check your email for the verification code. You can request a new one below.");
@@ -491,22 +497,39 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
-            <div className="w-full max-w-md">
-                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="flex justify-center mb-6">
+        <div className="ww-auth-page min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
+            <div className="ww-auth-layout">
+            <aside className="ww-auth-story">
+                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-story-brand">
+                    <span><WordWeftLogo className="w-9 h-9" /></span><strong>WordWeft</strong>
+                </a>
+                <div className="ww-auth-story-copy">
+                    <span>A place for the story-minded</span>
+                    <h1>Read deeply.<br />Write bravely.</h1>
+                    <p>Keep your library, reading progress, drafts, characters, and worlds together in one considered space.</p>
+                </div>
+                <div className="ww-auth-story-points">
+                    <div><strong>01</strong><span>Build a library that remembers where you left off.</span></div>
+                    <div><strong>02</strong><span>Write beside your characters, scenes, and story notes.</span></div>
+                    <div><strong>03</strong><span>Publish into a reader designed for long-form fiction.</span></div>
+                </div>
+            </aside>
+            <div className="ww-auth-form-shell w-full max-w-md">
+                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6" aria-label="WordWeft home">
                     <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
                 </a>
-                <div className="relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
                     <button
+                        type="button"
                         onClick={() => window.location.hash = '/'}
-                        className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
-                        aria-label="Close"
+                        className="ww-auth-close absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
+                        aria-label="Close sign in"
                     >
                         <XMarkIcon className="w-6 h-6" />
                     </button>
 
                     {view === 'forgot' && (
-                        <button onClick={() => resetForm('login')} className="absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors">
+                        <button type="button" onClick={() => resetForm('login')} className="ww-auth-back absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors" aria-label="Back to sign in">
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
                     )}
@@ -670,6 +693,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         </p>
                     )}
                 </div>
+            </div>
             </div>
 
             <LegalModal

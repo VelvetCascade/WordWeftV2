@@ -1,8 +1,9 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
 
 const JWT_KEY = 'wordweft_jwt';
 
@@ -21,8 +22,7 @@ const handleResponse = async (response: Response) => {
         const errorData = await response.text();
         throw new Error(errorData || response.statusText);
     }
-    try {
-        return await response.json();
+    try {        return await response.json();
     } catch (e) {
         // Some endpoints might return empty body on success
         return null;
@@ -47,11 +47,11 @@ export async function login(email: string, password_used: string): Promise<User 
     return null;
 }
 
-export async function signup(username: string, email: string, password: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
+export async function signup(username: string, email: string, password: string, dateOfBirth: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
+        body: JSON.stringify({ username, email, password, dateOfBirth })
     });
 
     const data = await handleResponse(response);
@@ -80,7 +80,7 @@ export async function verifyOtp(email: string, otp: string): Promise<User> {
 
     if (data && data.token) {
         localStorage.setItem(JWT_KEY, data.token);
-        return mapBackendUserToFrontend(data);
+        return (await getMe()) || mapBackendUserToFrontend(data);
     }
     throw new Error("OTP Verification failed");
 }
@@ -141,11 +141,21 @@ export async function getMe(): Promise<User | null> {
 
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
+
+        // If it's explicitly an auth error, wipe the token
+        if (response.status === 401 || response.status === 403) {
+            console.error("Session invalid: 401/403");
+            localStorage.removeItem(JWT_KEY);
+            return null;
+        }
+
         const backendUser = await handleResponse(response);
         return mapBackendUserToFrontend(backendUser);
     } catch (e) {
-        console.error("Session invalid", e);
-        localStorage.removeItem(JWT_KEY);
+        // This catches network errors (Failed to fetch) and other server errors (500)
+        // We DO NOT want to wipe the token here, as the user is still logged in, 
+        // the server is just unreachable.
+        console.error("Error fetching user profile (kept session):", e);
         return null;
     }
 }
@@ -167,6 +177,14 @@ export async function changePassword(userId: string, oldPassword_unused: string,
     });
     await handleResponse(response);
     return (await getMe())!;
+}
+
+export async function markWritingDemoSeen(): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/users/me/writing-demo`, {
+        method: 'PUT',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
 }
 
 // --- Support API ---
@@ -280,7 +298,32 @@ export async function getBookById(id: string): Promise<Book | null> {
 export async function getAuthorById(id: string): Promise<Author | null> {
     const response = await fetch(`${API_BASE_URL}/users/${id}/profile`, { headers: getHeaders() });
     if (!response.ok) return null;
-    return await handleResponse(response);
+    const data = await handleResponse(response);
+    if (!data) return null;
+
+    // Map backend fields to the Author type (backend sends `username`, not `name`)
+    let safeJoinDate = data.joinDate;
+    if (Array.isArray(safeJoinDate)) {
+        safeJoinDate = new Date(safeJoinDate[0], safeJoinDate[1] - 1, safeJoinDate[2]).toISOString();
+    }
+
+    return {
+        id: data.id,
+        name: data.username || data.name || 'Unknown',
+        avatarUrl: data.avatarUrl,
+        bio: data.bio || '',
+        location: data.location,
+        website: data.website,
+        joinDate: safeJoinDate,
+        stats: data.stats || undefined,
+        socials: data.socials || {},
+        favoriteGenres: data.favoriteGenres || [],
+        followersCount: data.followersCount || 0,
+        followingCount: data.followingCount || 0,
+        isFollowing: data.isFollowing ?? false,
+        communityInterests: data.communityInterests || [],
+        communityBadges: data.communityBadges || [],
+    };
 }
 
 export async function getBooksByAuthor(authorId: string, excludeBookId?: string): Promise<Book[]> {
@@ -432,7 +475,7 @@ export async function saveChapter(userId: string, bookId: string, chapterId: any
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify({ data, status })
+        body: JSON.stringify({ data, status, contentWarnings: data.contentWarnings || [], disclaimerNote: data.disclaimerNote || '' })
     });
     return mapBackendUserToFrontend(await handleResponse(response));
 }
@@ -678,6 +721,8 @@ function mapBackendUserToFrontend(backendData: any): User {
         },
         socials: backendData.socials || {},
         favoriteGenres: backendData.favoriteGenres || [],
+        communityInterests: backendData.communityInterests || [],
+        communityBadges: backendData.communityBadges || [],
         following: backendData.following || [], // Should be list of IDs
         followersCount: backendData.followersCount || 0,
         followingCount: backendData.followingCount || 0,
@@ -692,7 +737,10 @@ function mapBackendUserToFrontend(backendData: any): User {
                 };
             })
         })),
-        writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend)
+        writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend),
+        hasSeenWritingDemo: backendData.hasSeenWritingDemo ?? false,
+        dateOfBirth: backendData.dateOfBirth,
+        allowMatureContent: backendData.allowMatureContent ?? false
     };
 }
 
@@ -702,7 +750,20 @@ function mapBackendBookToFrontend(backendBook: any): Book {
         ...backendBook,
         isAIGenerated: backendBook.isAIGenerated ?? backendBook.aIGenerated ?? backendBook.aigenerated ?? backendBook.aiGenerated ?? false,
         isMature: backendBook.isMature ?? backendBook.mature ?? false,
+        ageRating: backendBook.ageRating ?? ((backendBook.isMature ?? backendBook.mature) ? 'MATURE_18' : 'ALL_AGES'),
+        contentWarnings: backendBook.contentWarnings || [],
+        chapters: (backendBook.chapters || []).map((chapter: any) => ({ ...chapter, contentWarnings: chapter.contentWarnings || [] })),
     };
+}
+
+export async function submitReport(data: { targetType: ReportTargetType; targetId: string; category: ReportCategory; description: string }): Promise<ContentReport> {
+    const response = await fetch(`${API_BASE_URL}/reports`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
+    return await handleResponse(response);
+}
+
+export async function getMyReports(): Promise<ContentReport[]> {
+    const response = await fetch(`${API_BASE_URL}/reports/mine`, { headers: getHeaders() });
+    return await handleResponse(response);
 }
 
 

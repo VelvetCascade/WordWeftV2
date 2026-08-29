@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import type { User, Character } from '../types';
-import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon } from '../components/icons/Icons';
+import type { User, Character, ContentWarning } from '../types';
+import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon, ShareIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -9,7 +10,14 @@ import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 import { useFeedback } from '../contexts/FeedbackContext';
+import { WritingDemoModal } from '../components/WritingDemoModal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
+import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
+import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
+import { ChapterScannerModal } from '../components/ChapterScannerModal';
+import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
+import { ShareModal } from '../components/ShareModal';
+import { goBackOrReplace, replaceHash } from '../utils/navigation';
 
 interface ChapterEditorPageProps {
     currentUser: User;
@@ -58,7 +66,13 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
                 )
             }
             // Handle Spoiler / Hidden Text
-            if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs['data-spoiler']) {
+            if (
+                domNode.type === 'tag' &&
+                domNode.name === 'span' &&
+                domNode.attribs &&
+                (Object.prototype.hasOwnProperty.call(domNode.attribs, 'data-spoiler') ||
+                    (domNode.attribs.class || '').split(/\s+/).includes('spoiler-text'))
+            ) {
                 return (
                     <SpoilerReveal>{domToReact(domNode.children, options)}</SpoilerReveal>
                 );
@@ -97,6 +111,7 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
 };
 
 export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
+    const { trackEvent } = useAnalytics();
     const { triggerFeedback } = useFeedback();
     const [chapterId, setChapterId] = useState(initialChapterId);
     const isNewChapter = chapterId === 'new';
@@ -106,9 +121,42 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const [title, setTitle] = useState(chapter?.title || '');
     const [content, setContent] = useState(chapter?.content || '');
+    const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>(chapter?.contentWarnings || []);
+    const [disclaimerNote, setDisclaimerNote] = useState(chapter?.disclaimerNote || '');
     const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showDemoModal, setShowDemoModal] = useState(false);
+    const [smartPasteContent, setSmartPasteContent] = useState<string | null>(null);
+    const [showSmartPasteToast, setShowSmartPasteToast] = useState(false);
+    const [smartPastedCharacters, setSmartPastedCharacters] = useState<Character[]>([]);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [pendingPublish, setPendingPublish] = useState<{content: string, title: string} | null>(null);
+    const [showPublishSuccess, setShowPublishSuccess] = useState(false);
+    const [publishedChapterTitle, setPublishedChapterTitle] = useState('');
+    const [publishedChapterId, setPublishedChapterId] = useState<string | null>(null);
+    const [isChapterShareOpen, setIsChapterShareOpen] = useState(false);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    // Show Demo Modal on first visit if not seen
+    useEffect(() => {
+        if (currentUser && currentUser.hasSeenWritingDemo === false) {
+            setShowDemoModal(true);
+        }
+    }, [currentUser]);
+
+    const handleCloseDemo = async () => {
+        setShowDemoModal(false);
+        if (currentUser && currentUser.hasSeenWritingDemo === false) {
+            try {
+                const updatedUser = await api.markWritingDemoSeen();
+                onUserUpdate(updatedUser);
+            } catch (error) {
+                console.error("Failed to mark writing demo as seen:", error);
+            }
+        }
+    };
 
     // Mention System State
     const [characters, setCharacters] = useState<Character[]>([]);
@@ -121,6 +169,9 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         const text = content.replace(/<[^>]*>/g, ' ');
         return text.split(/\s+/).filter(Boolean).length;
     }, [content]);
+    const chapterNumber = isNewChapter
+        ? (book?.chapters.length || 0) + 1
+        : Math.max(1, (book?.chapters.findIndex(c => c.id === chapterId) ?? 0) + 1);
 
     useEffect(() => {
         api.getCharactersByBookId(bookId).then(setCharacters);
@@ -134,12 +185,27 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const handleSave = async (status: 'draft' | 'published', currentContent: string, currentTitle: string) => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        if (!currentTitle && !currentContent) return; // Don't save empty chapters
+        if (!currentTitle.trim() && !currentContent.trim()) return; // Don't save completely empty chapters
+
+        let finalTitle = currentTitle.trim();
+        if (status === 'published' && !finalTitle) {
+             const chapterIndex = isNewChapter
+                ? (book?.chapters.length || 0) + 1
+                : ((book?.chapters.findIndex(c => c.id === chapterId) ?? -1) + 1);
+             finalTitle = `Chapter ${chapterIndex > 0 ? chapterIndex : 1}`;
+             setTitle(finalTitle); // Instantly update input to show the auto-generated title
+        }
+
+        if (status === 'published' && smartPastedCharacters.length > 0 && !isReviewOpen) {
+            setPendingPublish({ content: currentContent, title: finalTitle });
+            setIsReviewOpen(true);
+            return;
+        }
 
         setSaveState('saving');
 
         try {
-            const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: currentTitle, content: currentContent }, status);
+            const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: finalTitle, content: currentContent, contentWarnings, disclaimerNote }, status);
             onUserUpdate(updatedUser);
 
             // If it was a new chapter, find its newly created ID and update state
@@ -154,7 +220,13 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
             if (status === 'published') {
                 triggerFeedback('PUBLISH_FLOW');
-                window.location.hash = `/write/book/${bookId}/manage`;
+                // Determine the final saved chapter ID (either existing or newly created)
+                const savedChapterId = chapterId !== 'new'
+                    ? chapterId
+                    : updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === finalTitle)?.id ?? null;
+                setPublishedChapterTitle(finalTitle);
+                setPublishedChapterId(savedChapterId);
+                setShowPublishSuccess(true);
             }
         } catch (error) {
             console.error("Failed to save chapter:", error);
@@ -191,66 +263,109 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         }
     };
 
+    const handleLargePaste = (pastedText: string) => {
+        setSmartPasteContent(pastedText);
+        setShowSmartPasteToast(true);
+    };
+
+    const handleAddCharacters = async (names: string[]) => {
+        const newlyAdded: Character[] = [];
+        for (const name of names) {
+            try {
+                const char = await api.createCharacter({ bookId, name, role: 'Secondary' });
+                newlyAdded.push(char);
+            } catch (e) {
+                console.error("Failed to create character", name, e);
+            }
+        }
+        setSmartPastedCharacters(prev => [...prev, ...newlyAdded]);
+        const updated = await api.getCharactersByBookId(bookId);
+        setCharacters(updated);
+    };
+
+    const executeDeferredPublish = () => {
+        setIsReviewOpen(false);
+        setSmartPastedCharacters([]); // clear out to avoid infinite loop
+        if (pendingPublish) {
+            handleSave('published', pendingPublish.content, pendingPublish.title);
+            setPendingPublish(null);
+        }
+    };
+
+    const cancelDeferredPublish = () => {
+        setIsReviewOpen(false);
+        setPendingPublish(null);
+    };
+
+    const handleApplyReplacedHtml = (newHtml: string) => {
+        setContent(newHtml);
+        debouncedSave('draft', newHtml, title);
+    };
+
+
+
     if (!book) return <div className="p-8">Book not found.</div>;
 
     return (
-        <div className="flex bg-white dark:bg-dark-surface h-screen overflow-hidden">
-            {/* Main Content */}
-            <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${isSidebarOpen ? 'mr-0' : ''}`}>
-                <header className="flex-shrink-0 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b dark:border-dark-border z-10">
-                    <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <button
-                                onClick={() => window.location.hash = `/write/book/${bookId}/manage`}
-                                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors flex-shrink-0"
-                            >
-                                <ArrowLeftIcon className="w-5 h-5" />
-                            </button>
-                            <div className="min-w-0">
-                                <p className="text-xs text-text-body dark:text-dark-text-body truncate">{book.title}</p>
-                                <input
-                                    type="text"
-                                    value={title}
-                                    onChange={e => handleTitleChange(e.target.value)}
-                                    placeholder="Chapter Title"
-                                    className="font-sans font-bold text-md bg-transparent border-none focus:ring-0 p-0 w-full dark:text-dark-text-rich"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-opacity font-sans w-16 sm:w-24 text-right">{getSaveText()}</p>
-                            <button
-                                onClick={() => setIsPreviewOpen(true)}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors"
-                                title="Preview"
-                            >
-                                <EyeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                            </button>
-                            <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 dark:hover:bg-dark-surface-alt text-gray-600 dark:text-gray-400'}`}
-                                title="World Building"
-                            >
-                                <SwatchIcon className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => handleSave('draft', content, title)}
-                                className="hidden sm:inline-block bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-dark-border transition-colors text-sm"
-                            >
-                                Save Draft
-                            </button>
-                            <button
-                                onClick={() => handleSave('published', content, title)}
-                                className="bg-accent text-white font-sans font-semibold px-3 sm:px-4 py-2 rounded-lg hover:bg-primary transition-colors text-sm"
-                            >
-                                Publish
-                            </button>
-                        </div>
+        <>
+        <div className="ww-editor-shell">
+            <div className="ww-editor-main">
+                <header className="ww-editor-topbar">
+                    <div className="ww-editor-context">
+                        <button onClick={() => goBackOrReplace(`/write/book/${bookId}/manage`)} aria-label="Back to story studio">
+                            <ArrowLeftIcon className="w-5 h-5" />
+                        </button>
+                        <div><span>{book.title}</span><strong>Chapter {chapterNumber}</strong></div>
+                    </div>
+
+                    <div className={`ww-editor-save-state ${saveState}`}>
+                        <i /> {getSaveText()}
+                    </div>
+
+                    <div className="ww-editor-actions">
+                        <button onClick={() => setShowDemoModal(true)} title="Writing tools tour">
+                            <BookOpenIcon className="w-4 h-4" /><span>Tour</span>
+                        </button>
+                        <button onClick={() => setIsPreviewOpen(true)} title="Reader preview">
+                            <EyeIcon className="w-4 h-4" /><span>Preview</span>
+                        </button>
+                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={isSidebarOpen ? 'active' : ''} title="Story bible">
+                            <SwatchIcon className="w-4 h-4" /><span>Story bible</span>
+                        </button>
+                        <button onClick={() => setIsScannerOpen(true)} title="Scan chapter for characters">
+                            <SparklesIcon className="w-4 h-4" /><span>Scan</span>
+                        </button>
+                        <span className="ww-editor-action-divider" />
+                        <button className="ww-editor-save-button" onClick={() => handleSave('draft', content, title)}>Save draft</button>
+                        <button className="ww-editor-publish-button" onClick={() => handleSave('published', content, title)}>Publish</button>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto">
-                    <div className="container mx-auto px-4 sm:px-6 py-8 h-full relative">
+                <main className="ww-editor-stage">
+                    <article className="ww-editor-paper">
+                        <div className="ww-editor-title-block">
+                            <span>Chapter {String(chapterNumber).padStart(2, '0')}</span>
+                            <input
+                                ref={titleInputRef}
+                                type="text"
+                                value={title}
+                                onChange={e => handleTitleChange(e.target.value)}
+                                placeholder="Untitled chapter"
+                                aria-label="Chapter title"
+                            />
+                            <div><span>{wordCount.toLocaleString()} words</span><i /><span>{Math.max(1, Math.ceil(wordCount / 220))} min read</span></div>
+                        </div>
+
+                        <details className="chapter-disclosure-editor">
+                            <summary>Content guidance <span>{contentWarnings.length ? `${contentWarnings.length} warnings` : 'Optional'}</span></summary>
+                            <div>
+                                <p>Flag sensitive material specific to this chapter. These warnings appear before the reader opens it.</p>
+                                <div className="chapter-warning-options">
+                                    {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button type="button" key={w} className={contentWarnings.includes(w) ? 'selected' : ''} onClick={() => { setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w]); setSaveState('unsaved'); }}>{w.replaceAll('_', ' ').toLowerCase()}</button>)}
+                                </div>
+                                <label>Author’s note <small>Optional, avoid spoilers</small><textarea rows={2} maxLength={1000} value={disclaimerNote} onChange={e => { setDisclaimerNote(e.target.value); setSaveState('unsaved'); }} placeholder="Add context that helps readers decide whether to continue." /></label>
+                            </div>
+                        </details>
 
                         <RichTextEditor
                             value={content}
@@ -260,12 +375,10 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 setSaveState('saving');
                             }}
                             characters={characters}
+                            onLargePaste={handleLargePaste}
                         />
-                    </div>
+                    </article>
                 </main>
-                <footer className="flex-shrink-0 container mx-auto px-4 sm:px-6 h-8 flex items-center justify-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-sans">{wordCount.toLocaleString()} words</p>
-                </footer>
             </div>
 
             {/* Sidebar */}
@@ -292,6 +405,113 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 isOpen={!!viewingCharacter}
                 onClose={() => setViewingCharacter(null)}
             />
+            <WritingDemoModal 
+                isOpen={showDemoModal} 
+                onClose={handleCloseDemo} 
+            />
+
+            {/* Smart Paste Toast */}
+            {showSmartPasteToast && (
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-lg animate-in slide-in-from-top-10 fade-in duration-300">
+                    <div className="bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border-2 border-accent/40 flex items-center justify-between gap-4">
+                        <div 
+                            className="flex items-center gap-4 cursor-pointer flex-1 group" 
+                            onClick={() => setShowSmartPasteToast(false)}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                <SparklesIcon className="w-7 h-7 text-accent animate-pulse" />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-gray-900 dark:text-gray-100 text-base">✨ Story Paste Detected!</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium group-hover:text-accent transition-colors">Click here to auto-detect characters.</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => { setSmartPasteContent(null); setShowSmartPasteToast(false); }} 
+                            className="p-2 bg-gray-100 dark:bg-dark-border rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                            title="Dismiss"
+                        >
+                            <XMarkIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Smart Paste Assistant Modal */}
+            {smartPasteContent && !showSmartPasteToast && (
+                <SmartPasteAssistant 
+                    isOpen={true}
+                    text={smartPasteContent}
+                    existingCharacters={characters}
+                    onClose={() => setSmartPasteContent(null)}
+                    onAddCharacters={handleAddCharacters}
+                    onShowDemo={() => setShowDemoModal(true)}
+                />
+            )}
+
+            <PublishCharacterReviewModal
+                isOpen={isReviewOpen}
+                characters={smartPastedCharacters}
+                onClose={cancelDeferredPublish}
+                onPublish={executeDeferredPublish}
+            />
+
+            <ChapterScannerModal
+                isOpen={isScannerOpen}
+                htmlContent={content}
+                existingCharacters={characters}
+                onClose={() => setIsScannerOpen(false)}
+                onAddCharacters={handleAddCharacters}
+                onApplyReplacedHtml={handleApplyReplacedHtml}
+            />
         </div>
+
+        {/* W1: Post-publish chapter celebration modal */}
+        {showPublishSuccess && book && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                        <CheckCircleIcon className="w-10 h-10 text-green-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-2">Chapter Published!</h3>
+                    <p className="font-semibold text-text-body dark:text-dark-text-body mb-1">'{publishedChapterTitle}' is now live.</p>
+                    <p className="text-sm text-text-body dark:text-dark-text-body mb-6">Let your readers know there's a new chapter to read.</p>
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={() => { setShowPublishSuccess(false); setIsChapterShareOpen(true); }}
+                            className="w-full py-3 rounded-xl font-bold text-white bg-accent hover:bg-primary transition-colors flex items-center justify-center gap-2"
+                        >
+                            <ShareIcon className="w-5 h-5" /> Share this Chapter
+                        </button>
+                        <button
+                            onClick={() => { setShowPublishSuccess(false); replaceHash(`/write/book/${bookId}/manage`); }}
+                            className="w-full py-2.5 rounded-xl font-semibold text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich transition-colors"
+                        >
+                            Go to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {isChapterShareOpen && book && (() => {
+            const sharedChapter = publishedChapterId
+                ? book.chapters.find(c => c.id === publishedChapterId)
+                : book.chapters.find(c => c.title === publishedChapterTitle);
+            const publicUrl = sharedChapter
+                ? `${window.location.origin}/#/book/${book.id}`
+                : window.location.href;
+            return (
+                <ShareModal
+                    isOpen={isChapterShareOpen}
+                    onClose={() => { setIsChapterShareOpen(false); replaceHash(`/write/book/${bookId}/manage`); }}
+                    book={book}
+                    chapter={sharedChapter}
+                    url={publicUrl}
+                    shareTextOverride={`I just published a new chapter: '${publishedChapterTitle}' in ${book.title}. Read it on WordWeft!`}
+                />
+            );
+        })()}
+        </>
     );
 };

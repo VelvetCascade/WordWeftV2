@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 import type { User } from '../types';
 import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, XMarkIcon, PlusIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
+import { goBackOrReplace } from '../utils/navigation';
 
 interface EditProfilePageProps {
   user: User;
@@ -44,18 +46,24 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 
 
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
+    const { trackEvent } = useAnalytics();
   const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
   const [avatarFileId, setAvatarFileId] = useState<string | null>(user.avatarFileId || null);
   const [bio, setBio] = useState(user.bio || '');
   const [location, setLocation] = useState(user.location || '');
   const [website, setWebsite] = useState(user.website || '');
+  const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth || '');
+  const [allowMatureContent, setAllowMatureContent] = useState(user.allowMatureContent || false);
 
   // Socials
   const [twitter, setTwitter] = useState(user.socials?.twitter || '');
   const [instagram, setInstagram] = useState(user.socials?.instagram || '');
   const [threads, setThreads] = useState(user.socials?.threads || '');
   const [socialErrors, setSocialErrors] = useState<{ twitter?: string, instagram?: string, threads?: string }>({});
+  
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   // Genres
   const [selectedGenres, setSelectedGenres] = useState<string[]>(user.favoriteGenres || []);
@@ -115,21 +123,32 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     const igErr = validateUrl(instagram, 'instagram');
     const thErr = validateUrl(threads, 'threads');
 
+    setSaveError(null);
+    setSaveSuccess(null);
+
     if (twErr || igErr || thErr) {
       setSocialErrors({ twitter: twErr, instagram: igErr, threads: thErr });
       return;
     }
 
-    await onUpdateProfile({
-      name,
-      avatarUrl,
-      avatarFileId,
-      bio,
-      location,
-      website,
-      socials: { twitter, instagram, threads },
-      favoriteGenres: selectedGenres
-    });
+    try {
+      await onUpdateProfile({
+        name,
+        avatarUrl,
+        avatarFileId,
+        bio,
+        location,
+        website,
+        dateOfBirth,
+        allowMatureContent,
+        socials: { twitter, instagram, threads },
+        favoriteGenres: selectedGenres
+      });
+      setSaveSuccess("Profile updated successfully!");
+      setTimeout(() => setSaveSuccess(null), 3000);
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to update profile.");
+    }
   };
 
   const validatePassword = (pw: string) => {
@@ -175,7 +194,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
 
   const handleCancel = () => {
-    window.location.hash = '/profile';
+    goBackOrReplace('/profile');
   };
 
   const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
@@ -205,6 +224,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               }}
               fallbackUrl={`https://i.pravatar.cc/150?u=${user.email}`}
               label="Profile Avatar"
+              aspectRatio={1}
+              cropShape="circle"
             />
 
             <div>
@@ -363,21 +384,38 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               />
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
-                className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Save Changes
-              </button>
+            <section className="rounded-2xl border border-gray-200 dark:border-dark-border p-5 bg-gray-50 dark:bg-dark-surface-alt/40">
+              <h3 className="font-sans font-bold text-text-rich dark:text-dark-text-rich">Content preferences</h3>
+              <p className="text-sm text-text-body dark:text-dark-text-body mt-1 mb-4">Your birthday is private and is used to enforce age-appropriate access.</p>
+              <label htmlFor="dateOfBirth" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Date of birth</label>
+              <input type="date" id="dateOfBirth" value={dateOfBirth} onChange={e => { setDateOfBirth(e.target.value); setAllowMatureContent(false); }} className="w-full h-11 px-4 rounded-xl border-gray-300 dark:bg-dark-surface dark:border-dark-border" />
+              <label className="mt-4 flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={allowMatureContent} disabled={!dateOfBirth || (() => { const d = new Date(dateOfBirth); const now = new Date(); let age = now.getFullYear() - d.getFullYear(); if (now < new Date(now.getFullYear(), d.getMonth(), d.getDate())) age--; return age < 18; })()} onChange={e => setAllowMatureContent(e.target.checked)} />
+                <span><strong className="block text-sm text-text-rich dark:text-dark-text-rich">Include mature stories</strong><small className="text-xs text-text-body dark:text-dark-text-body">Show 18+/21+ stories in discovery when your age permits. You’ll still see chapter-specific warnings.</small></span>
+              </label>
+            </section>
+
+            <div className="flex justify-between items-center pt-4 w-full">
+              <div>
+                {saveError && <p className="text-sm text-danger font-sans">{saveError}</p>}
+                {saveSuccess && <p className="text-sm text-success font-sans">{saveSuccess}</p>}
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="bg-gray-200 dark:bg-dark-surface-alt dark:text-dark-text-body font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-300 dark:hover:bg-dark-border transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
+                  className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </form>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Character, Scene, Note } from '../types';
 import * as api from '../api/client';
+import { CharacterAvatar } from './CharacterAvatar';
 
 interface WorldBuildingSidebarProps {
     bookId: string;
@@ -80,13 +81,7 @@ export const WorldBuildingSidebar: React.FC<WorldBuildingSidebarProps> = ({ book
                                 characters.map(char => (
                                     <div key={char.id} className="p-3 bg-card-bg dark:bg-dark-card-bg rounded border border-border dark:border-dark-border">
                                         <div className="flex items-center gap-3 mb-2">
-                                            {char.imageUrl ? (
-                                                <img src={char.imageUrl} alt={char.name} className="w-10 h-10 rounded-full object-cover bg-gray-200" />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                                    {char.name.charAt(0)}
-                                                </div>
-                                            )}
+                                            <CharacterAvatar name={char.name} imageUrl={char.imageUrl} size="sm" />
                                             <div>
                                                 <h4 className="font-bold text-sm text-text-header dark:text-dark-text-header">{char.name}</h4>
                                                 <p className="text-xs text-primary">{char.role}</p>

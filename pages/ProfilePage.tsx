@@ -3,8 +3,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { User, Shelf, LibraryBook, BookProgress, ChapterProgress, Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon } from '../components/icons/Icons';
+import { BookOpenIcon, ChartPieIcon, UserGroupIcon, StarIcon, Cog6ToothIcon, PlusIcon, XMarkIcon, ArrowPathIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, ClockIcon, TrophyIcon, DocumentPlusIcon, ShareIcon } from '../components/icons/Icons';
+import { AuthorShareModal } from '../components/AuthorShareModal';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ConnectionsModal } from '../components/ConnectionsModal';
 
 const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
@@ -95,6 +97,7 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) => {
+    const { trackEvent } = useAnalytics();
     const [activeShelfId, setActiveShelfId] = useState<'all' | string>('all');
     const [allProgress, setAllProgress] = useState<Record<string, BookProgress>>({});
 
@@ -105,6 +108,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
     const [isCreateShelfModalOpen, setIsCreateShelfModalOpen] = useState(false);
     const [newShelfName, setNewShelfName] = useState('');
     const [isCreatingShelf, setIsCreatingShelf] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     const [writtenBooks, setWrittenBooks] = useState<Book[]>([]);
 
@@ -227,7 +231,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                             <div className="flex flex-col md:flex-row md:justify-between gap-4">
                                 <div>
                                     <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich mb-2">{user.name}</h1>
-                                    <p className="text-text-body dark:text-dark-text-body max-w-xl text-lg leading-relaxed">{user.bio || "No bio yet."}</p>
+                                    <p className="text-text-body dark:text-dark-text-body max-w-xl text-lg leading-relaxed break-words break-all">{user.bio || "No bio yet."}</p>
 
                                     <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
                                         <p>Joined {new Date(user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</p>
@@ -269,12 +273,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => { window.location.hash = '/edit-profile'; }}
-                                    className="self-start md:self-start bg-gray-100 dark:bg-dark-surface-alt font-sans font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors text-sm"
-                                >
-                                    <Cog6ToothIcon className="w-4 h-4" /> Edit Profile
-                                </button>
+                                <div className="flex gap-2 self-start md:self-start">
+                                    <button
+                                        onClick={() => { window.location.hash = '/edit-profile'; }}
+                                        className="bg-gray-100 dark:bg-dark-surface-alt font-sans font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors text-sm"
+                                    >
+                                        <Cog6ToothIcon className="w-4 h-4" /> Edit Profile
+                                    </button>
+                                    <button
+                                        onClick={() => setIsShareOpen(true)}
+                                        className="bg-accent text-white font-sans font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-primary transition-colors text-sm shadow-md"
+                                    >
+                                        <ShareIcon className="w-4 h-4" /> Share Profile
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -424,6 +436,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
             )}
 
             <Footer />
+
+            <AuthorShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                author={user}
+                authorBooks={writtenBooks}
+                url={window.location.href}
+            />
         </div>
     );
 };

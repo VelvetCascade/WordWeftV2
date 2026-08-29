@@ -1,25 +1,36 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
+import { discussLink } from '../utils/community';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
 import { AIBadge } from '../components/AIBadge';
-
+import { ShareModal } from '../components/ShareModal';
+import AdUnit from '../components/AdUnit';
+import { FeatureSparkle } from '../components/FeatureSparkle';
+import { AgeRatingBadge } from '../components/AgeRatingBadge';
+import { warningLabel } from '../components/ChapterDisclaimerModal';
+import { ReportModal } from '../components/ReportModal';
+import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
     const isInProgress = progress > 0 && progress < 90;
 
     return (
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group">
+        <div 
+            onClick={() => { if (chapter.status === 'published') onRead(); }}
+            className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group ${chapter.status === 'published' ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors' : ''}`}
+        >
             <div className="flex items-center gap-4 flex-1 min-w-0">
                 {isCompleted ? <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0" /> : <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center flex-shrink-0">{index + 1}</span>}
-                <div className="flex-1 min-w-0">
-                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich truncate">{chapter.title}</h4>
+                <div className="flex-1 min-w-0 pr-2">
+                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich line-clamp-2 leading-tight">{chapter.title}</h4>
                     <div className="flex items-center gap-4 mt-2">
                         {/* Progress Bar */}
                         <div className="w-24 bg-gray-200 dark:bg-dark-border rounded-full h-1.5 overflow-hidden flex-shrink-0">
@@ -50,11 +61,16 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                 </div>
             </div>
             {chapter.status === 'published' ? (
-                <button onClick={onRead} className="font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
-                    {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Start Reading'}
-                </button>
+                <div className="flex items-center gap-2">
+                    <span className="hidden sm:block font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
+                        {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Read'}
+                    </span>
+                    <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 sm:hidden transition-opacity flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
             ) : (
-                <LockClosedIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <LockClosedIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
             )}
         </div>
     );
@@ -201,11 +217,14 @@ interface BookDetailsPageProps {
 
 export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, currentUser, onUserUpdate }) => {
     const { triggerFeedback } = useFeedback();
+    const { trackEvent } = useAnalytics();
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
     const [isBookmarked, setIsBookmarked] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
 
     const [allReviews, setAllReviews] = useState<Review[]>([]);
@@ -214,6 +233,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [hoverRating, setHoverRating] = useState(0);
     const [userComment, setUserComment] = useState('');
     const [isEditingReview, setIsEditingReview] = useState(false);
+    // Share nudge state
+    const [showLibraryNudge, setShowLibraryNudge] = useState(false);
+    const [showReviewShareNudge, setShowReviewShareNudge] = useState(false);
 
     const currentUserReview = useMemo(() => {
         if (!currentUser) return null;
@@ -270,6 +292,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         api.getBookById(bookId).then(fetchedBook => {
             setBook(fetchedBook);
             if (fetchedBook) {
+                trackEvent('content', 'book_view', fetchedBook.title, undefined, { bookId, authorId: fetchedBook.author.id, genre: fetchedBook.genres[0] });
                 api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(setAuthorBooks);
             }
             setIsLoading(false);
@@ -299,11 +322,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     }, [currentUser, bookId]);
 
     const handleBack = () => {
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            window.location.hash = '/category';
-        }
+        goBackOrReplace('/category');
     };
 
     const handleToggleLibrary = async () => {
@@ -318,9 +337,15 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (customShelves.length > 0) {
             openManageShelvesModal();
         } else {
+            const wasInLibrary = isBookInLibrary;
             const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
             onUserUpdate(updatedUser);
             triggerFeedback('FIRST_EXPERIENCE');
+            // R5: Show share nudge when adding (not removing)
+            if (!wasInLibrary) {
+                setShowLibraryNudge(true);
+                setTimeout(() => setShowLibraryNudge(false), 6000);
+            }
         }
     };
 
@@ -332,12 +357,13 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const handleReadClick = () => {
         if (!book) return;
         const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
-        window.location.hash = `/read/book/${book.id}/chapter/${startChapter}`;
+        trackEvent('reading', 'start_reading', book.title, undefined, { bookId: book.id, chapterIndex: startChapter });
+        openReaderFromStory(book.id, startChapter);
     };
 
     const handleReadChapterClick = (chapterIndex: number) => {
         if (!book) return;
-        window.location.hash = `/read/book/${book.id}/chapter/${chapterIndex}`;
+        openReaderFromStory(book.id, chapterIndex);
     }
 
     const handleSubmitReview = async (e: React.FormEvent) => {
@@ -345,8 +371,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser || userRating === 0 || !userComment) return;
 
         const updatedReviews = await api.submitReview(currentUser.id, bookId, userRating, userComment);
+        trackEvent('social', 'write_review', book?.title, userRating, { bookId, reviewLength: userComment.length });
         setAllReviews(updatedReviews);
         setIsEditingReview(false);
+        // R2: Show share nudge after review is submitted
+        setShowReviewShareNudge(true);
+        setTimeout(() => setShowReviewShareNudge(false), 10000);
     };
 
     const handleDeleteReview = async () => {
@@ -416,29 +446,36 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         : 'Read from Start';
 
     return (
-        <div className="bg-white dark:bg-dark-surface">
+        <div className="ww-story-page bg-white dark:bg-dark-surface">
             {/* Sticky Header */}
             <div className="sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
                 <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
                     <button onClick={handleBack} className="flex items-center gap-2 text-sm font-sans font-medium hover:text-accent transition-colors">
                         <ArrowLeftIcon className="w-5 h-5" /> Back
                     </button>
-                    <div className="flex-1 min-w-0 text-center px-4">
-                        <h2 className="font-sans font-bold text-lg truncate dark:text-dark-text-rich">{book.title}</h2>
+                    <div className="flex-1 min-w-0 text-center px-4 flex items-center justify-center">
+                        <h2 className="font-sans font-bold text-lg line-clamp-2 leading-tight dark:text-dark-text-rich">{book.title}</h2>
                     </div>
-                    <button onClick={() => setIsBookmarked(!isBookmarked)}>
-                        <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
-                    </button>
+                    <div className="flex items-center gap-4">
+                        {currentUser?.id !== book.author.id && <button onClick={() => currentUser ? setIsReportModalOpen(true) : window.location.hash = '/auth'} className="text-xs font-semibold text-gray-500 hover:text-danger">Report</button>}
+                        <button onClick={() => setIsShareModalOpen(true)}>
+                            <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
+                        </button>
+                        <button onClick={() => setIsBookmarked(!isBookmarked)}>
+                            <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div className="container mx-auto px-4 sm:px-6 py-12">
                 {/* Book Summary Section */}
-                <section className="grid md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12 mb-16">
-                    <div className="md:col-span-1 lg:col-span-1">
+                <section className="ww-story-hero grid md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12 mb-16">
+                    <div className="ww-story-cover md:col-span-1 lg:col-span-1">
                         <img src={book.coverUrl} alt={book.title} className="w-full h-auto rounded-2xl shadow-lifted" />
                     </div>
-                    <div className="md:col-span-2 lg:col-span-3">
+                    <div className="ww-story-intro md:col-span-2 lg:col-span-3">
+                        <span className="ww-page-eyebrow">A WordWeft story</span>
                         <h1 className="font-sans text-4xl lg:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich leading-tight mb-2">{book.title}</h1>
                         <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <button onClick={handleAuthorClick} className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</button></p>
 
@@ -482,11 +519,23 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 mb-6">
+                            <AgeRatingBadge rating={book.ageRating} />
                             {book.isAIGenerated && <AIBadge />}
                             {book.genres.map(g => <span key={g} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full">{g}</span>)}
                         </div>
 
                         <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed mb-8">{book.summary}</p>
+                        <div className="ww-story-facts">
+                            <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
+                            <div><strong>{book.readingStatus}</strong><span>Story status</span></div>
+                            <div><strong>{book.reviewsCount.toLocaleString()}</strong><span>Reader reviews</span></div>
+                        </div>
+
+                        {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance">
+                            <strong>Content guidance</strong>
+                            {book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(w => <span key={w}>{warningLabel(w)}</span>)}</div>}
+                            {book.customDisclaimer && <p>{book.customDisclaimer}</p>}
+                        </div>}
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button onClick={handleReadClick} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-opacity-80 transition-all hover:scale-105 duration-300 shadow-lg">
                                 {mainButtonText}
@@ -501,27 +550,58 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                 {isBookInLibrary ? <CheckCircleIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
                                 {isBookInLibrary ? 'In Your Library' : 'Add to Library'}
                             </button>
+                            <button
+                                onClick={() => setIsShareModalOpen(true)}
+                                className="w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border transition-colors flex items-center justify-center gap-2"
+                            >
+                                <ShareIcon className="w-5 h-5" />
+                                Share
+                            </button>
                         </div>
+
+                        <a href={discussLink(book.id, null, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
+                        {/* R5: Add-to-library share nudge */}
+                        {showLibraryNudge && (
+                            <div className="mt-4 flex items-center justify-between gap-3 bg-accent/5 border border-accent/20 rounded-xl px-4 py-3 animate-fade-in">
+                                <p className="text-sm text-text-body dark:text-dark-text-body">Added! Recommend it to friends?</p>
+                                <button
+                                    onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}
+                                    className="text-sm font-bold text-accent hover:underline whitespace-nowrap flex-shrink-0"
+                                >
+                                    Share
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </section>
 
                 {/* Tab Navigation */}
-                <div className="flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
-                    {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-3 font-sans font-medium text-sm transition-colors border-b-2 ${activeTab === tab
-                                ? 'border-accent text-accent'
-                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
-                                }`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
+                <div className="ww-story-tabs flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
+                    {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => {
+                        const btn = (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-6 py-3 font-sans font-medium text-sm transition-colors border-b-2 ${activeTab === tab
+                                    ? 'border-accent text-accent'
+                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        );
+                        if (tab === 'Characters') {
+                            return (
+                                <FeatureSparkle key={tab} featureId="character-tab" tooltip="Meet the characters in this story" position="bottom" delay={3000}>
+                                    {btn}
+                                </FeatureSparkle>
+                            );
+                        }
+                        return btn;
+                    })}
                 </div>
 
-                <div className="max-w-4xl mx-auto mb-16 min-h-[400px]">
+                <div className="ww-story-tab-content max-w-4xl mx-auto mb-16 min-h-[400px]">
                     {activeTab === 'Chapters' && (
                         <section className="animate-fade-in">
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Chapters</h3>
@@ -615,6 +695,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     )}
                 </div>
 
+                <AdUnit format="article" />
 
                 {/* More from author */}
                 {authorBooks.length > 0 && (
@@ -676,6 +757,41 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            <ShareModal 
+                isOpen={isShareModalOpen} 
+                onClose={() => setIsShareModalOpen(false)} 
+                book={book} 
+            />
+            <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} targetType="BOOK" targetId={book.id} targetTitle={book.title} />
+
+            {/* R2: Post-review share nudge */}
+            {showReviewShareNudge && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border shadow-lifted rounded-2xl px-5 py-4 flex items-start gap-4 animate-fade-in">
+                    <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-text-rich dark:text-dark-text-rich">Your review is live!</p>
+                        <p className="text-xs text-text-body dark:text-dark-text-body mt-0.5">Help {book.title} reach more readers.</p>
+                        <div className="flex gap-3 mt-2">
+                            <button
+                                onClick={() => { setShowReviewShareNudge(false); setIsShareModalOpen(true); }}
+                                className="text-sm font-bold text-accent hover:underline"
+                            >
+                                Share this Book
+                            </button>
+                            <button
+                                onClick={() => setShowReviewShareNudge(false)}
+                                className="text-sm text-gray-400 hover:text-text-body dark:hover:text-dark-text-body"
+                            >
+                                Maybe Later
+                            </button>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowReviewShareNudge(false)} className="text-gray-400 hover:text-text-body flex-shrink-0">
+                        <XMarkIcon className="w-4 h-4" />
+                    </button>
                 </div>
             )}
 

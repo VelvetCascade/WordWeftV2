@@ -8,22 +8,28 @@ import React, { useState } from 'react';
 export const SpoilerReveal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [revealed, setRevealed] = useState(false);
 
+    const toggle = () => setRevealed(current => !current);
+
     return (
         <span
             className={`spoiler-text${revealed ? ' revealed' : ''}`}
+            data-revealed={revealed ? 'true' : 'false'}
             onClick={(e) => {
                 e.stopPropagation();
-                setRevealed(prev => !prev);
+                toggle();
             }}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setRevealed(prev => !prev);
+                    e.stopPropagation();
+                    toggle();
                 }
             }}
-            aria-label={revealed ? 'Click to hide spoiler' : 'Click to reveal hidden text'}
+            aria-pressed={revealed}
+            aria-label={revealed ? 'Hide spoiler' : 'Reveal spoiler'}
+            title={revealed ? 'Hide spoiler' : 'Reveal spoiler'}
         >
             {children}
         </span>

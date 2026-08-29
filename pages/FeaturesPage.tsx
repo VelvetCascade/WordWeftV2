@@ -1,6 +1,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Footer } from '../components/Footer';
+import { useAnalytics } from '../contexts/AnalyticsContext';
+import { WritingDemoModal } from '../components/WritingDemoModal';
+import { SparklesIcon } from '../components/icons/Icons';
 
 /* ═══════════════════════════════════════════════════════════════
    FEATURES PAGE — Warm earth-tone themed, immersive showcase
@@ -361,7 +364,6 @@ const UpcomingCard: React.FC<UpcomingCardProps> = ({ icon, title, desc, highligh
     const [ref, visible] = useReveal();
     return (
         <div ref={ref} className={`ft-upcoming-card ${visible ? 'ft-upcoming-card-visible' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
-            <div className="ft-upcoming-badge">Coming Soon</div>
             <div className="ft-upcoming-icon">{icon}</div>
             <h4 className="ft-upcoming-title">{title}</h4>
             <p className="ft-upcoming-desc">{desc}</p>
@@ -404,9 +406,13 @@ const KanbanIcon = () => (
 // =============================================================
 export const FeaturesPage: React.FC = () => {
     const [heroRef, heroVisible] = useReveal();
+    const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+    const { trackEvent } = useAnalytics();
+    useEffect(() => { trackEvent('content', 'features_view'); }, []);
 
     return (
         <div className="ft-page">
+            <WritingDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
 
             {/* ── HERO ────────────────────────────────────────────── */}
             <section ref={heroRef} className={`ft-hero ${heroVisible ? 'ft-hero-visible' : ''}`}>
@@ -417,32 +423,84 @@ export const FeaturesPage: React.FC = () => {
                     ))}
                 </div>
 
+                <div className="ft-hero-layout">
                 <div className="ft-hero-content">
-                    <span className="ft-hero-eyebrow">The Future of Storytelling</span>
+                    <span className="ft-hero-eyebrow"><span className="ft-eyebrow-dot" /> A home for story people</span>
                     <h1 className="ft-hero-headline">
-                        Where Stories<br />
-                        <span className="ft-hero-gradient-text">Come Alive</span>
+                        Stories deserve<br />
+                        <span className="ft-hero-gradient-text">room to breathe.</span>
                     </h1>
                     <p className="ft-hero-sub">
-                        WordWeft gives writers superpowers and readers immersive experiences.
-                        Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit
-                        &mdash; all in one beautiful platform.
+                        A thoughtful reading and writing studio where atmosphere, characters, and craft live together
+                        &mdash; without getting between you and the page.
                     </p>
                     <div className="ft-hero-ctas">
-                        <a href="#/auth" className="ft-btn ft-btn-primary">
-                            <PenIcon /> Start Writing
-                        </a>
+                        <button onClick={() => setIsDemoModalOpen(true)} className="ft-btn ft-btn-primary relative overflow-hidden group">
+                            <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                            <SparklesIcon className="w-5 h-5 text-current relative z-10" />
+                            <span className="relative z-10 font-bold">Try the writing tools</span>
+                        </button>
                         <a href="#/category" className="ft-btn ft-btn-secondary">
-                            <BookOpenIcon /> Explore Library
+                            <BookOpenIcon /> Browse stories
                         </a>
                     </div>
+                    <p className="ft-hero-note">Free to begin · Keep ownership of your work · Read on any device</p>
                     <div className="ft-hero-stats">
-                        <div className="ft-hero-stat"><strong>8+</strong><span>Unique Features</span></div>
+                        <div className="ft-hero-stat"><strong>8+</strong><span>Craft tools</span></div>
                         <div className="ft-hero-stat-divider" />
-                        <div className="ft-hero-stat"><strong>6</strong><span>Mood Themes</span></div>
+                        <div className="ft-hero-stat"><strong>6</strong><span>Reading moods</span></div>
                         <div className="ft-hero-stat-divider" />
-                        <div className="ft-hero-stat"><strong>&infin;</strong><span>Stories to Tell</span></div>
+                        <div className="ft-hero-stat"><strong>&infin;</strong><span>Stories to tell</span></div>
                     </div>
+                </div>
+                <div className="ft-hero-stage" aria-label="A preview of WordWeft's immersive reader">
+                    <div className="ft-stage-shadow-card ft-stage-shadow-card-one" />
+                    <div className="ft-stage-shadow-card ft-stage-shadow-card-two" />
+                    <div className="ft-stage-reader">
+                        <div className="ft-stage-toolbar">
+                            <span className="ft-stage-brand">W</span>
+                            <span className="ft-stage-chapter">Chapter 07</span>
+                            <span className="ft-stage-progress">68%</span>
+                        </div>
+                        <div className="ft-stage-paper">
+                            <span className="ft-stage-kicker">The House Beyond the Pines</span>
+                            <h2>The map remembered her.</h2>
+                            <p>The ink shifted beneath Elara&rsquo;s fingertips, drawing a road that had not existed the night before.</p>
+                            <blockquote>&ldquo;Some doors wait for the right story.&rdquo;</blockquote>
+                            <div className="ft-stage-lines"><span /><span /><span /></div>
+                        </div>
+                        <div className="ft-stage-footer"><span>Aa</span><span>Light</span><span>•••</span></div>
+                    </div>
+                    <div className="ft-stage-float ft-stage-float-mood"><span>Atmosphere</span><strong>Quiet wonder</strong></div>
+                    <div className="ft-stage-float ft-stage-float-character"><span className="ft-stage-avatar">EN</span><span><strong>Elara Nightshade</strong><small>Character note</small></span></div>
+                </div>
+                </div>
+            </section>
+
+            <section className="ft-audience-section">
+                <div className="ft-audience-heading">
+                    <span>One platform, two ways in</span>
+                    <h2>Made for the person holding the pen<br />and the person turning the page.</h2>
+                </div>
+                <div className="ft-audience-grid">
+                    <article className="ft-audience-card ft-audience-reader">
+                        <div className="ft-audience-card-copy">
+                            <span>For readers</span>
+                            <h3>Settle into the story.</h3>
+                            <p>A clean, adjustable reader with saved progress, thoughtful discussion, character context, and atmosphere that follows the prose.</p>
+                            <a href="#/category">Find something to read <ArrowRightIcon /></a>
+                        </div>
+                        <div className="ft-audience-mini-reader"><i /><strong>The sea remembered every name.</strong><p>By dusk, the lighthouse had begun to answer.</p><span>42% read</span></div>
+                    </article>
+                    <article className="ft-audience-card ft-audience-writer">
+                        <div className="ft-audience-card-copy">
+                            <span>For writers</span>
+                            <h3>Keep the whole world close.</h3>
+                            <p>Draft chapters beside your characters, scenes, notes, and lore—then publish without surrendering the rhythm of your writing.</p>
+                            <a href="#/auth">Open the writer studio <ArrowRightIcon /></a>
+                        </div>
+                        <div className="ft-audience-mini-studio"><span><i /> Drafting</span><h4>Chapter 12 · The Crossing</h4><div><b /><b /><b /><b /></div><small>1,842 words · saved</small></div>
+                    </article>
                 </div>
             </section>
 
@@ -477,37 +535,6 @@ export const FeaturesPage: React.FC = () => {
                 reversed
             >
                 <SpoilerDemo />
-            </FeatureSection>
-
-            <FeatureSection
-                id="details"
-                badge="Collapsible Blocks"
-                title="Author Notes & Lore"
-                description="Tuck world-building notes, glossaries, and bonus content into collapsible blocks that readers can explore at their own pace."
-                bullets={[
-                    'Clean, toggleable content sections',
-                    'Perfect for lore, translations, and author notes',
-                    'Keeps the main narrative distraction-free',
-                    'Supports rich content inside: text, lists, images',
-                ]}
-            >
-                <DetailsDemo />
-            </FeatureSection>
-
-            <FeatureSection
-                id="pullquote"
-                badge="Pull Quotes"
-                title="Typographic Beauty"
-                description="Stunning decorative quotes with oversized quotation marks, elegant attribution, and a center-aligned layout that turns memorable lines into visual anchors."
-                bullets={[
-                    'Decorative oversized quotation marks',
-                    'Optional attribution line for citations',
-                    'Beautiful center-aligned typography',
-                    'Perfect for epigraphs, proverbs, and key dialogue',
-                ]}
-                reversed
-            >
-                <PullQuoteDemo />
             </FeatureSection>
 
             <FeatureSection
@@ -573,64 +600,12 @@ export const FeaturesPage: React.FC = () => {
                 <SearchDemo />
             </FeatureSection>
 
-            {/* ── UPCOMING FEATURES ────────────────────────────────── */}
-            <section className="ft-upcoming-section">
-                <div className="ft-upcoming-header">
-                    <RocketIcon />
-                    <h2 className="ft-upcoming-headline">What&apos;s Coming Next</h2>
-                    <p className="ft-upcoming-sub">
-                        We&apos;re building the future of storytelling. Here&apos;s a peek at what&apos;s in the pipeline.
-                    </p>
-                </div>
-                <div className="ft-upcoming-grid">
-                    <UpcomingCard
-                        icon={<TrophyIcon />}
-                        title="Reading & Writing Challenges"
-                        desc="Set personal goals, join community challenges, earn badges, and climb leaderboards."
-                        highlights={[
-                            'Daily, weekly, and monthly reading & writing streaks',
-                            'Community-wide events and NaNoWriMo-style sprints',
-                            'Badges for milestones: 10k words, 50 chapters read, and more',
-                            'Leaderboards ranked by streak, output, and engagement',
-                        ]}
-                        delay={0}
-                    />
-                    <UpcomingCard
-                        icon={<TargetIcon />}
-                        title="For You &mdash; Personalized Picks"
-                        desc="Curated recommendations tailored to your reading history, favorite genres, and bookmarked authors."
-                        highlights={[
-                            'Smart feed that adapts to your taste over time',
-                            'Discover hidden gems from emerging writers',
-                            'Genre affinity scores and mood-matching',
-                            'Weekly digest emails with top picks',
-                        ]}
-                        delay={100}
-                    />
-                    <UpcomingCard
-                        icon={<UsersIcon />}
-                        title="Communities"
-                        desc="Join or create communities around genres, fandoms, or writing groups. Share work, give feedback, and connect."
-                        highlights={[
-                            'Public and private community spaces',
-                            'Discussion threads, polls, and shared reading lists',
-                            'Community moderators and role management',
-                            'Featured community picks on the home feed',
-                        ]}
-                        delay={200}
-                    />
-                    <UpcomingCard
-                        icon={<KanbanIcon />}
-                        title="Story Board"
-                        desc="A Kanban-style board to plan, draft, edit, and publish your stories. Drag ideas through columns like a production pipeline."
-                        highlights={[
-                            'Visual columns: Ideas, Drafting, Editing, Published',
-                            'Tag cards as Plot, Character, Lore, or Chapter',
-                            'Drag and drop between stages',
-                            'Per-book boards with shared team access',
-                        ]}
-                        delay={300}
-                    />
+            <section className="ft-journey-section">
+                <div className="ft-journey-heading"><span>A complete creative loop</span><h2>From the first sentence<br />to the reader who stays up late.</h2></div>
+                <div className="ft-journey-steps">
+                    <article><span>01</span><div><h3>Shape the world</h3><p>Keep characters, locations, scenes, and lore beside the manuscript—not scattered across tabs.</p></div></article>
+                    <article><span>02</span><div><h3>Write in context</h3><p>Draft with the details you need, add atmosphere and interactive elements, and keep momentum.</p></div></article>
+                    <article><span>03</span><div><h3>Publish beautifully</h3><p>Readers receive a composed, responsive experience that protects the words and remembers their place.</p></div></article>
                 </div>
             </section>
 

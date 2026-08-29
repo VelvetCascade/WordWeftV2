@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -20,6 +20,8 @@ import { Footnote } from './extensions/FootnoteExtension';
 import { MoodBlock } from './extensions/MoodExtension';
 import { PullQuote, PullQuoteText, PullQuoteCite } from './extensions/PullQuoteExtension';
 import * as api from '../api/client';
+import { ImageCropModal } from './ImageCropModal';
+import imageCompression from 'browser-image-compression';
 
 // ─── SVG Icon Components ───────────────────────────────────────────
 const Icon: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -294,6 +296,7 @@ interface RichTextEditorProps {
     onChange: (value: string) => void;
     characters: Character[];
     readOnly?: boolean;
+    onLargePaste?: (text: string) => void;
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -302,8 +305,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onChange,
     characters,
     readOnly = false,
+    onLargePaste,
 }) => {
     const bubbleMenuRef = useRef<HTMLDivElement>(null);
+    const [rteCropFile, setRteCropFile] = useState<File | null>(null);
 
     // Use a ref so the mention suggestion always sees the *latest* characters,
     // even though useEditor freezes extensions config at mount time.
@@ -405,6 +410,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             attributes: {
                 class: 'rte-content',
             },
+            handlePaste: (view, event) => {
+                if (onLargePaste) {
+                    const pastedText = event.clipboardData?.getData('text/plain') || '';
+                    if (pastedText.length >= 200) {
+                        onLargePaste(pastedText);
+                    }
+                }
+                return false;
+            }
         },
     });
 
@@ -443,23 +457,36 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         input.onchange = async () => {
             if (input.files?.length) {
                 const file = input.files[0];
-                const formData = new FormData();
-                formData.append('file', file);
-                try {
-                    const res = await api.uploadFile(formData);
-                    if (editor) {
-                        editor.chain().focus().setImage({ src: res.url }).run();
-                    }
-                } catch (error) {
-                    console.error('Failed to upload image', error);
-                    alert('Failed to upload image. Please try again.');
-                }
+                // Open crop modal for inline images (free-form)
+                setRteCropFile(file);
             }
         };
         input.click();
     }, [editor]);
 
+    const handleRteCropConfirm = useCallback(async (croppedFile: File) => {
+        setRteCropFile(null);
+        try {
+            // Compress before uploading
+            const compressed = await imageCompression(croppedFile, {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+            });
+            const formData = new FormData();
+            formData.append('file', compressed);
+            const res = await api.uploadFile(formData);
+            if (editor) {
+                editor.chain().focus().setImage({ src: res.url }).run();
+            }
+        } catch (error) {
+            console.error('Failed to upload image', error);
+            alert('Failed to upload image. Please try again.');
+        }
+    }, [editor]);
+
     return (
+        <>
         <div className="rte-wrapper">
             {!readOnly && <MenuBar editor={editor} addImage={addImage} />}
 
@@ -474,5 +501,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <EditorContent editor={editor} />
             </div>
         </div>
+
+        {/* Image Crop Modal for in-editor images */}
+        {rteCropFile && (
+            <ImageCropModal
+                file={rteCropFile}
+                contextLabel="Chapter Image"
+                onConfirm={handleRteCropConfirm}
+                onCancel={() => setRteCropFile(null)}
+            />
+        )}
+    </>
     );
 };

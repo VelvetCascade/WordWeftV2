@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import type { AppNotification, NavigateTo } from '../types';
 import type { Page } from '../App';
+import { communityNotificationPostId } from '../utils/community';
 
 interface NotificationToastProps {
     notification: AppNotification | null;
@@ -11,6 +12,9 @@ interface NotificationToastProps {
 
 const getNotificationIcon = (type: string): string => {
     switch (type) {
+        case 'COMMUNITY_COMMENT': return '💬';
+        case 'COMMUNITY_REPLY': return '↩️';
+        case 'COMMUNITY_RELEASE': return '📚';
         case 'NEW_FOLLOWER': return '👤';
         case 'NEW_COMMENT': return '💬';
         case 'COMMENT_REPLY': return '↩️';
@@ -38,6 +42,8 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ notificati
 
     const handleClick = () => {
         onDismiss();
+        const postId = communityNotificationPostId(notification);
+        if (postId) { onNavigate({ name: 'community-post', postId }); return; }
         // Navigate based on type
         switch (notification.type) {
             case 'NEW_FOLLOWER':

@@ -35,8 +35,38 @@ public class UserService {
 
     public Map<String, Object> getPublicProfile(String targetUserId, String currentUserId) {
         User user = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
-        // Basic enrichment for public view
-        return enrichUser(user, currentUserId);
+        // Public profiles must not hydrate a member's private library. Besides leaking
+        // reading history, that made an otherwise public profile fail when a shelf
+        // contained a story the viewer was not old enough to access.
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", user.getId());
+        map.put("username", user.getUsername());
+        map.put("avatarUrl", user.getAvatarUrl());
+        map.put("bio", user.getBio());
+        map.put("location", user.getLocation());
+        map.put("website", user.getWebsite());
+        map.put("joinDate", user.getJoinDate());
+        map.put("followersCount", user.getFollowers().size());
+        map.put("followingCount", user.getFollowing().size());
+        map.put("socials", user.getSocials());
+        map.put("favoriteGenres", user.getFavoriteGenres());
+        map.put("communityInterests", user.getCommunityInterests() == null ? Set.of() : user.getCommunityInterests());
+        map.put("communityBadges", user.getCommunityBadges() == null ? Set.of() : user.getCommunityBadges());
+        Map<String, Object> stats = new HashMap<>();
+        if (user.getStats() != null) {
+            stats.put("booksRead", user.getStats().getBooksRead());
+            stats.put("chaptersRead", user.getStats().getChaptersRead());
+            stats.put("totalWordsRead", user.getStats().getTotalWordsRead());
+            stats.put("readingTimeMinutes", user.getStats().getTotalWordsRead() / 250);
+            stats.put("favoriteGenres", user.getStats().getFavoriteGenres());
+            long totalWords = user.getStats().getTotalWordsRead();
+            String level = totalWords > 500000 ? "Sage" : totalWords > 200000 ? "Scholar"
+                    : totalWords > 50000 ? "Bookworm" : totalWords > 10000 ? "Apprentice" : "Novice";
+            stats.put("readerLevel", level);
+        }
+        map.put("stats", stats);
+        map.put("isFollowing", currentUserId != null && user.getFollowers().contains(currentUserId));
+        return map;
     }
 
     @Autowired
@@ -59,6 +89,13 @@ public class UserService {
 
         map.put("socials", user.getSocials());
         map.put("favoriteGenres", user.getFavoriteGenres());
+        map.put("communityInterests", user.getCommunityInterests() == null ? Set.of() : user.getCommunityInterests());
+        map.put("communityBadges", user.getCommunityBadges() == null ? Set.of() : user.getCommunityBadges());
+        map.put("hasSeenWritingDemo", user.isHasSeenWritingDemo());
+        if (user.getId().equals(currentViewerId)) {
+            map.put("dateOfBirth", user.getDateOfBirth());
+            map.put("allowMatureContent", user.isAllowMatureContent());
+        }
 
         // Stats Logic
         Map<String, Object> stats = new HashMap<>();
@@ -88,9 +125,15 @@ public class UserService {
         }
         map.put("stats", stats);
 
-        // Populate Written Books
+        // Populate Written Books — use BookService to enrich each book so the
+        // nested `author` object (id, name, avatarUrl, bio) is included.
+        // Raw Book entities only store authorId, not the resolved author object.
         List<Book> written = bookRepository.findByAuthorId(user.getId());
-        map.put("writtenBooks", written);
+        List<Map<String, Object>> writtenEnriched = written.stream()
+                .map(b -> bookService.getBookById(b.getId(), false))
+                .filter(b -> b != null)
+                .collect(Collectors.toList());
+        map.put("writtenBooks", writtenEnriched);
 
         // Populate Library
         List<LibraryEntry> entries = libraryRepository.findByUserId(user.getId());

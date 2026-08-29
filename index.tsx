@@ -9,11 +9,12 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
+const appContent = (
   <React.StrictMode>
     <ThemeProvider>
       <App />
     </ThemeProvider>
   </React.StrictMode>
 );
+
+ReactDOM.createRoot(rootElement).render(appContent);
