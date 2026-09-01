@@ -68,7 +68,9 @@ export interface Chapter {
   title: string;
   wordCount: number;
   content: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'scheduled' | 'published';
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
   // Stats
   viewCount: number;
   likesCount: number;
@@ -76,6 +78,19 @@ export interface Chapter {
   isLiked: boolean;
   contentWarnings: ContentWarning[];
   disclaimerNote?: string;
+}
+
+export interface ChapterRevision {
+  id: string;
+  authorId: string;
+  bookId: string;
+  chapterId: string;
+  title: string;
+  content: string;
+  wordCount: number;
+  reason: string;
+  plainTextPreview: string;
+  createdAt: string;
 }
 
 export type AgeRating = 'ALL_AGES' | 'TEEN_13' | 'MATURE_18' | 'ADULT_21';
@@ -103,6 +118,7 @@ export interface Book {
   readingStatus: 'Completed' | 'Ongoing';
   publicationStatus: 'draft' | 'published';
   publishedDate?: string;
+  nextScheduledReleaseAt?: string;
   isMature: boolean;
   ageRating: AgeRating;
   contentWarnings: ContentWarning[];
@@ -152,6 +168,126 @@ export interface User {
   hasSeenWritingDemo?: boolean;
   dateOfBirth?: string;
   allowMatureContent?: boolean;
+}
+
+export interface WriterAnalyticsSummary {
+  uniqueReaders: number;
+  views: number;
+  completedReaders: number;
+  completionRate: number;
+  returningReaders: number;
+  averageCompletion: number;
+  likes: number;
+  comments: number;
+}
+
+export interface WriterStoryAnalytics {
+  bookId: string;
+  title: string;
+  coverUrl?: string;
+  uniqueReaders: number;
+  views: number;
+  completedReaders: number;
+  completionRate: number;
+  likes: number;
+  comments: number;
+}
+
+export interface ChapterFunnelRow {
+  bookId: string;
+  chapterId: string;
+  title: string;
+  chapterNumber: number;
+  views: number;
+  reachedReaders: number;
+  completedReaders: number;
+  completionRate: number;
+  continuationRate: number;
+  likes: number;
+  comments: number;
+}
+
+export interface DailyTrendPoint {
+  date: string;
+  readers: number;
+  views: number;
+}
+
+export interface AnalyticsReferrer {
+  source: string;
+  readers: number;
+  views: number;
+}
+
+export interface ReleaseMarker {
+  bookId: string;
+  chapterId: string;
+  chapterTitle: string;
+  publishedAt: string;
+}
+
+export interface WriterAnalytics {
+  summary: WriterAnalyticsSummary;
+  stories: WriterStoryAnalytics[];
+  chapterFunnel: ChapterFunnelRow[];
+  dailyTrend: DailyTrendPoint[];
+  referrers: AnalyticsReferrer[];
+  releaseMarkers: ReleaseMarker[];
+}
+
+export interface HookCard {
+  bookId: string;
+  chapterId: string;
+  title: string;
+  chapterTitle: string;
+  authorId: string;
+  authorName: string;
+  coverUrl?: string;
+  excerpt: string;
+  genres: string[];
+  matchedGenres: string[];
+  wordCount: number;
+  readingMinutes: number;
+  likesCount: number;
+}
+
+export interface HookFeedResponse {
+  items: HookCard[];
+  tasteGenres: string[];
+  personalized: boolean;
+}
+
+export interface ReadingChallenge {
+  id: string;
+  title: string;
+  description: string;
+  metric: 'chapters' | 'minutes' | 'books';
+  target: number;
+  progress: number;
+  progressPercent: number;
+  joined: boolean;
+  completed: boolean;
+  joinedAt?: string;
+}
+
+export interface GenreEventStory {
+  bookId: string;
+  title: string;
+  coverUrl?: string;
+  authorId: string;
+  authorName: string;
+}
+
+export interface GenreEvent {
+  id: string;
+  title: string;
+  genre: string;
+  prompt: string;
+  description: string;
+  startAt: string;
+  endAt: string;
+  timing: 'upcoming' | 'active' | 'ended';
+  stories: GenreEventStory[];
 }
 
 export type ReportTargetType = 'BOOK' | 'CHAPTER' | 'COMMENT' | 'USER' | 'COMMUNITY_POST' | 'COMMUNITY_COMMENT';

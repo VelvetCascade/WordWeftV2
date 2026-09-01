@@ -3,6 +3,7 @@ package com.wordweft.book.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +17,9 @@ public class Chapter {
     private String title;
     private int wordCount;
     private String content; 
-    private String status = "draft"; // "draft" or "published"
+    private String status = "draft"; // "draft", "scheduled", or "published"
+    private Instant scheduledAt;
+    private Instant publishedAt;
     private List<String> contentWarnings = new ArrayList<>();
     private String disclaimerNote;
     

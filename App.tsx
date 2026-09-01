@@ -11,6 +11,7 @@ const WriterDashboardPage = lazy(() => import('./pages/WriterDashboardPage').the
 const CreateBookPage = lazy(() => import('./pages/CreateBookPage').then(module => ({ default: module.CreateBookPage })));
 const ManageChaptersPage = lazy(() => import('./pages/ManageChaptersPage').then(module => ({ default: module.ManageChaptersPage })));
 const ChapterEditorPage = lazy(() => import('./pages/ChapterEditorPage').then(module => ({ default: module.ChapterEditorPage })));
+const WriterAnalyticsPage = lazy(() => import('./pages/WriterAnalyticsPage').then(module => ({ default: module.WriterAnalyticsPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
 const AuthorPage = lazy(() => import('./pages/AuthorPage').then(module => ({ default: module.AuthorPage })));
@@ -25,6 +26,8 @@ const FeedbackPage = lazy(() => import('./pages/FeedbackPage').then(module => ({
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })));
 const GenrePage = lazy(() => import('./pages/GenrePage').then(module => ({ default: module.GenrePage })));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
+const HookFeedPage = lazy(() => import('./pages/HookFeedPage').then(module => ({ default: module.HookFeedPage })));
+const ReadingGrowthPage = lazy(() => import('./pages/ReadingGrowthPage').then(module => ({ default: module.ReadingGrowthPage })));
 const FeaturesPage = lazy(() => import('./pages/FeaturesPage').then(module => ({ default: module.FeaturesPage })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(module => ({ default: module.AboutPage })));
@@ -57,6 +60,8 @@ export type Page =
   | { name: 'writer-edit-chapter'; bookId: string, chapterId: string | 'new' }
   | { name: 'writer-analytics' }
   | { name: 'writer-settings' }
+  | { name: 'hook-feed' }
+  | { name: 'reading-growth' }
   | { name: 'profile' }
   | { name: 'auth' }
   | { name: 'author'; authorId: string }
@@ -119,6 +124,8 @@ const App: React.FC = () => {
       case 'feedback': window.location.hash = '/feedback'; break;
       case 'features': window.location.hash = '/features'; break;
       case 'about': window.location.hash = '/about'; break;
+      case 'hook-feed': window.location.hash = '/hooks'; break;
+      case 'reading-growth': window.location.hash = '/events'; break;
       default: window.location.hash = '/'; break;
     }
   };
@@ -167,6 +174,10 @@ const App: React.FC = () => {
       window.location.hash = `/author/${targetPage.authorId}`;
     } else if (targetPage.name === 'reader') {
       window.location.hash = `/read/book/${targetPage.bookId}/chapter/${targetPage.chapterIndex}`;
+    } else if (targetPage.name === 'hook-feed') {
+      window.location.hash = '/hooks';
+    } else if (targetPage.name === 'reading-growth') {
+      window.location.hash = '/events';
     } else if (targetPage.name !== 'home' && targetPage.name !== 'auth') {
       window.location.hash = `/${targetPage.name}`;
     } else {
@@ -233,6 +244,8 @@ const App: React.FC = () => {
         contact:        { title: 'Contact Us — WordWeft', description: 'Get in touch with the WordWeft team. We\'d love to hear from you.', canonical: base + '/contact' },
         feedback:       { title: 'Share Feedback — WordWeft', description: 'Help us make WordWeft better. Share your thoughts, ideas, and suggestions.', canonical: base + '/feedback' },
         auth:           { title: 'Sign In or Join — WordWeft', description: 'Create a free WordWeft account to start reading or publishing your own stories.', canonical: base + '/auth' },
+        'hook-feed':    { title: 'Hook Feed — Find Your Next Story | WordWeft', description: 'Sample opening lines from published WordWeft stories and find the writing that hooks you.', canonical: base + '/hooks' },
+        'reading-growth': { title: 'Reading Challenges & Genre Events | WordWeft', description: 'Join personal reading challenges and discover curated genre events on WordWeft.', canonical: base + '/events' },
       };
       const entry = metaMap[p.name];
       if (!entry) return;
@@ -304,6 +317,10 @@ const App: React.FC = () => {
         targetPage = { name: 'writer-dashboard' };
       } else if (hash.startsWith('category')) {
         targetPage = { name: 'category', genre: null };
+      } else if (hash.startsWith('hooks')) {
+        targetPage = { name: 'hook-feed' };
+      } else if (hash.startsWith('events') || hash.startsWith('challenges')) {
+        targetPage = { name: 'reading-growth' };
       } else if (hash.startsWith('profile')) {
         targetPage = { name: 'profile' };
       } else if (hash.startsWith('edit-profile')) {
@@ -429,9 +446,13 @@ const App: React.FC = () => {
       case 'writer-edit-chapter':
         return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
       case 'writer-analytics':
-        return <FeatureDevelopmentPage featureName="Writer Analytics" description="We're actively building this page. It will provide deep insights into your story's performance, readership statistics, and engagement metrics." />;
+        return <WriterAnalyticsPage />;
       case 'writer-settings':
         return <FeatureDevelopmentPage featureName="Writer Settings" description="Fine-grained controls for your stories and pen name are coming here. You'll be able to manage your publishing preferences and writer profile." />;
+      case 'hook-feed':
+        return <HookFeedPage currentUser={currentUser} onUserUpdate={setCurrentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
+      case 'reading-growth':
+        return <ReadingGrowthPage currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'profile':
         return <ProfilePage user={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'edit-profile':
@@ -555,11 +576,15 @@ const App: React.FC = () => {
             onComplete={(role) => {
               setShowWelcomeJourney(false);
               localStorage.setItem('ww_userRole', role);
+              const destination = intendedPage;
               const communityReturn = communityReturnLink(intendedPage);
               setIntendedPage(null);
-              // Navigate based on role
+              // Preserve a public acquisition destination through first-time onboarding.
               if (communityReturn) {
                 window.location.hash = communityReturn;
+              } else if (destination?.name === 'hook-feed' || destination?.name === 'reading-growth'
+                || destination?.name === 'book-details' || destination?.name === 'author' || destination?.name === 'reader') {
+                navigateTo(destination);
               } else if (role === 'writer') {
                 window.location.hash = '/write';
               } else {

@@ -1,20 +1,27 @@
 
 package com.wordweft.book.controller;
 
+import com.wordweft.analytics.service.ChapterReadEventService;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
+import com.wordweft.book.service.ChapterPublishingService;
 import com.wordweft.notification.service.NotificationService;
+import com.wordweft.manuscript.service.ManuscriptImportService;
+import com.wordweft.manuscript.model.ChapterRevision;
+import com.wordweft.manuscript.service.ChapterRevisionService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +41,14 @@ public class BookController {
     @Autowired
     NotificationService notificationService;
     @Autowired
+    ChapterPublishingService chapterPublishingService;
+    @Autowired
+    ChapterReadEventService chapterReadEventService;
+    @Autowired
+    ManuscriptImportService manuscriptImportService;
+    @Autowired
+    ChapterRevisionService chapterRevisionService;
+    @Autowired
     com.wordweft.support.ImageKitService imageKitService;
 
     private String getCurrentUserId() {
@@ -42,6 +57,15 @@ public class BookController {
             return ((UserDetailsImpl) principal).getId();
         }
         throw new RuntimeException("User not authenticated");
+    }
+
+    private String getOptionalCurrentUserId() {
+        try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return principal instanceof UserDetailsImpl ? ((UserDetailsImpl) principal).getId() : null;
+        } catch (RuntimeException unauthenticated) {
+            return null;
+        }
     }
 
     @GetMapping
@@ -116,20 +140,58 @@ public class BookController {
         return ResponseEntity.ok(bookService.getBookById(bookId, false));
     }
 
+    public record ChapterViewRequest(String sessionId, String referrer) {}
+
     @PostMapping("/{bookId}/chapters/{chapterId}/view")
-    public ResponseEntity<?> incrementChapterView(@PathVariable String bookId, @PathVariable String chapterId) {
-        Book book = bookRepository.findById(bookId).orElseThrow();
-        Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst()
-                .orElseThrow();
+    public ResponseEntity<Void> incrementChapterView(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @RequestBody(required = false) ChapterViewRequest request) {
+        ChapterViewRequest body = request != null ? request : new ChapterViewRequest(null, null);
+        chapterReadEventService.record(
+                bookId,
+                chapterId,
+                getOptionalCurrentUserId(),
+                body.sessionId(),
+                body.referrer(),
+                Instant.now());
+        return ResponseEntity.noContent().build();
+    }
 
-        chapter.setViewCount(chapter.getViewCount() + 1);
-        book.setViewCountLast7Days((book.getViewCountLast7Days() == null ? 0 : book.getViewCountLast7Days()) + 1);
-        bookRepository.save(book);
+    public record ScheduleChapterRequest(Instant scheduledAt) {}
 
-        return ResponseEntity.ok().build();
+    @PutMapping("/{bookId}/chapters/{chapterId}/schedule")
+    public ResponseEntity<?> scheduleChapter(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @RequestBody ScheduleChapterRequest request) {
+        String userId = getCurrentUserId();
+        chapterPublishingService.schedule(userId, bookId, chapterId, request.scheduledAt());
+        return ResponseEntity.ok(userService.getUserProfile(userId));
+    }
+
+    @DeleteMapping("/{bookId}/chapters/{chapterId}/schedule")
+    public ResponseEntity<?> cancelChapterSchedule(
+            @PathVariable String bookId,
+            @PathVariable String chapterId) {
+        String userId = getCurrentUserId();
+        chapterPublishingService.cancelSchedule(userId, bookId, chapterId);
+        return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 
     // --- Writer Endpoints ---
+
+    @PostMapping(value = "/{bookId}/import", consumes = "multipart/form-data")
+    public ResponseEntity<?> importManuscript(
+            @PathVariable String bookId,
+            @RequestPart("file") MultipartFile file) throws java.io.IOException {
+        String userId = getCurrentUserId();
+        ManuscriptImportService.ImportResult result = manuscriptImportService.importManuscript(
+                userId, bookId, file.getOriginalFilename(), file.getBytes());
+        return ResponseEntity.ok(Map.of(
+                "result", result,
+                "user", userService.getUserProfile(userId)));
+    }
 
     @PostMapping
     public ResponseEntity<?> createBook(@Valid @RequestBody Book book) {
@@ -213,6 +275,13 @@ public class BookController {
         Map<String, String> data = (Map<String, String>) payload.get("data");
         String status = (String) payload.get("status");
 
+        if (!isNew) {
+            String reason = "published".equals(status) ? "PUBLISH"
+                    : "draft".equals(status) ? "MANUAL_SAVE" : "AUTOSAVE";
+            chapterRevisionService.capture(
+                    userDetails.getId(), book, chapter, reason, !"preserve".equals(status));
+        }
+
         chapter.setTitle(data.get("title"));
         chapter.setContent(data.get("content"));
         Object warningValue = payload.get("contentWarnings");
@@ -223,19 +292,16 @@ public class BookController {
         if (disclaimerValue != null) chapter.setDisclaimerNote(String.valueOf(disclaimerValue));
         chapter.updateWordCount();
 
-        // If changing to published
-        if ("published".equals(status) && !"published".equals(chapter.getStatus())) {
-            chapter.setStatus("published");
-            // If the book is already public, bump the published date so it appears as
-            // "Updated"
-            if ("published".equals(book.getPublicationStatus())) {
-                book.setPublishedDate(LocalDate.now());
-            }
-        } else if ("draft".equals(status)) {
+        boolean publishAfterSave = "published".equals(status) && !"published".equals(chapter.getStatus());
+        if (publishAfterSave || "draft".equals(status)) {
             chapter.setStatus("draft");
+            chapter.setScheduledAt(null);
         }
 
         bookRepository.save(book);
+        if (publishAfterSave) {
+            chapterPublishingService.publishNow(userDetails.getId(), bookId, chapter.getId());
+        }
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
 
@@ -291,30 +357,33 @@ public class BookController {
 
         Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst()
                 .orElseThrow();
-        String newStatus = "published".equals(chapter.getStatus()) ? "draft" : "published";
-        chapter.setStatus(newStatus);
-
-        // If we just published a chapter and the book is public, bump the date
-        if ("published".equals(newStatus) && "published".equals(book.getPublicationStatus())) {
-            book.setPublishedDate(LocalDate.now());
-            book.setLastUpdatedAt(LocalDate.now());
-        }
-
-        bookRepository.save(book);
-
-        // Notify followers about new chapter
-        if ("published".equals(newStatus) && "published".equals(book.getPublicationStatus())) {
-            java.util.Map<String, String> meta = new java.util.HashMap<>();
-            meta.put("bookTitle", book.getTitle());
-            meta.put("bookId", bookId);
-            meta.put("chapterTitle", chapter.getTitle());
-            meta.put("coverUrl", book.getCoverUrl() != null ? book.getCoverUrl() : "");
-            notificationService.notifyFollowers(
-                    userDetails.getId(), "AUTHOR_NEW_CHAPTER", "CHAPTER", chapterId,
-                    "published a new chapter \"" + chapter.getTitle() + "\" in " + book.getTitle(), meta);
+        chapterRevisionService.capture(userDetails.getId(), book, chapter, "STATUS_CHANGE", true);
+        if ("published".equals(chapter.getStatus())) {
+            chapter.setStatus("draft");
+            chapter.setScheduledAt(null);
+            bookRepository.save(book);
+        } else {
+            chapterPublishingService.publishNow(userDetails.getId(), bookId, chapterId);
         }
 
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
+
+    @GetMapping("/{bookId}/chapters/{chapterId}/revisions")
+    public ResponseEntity<List<ChapterRevision>> getChapterRevisions(
+            @PathVariable String bookId,
+            @PathVariable String chapterId) {
+        return ResponseEntity.ok(chapterRevisionService.list(getCurrentUserId(), bookId, chapterId));
+    }
+
+    @PostMapping("/{bookId}/chapters/{chapterId}/revisions/{revisionId}/restore")
+    public ResponseEntity<?> restoreChapterRevision(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @PathVariable String revisionId) {
+        String userId = getCurrentUserId();
+        chapterRevisionService.restore(userId, bookId, chapterId, revisionId);
+        return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 
     // --- Delete Endpoints ---

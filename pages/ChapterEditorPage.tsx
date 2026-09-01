@@ -17,6 +17,8 @@ import { PublishCharacterReviewModal } from '../components/PublishCharacterRevie
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
 import { ShareModal } from '../components/ShareModal';
+import { ScheduleChapterDialog } from '../components/ScheduleChapterDialog';
+import { ChapterVersionHistoryDialog } from '../components/ChapterVersionHistoryDialog';
 import { goBackOrReplace, replaceHash } from '../utils/navigation';
 
 interface ChapterEditorPageProps {
@@ -137,6 +139,8 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [publishedChapterTitle, setPublishedChapterTitle] = useState('');
     const [publishedChapterId, setPublishedChapterId] = useState<string | null>(null);
     const [isChapterShareOpen, setIsChapterShareOpen] = useState(false);
+    const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
     // Show Demo Modal on first visit if not seen
@@ -183,7 +187,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         };
     }, [bookId]);
 
-    const handleSave = async (status: 'draft' | 'published', currentContent: string, currentTitle: string) => {
+    const handleSave = async (status: 'draft' | 'published' | 'preserve', currentContent: string, currentTitle: string) => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         if (!currentTitle.trim() && !currentContent.trim()) return; // Don't save completely empty chapters
 
@@ -234,7 +238,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         }
     };
 
-    const debouncedSave = (status: 'draft' | 'published', newContent: string, newTitle: string) => {
+    const debouncedSave = (status: 'draft' | 'published' | 'preserve', newContent: string, newTitle: string) => {
         setSaveState('unsaved');
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
@@ -246,13 +250,13 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
        const handleContentChange = (newContent: string) => {
             setContent(newContent);
-            debouncedSave('draft', newContent, title);
+            debouncedSave('preserve', newContent, title);
         };
 
 
     const handleTitleChange = (newTitle: string) => {
         setTitle(newTitle);
-        debouncedSave('draft', content, newTitle);
+        debouncedSave('preserve', content, newTitle);
     };
 
     const getSaveText = () => {
@@ -299,7 +303,43 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const handleApplyReplacedHtml = (newHtml: string) => {
         setContent(newHtml);
-        debouncedSave('draft', newHtml, title);
+        debouncedSave('preserve', newHtml, title);
+    };
+
+    const handleSchedule = async (scheduledAt: string) => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        const readableContent = content.replace(/<[^>]*>/g, ' ').trim();
+        if (!readableContent) throw new Error('Add chapter content before scheduling it.');
+
+        const finalTitle = title.trim() || `Chapter ${chapterNumber}`;
+        if (!title.trim()) setTitle(finalTitle);
+        setSaveState('saving');
+
+        try {
+            const previousIds = new Set(book.chapters.map(item => item.id));
+            const savedUser = await api.saveChapter(
+                currentUser.id,
+                bookId,
+                chapterId,
+                { title: finalTitle, content, contentWarnings, disclaimerNote },
+                'draft',
+            );
+            const savedBook = savedUser.writtenBooks?.find(item => item.id === bookId);
+            const targetId = chapterId === 'new'
+                ? savedBook?.chapters.find(item => !previousIds.has(item.id))?.id
+                : chapterId;
+            if (!targetId) {
+                throw new Error('The chapter was saved, but WordWeft could not identify it for scheduling.');
+            }
+
+            const updatedUser = await api.scheduleChapter(bookId, targetId, scheduledAt);
+            onUserUpdate(updatedUser);
+            setChapterId(targetId);
+            setSaveState('saved');
+        } catch (failure) {
+            setSaveState('unsaved');
+            throw failure;
+        }
     };
 
 
@@ -335,8 +375,17 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                         <button onClick={() => setIsScannerOpen(true)} title="Scan chapter for characters">
                             <SparklesIcon className="w-4 h-4" /><span>Scan</span>
                         </button>
+                        {!isNewChapter && <button onClick={() => setIsVersionHistoryOpen(true)} title="Open version history"><span>History</span></button>}
                         <span className="ww-editor-action-divider" />
                         <button className="ww-editor-save-button" onClick={() => handleSave('draft', content, title)}>Save draft</button>
+                        <button
+                            className="ww-editor-schedule-button"
+                            onClick={() => setIsScheduleOpen(true)}
+                            disabled={book.publicationStatus !== 'published' || chapter?.status === 'published'}
+                            title={book.publicationStatus !== 'published' ? 'Publish the story before scheduling a chapter' : 'Schedule this chapter'}
+                        >
+                            {chapter?.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
+                        </button>
                         <button className="ww-editor-publish-button" onClick={() => handleSave('published', content, title)}>Publish</button>
                     </div>
                 </header>
@@ -399,6 +448,27 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 characters={characters}
                 onCharacterClick={setViewingCharacter}
             />
+            <ScheduleChapterDialog
+                isOpen={isScheduleOpen}
+                chapterTitle={title}
+                initialScheduledAt={chapter?.scheduledAt}
+                onConfirm={handleSchedule}
+                onClose={() => setIsScheduleOpen(false)}
+            />
+            {!isNewChapter && (
+                <ChapterVersionHistoryDialog
+                    isOpen={isVersionHistoryOpen}
+                    bookId={bookId}
+                    chapterId={chapterId}
+                    onClose={() => setIsVersionHistoryOpen(false)}
+                    onRestored={(updatedUser, revision) => {
+                        onUserUpdate(updatedUser);
+                        setTitle(revision.title);
+                        setContent(revision.content);
+                        setSaveState('saved');
+                    }}
+                />
+            )}
 
             <CharacterPreview
                 character={viewingCharacter}

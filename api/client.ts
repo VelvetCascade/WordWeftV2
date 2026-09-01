@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -352,10 +352,57 @@ export async function toggleChapterLike(bookId: string, chapterId: string): Prom
 }
 
 export async function recordChapterView(bookId: string, chapterId: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/view`, {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/view`, {
         method: 'POST',
-        headers: getHeaders()
+        headers: getHeaders(),
+        body: JSON.stringify({
+            sessionId: getOrCreateReaderSession(),
+            referrer: document.referrer || ''
+        })
     });
+    await handleResponse(response);
+}
+
+export async function getHookFeed(excludedBookIds: string[] = [], genres: string[] = [], limit = 10): Promise<HookFeedResponse> {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (excludedBookIds.length) params.set('exclude', excludedBookIds.join(','));
+    if (genres.length) params.set('genres', genres.join(','));
+    const response = await fetch(`${API_BASE_URL}/discovery/hooks?${params}`, { headers: getHeaders() });
+    return handleResponse(response);
+}
+
+export async function saveReaderTaste(favoriteGenres: string[]): Promise<string[]> {
+    const response = await fetch(`${API_BASE_URL}/discovery/taste`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ favoriteGenres }),
+    });
+    const result = await handleResponse(response);
+    return result.favoriteGenres || [];
+}
+
+export async function getReadingChallenges(): Promise<ReadingChallenge[]> {
+    const response = await fetch(`${API_BASE_URL}/growth/challenges`, { headers: getHeaders() });
+    return handleResponse(response);
+}
+
+export async function joinReadingChallenge(challengeId: string): Promise<ReadingChallenge> {
+    const response = await fetch(`${API_BASE_URL}/growth/challenges/${encodeURIComponent(challengeId)}/join`, {
+        method: 'POST', headers: getHeaders(),
+    });
+    return handleResponse(response);
+}
+
+export async function getGenreEvents(): Promise<GenreEvent[]> {
+    const response = await fetch(`${API_BASE_URL}/growth/events`, { headers: getHeaders() });
+    return handleResponse(response);
+}
+
+export async function submitStoryToGenreEvent(eventId: string, bookId: string): Promise<GenreEvent> {
+    const response = await fetch(`${API_BASE_URL}/growth/events/${encodeURIComponent(eventId)}/submissions/${encodeURIComponent(bookId)}`, {
+        method: 'POST', headers: getHeaders(),
+    });
+    return handleResponse(response);
 }
 
 // --- Library & Progress API ---
@@ -499,6 +546,60 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
         headers: getHeaders()
     });
     return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function importManuscript(bookId: string, file: File): Promise<{ user: User; importedChapters: number; totalChapters: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/import`, {
+        method: 'POST',
+        headers: { 'Authorization': getHeaders().Authorization },
+        body: formData,
+    });
+    const data = await handleResponse(response);
+    return {
+        user: mapBackendUserToFrontend(data.user),
+        importedChapters: data.result.importedChapters,
+        totalChapters: data.result.totalChapters,
+    };
+}
+
+export async function scheduleChapter(bookId: string, chapterId: string, scheduledAt: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ scheduledAt })
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function cancelChapterSchedule(bookId: string, chapterId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function getChapterRevisions(bookId: string, chapterId: string): Promise<ChapterRevision[]> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions`, {
+        headers: getHeaders()
+    });
+    return await handleResponse(response);
+}
+
+export async function restoreChapterRevision(bookId: string, chapterId: string, revisionId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}/restore`, {
+        method: 'POST',
+        headers: getHeaders()
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+export async function getWriterAnalytics(bookId?: string): Promise<WriterAnalytics> {
+    const query = bookId ? `?bookId=${encodeURIComponent(bookId)}` : '';
+    const response = await fetch(`${API_BASE_URL}/writer/analytics${query}`, { headers: getHeaders() });
+    return await handleResponse(response);
 }
 
 export async function deleteBook(bookId: string): Promise<User> {
@@ -754,6 +855,15 @@ function mapBackendBookToFrontend(backendBook: any): Book {
         contentWarnings: backendBook.contentWarnings || [],
         chapters: (backendBook.chapters || []).map((chapter: any) => ({ ...chapter, contentWarnings: chapter.contentWarnings || [] })),
     };
+}
+
+function getOrCreateReaderSession(): string {
+    const key = 'wordweft_reader_session';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const sessionId = crypto.randomUUID();
+    localStorage.setItem(key, sessionId);
+    return sessionId;
 }
 
 export async function submitReport(data: { targetType: ReportTargetType; targetId: string; category: ReportCategory; description: string }): Promise<ContentReport> {

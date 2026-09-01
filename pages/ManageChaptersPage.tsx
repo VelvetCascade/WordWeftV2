@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User, Chapter, Book, AgeRating, ContentWarning } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -8,6 +8,7 @@ import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
 import { ShareModal } from '../components/ShareModal';
+import { validateManuscriptFile } from '../utils/manuscriptImport';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -197,17 +198,20 @@ const ConfirmDialog: React.FC<{
     );
 };
 
-const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, onPublishToggle, onDelete, onShare }) => (
+const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onCancelSchedule: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, onPublishToggle, onCancelSchedule, onDelete, onShare }) => (
     <div className="ww-manage-chapter-card flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
         <div className="ww-manage-chapter-main flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
             <div className="ww-manage-chapter-copy">
                 <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{chapter.title}</h4>
                 <div className="ww-manage-chapter-meta flex items-center gap-2 mt-1">
-                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm flex-shrink-0 ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm flex-shrink-0 ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : chapter.status === 'scheduled' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
                         {chapter.status}
                     </span>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{chapter.wordCount.toLocaleString()} words</p>
+                    {chapter.status === 'scheduled' && chapter.scheduledAt && (
+                        <p className="ww-manage-scheduled-time">{new Date(chapter.scheduledAt).toLocaleString()}</p>
+                    )}
                 </div>
             </div>
         </div>
@@ -219,10 +223,10 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
                 <PencilIcon className="w-4 h-4" /> Edit
             </button>
             <button
-                onClick={onPublishToggle}
+                onClick={chapter.status === 'scheduled' ? onCancelSchedule : onPublishToggle}
                 className={`flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${chapter.status === 'published' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
             >
-                {chapter.status === 'published' ? 'Unpublish' : 'Publish'}
+                {chapter.status === 'published' ? 'Unpublish' : chapter.status === 'scheduled' ? 'Cancel schedule' : 'Publish'}
             </button>
             {chapter.status === 'published' && (
                 <button
@@ -257,6 +261,9 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     // W2: Book publish celebration state
     const [showPublishCelebration, setShowPublishCelebration] = useState(false);
     const [bookShareOpen, setBookShareOpen] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importNotice, setImportNotice] = useState('');
+    const importInputRef = useRef<HTMLInputElement>(null);
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
@@ -269,6 +276,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
         onUserUpdate(updatedUser);
         setErrorMsg(null);
+    };
+
+    const handleCancelSchedule = async (chapterId: string) => {
+        try {
+            const updatedUser = await api.cancelChapterSchedule(bookId, chapterId);
+            onUserUpdate(updatedUser);
+            setErrorMsg(null);
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'Could not cancel this schedule.');
+        }
     };
 
     const handleDeleteChapter = async (chapterId: string) => {
@@ -316,6 +333,24 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         onUserUpdate(updatedUser);
     };
 
+    const handleManuscriptImport = async (file?: File) => {
+        if (!file) return;
+        setErrorMsg(null);
+        setImportNotice('');
+        try {
+            validateManuscriptFile(file.name, file.size);
+            setIsImporting(true);
+            const result = await api.importManuscript(bookId, file);
+            onUserUpdate(result.user);
+            setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.`);
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'Could not import this manuscript.');
+        } finally {
+            setIsImporting(false);
+            if (importInputRef.current) importInputRef.current.value = '';
+        }
+    };
+
     if (!book) {
         return <div className="p-8">Book not found.</div>;
     }
@@ -354,6 +389,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                         <button className="ww-manage-primary" onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}>
                             <PlusIcon className="w-4 h-4" /> New chapter
                         </button>
+                        <button onClick={() => importInputRef.current?.click()} disabled={isImporting}>
+                            {isImporting ? 'Importing…' : 'Import manuscript'}
+                        </button>
+                        <input
+                            ref={importInputRef}
+                            className="sr-only"
+                            type="file"
+                            accept=".txt,.md,.markdown,.docx"
+                            onChange={event => handleManuscriptImport(event.target.files?.[0])}
+                        />
                         <button className="ww-manage-publish" onClick={handleBookPublishToggle}>
                             {isBookPublished ? 'Return to draft' : 'Publish story'}
                         </button>
@@ -362,6 +407,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     </div>
                 </div>
                 {errorMsg && <div className="ww-manage-error">{errorMsg}</div>}
+                {importNotice && <div className="ww-manage-import-notice" role="status">{importNotice}</div>}
             </section>
 
             <div className="ww-manage-workspace">
@@ -388,6 +434,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                     bookId={book.id}
                                     index={i}
                                     onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
+                                    onCancelSchedule={() => handleCancelSchedule(chapter.id)}
                                     onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
                                     onShare={() => setShareChapter(chapter)}
                                 />

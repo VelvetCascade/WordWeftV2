@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon, HeartIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Trophy } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { SearchOverlay } from './SearchOverlay';
 import type { User } from '../types';
@@ -60,6 +60,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     if (hash.startsWith('profile') || hash.startsWith('edit-profile')) return 'library';
     if (hash.startsWith('write')) return 'write';
     if (hash.startsWith('community')) return 'community';
+    if (hash.startsWith('hooks')) return 'hooks';
+    if (hash.startsWith('events') || hash.startsWith('challenges')) return 'events';
     return '';
   };
 
@@ -117,6 +119,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
   const desktopNavLinks = [
     { label: 'Discover', route: 'home', action: () => { window.location.hash = '/'; } },
+    { label: 'Hook Feed', route: 'hooks', action: () => { window.location.hash = '/hooks'; } },
+    { label: 'Events', route: 'events', action: () => { window.location.hash = '/events'; } },
     { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; } },
     { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; } },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; } },
@@ -125,7 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
   const mobileNavLinks = [
     { label: 'Home', route: 'home', action: () => { window.location.hash = '/'; }, icon: HomeIcon },
-    { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; }, icon: Squares2X2Icon },
+    { label: 'Hooks', route: 'hooks', action: () => { window.location.hash = '/hooks'; }, icon: SparklesIcon },
     { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
     { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
@@ -354,6 +358,14 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
                   <span className="mobile-more-item-label">For You</span>
                 </button>
 
+                <button
+                  className="mobile-more-item"
+                  onClick={() => handleMobileNav(() => { window.location.hash = '/events'; })}
+                >
+                  <Trophy className="mobile-more-item-icon" />
+                  <span className="mobile-more-item-label">Challenges & Events</span>
+                </button>
+
                 <div className="mobile-more-divider" />
 
                 {/* Support WordWeft Premium Banner */}
@@ -416,6 +428,14 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
                     Login / Sign Up
                   </button>
                 </div>
+
+                <button
+                  className="mobile-more-item"
+                  onClick={() => handleMobileNav(() => { window.location.hash = '/events'; })}
+                >
+                  <Trophy className="mobile-more-item-icon" />
+                  <span className="mobile-more-item-label">Challenges & Events</span>
+                </button>
 
                 <div className="mobile-more-divider" />
 
