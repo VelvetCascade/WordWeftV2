@@ -1,5 +1,6 @@
 
 import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 
 import { Navbar } from './components/Navbar';
 import { WriterLayout } from './components/WriterLayout';
@@ -613,6 +614,7 @@ const App: React.FC = () => {
           </div>
         )}
       </div>
+      <Analytics />
     </FeedbackContext.Provider>
     </AnalyticsProvider>
   );
