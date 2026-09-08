@@ -1,5 +1,7 @@
 
 import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { Navbar } from './components/Navbar';
 import { WriterLayout } from './components/WriterLayout';
@@ -613,6 +615,8 @@ const App: React.FC = () => {
           </div>
         )}
       </div>
+      <Analytics />
+      <SpeedInsights />
     </FeedbackContext.Provider>
     </AnalyticsProvider>
   );
