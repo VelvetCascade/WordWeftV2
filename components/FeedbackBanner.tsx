@@ -21,7 +21,7 @@ export const FeedbackBanner: React.FC<Props> = ({ visible, onDismiss }) => {
 
     return (
         <div
-            className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-out
+            className={`ww-feedback-banner fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-out
                 ${visible && !exiting ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full'}`}
         >
             <div className="bg-white dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border shadow-lg">

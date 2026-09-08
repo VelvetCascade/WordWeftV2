@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 
@@ -72,25 +72,10 @@ const StatChip: React.FC<StatChipProps> = ({ value, label }) => (
 /* ─── Main page ───────────────────────────────────────────────────────────── */
 export const AboutPage: React.FC = () => {
     const { trackEvent } = useAnalytics();
-    const heroRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         trackEvent('content', 'page_view', 'about');
         window.scrollTo(0, 0);
-    }, []);
-
-    /* Subtle parallax on hero blobs */
-    useEffect(() => {
-        const onScroll = () => {
-            if (!heroRef.current) return;
-            const y = window.scrollY;
-            const blobs = heroRef.current.querySelectorAll<HTMLElement>('[data-blob]');
-            blobs.forEach((b, i) => {
-                b.style.transform = `translateY(${y * (i % 2 === 0 ? 0.12 : -0.1)}px)`;
-            });
-        };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
     return (
@@ -99,14 +84,11 @@ export const AboutPage: React.FC = () => {
             {/* ══════════════════════════════════════════════════════════════
                 HERO
             ══════════════════════════════════════════════════════════════ */}
-            <section
-                ref={heroRef}
-                className="relative overflow-hidden bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border"
-            >
+            <section className="relative overflow-hidden bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border">
                 {/* Decorative blobs */}
-                <Blob data-blob="1" className="top-0 left-1/2 w-[700px] h-[700px] bg-accent/6 -translate-x-1/2 -translate-y-1/2" />
-                <Blob data-blob="2" className="bottom-0 left-0 w-80 h-80 bg-primary/5 translate-y-1/2 -translate-x-1/4" />
-                <Blob data-blob="3" className="top-0 right-0 w-64 h-64 bg-accent/8 -translate-y-1/3 translate-x-1/3" />
+                <Blob className="top-0 left-1/2 w-[700px] h-[700px] bg-accent/6 -translate-x-1/2 -translate-y-1/2" />
+                <Blob className="bottom-0 left-0 w-80 h-80 bg-primary/5 translate-y-1/2 -translate-x-1/4" />
+                <Blob className="top-0 right-0 w-64 h-64 bg-accent/8 -translate-y-1/3 translate-x-1/3" />
 
                 <div className="container mx-auto px-6 py-20 md:py-28 relative z-10 text-center max-w-4xl">
                     {/* Label */}

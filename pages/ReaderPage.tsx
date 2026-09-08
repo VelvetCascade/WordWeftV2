@@ -762,8 +762,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             </main>
 
             {/* Discussion Section (Bottom) */}
-            <section className="max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
-                <div className="flex items-center justify-between mb-8">
+            <section className="reader-discussion max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
+                <div className="reader-discussion-head flex items-center justify-between mb-8">
                     <h2 className="font-sans text-2xl font-bold dark:text-dark-text-rich">
                         Chapter Discussion <span className="text-base font-normal text-gray-500">({comments.length})</span>
                     </h2>

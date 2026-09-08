@@ -48,12 +48,12 @@ export const FeedbackModal: React.FC<Props> = ({ config, onSubmit, onDismiss, on
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="ww-feedback-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" role="dialog" aria-modal="true" aria-label={config.title}>
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onDismiss} />
 
             {/* Modal */}
-            <div className="relative bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="ww-feedback-modal-card relative bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl shadow-2xl w-full max-w-md overflow-y-auto">
                 {/* Header */}
                 <div className="px-6 pt-6 pb-2 flex items-start justify-between">
                     <div>

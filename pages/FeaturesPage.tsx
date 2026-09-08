@@ -52,38 +52,94 @@ const ArrowRightIcon = () => (
 );
 
 // ─── Mood Demo Component ──────────────────────────────────────
+type AtmospherePreset = {
+    id: 'romantic' | 'tense' | 'melancholy' | 'triumphant' | 'eerie' | 'serene';
+    name: string;
+    chapter: string;
+    title: string;
+    excerpt: string;
+    cue: string;
+};
+
+const atmospherePresets: AtmospherePreset[] = [
+    { id: 'romantic', name: 'Tender', chapter: 'A room after rain', title: 'The silence leaned closer.', excerpt: 'Rain silvered the window. When Mira reached for the cup, her hand found his instead—and neither of them moved away.', cue: 'Warm lamplight · softened edges' },
+    { id: 'tense', name: 'Tense', chapter: 'Footsteps below', title: 'The lock turned downstairs.', excerpt: 'One click. Then another. Elara held her breath as the hallway light narrowed beneath the door.', cue: 'Narrowed light · measured pulse' },
+    { id: 'melancholy', name: 'Wistful', chapter: 'Letters never sent', title: 'Summer had kept his handwriting.', excerpt: 'The paper smelled faintly of cedar. Outside, the last train crossed the valley without slowing for her town.', cue: 'Rainwashed glass · distant horizon' },
+    { id: 'triumphant', name: 'Radiant', chapter: 'Above the cloudline', title: 'At dawn, the gates opened.', excerpt: 'A thousand banners lifted with the wind. For the first time, the road ahead belonged entirely to them.', cue: 'Rising light · open air' },
+    { id: 'eerie', name: 'Uncanny', chapter: 'The house listening', title: 'The portrait blinked second.', excerpt: 'No floorboard creaked. No curtain stirred. Still, the room had quietly rearranged itself around her.', cue: 'Peripheral shadow · held breath' },
+    { id: 'serene', name: 'Still', chapter: 'The river path', title: 'Morning arrived without hurry.', excerpt: 'Mist rested on the reeds while the river carried small circles of light toward the sea.', cue: 'Open space · gentle drift' },
+];
+
 const MoodDemo: React.FC = () => {
-    const moods = [
-        { name: 'Romantic', color: 'linear-gradient(135deg, #C44D73, #8D6E63)' },
-        { name: 'Tense', color: 'linear-gradient(135deg, #B71C1C, #5D4037)' },
-        { name: 'Melancholy', color: 'linear-gradient(135deg, #5B86E5, #4E342E)' },
-        { name: 'Triumphant', color: 'linear-gradient(135deg, #D4A017, #8D6E63)' },
-        { name: 'Eerie', color: 'linear-gradient(135deg, #3E2723, #1B0E0A)' },
-        { name: 'Serene', color: 'linear-gradient(135deg, #A1887F, #5D4037)' },
-    ];
     const [active, setActive] = useState(0);
+    const [autoPlay, setAutoPlay] = useState(() => (
+        typeof window !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ));
+    const preset = atmospherePresets[active];
 
     useEffect(() => {
-        const t = setInterval(() => setActive(p => (p + 1) % moods.length), 2400);
-        return () => clearInterval(t);
-    }, []);
+        if (!autoPlay) return;
+        const timer = window.setInterval(() => setActive(previous => (previous + 1) % atmospherePresets.length), 5200);
+        return () => window.clearInterval(timer);
+    }, [autoPlay]);
+
+    const chooseAtmosphere = (index: number) => {
+        setActive(index);
+        setAutoPlay(false);
+    };
 
     return (
-        <div className="ft-mood-demo">
-            <div className="ft-mood-preview" style={{ background: moods[active].color }}>
-                <span className="ft-mood-label">{moods[active].name}</span>
-                <p className="ft-mood-sample-text">
-                    The golden light filtered through the ancient windows, casting long shadows across the stone floor...
-                </p>
-            </div>
-            <div className="ft-mood-pills">
-                {moods.map((m, i) => (
+        <div className="ft-mood-demo ft-atmosphere-demo" data-atmosphere={preset.id}>
+            <div className="ft-atmosphere-frame">
+                <div className="ft-atmosphere-scene" aria-hidden="true">
+                    <span className="ft-atmosphere-glow" />
+                    <span className="ft-atmosphere-horizon" />
+                    <span className="ft-atmosphere-texture" />
+                    <span className="ft-atmosphere-drift ft-atmosphere-drift-one" />
+                    <span className="ft-atmosphere-drift ft-atmosphere-drift-two" />
+                </div>
+
+                <div className="ft-atmosphere-toolbar">
+                    <span><i /> Live reading preview</span>
                     <button
-                        key={m.name}
-                        className={`ft-mood-pill ${i === active ? 'ft-mood-pill-active' : ''}`}
-                        onClick={() => setActive(i)}
+                        type="button"
+                        onClick={() => setAutoPlay(value => !value)}
+                        aria-pressed={autoPlay}
+                        aria-label={autoPlay ? 'Pause atmosphere preview' : 'Play atmosphere preview'}
                     >
-                        {m.name}
+                        {autoPlay ? 'Pause' : 'Play'}
+                    </button>
+                </div>
+
+                <article className="ft-atmosphere-reader" key={preset.id}>
+                    <div className="ft-atmosphere-chapter">
+                        <span>{preset.chapter}</span>
+                        <span>{String(active + 1).padStart(2, '0')} / {String(atmospherePresets.length).padStart(2, '0')}</span>
+                    </div>
+                    <h4>{preset.title}</h4>
+                    <p>{preset.excerpt}</p>
+                    <div className="ft-atmosphere-cue"><i />{preset.cue}</div>
+                </article>
+
+                <div className="ft-atmosphere-caption">
+                    <span>Atmosphere</span>
+                    <strong>{preset.name}</strong>
+                    <small>The page responds to the prose—not the other way around.</small>
+                </div>
+            </div>
+
+            <div className="ft-mood-pills" role="group" aria-label="Choose an atmosphere">
+                {atmospherePresets.map((mood, index) => (
+                    <button
+                        type="button"
+                        key={mood.id}
+                        data-atmosphere={mood.id}
+                        className={`ft-mood-pill ${index === active ? 'ft-mood-pill-active' : ''}`}
+                        onClick={() => chooseAtmosphere(index)}
+                        aria-pressed={index === active}
+                    >
+                        <i aria-hidden="true" />
+                        {mood.name}
                     </button>
                 ))}
             </div>
@@ -159,6 +215,7 @@ const ReaderDemo: React.FC = () => {
     const [progress, setProgress] = useState(34);
 
     useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const t = setInterval(() => setProgress(p => p >= 90 ? 34 : p + 1), 120);
         return () => clearInterval(t);
     }, []);
@@ -279,6 +336,10 @@ const SearchDemo: React.FC = () => {
     ];
 
     useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setTyping(fullText);
+            return;
+        }
         let i = 0;
         const timer = setInterval(() => {
             i++;
@@ -509,13 +570,13 @@ export const FeaturesPage: React.FC = () => {
             <FeatureSection
                 id="mood"
                 badge="Atmosphere Engine"
-                title="Set the Mood"
-                description="Tag sections of your story with moods &mdash; romantic, tense, eerie, triumphant &mdash; and readers experience subtle, immersive color shifts that match the narrative's emotion."
+                title="Let the page breathe"
+                description="Writers can shape the emotional climate of a passage. Light, texture, rhythm, and restrained motion respond around the manuscript while the words remain calm and readable."
                 bullets={[
-                    '6 handcrafted mood themes with unique palettes',
-                    'Background, text, and accent colors shift automatically',
-                    'Writers tag sections; readers feel the atmosphere',
-                    'Works seamlessly in both light and dark mode',
+                    'Six cinematic atmospheres designed around reading comfort',
+                    'Soft environmental cues instead of full-screen color washes',
+                    'Transitions follow tagged passages without interrupting the prose',
+                    'Reduced-motion and light/dark preferences are respected',
                 ]}
             >
                 <MoodDemo />

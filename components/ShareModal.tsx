@@ -724,6 +724,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     return (
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Share ${book.title}`}
             onClick={onClose}
         >
             <div
@@ -782,7 +785,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 </button>
                             )}
 
-                            <div className="grid grid-cols-5 gap-3">
+                            <div className="ww-share-channels grid grid-cols-5 gap-3">
                                 <button onClick={() => openLink(shareLinks.twitter)} className="flex flex-col items-center gap-2 group">
                                     <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><TwitterIcon className="w-5 h-5" /></div>
                                     <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">X</span>
