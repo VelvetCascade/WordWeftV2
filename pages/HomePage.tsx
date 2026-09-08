@@ -15,6 +15,7 @@ const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
 
   useEffect(() => {
     if (books.length === 0) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length);
     }, 5000);

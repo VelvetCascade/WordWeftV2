@@ -6,8 +6,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
  * Watches [data-mood] blocks in the viewport via IntersectionObserver.
  * When a mood block enters view, the entire page environment shifts:
  *   - Background gradient layer
- *   - Floating particle elements
- *   - Edge vignette overlay
+ *   - A restrained environmental texture
+ *   - A small number of deterministic ambient details
  *
  * All effects are pure CSS, pointer-events:none, and respect prefers-reduced-motion.
  */
@@ -22,18 +22,33 @@ interface MoodAtmosphereProps {
 }
 
 const MOOD_PARTICLES: Record<MoodType, { count: number; className: string }> = {
-    romantic: { count: 35, className: 'mood-particle--petal' },
-    tense: { count: 60, className: 'mood-particle--spark' },
-    melancholy: { count: 80, className: 'mood-particle--raindrop' },
-    triumphant: { count: 45, className: 'mood-particle--sparkle' },
-    eerie: { count: 30, className: 'mood-particle--wisp' },
-    serene: { count: 40, className: 'mood-particle--orb' },
+    romantic: { count: 9, className: 'mood-particle--petal' },
+    tense: { count: 12, className: 'mood-particle--spark' },
+    melancholy: { count: 14, className: 'mood-particle--raindrop' },
+    triumphant: { count: 10, className: 'mood-particle--sparkle' },
+    eerie: { count: 8, className: 'mood-particle--wisp' },
+    serene: { count: 9, className: 'mood-particle--orb' },
 };
+
+const seededValue = (index: number, salt: number) => {
+    const value = Math.sin((index + 1) * (salt + 11) * 12.9898) * 43758.5453;
+    return value - Math.floor(value);
+};
+
+const particleStyle = (index: number): React.CSSProperties => ({
+    '--particle-index': index,
+    '--particle-delay': `${seededValue(index, 1) * 4}s`,
+    '--particle-duration': `${10 + seededValue(index, 2) * 12}s`,
+    '--particle-x': `${4 + seededValue(index, 3) * 92}%`,
+    '--particle-y': `${6 + seededValue(index, 4) * 88}%`,
+    '--particle-scale': `${0.65 + seededValue(index, 5) * 0.75}`,
+    '--particle-opacity': `${0.16 + seededValue(index, 6) * 0.22}`,
+} as React.CSSProperties);
 
 export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, active = true }) => {
     const [activeMood, setActiveMood] = useState<MoodType | null>(null);
-    const [prevMood, setPrevMood] = useState<MoodType | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const activeMoodRef = useRef<MoodType | null>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
     const visibleMoodsRef = useRef<Map<Element, { mood: MoodType; ratio: number }>>(new Map());
     const transitionTimeoutRef = useRef<number | null>(null);
@@ -72,8 +87,8 @@ export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, acti
 
                 const dominant = determineDominantMood();
 
-                if (dominant !== activeMood) {
-                    setPrevMood(activeMood);
+                if (dominant !== activeMoodRef.current) {
+                    activeMoodRef.current = dominant;
                     setIsTransitioning(true);
                     setActiveMood(dominant);
 
@@ -82,8 +97,7 @@ export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, acti
                     }
                     transitionTimeoutRef.current = window.setTimeout(() => {
                         setIsTransitioning(false);
-                        setPrevMood(null);
-                    }, 900);
+                    }, 1200);
                 }
             },
             {
@@ -110,7 +124,7 @@ export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, acti
                 clearTimeout(transitionTimeoutRef.current);
             }
         };
-    }, [active, contentRef, determineDominantMood, activeMood]);
+    }, [active, contentRef, determineDominantMood]);
 
     // Apply global body class for immersive full-page styling overrides
     useEffect(() => {
@@ -137,26 +151,21 @@ export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, acti
             {/* Layer 1: Full-page gradient background */}
             <div className={`mood-atmosphere__gradient mood-atmosphere__gradient--${activeMood}`} />
 
-            {/* Layer 2: Floating particles */}
+            {/* Layer 2: A quiet paper/light texture that gives the palette depth */}
+            <div className={`mood-atmosphere__texture mood-atmosphere__texture--${activeMood}`} />
+
+            {/* Layer 3: Sparse ambient details */}
             <div className="mood-atmosphere__particles">
                 {Array.from({ length: particleConfig.count }).map((_, i) => (
                     <div
                         key={`${activeMood}-${i}`}
                         className={`mood-particle ${particleConfig.className}`}
-                        style={{
-                            '--particle-index': i,
-                            '--particle-delay': `${(i * 0.1) + Math.random() * 2}s`,
-                            '--particle-duration': `${5 + Math.random() * 8}s`,
-                            '--particle-x': `${Math.random() * 100}%`,
-                            '--particle-y': `${Math.random() * 100}%`,
-                            '--particle-scale': `${0.5 + Math.random() * 1.5}`,
-                            '--particle-opacity': `${0.6 + Math.random() * 0.4}`,
-                        } as React.CSSProperties}
+                        style={particleStyle(i)}
                     />
                 ))}
             </div>
 
-            {/* Layer 3: Vignette overlay */}
+            {/* Layer 4: Edge light keeps the manuscript as the visual anchor */}
             <div className={`mood-atmosphere__vignette mood-atmosphere__vignette--${activeMood}`} />
         </div>
     );

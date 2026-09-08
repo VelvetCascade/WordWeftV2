@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * AdUnit — Renders a Google AdSense ad on content-rich pages only.
@@ -46,13 +46,23 @@ interface AdUnitProps {
 const AdUnit: React.FC<AdUnitProps> = ({ format = 'horizontal', className = '' }) => {
   const adRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
+  const [loadState, setLoadState] = useState<'pending' | 'filled' | 'empty'>('pending');
 
   useEffect(() => {
     loadAdsenseScript();
 
-    // Small delay to ensure the script has loaded before pushing
+    const ad = adRef.current;
+    const updateLoadState = () => {
+      const status = ad?.getAttribute('data-ad-status');
+      if (status === 'filled') setLoadState('filled');
+      if (status === 'unfilled') setLoadState('empty');
+    };
+    const observer = ad ? new MutationObserver(updateLoadState) : null;
+    if (ad && observer) observer.observe(ad, { attributes: true, attributeFilter: ['data-ad-status'] });
+
+    // Small delay to ensure the script has loaded before pushing.
     const timer = setTimeout(() => {
-      if (adRef.current && !pushed.current) {
+      if (ad && !pushed.current) {
         try {
           (window.adsbygoogle = window.adsbygoogle || []).push({});
           pushed.current = true;
@@ -62,7 +72,17 @@ const AdUnit: React.FC<AdUnitProps> = ({ format = 'horizontal', className = '' }
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    // Ad blockers and failed networks often never set data-ad-status. Collapse
+    // that unresolved slot so it cannot leave a large blank hole in the page.
+    const emptyFallback = window.setTimeout(() => {
+      if (ad?.getAttribute('data-ad-status') !== 'filled') setLoadState('empty');
+    }, 7000);
+
+    return () => {
+      clearTimeout(timer);
+      window.clearTimeout(emptyFallback);
+      observer?.disconnect();
+    };
   }, []);
 
   // Format-specific styles
@@ -86,6 +106,8 @@ const AdUnit: React.FC<AdUnitProps> = ({ format = 'horizontal', className = '' }
   return (
     <div
       className={`ww-ad-unit ${className}`}
+      data-load-state={loadState}
+      aria-hidden={loadState === 'empty'}
       style={{
         margin: '32px auto',
         maxWidth: '1100px',

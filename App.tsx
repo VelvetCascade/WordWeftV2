@@ -130,7 +130,7 @@ const App: React.FC = () => {
     }
   };
 
-  const feedback = useFeedbackTriggers();
+  const feedback = useFeedbackTriggers(isAuthenticated);
 
   // Check for existing session on initial load
   useEffect(() => {
@@ -243,9 +243,12 @@ const App: React.FC = () => {
         safety:         { title: 'Community Safety Rules — WordWeft', description: 'WordWeft\'s content guidelines and community safety rules for a respectful storytelling environment.', canonical: base + '/safety' },
         contact:        { title: 'Contact Us — WordWeft', description: 'Get in touch with the WordWeft team. We\'d love to hear from you.', canonical: base + '/contact' },
         feedback:       { title: 'Share Feedback — WordWeft', description: 'Help us make WordWeft better. Share your thoughts, ideas, and suggestions.', canonical: base + '/feedback' },
+        about:          { title: 'About WordWeft Studio — A Home for Story People', description: 'Meet WordWeft Studio and the principles behind our thoughtful home for readers and independent writers.', canonical: base + '/about' },
         auth:           { title: 'Sign In or Join — WordWeft', description: 'Create a free WordWeft account to start reading or publishing your own stories.', canonical: base + '/auth' },
         'hook-feed':    { title: 'Hook Feed — Find Your Next Story | WordWeft', description: 'Sample opening lines from published WordWeft stories and find the writing that hooks you.', canonical: base + '/hooks' },
         'reading-growth': { title: 'Reading Challenges & Genre Events | WordWeft', description: 'Join personal reading challenges and discover curated genre events on WordWeft.', canonical: base + '/events' },
+        community:      { title: 'Community — Conversations Around Stories | WordWeft', description: 'Join readers and writers discussing craft, releases, recommendations, and the stories they love.', canonical: base + '/community' },
+        search:         { title: 'Search Stories and Authors — WordWeft', description: 'Search WordWeft for books, writers, genres, and your next memorable read.', canonical: base + '/search' },
       };
       const entry = metaMap[p.name];
       if (!entry) return;
@@ -541,7 +544,7 @@ const App: React.FC = () => {
             <Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense>
           </WriterLayout>
         ) : (
-          <main className={`ww-app-main ww-page-${page.name} ${showNavbar ? `ww-app-main-with-nav pb-24 md:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'md:pt-20'}` : ""}`}>
+          <main className={`ww-app-main ww-page-${page.name} ${showNavbar ? `ww-app-main-with-nav pb-24 xl:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'xl:pt-20'}` : ""}`}>
             <Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense>
           </main>
         )}

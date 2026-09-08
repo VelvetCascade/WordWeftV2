@@ -48,15 +48,27 @@ export type FeedbackTriggerType =
     | 'EXIT_FEEDBACK'
     | 'POWER_USER';
 
-export function useFeedbackTriggers() {
+export function useFeedbackTriggers(enabled = true) {
     const [toastConfig, setToastConfig] = useState<ToastConfig | null>(null);
     const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);
     const [showBanner, setShowBanner] = useState(false);
     const readingStartRef = useRef<number>(0);
     const exitListenerRef = useRef(false);
+    const enabledRef = useRef(enabled);
+
+    useEffect(() => {
+        enabledRef.current = enabled;
+    }, [enabled]);
 
     // On mount: record session day, mark session start, check banner
     useEffect(() => {
+        if (!enabled) {
+            setToastConfig(null);
+            setModalConfig(null);
+            setShowBanner(false);
+            return;
+        }
+
         cooldown.recordSessionDay();
         cooldown.markSessionStart();
 
@@ -69,10 +81,11 @@ export function useFeedbackTriggers() {
         }, 10000); // Show banner after 10s
 
         return () => clearTimeout(bannerTimer);
-    }, []);
+    }, [enabled]);
 
     // Exit intent listener
     useEffect(() => {
+        if (!enabled) return;
         if (exitListenerRef.current) return;
         exitListenerRef.current = true;
 
@@ -114,11 +127,13 @@ export function useFeedbackTriggers() {
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            exitListenerRef.current = false;
         };
-    }, []);
+    }, [enabled]);
 
     // Power user check (after enough session days)
     useEffect(() => {
+        if (!enabled) return;
         const timer = setTimeout(() => {
             const dayCount = cooldown.getSessionDayCount();
             if (dayCount >= 3 && !cooldown.wasDismissed('POWER_USER') && cooldown.canShowFeedback()) {
@@ -133,11 +148,13 @@ export function useFeedbackTriggers() {
         }, 30000); // Check after 30s to not interrupt early actions
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [enabled]);
 
     /** Trigger a contextual feedback popup from any page component */
     const triggerFeedback = useCallback((type: FeedbackTriggerType, delayMs = 2000) => {
+        if (!enabled) return;
         setTimeout(() => {
+            if (!enabledRef.current) return;
             if (!cooldown.canShowFeedback()) return;
             if (cooldown.wasDismissed(type)) return;
 
@@ -147,7 +164,7 @@ export function useFeedbackTriggers() {
                 cooldown.recordShown();
             }
         }, delayMs);
-    }, []);
+    }, [enabled]);
 
     /** Start tracking reading time (call when entering reader) */
     const startReadingTimer = useCallback(() => {

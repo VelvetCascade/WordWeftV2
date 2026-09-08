@@ -435,8 +435,8 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={onClose}>
-            <div className="bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border border-white/20 dark:border-white/10 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col transform transition-all" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={onClose} role="dialog" aria-modal="true" aria-label={`Share ${author.name}'s portfolio`}>
+            <div className="ww-author-share-dialog bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border border-white/20 dark:border-white/10 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col transform transition-all" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-200/50 dark:border-dark-border/50">
                     <h3 className="font-sans font-bold text-xl flex items-center gap-2 text-text-rich dark:text-dark-text-rich">
@@ -477,7 +477,7 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
                                 </button>
                             )}
 
-                            <div className="grid grid-cols-5 gap-3">
+                            <div className="ww-share-channels grid grid-cols-5 gap-3">
                                 <button onClick={() => openLink(shareLinks.twitter)} className="flex flex-col items-center gap-2 group"><div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><TwitterIcon className="w-5 h-5" /></div><span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">X</span></button>
                                 <button onClick={() => openLink(shareLinks.facebook)} className="flex flex-col items-center gap-2 group"><div className="w-12 h-12 bg-[#1877F2] text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><FacebookIconSvg /></div><span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">Facebook</span></button>
                                 <button onClick={() => openLink(shareLinks.whatsapp)} className="flex flex-col items-center gap-2 group"><div className="w-12 h-12 bg-[#25D366] text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><WhatsAppIconSvg /></div><span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">WhatsApp</span></button>

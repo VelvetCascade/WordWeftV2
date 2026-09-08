@@ -125,7 +125,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     });
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark-background transition-colors duration-300 pb-20 md:pb-0">
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark-background transition-colors duration-300 pb-20 xl:pb-0">
             <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 md:py-8">
                 {/* Header */}
                 <div className="flex flex-wrap items-center justify-between mb-6 gap-3">

@@ -47,14 +47,14 @@ export const FeedbackToast: React.FC<Props> = ({ config, onRespond, onDismiss })
 
     return (
         <div
-            className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out
+            className={`ww-feedback-toast fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out
                 ${visible && !exiting ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
         >
-            <div className="bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl shadow-xl px-6 py-4 flex items-center gap-5 max-w-lg">
-                <p className="text-sm text-text-rich dark:text-dark-text-rich font-medium whitespace-nowrap">
+            <div className="ww-feedback-toast-card bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl shadow-xl px-6 py-4 flex items-center gap-5 max-w-lg">
+                <p className="text-sm text-text-rich dark:text-dark-text-rich font-medium">
                     {config.message}
                 </p>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="ww-feedback-toast-actions flex gap-2 flex-shrink-0">
                     {config.buttons.map(btn => (
                         <button
                             key={btn.value}
@@ -67,7 +67,7 @@ export const FeedbackToast: React.FC<Props> = ({ config, onRespond, onDismiss })
                 </div>
                 <button
                     onClick={handleDismiss}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0 ml-1"
+                    className="ww-feedback-dismiss text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0 ml-1"
                     aria-label="Dismiss"
                 >
                     <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none">
