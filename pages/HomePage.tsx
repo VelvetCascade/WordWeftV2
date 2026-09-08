@@ -429,7 +429,7 @@ export const HomePage: React.FC = () => {
               <span><StarIcon className="w-4 h-4" /> {books[0].rating || 'New'}</span>
               <span>{books[0].chapters.length} chapters</span>
               <span>{books[0].readingStatus}</span>
-              {books[0].genres.slice(0, 2).map(genre => <span key={genre}>{genre}</span>)}
+              {books[0].genres.slice(0, 2).map(genre => <button type="button" key={genre} onClick={() => window.location.hash = `/genre/${encodeURIComponent(genre)}`}>{genre}</button>)}
             </div>
             <div className="ww-home-feature-actions">
               <button onClick={() => window.location.hash = `/book/${books[0].id}`}>Open story <span>→</span></button>

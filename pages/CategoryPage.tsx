@@ -15,7 +15,7 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
     <img src={book.coverUrl} alt={book.title} className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
-        {book.genres.map(g => <span key={g} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full">{g}</span>)}
+        {book.genres.map(g => <button type="button" key={g} onClick={event => { event.stopPropagation(); window.location.hash = `/genre/${encodeURIComponent(g)}`; }} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full hover:bg-accent/20">{g}</button>)}
       </div>
       <h3 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">{book.title}</h3>
       <p className="text-sm font-medium text-text-body dark:text-dark-text-body mb-2">by {book.author.name}</p>

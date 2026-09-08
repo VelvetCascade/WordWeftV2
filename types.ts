@@ -95,6 +95,7 @@ export interface ChapterRevision {
 
 export type AgeRating = 'ALL_AGES' | 'TEEN_13' | 'MATURE_18' | 'ADULT_21';
 export type ContentWarning = 'VIOLENCE' | 'GORE' | 'STRONG_LANGUAGE' | 'SEXUAL_CONTENT' | 'ABUSE' | 'SELF_HARM' | 'SUBSTANCE_USE' | 'GRIEF' | 'DISCRIMINATION' | 'FLASHING_IMAGES' | 'OTHER';
+export type StoryStatus = 'Ongoing' | 'Hiatus' | 'Completed';
 
 export interface Book {
   id: string;
@@ -115,7 +116,7 @@ export interface Book {
   tags: string[];
   summary: string;
   chapters: Chapter[];
-  readingStatus: 'Completed' | 'Ongoing';
+  readingStatus: StoryStatus;
   publicationStatus: 'draft' | 'published';
   publishedDate?: string;
   nextScheduledReleaseAt?: string;

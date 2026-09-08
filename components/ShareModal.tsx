@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Book } from '../types';
 import { ShareIcon, LinkIcon, DocumentDuplicateIcon, XMarkIcon, CheckCircleIcon, TwitterIcon, InstagramIcon } from './icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { storyShareUrl } from '../utils/shareLinks';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -589,7 +590,7 @@ async function drawQuoteCard(
 // ============================
 
 export const ShareModal: React.FC<ShareModalProps> = ({
-    isOpen, onClose, book, chapter, url = window.location.href,
+    isOpen, onClose, book, chapter, url,
     initialTab = 'quick', quoteText, quickShareOnly = false, shareTextOverride,
 }) => {
     const { theme } = useTheme();
@@ -599,6 +600,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const quoteCanvasRef = useRef<HTMLCanvasElement>(null);
+    const publicUrl = url || storyShareUrl(book.id);
 
     const shareTitle = chapter ? `${book.title} - ${chapter.title}` : book.title;
     const authorName = book.author?.name || 'an unknown author';
@@ -652,16 +654,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     if (!isOpen) return null;
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(publicUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
     const shareLinks = {
-        twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + url)}`,
-        telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`
+        twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(shareText)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl)}`,
+        whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + publicUrl)}`,
+        telegram: `https://t.me/share/url?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(shareText)}`
     };
 
     const openLink = (link: string) => {
@@ -671,7 +673,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     const handleNativeShare = async () => {
         if (navigator.share) {
             try {
-                await navigator.share({ title: shareTitle, text: shareText, url });
+                await navigator.share({ title: shareTitle, text: shareText, url: publicUrl });
             } catch (e) {
                 console.log('Native share cancelled or failed', e);
             }
@@ -725,7 +727,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             onClick={onClose}
         >
             <div
-                className="bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border border-white/20 dark:border-white/10 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col transform transition-all"
+                className={`ww-share-dialog bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border border-white/20 dark:border-white/10 w-full rounded-3xl shadow-2xl overflow-hidden flex flex-col transform transition-all ${activeTab === 'story' ? 'ww-share-dialog-poster' : ''}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -755,7 +757,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 )}
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+                <div className="ww-share-content p-6 overflow-y-auto max-h-[78vh] custom-scrollbar">
 
                     {/* ========== QUICK SHARE TAB ========== */}
                     {activeTab === 'quick' && (
@@ -811,7 +813,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Page Link</label>
                                 <div className="flex gap-2">
                                     <div className="flex-1 bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm text-gray-500 dark:text-gray-400 truncate flex items-center">
-                                        {url}
+                                        {publicUrl}
                                     </div>
                                     <button
                                         onClick={handleCopyLink}
@@ -826,29 +828,36 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
                     {/* ========== STORY POSTER TAB ========== */}
                     {activeTab === 'story' && (
-                        <div className="animate-fade-in flex flex-col items-center">
-                            <p className="text-center text-sm text-text-body dark:text-dark-text-body mb-4">
-                                Download a beautiful poster for Instagram Stories or social media feeds.
-                            </p>
-
-                            {/* Theme Picker */}
-                            <div className="flex gap-2 mb-4 flex-wrap justify-center">
-                                {THEME_KEYS.map(tk => (
-                                    <button
-                                        key={tk}
-                                        onClick={() => setPosterTheme(tk)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${posterTheme === tk
-                                            ? 'bg-accent text-white shadow-md scale-105'
-                                            : 'bg-gray-100 dark:bg-dark-surface-alt text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border'
-                                        }`}
-                                    >
-                                        {POSTER_THEMES[tk].label}
-                                    </button>
-                                ))}
+                        <div className="ww-poster-workspace animate-fade-in">
+                            <div className="ww-poster-controls">
+                                <div>
+                                    <h4>Make it yours</h4>
+                                    <p>Choose a look, preview it, then share the finished poster.</p>
+                                </div>
+                                <div className="ww-poster-themes" aria-label="Poster theme">
+                                    {THEME_KEYS.map(tk => (
+                                        <button
+                                            key={tk}
+                                            onClick={() => setPosterTheme(tk)}
+                                            className={posterTheme === tk ? 'active' : ''}
+                                            aria-pressed={posterTheme === tk}
+                                        >
+                                            <i style={{ backgroundColor: POSTER_THEMES[tk].accent }} />
+                                            {POSTER_THEMES[tk].label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => handleDownloadCanvas(canvasRef.current, 'poster')}
+                                    disabled={isGenerating}
+                                    className="ww-poster-share-button"
+                                >
+                                    <ShareIcon className="w-5 h-5" /> {isGenerating ? 'Preparing…' : 'Share poster'}
+                                </button>
+                                <small>On supported phones this opens the share sheet with the poster attached.</small>
                             </div>
 
-                            {/* Canvas Preview */}
-                            <div className="w-full relative rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-dark-border aspect-[9/16]"
+                            <div className="ww-poster-preview relative rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-dark-border aspect-[9/16]"
                                 style={{ backgroundColor: POSTER_THEMES[posterTheme].previewBg }}
                             >
                                 <canvas
@@ -857,14 +866,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                     style={{ display: 'block' }}
                                 />
                             </div>
-
-                            <button
-                                onClick={() => handleDownloadCanvas(canvasRef.current, 'poster')}
-                                disabled={isGenerating}
-                                className="mt-6 w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {isGenerating ? 'Generating...' : 'Download Poster'}
-                            </button>
                         </div>
                     )}
 

@@ -420,7 +420,7 @@ export async function getAllReadingProgress(userId: string): Promise<Record<stri
 export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, progressPercentage: number): Promise<void> {
     const chapterId = book.chapters[chapterIndex].id;
 
-    await fetch(`${API_BASE_URL}/reading/progress`, {
+    const response = await fetch(`${API_BASE_URL}/reading/progress`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -434,6 +434,7 @@ export async function saveReadingProgress(userId: string, book: Book, chapterInd
             }
         })
     });
+    await handleResponse(response);
 }
 
 export async function clearReadingProgress(userId: string, bookId: string): Promise<void> {
@@ -790,9 +791,28 @@ export async function uploadFile(formData: FormData): Promise<{ filename: string
 
 // --- ImageKit API ---
 
-export async function getImageKitAuth(): Promise<{ token: string, expire: number, signature: string, publicKey: string }> {
-    const response = await fetch(`${API_BASE_URL}/imagekit/auth`, { headers: getHeaders() });
+export async function getImageKitAuth(uploadId?: string): Promise<{ token: string, expire: number, signature: string, publicKey: string }> {
+    const suffix = uploadId ? `?uploadId=${encodeURIComponent(uploadId)}` : '';
+    const response = await fetch(`${API_BASE_URL}/imagekit/auth${suffix}`, { headers: getHeaders() });
     return await handleResponse(response);
+}
+
+export interface ImageUploadDiagnostic {
+    uploadId: string;
+    event: 'selected' | 'auth_ready' | 'uploaded' | 'failed';
+    contentType?: string;
+    sizeBytes?: number;
+    httpStatus?: number;
+    message?: string;
+}
+
+export async function reportImageUploadDiagnostic(event: ImageUploadDiagnostic): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/imagekit/events`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(event),
+    });
+    await handleResponse(response);
 }
 
 function mapBackendUserToFrontend(backendData: any): User {
@@ -852,6 +872,7 @@ function mapBackendBookToFrontend(backendBook: any): Book {
         isAIGenerated: backendBook.isAIGenerated ?? backendBook.aIGenerated ?? backendBook.aigenerated ?? backendBook.aiGenerated ?? false,
         isMature: backendBook.isMature ?? backendBook.mature ?? false,
         ageRating: backendBook.ageRating ?? ((backendBook.isMature ?? backendBook.mature) ? 'MATURE_18' : 'ALL_AGES'),
+        readingStatus: backendBook.readingStatus || 'Ongoing',
         contentWarnings: backendBook.contentWarnings || [],
         chapters: (backendBook.chapters || []).map((chapter: any) => ({ ...chapter, contentWarnings: chapter.contentWarnings || [] })),
     };

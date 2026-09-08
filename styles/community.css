@@ -172,6 +172,16 @@
 .community-attachment-picker legend { padding: 0 5px; }
 .community-attachment-picker legend svg { display: inline; margin-right: 5px; vertical-align: middle; }
 .community-attachment-picker > p { font-size: 11px; }
+.community-attachment-results { display: grid; gap: 7px; max-height: 260px; overflow-y: auto; padding-right: 3px; }
+.community-attachment-results > button { width: 100%; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 8px; border: 1px solid var(--ww-line); border-radius: 9px; text-align: left; background: var(--ww-paper); color: var(--ww-ink); }
+.community-attachment-results > button:hover, .community-attachment-results > button[aria-selected="true"] { border-color: var(--ww-brand); background: var(--ww-brand-soft); }
+.community-attachment-results img, .community-attachment-cover { width: 42px; height: 56px; object-fit: cover; border-radius: 6px; background: var(--ww-canvas); display: grid; place-items: center; color: var(--ww-brand); }
+.community-attachment-results > button > span:nth-child(2), .community-attached-summary > span { min-width: 0; display: grid; gap: 3px; }
+.community-attachment-results strong, .community-attached-summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.community-attachment-results small, .community-attached-summary small { color: var(--ww-muted); font-size: 9px; }
+.community-attachment-results i { color: var(--ww-brand); font-size: 9px; font-style: normal; font-weight: 700; }
+.community-attached-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--ww-brand-soft); }
+.community-attached-summary button { color: #b5563f; font-size: 10px; font-weight: 700; }
 .community-warning-options p { font-size: 10px; margin-bottom: 11px; color: var(--ww-muted); }
 .community-warning-options > div { display: flex; flex-wrap: wrap; gap: 8px 15px; }
 .community-warning-options label { display: flex; gap: 5px; align-items: center; font-size: 10px; }

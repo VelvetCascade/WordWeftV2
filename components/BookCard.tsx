@@ -36,7 +36,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
           loading="lazy"
         />
         <div className="ww-book-cover-shade" />
-        {primaryGenre && <span className="ww-book-genre">{primaryGenre}</span>}
+        {primaryGenre && <button type="button" className="ww-book-genre" onClick={(event) => { event.stopPropagation(); window.location.hash = `/genre/${encodeURIComponent(primaryGenre)}`; }} aria-label={`Browse ${primaryGenre} stories`}>{primaryGenre}</button>}
         <div className="ww-book-age"><AgeRatingBadge rating={book.ageRating} compact /></div>
         {book.isAIGenerated && <div className="ww-book-ai"><AIBadge /></div>}
         <span className="ww-book-open">View story <span aria-hidden="true">→</span></span>

@@ -17,6 +17,7 @@ import { AgeRatingBadge } from '../components/AgeRatingBadge';
 import { warningLabel } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
 import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
+import { applyBookMetadata } from '../utils/entityMetadata';
 
 const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
@@ -237,7 +238,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [isLoading, setIsLoading] = useState(true);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
-    const [isBookmarked, setIsBookmarked] = useState(false);
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -320,6 +320,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             api.getReadingProgressForBook(currentUser.id, bookId).then(setReadingProgress);
         }
     }, [currentUser, bookId]);
+
+    useEffect(() => book ? applyBookMetadata(book) : undefined, [book]);
 
     useEffect(() => {
         if (currentUserReview) {
@@ -478,8 +480,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <button className="ww-story-header-icon" aria-label="Share this book" onClick={() => setIsShareModalOpen(true)}>
                             <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
                         </button>
-                        <button className="ww-story-header-icon" aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this book'} aria-pressed={isBookmarked} onClick={() => setIsBookmarked(!isBookmarked)}>
-                            <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookmarked ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
+                        <button className="ww-story-header-icon" aria-label={isBookInLibrary ? 'Remove bookmark' : 'Bookmark this book'} aria-pressed={isBookInLibrary} onClick={handleToggleLibrary}>
+                            <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookInLibrary ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
                         </button>
                     </div>
                 </div>
@@ -497,12 +499,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <button onClick={handleAuthorClick} className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</button></p>
 
                         {/* Book Stats */}
-                        <div className="flex flex-wrap items-center gap-6 mb-6 text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center gap-2" title="Rating">
+                        <div className="ww-story-stats flex flex-wrap items-center gap-6 mb-6 text-gray-600 dark:text-gray-400">
+                            <div className="ww-story-rating flex items-center gap-2" title="Average reader rating">
                                 <div className="flex items-center text-amber-500">
                                     {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(book.rating) ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
                                 </div>
-                                <span className="font-sans font-semibold dark:text-dark-text-body text-lg">{book.rating}</span>
+                                <span><strong>{book.rating.toFixed(1)}</strong><small>{book.reviewsCount.toLocaleString()} {book.reviewsCount === 1 ? 'review' : 'reviews'}</small></span>
                             </div>
 
                             <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
@@ -527,18 +529,13 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                 <span className="font-sans font-medium">{book.commentCount.toLocaleString()}</span>
                             </div>
 
-                            <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
-
-                            <div className="flex items-center gap-2" title="Reviews">
-                                <PencilIcon className="w-5 h-5" />
-                                <span className="font-sans font-medium">{book.reviewsCount.toLocaleString()}</span>
-                            </div>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 mb-6">
                             <AgeRatingBadge rating={book.ageRating} />
                             {book.isAIGenerated && <AIBadge />}
-                            {book.genres.map(g => <span key={g} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full">{g}</span>)}
+                            {book.genres.map(g => <button key={g} onClick={() => window.location.hash = `/genre/${encodeURIComponent(g)}`} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full hover:text-accent hover:ring-1 hover:ring-accent/30 transition-colors">{g}</button>)}
+                            {book.tags?.filter(tag => !book.genres.includes(tag)).map(tag => <button key={tag} onClick={() => window.location.hash = `/search?q=${encodeURIComponent(tag)}`} className="text-sm font-sans font-medium text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full hover:text-accent">#{tag}</button>)}
                         </div>
 
                         <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}>

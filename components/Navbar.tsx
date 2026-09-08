@@ -117,22 +117,30 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
-  const desktopNavLinks = [
-    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/'; } },
+  const desktopNavLinks = isAuthenticated ? [
+    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; } },
     { label: 'Hook Feed', route: 'hooks', action: () => { window.location.hash = '/hooks'; } },
     { label: 'Events', route: 'events', action: () => { window.location.hash = '/events'; } },
     { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; } },
     { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; } },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; } },
     { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; } },
+  ] : [
+    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; } },
+    { label: 'Features', route: 'features', action: () => { window.location.hash = '/features'; } },
+    { label: 'About', route: 'about', action: () => { window.location.hash = '/about'; } },
   ];
 
-  const mobileNavLinks = [
-    { label: 'Home', route: 'home', action: () => { window.location.hash = '/'; }, icon: HomeIcon },
+  const mobileNavLinks = isAuthenticated ? [
+    { label: 'Home', route: 'home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
     { label: 'Hooks', route: 'hooks', action: () => { window.location.hash = '/hooks'; }, icon: SparklesIcon },
     { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
     { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
+  ] : [
+    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
+    { label: 'Features', route: 'features', action: () => { window.location.hash = '/features'; }, icon: Squares2X2Icon },
+    { label: 'About', route: 'about', action: () => { window.location.hash = '/about'; }, icon: UserCircleIcon },
   ];
 
   const closeMobileMenu = () => {
@@ -428,16 +436,6 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
                     Login / Sign Up
                   </button>
                 </div>
-
-                <button
-                  className="mobile-more-item"
-                  onClick={() => handleMobileNav(() => { window.location.hash = '/events'; })}
-                >
-                  <Trophy className="mobile-more-item-icon" />
-                  <span className="mobile-more-item-label">Challenges & Events</span>
-                </button>
-
-                <div className="mobile-more-divider" />
 
                 {/* Support WordWeft Premium Banner */}
                 <div className="px-4 py-2">

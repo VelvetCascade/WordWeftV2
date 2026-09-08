@@ -56,14 +56,16 @@ public class ReadingController {
         String bookId = (String) payload.get("bookId");
 
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
-        int totalChapters = book.getChapters().size();
+        List<Chapter> readableChapters = book.getChapters().stream()
+                .filter(chapter -> "published".equals(chapter.getStatus()))
+                .toList();
+        int totalChapters = readableChapters.size();
 
         ReadingProgress progress = progressRepository.findByUserIdAndBookId(userDetails.getId(), bookId)
                 .orElse(new ReadingProgress());
 
         progress.setUserId(userDetails.getId());
         progress.setBookId(bookId);
-        progress.setLastReadChapterIndex((Integer) payload.get("chapterIndex"));
         progress.setLastReadScrollPosition((Integer) payload.get("scrollPosition"));
         progress.setLastReadTimestamp(LocalDateTime.now());
 
@@ -72,6 +74,20 @@ public class ReadingController {
         String chapterId = (String) chapterData.get("id");
         int pVal = (Integer) chapterData.get("progress");
         int sVal = (Integer) chapterData.get("scroll");
+
+        int readableChapterIndex = -1;
+        for (int index = 0; index < readableChapters.size(); index++) {
+            if (Objects.equals(readableChapters.get(index).getId(), chapterId)) {
+                readableChapterIndex = index;
+                break;
+            }
+        }
+        progress.setLastReadChapterIndex(Math.max(0, readableChapterIndex));
+
+        Chapter readableChapter = readableChapters.stream()
+                .filter(chapter -> Objects.equals(chapter.getId(), chapterId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Reading progress can only be saved for a published chapter."));
 
         ReadingProgress.ChapterProgressItem item = new ReadingProgress.ChapterProgressItem();
         item.setProgress(Math.min(100, Math.max(0, pVal)));
@@ -95,15 +111,17 @@ public class ReadingController {
                     user.setStats(new User.UserStats());
 
                 // Find word count of this chapter
-                Optional<Chapter> chapterOpt = book.getChapters().stream().filter(c -> c.getId().equals(chapterId))
-                        .findFirst();
+                Optional<Chapter> chapterOpt = Optional.of(readableChapter);
                 if (chapterOpt.isPresent()) {
                     user.getStats().setChaptersRead(user.getStats().getChaptersRead() + 1);
                     user.getStats()
                             .setTotalWordsRead(user.getStats().getTotalWordsRead() + chapterOpt.get().getWordCount());
 
                     // Increment books read if all chapters are done (simple logic)
-                    if (progress.getCompletedChapterIds().size() == totalChapters) {
+                    long completedPublishedChapters = readableChapters.stream()
+                            .filter(published -> progress.getCompletedChapterIds().contains(published.getId()))
+                            .count();
+                    if (completedPublishedChapters == totalChapters) {
                         user.getStats().setBooksRead(user.getStats().getBooksRead() + 1);
                     }
 
@@ -115,7 +133,7 @@ public class ReadingController {
         // Calculate Overall Book Progress
         if (totalChapters > 0) {
             double totalPercentage = 0;
-            for (Chapter chapter : book.getChapters()) {
+            for (Chapter chapter : readableChapters) {
                 ReadingProgress.ChapterProgressItem cp = progress.getChapters().get(chapter.getId());
                 if (cp != null) {
                     totalPercentage += cp.getProgress();

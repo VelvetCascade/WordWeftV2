@@ -77,7 +77,7 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
 
 const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string, onClick?: () => void, subLabel?: string }> = ({ icon, value, label, onClick, subLabel }) => (
     <div
-        className={`bg-background dark:bg-dark-surface-alt p-6 rounded-2xl flex flex-col justify-between h-full ${onClick ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors' : ''}`}
+        className={`ww-profile-stat-card bg-background dark:bg-dark-surface-alt p-6 rounded-2xl flex flex-col justify-between h-full ${onClick ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors' : ''}`}
         onClick={onClick}
     >
         <div>
@@ -214,11 +214,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
     return (
         <div>
             {/* Header Section */}
-            <div className="bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border relative overflow-hidden">
+            <div className="ww-profile-hero bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
-                <div className="container mx-auto px-6 py-12 relative z-10">
-                    <div className="flex flex-col md:flex-row items-start gap-8">
-                        <div className="relative group">
+                <div className="ww-profile-hero-inner container mx-auto px-6 py-12 relative z-10">
+                    <div className="ww-profile-identity flex flex-col md:flex-row items-start gap-8">
+                        <div className="ww-profile-avatar relative group">
                             <img src={user.avatarUrl} alt={user.name} className="w-32 h-32 rounded-3xl object-cover shadow-lifted border-4 border-white dark:border-dark-surface" />
                             <div className="absolute -bottom-3 -right-3 bg-white dark:bg-dark-surface p-1.5 rounded-xl shadow-md">
                                 <span className="block px-2 py-0.5 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 text-xs font-bold rounded-lg uppercase tracking-wider">
@@ -227,7 +227,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                             </div>
                         </div>
 
-                        <div className="flex-1 w-full">
+                        <div className="ww-profile-info flex-1 w-full">
                             <div className="flex flex-col md:flex-row md:justify-between gap-4">
                                 <div>
                                     <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich mb-2">{user.name}</h1>
@@ -262,18 +262,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                         )}
 
                                         {user.favoriteGenres && user.favoriteGenres.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 ml-2 pl-4 border-l border-gray-200 dark:border-dark-border">
+                                            <div className="ww-profile-genres flex flex-wrap gap-2 ml-2 pl-4 border-l border-gray-200 dark:border-dark-border">
                                                 {user.favoriteGenres.map(g => (
-                                                    <span key={g} className="text-xs font-bold text-gray-500 bg-gray-100 dark:bg-dark-surface-alt dark:text-gray-400 px-2.5 py-1 rounded-md">
+                                                    <button type="button" onClick={() => window.location.hash = `/genre/${encodeURIComponent(g)}`} key={g} className="text-xs font-bold text-gray-500 bg-gray-100 dark:bg-dark-surface-alt dark:text-gray-400 px-2.5 py-1 rounded-md hover:text-accent">
                                                         {g}
-                                                    </span>
+                                                    </button>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2 self-start md:self-start">
+                                <div className="ww-profile-actions flex gap-2 self-start md:self-start">
                                     <button
                                         onClick={() => { window.location.hash = '/edit-profile'; }}
                                         className="bg-gray-100 dark:bg-dark-surface-alt font-sans font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors text-sm"
@@ -284,7 +284,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                         onClick={() => setIsShareOpen(true)}
                                         className="bg-accent text-white font-sans font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-primary transition-colors text-sm shadow-md"
                                     >
-                                        <ShareIcon className="w-4 h-4" /> Share Profile
+                                        <ShareIcon className="w-4 h-4" /> Share Portfolio
                                     </button>
                                 </div>
                             </div>
@@ -292,7 +292,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-12">
+                    <div className="ww-profile-stats grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-12">
                         <StatCard
                             icon={<TrophyIcon className="w-6 h-6" />}
                             value={user.stats?.readerLevel || "Novice"}
@@ -442,7 +442,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                 onClose={() => setIsShareOpen(false)}
                 author={user}
                 authorBooks={writtenBooks}
-                url={window.location.href}
             />
         </div>
     );
