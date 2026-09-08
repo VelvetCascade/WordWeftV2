@@ -25,6 +25,7 @@ class BookServiceReleaseProjectionTest {
     private Book book;
     private Chapter published;
     private Chapter scheduled;
+    private Instant earliestRelease;
 
     @BeforeEach
     void setUp() {
@@ -46,21 +47,22 @@ class BookServiceReleaseProjectionTest {
         published.setTitle("Published");
         published.setContent("Visible");
         published.setStatus("published");
-        published.setPublishedAt(Instant.parse("2026-08-20T10:00:00Z"));
+        published.setPublishedAt(Instant.now().minusSeconds(86_400));
 
         scheduled = new Chapter();
         scheduled.setId("scheduled");
         scheduled.setTitle("Secret draft");
         scheduled.setContent("Not public yet");
         scheduled.setStatus("scheduled");
-        scheduled.setScheduledAt(Instant.parse("2026-09-01T12:30:00Z"));
+        earliestRelease = Instant.now().plusSeconds(86_400);
+        scheduled.setScheduledAt(earliestRelease);
 
         Chapter later = new Chapter();
         later.setId("later");
         later.setTitle("Later draft");
         later.setContent("Also private");
         later.setStatus("scheduled");
-        later.setScheduledAt(Instant.parse("2026-09-10T12:30:00Z"));
+        later.setScheduledAt(Instant.now().plusSeconds(172_800));
 
         book = new Book();
         book.setId("book");
@@ -76,7 +78,7 @@ class BookServiceReleaseProjectionTest {
 
         List<?> chapters = (List<?>) response.get("chapters");
         assertEquals(1, chapters.size());
-        assertEquals(Instant.parse("2026-09-01T12:30:00Z"), response.get("nextScheduledReleaseAt"));
+        assertEquals(earliestRelease, response.get("nextScheduledReleaseAt"));
         Map<?, ?> publicChapter = (Map<?, ?>) chapters.get(0);
         assertFalse(publicChapter.containsKey("scheduledAt"));
         assertFalse(publicChapter.containsKey("publishedAt"));

@@ -94,7 +94,6 @@ const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) =>
                 isOpen={isShareOpen}
                 onClose={() => setIsShareOpen(false)}
                 book={book}
-                url={`${window.location.origin}/#/book/${book.id}`}
                 shareTextOverride={`Read my book '${book.title}' on WordWeft — ${book.chapters.length} chapters of ${book.genres[0] || 'fiction'}. Check it out!`}
             />
         </article>

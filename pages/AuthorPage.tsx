@@ -9,10 +9,10 @@ import { UserGroupIcon, PlusIcon, CheckCircleIcon, BookOpenIcon, StarIcon, EyeIc
 import { ConnectionsModal } from '../components/ConnectionsModal';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
-import AdUnit from '../components/AdUnit';
 import { ShareModal } from '../components/ShareModal';
 import { AuthorShareModal } from '../components/AuthorShareModal';
 import { ReportModal } from '../components/ReportModal';
+import { applyAuthorMetadata } from '../utils/entityMetadata';
 
 // ── Inline icons not in the shared set ──
 
@@ -82,7 +82,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [isLoading, setIsLoading] = useState(true);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
-    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'activity'>('published');
+    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>('published');
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
 
@@ -103,6 +103,8 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         }).finally(() => { if (active) setIsLoading(false); });
         return () => { active = false; };
     }, [authorId]);
+
+    useEffect(() => author ? applyAuthorMetadata(author, authorBooks) : undefined, [author, authorBooks]);
 
     const handleFollowToggle = async () => {
         if (!author) return;
@@ -189,16 +191,16 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     return (
         <div className="ww-author-page">
             {/* ═══════════  Hero Header  ═══════════ */}
-            <div className="relative overflow-hidden">
+            <div className="ww-author-hero relative overflow-hidden">
                 {/* Background gradient banner */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent dark:from-primary/20 dark:via-accent/10 dark:to-transparent" />
                 <div className="absolute top-0 right-0 w-96 h-96 bg-accent/8 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary/6 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl" />
 
-                <div className="relative container mx-auto px-6 pt-12 pb-8">
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+                <div className="ww-author-hero-inner relative container mx-auto px-6 pt-12 pb-8">
+                    <div className="ww-author-identity flex flex-col md:flex-row items-center md:items-start gap-8">
                         {/* Avatar */}
-                        <div className="relative group flex-shrink-0">
+                        <div className="ww-author-avatar relative group flex-shrink-0">
                             {author.avatarUrl ? (
                                 <img
                                     src={author.avatarUrl}
@@ -221,16 +223,17 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                         </div>
 
                         {/* Profile Info */}
-                        <div className="flex-1 text-center md:text-left min-w-0">
+                        <div className="ww-author-info flex-1 text-center md:text-left min-w-0">
+                            <p className="ww-author-eyebrow">Author portfolio</p>
                             {(author.communityBadges?.length || author.communityInterests?.length) ? <div className="community-author-identity">{author.communityBadges?.map(badge => <span key={badge}>{badge === 'VERIFIED_CREATOR' ? 'Verified creator' : badge === 'EDITORIAL_STAFF' ? 'Editorial staff' : 'Community moderator'}</span>)}{author.communityInterests?.map(interest => <span key={interest}>{({ READING: 'Reader', WEBNOVEL_WRITING: 'Web-novel writer', EBOOK_PUBLISHING: 'E-book writer', WRITING_CRAFT: 'Writing craft', CRITIQUE: 'Critique' })[interest]}</span>)}</div> : null}
-                            <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-3">
+                            <div className="ww-author-title-row flex flex-col md:flex-row items-center md:items-start gap-4 mb-3">
                                 <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich tracking-tight leading-tight">
                                     {author.name}
                                 </h1>
-                                {isOwnProfile ? <a href="#/edit-profile" className="px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit profile</a> : <button
+                                {isOwnProfile ? <a href="#/edit-profile" className="ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit portfolio</a> : <button
                                     onClick={handleFollowToggle}
                                     disabled={isFollowLoading}
-                                    className={`px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95 flex-shrink-0 ${
+                                    className={`ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95 flex-shrink-0 ${
                                         author.isFollowing 
                                         ? 'bg-gray-100 dark:bg-dark-border text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950 dark:hover:text-red-400'
                                         : 'bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl'
@@ -248,10 +251,12 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 </button>}
                                 <button
                                     onClick={() => setIsShareOpen(true)}
-                                    className="p-2.5 rounded-full border border-gray-200 dark:border-dark-border hover:border-accent hover:text-accent text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
-                                    title="Share Profile"
+                                    className="ww-author-share-action p-2.5 rounded-full border border-gray-200 dark:border-dark-border hover:border-accent hover:text-accent text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
+                                    title="Share portfolio"
+                                    aria-label="Share author portfolio"
                                 >
                                     <ShareIcon className="w-5 h-5" />
+                                    <span>Share</span>
                                 </button>
                                 {!isOwnProfile && <button onClick={() => currentUser ? setIsReportOpen(true) : onSignIn()} className="px-3 py-2.5 rounded-full text-xs font-semibold text-gray-500 hover:text-danger" title="Report profile">Report</button>}
                             </div>
@@ -336,7 +341,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
 
                     {/* ── Stats Row ── */}
                     {authorBooks.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-10">
+                        <div className="ww-author-stats grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-10">
                             <StatPill icon={<BookOpenIcon className="w-5 h-5" />} value={authorBooks.length} label="Books" />
                             <StatPill icon={<DocumentPlusIcon className="w-5 h-5" />} value={bookStats.totalChapters} label="Chapters" />
                             <StatPill icon={<EyeIcon className="w-5 h-5" />} value={bookStats.totalViews.toLocaleString()} label="Total Views" />
@@ -351,10 +356,8 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-dark-border to-transparent" />
             </div>
 
-            <AdUnit format="horizontal" />
-
             {/* ═══════════  Tab Navigation  ═══════════ */}
-            <div className="sticky top-[72px] z-30 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md border-b border-gray-100 dark:border-dark-border">
+            <div className="ww-author-tabs sticky top-[72px] z-30 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md border-b border-gray-100 dark:border-dark-border">
                 <div className="container mx-auto px-6">
                     <div className="flex items-center gap-1">
                         <button
@@ -370,7 +373,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
                             )}
                         </button>
-                        <button onClick={() => setActiveTab('activity')} className={`relative px-6 py-4 font-sans font-semibold text-sm transition-colors ${activeTab === 'activity' ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}>Activity{activeTab === 'activity' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />}</button>
+                        <button onClick={() => setActiveTab('posts')} className={`relative px-6 py-4 font-sans font-semibold text-sm transition-colors ${activeTab === 'posts' ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}>Community posts{activeTab === 'posts' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />}</button>
                         {hasAboutContent && (
                             <button
                                 onClick={() => setActiveTab('about')}
@@ -391,8 +394,8 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
             </div>
 
             {/* ═══════════  Content  ═══════════ */}
-            <div className="container mx-auto px-6 py-10">
-                {activeTab === 'activity' && <CommunitySession user={currentUser} onSignIn={onSignIn}><div className="community-author-feed"><CommunityFeed query={{ mode: 'discover', authorId }} /></div></CommunitySession>}
+            <div className="ww-author-content container mx-auto px-6 py-10">
+                {activeTab === 'posts' && <CommunitySession user={currentUser} onSignIn={onSignIn}><div className="community-author-feed"><div className="ww-author-tab-intro"><h2>Community posts</h2><p>Updates, releases, questions, and discussions shared by {author.name}.</p></div><CommunityFeed query={{ mode: 'discover', authorId }} /></div></CommunitySession>}
                 {activeTab === 'published' && (
                     <>
                         {/* Genre tags for the author's works */}
@@ -449,12 +452,13 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 </h3>
                                 <div className="flex flex-wrap gap-2.5">
                                     {author.favoriteGenres!.map(g => (
-                                        <span
+                                        <button
                                             key={g}
+                                            onClick={() => window.location.hash = `/genre/${encodeURIComponent(g)}`}
                                             className="px-4 py-2 bg-accent/8 dark:bg-accent/15 text-accent font-sans font-semibold text-sm rounded-xl border border-accent/15 dark:border-accent/25"
                                         >
                                             {g}
-                                        </span>
+                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -544,7 +548,6 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                     onClose={() => setIsShareOpen(false)}
                     author={author}
                     authorBooks={authorBooks}
-                    url={window.location.href}
                 />
             )}
         </div>

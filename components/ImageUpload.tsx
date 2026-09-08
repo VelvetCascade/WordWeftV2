@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { getImageKitAuth } from '../api/client';
+import { getImageKitAuth, reportImageUploadDiagnostic } from '../api/client';
 import imageCompression from 'browser-image-compression';
-import { Upload, X, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, X, Loader2, AlertCircle, RotateCcw } from 'lucide-react';
 import { ImageCropModal } from './ImageCropModal';
+import { newUploadReference, uploadErrorMessage } from '../utils/uploadDiagnostics';
 
 interface ImageUploadProps {
     value?: string;
@@ -28,6 +29,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState('');
+    const [uploadReference, setUploadReference] = useState('');
+    const [retryFile, setRetryFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [cropFile, setCropFile] = useState<File | null>(null);
     const uniqueId = useRef(`image-upload-${Math.random().toString(36).slice(2, 8)}`);
@@ -59,8 +62,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     };
 
     const processAndUpload = async (file: File) => {
+        const reference = newUploadReference();
+        setUploadReference(reference);
+        setRetryFile(file);
+        setError('');
         setUploading(true);
         setProgress(10);
+        void reportImageUploadDiagnostic({ uploadId: reference, event: 'selected', contentType: file.type, sizeBytes: file.size }).catch(() => undefined);
 
         try {
             // 2. Compress Image
@@ -76,13 +84,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             const isSafe = await checkNSFW(compressedFile);
             if (!isSafe) {
                 setError('Image blocked: Explicit content detected.');
+                setRetryFile(null);
+                void reportImageUploadDiagnostic({ uploadId: reference, event: 'failed', contentType: file.type, sizeBytes: file.size, message: 'client_content_check_blocked' }).catch(() => undefined);
                 setUploading(false);
                 return;
             }
             setProgress(50);
 
             // 4. Get Auth Signature
-            const auth = await getImageKitAuth();
+            const auth = await getImageKitAuth(reference);
+            void reportImageUploadDiagnostic({ uploadId: reference, event: 'auth_ready', contentType: compressedFile.type, sizeBytes: compressedFile.size }).catch(() => undefined);
             setProgress(70);
 
             // 5. Upload to ImageKit
@@ -101,18 +112,39 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
             if (!uploadRes.ok) {
                 const errText = await uploadRes.text();
-                throw new Error('Upload failed: ' + errText);
+                let providerMessage = errText;
+                try {
+                    const parsed = JSON.parse(errText);
+                    providerMessage = parsed.message || parsed.error?.message || errText;
+                } catch {
+                    // ImageKit can return plain-text errors.
+                }
+                const uploadError = new Error(uploadErrorMessage(uploadRes.status, providerMessage)) as Error & { status?: number; diagnostic?: string };
+                uploadError.status = uploadRes.status;
+                uploadError.diagnostic = providerMessage;
+                throw uploadError;
             }
 
             const data = await uploadRes.json();
             setProgress(100);
+            setRetryFile(null);
+            void reportImageUploadDiagnostic({ uploadId: reference, event: 'uploaded', contentType: compressedFile.type, sizeBytes: compressedFile.size, httpStatus: uploadRes.status }).catch(() => undefined);
             
             // Pass back URL and File ID
             onChange(data.url, data.fileId);
 
         } catch (err: any) {
             console.error(err);
-            setError(err.message || 'An error occurred during upload.');
+            const message = uploadErrorMessage(err?.status, err?.diagnostic || err?.message);
+            setError(message);
+            void reportImageUploadDiagnostic({
+                uploadId: reference,
+                event: 'failed',
+                contentType: file.type,
+                sizeBytes: file.size,
+                httpStatus: err?.status,
+                message: String(err?.diagnostic || err?.message || 'client_upload_failure').slice(0, 300),
+            }).catch(() => undefined);
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -207,9 +239,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                         )}
 
                         {error && (
-                            <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                                <AlertCircle className="w-3 h-3" />
-                                <span>{error}</span>
+                            <div className="image-upload-error text-red-500 text-xs mt-1" role="alert">
+                                <span><AlertCircle className="w-3 h-3" />{error}</span>
+                                {uploadReference && <small>Reference: {uploadReference.slice(0, 8)}</small>}
+                                {retryFile && <button type="button" onClick={() => processAndUpload(retryFile)} disabled={uploading}><RotateCcw className="w-3 h-3" /> Retry upload</button>}
                             </div>
                         )}
                     </div>

@@ -436,7 +436,7 @@ const App: React.FC = () => {
       case 'book-details':
         return <BookDetailsPage bookId={page.bookId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       case 'reader':
-        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} currentUser={currentUser} />;
+        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       case 'writer-dashboard':
         return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'writer-create-book':

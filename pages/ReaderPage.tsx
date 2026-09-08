@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Flag } from 'lucide-react';
 import type { User, Book, BookProgress, Comment, Character  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
@@ -18,6 +18,7 @@ import { ReportModal } from '../components/ReportModal';
 import parse, { domToReact } from 'html-react-parser';
 import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 import { readReaderPreferences } from '../utils/runtimeLifecycle';
+import { manuscriptProgress } from '../utils/readerProgress';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -27,6 +28,7 @@ interface ReaderPageProps {
     bookId: string;
     chapterIndex: number;
     currentUser: User | null;
+    onUserUpdate: (user: User) => void;
 }
 
 const CommentItem: React.FC<{
@@ -215,7 +217,7 @@ const CommentDrawer: React.FC<{
     );
 };
 
-export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, currentUser }) => {
+export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, currentUser, onUserUpdate }) => {
     const { theme: globalTheme } = useTheme();
     const [initialReaderPreferences] = useState(() => {
         try {
@@ -236,7 +238,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
-    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [bookmarkSaving, setBookmarkSaving] = useState(false);
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -268,6 +270,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
+    const isBookmarked = useMemo(
+        () => !!currentUser?.library.some(shelf => shelf.books.some(savedBook => savedBook.id === bookId)),
+        [currentUser, bookId],
+    );
     const disclaimerRequired = !!(book && chapter && ((book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21') || book.contentWarnings?.length || chapter.contentWarnings?.length || book.customDisclaimer || chapter.disclaimerNote));
     const disclaimerKey = chapter ? `ww_disclaimer_${bookId}_${chapter.id}` : '';
 
@@ -312,6 +318,18 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         }
     }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight]);
 
+    const calculateProgress = useCallback(() => {
+        const manuscript = contentRef.current;
+        if (!manuscript) return 0;
+        const rect = manuscript.getBoundingClientRect();
+        return manuscriptProgress({
+            contentTop: rect.top + window.scrollY,
+            contentHeight: manuscript.offsetHeight,
+            viewportHeight: window.innerHeight,
+            scrollY: window.scrollY,
+        });
+    }, []);
+
     const saveProgress = useCallback(() => {
         if (!currentUser || !book || !chapter) return;
 
@@ -322,36 +340,26 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         lastSaveTimeRef.current = now;
 
         const scrollTop = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const fullHeight = document.documentElement.scrollHeight;
-        const maxScroll = fullHeight - windowHeight;
-
-        let percentage = 0;
-        if (maxScroll > 0) {
-            percentage = (scrollTop / maxScroll) * 100;
-        } else {
-            percentage = 100;
-        }
-
-        percentage = Math.min(100, Math.max(0, percentage));
+        const percentage = calculateProgress();
 
         if (percentage > maxPercentageRef.current) {
             maxPercentageRef.current = percentage;
         }
 
-        api.saveReadingProgress(
+        void api.saveReadingProgress(
             currentUser.id,
             book,
             currentChapterIndex,
             scrollTop,
             maxPercentageRef.current
-        );
-    }, [currentUser, book, currentChapterIndex, chapter]);
+        ).catch(error => console.warn('Reading progress could not be saved', error));
+    }, [currentUser, book, currentChapterIndex, chapter, calculateProgress]);
 
     useEffect(() => {
         if (!currentUser || !chapter) return;
 
         const restorePosition = async () => {
+            maxPercentageRef.current = 0;
             const savedProgress = await api.getReadingProgressForBook(currentUser.id, bookId);
             if (savedProgress && savedProgress.chapters[chapter.id]) {
                 const savedScroll = savedProgress.chapters[chapter.id].scrollPosition;
@@ -374,8 +382,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
-            const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-            setScrollProgress(Math.min(100, Math.max(0, (currentScrollY / maxScroll) * 100)));
+            setScrollProgress(calculateProgress());
 
             if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
                 setIsToolbarVisible(false);
@@ -401,7 +408,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
             }
             saveProgress();
         };
-    }, [saveProgress]);
+    }, [saveProgress, calculateProgress]);
 
     useEffect(() => {
         const handleReaderShortcuts = (event: KeyboardEvent) => {
@@ -494,6 +501,22 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                 chapters: book.chapters,
                 likesCount: book.likesCount
             });
+        }
+    };
+
+    const handleToggleBookmark = async () => {
+        if (!currentUser || !book) {
+            window.location.hash = '/auth';
+            return;
+        }
+        if (bookmarkSaving) return;
+        setBookmarkSaving(true);
+        try {
+            onUserUpdate(await api.toggleBookInLibrary(currentUser.id, book));
+        } catch (error) {
+            console.error('Unable to update bookmark', error);
+        } finally {
+            setBookmarkSaving(false);
         }
     };
 
@@ -663,9 +686,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
                         <strong>{chapter.title}</strong>
                     </div>
                     <div className="reader-header-actions">
-                        <button onClick={() => setIsBookmarked(!isBookmarked)} className={isBookmarked ? 'reader-action-active' : ''} aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark chapter'}>
+                        <button onClick={handleToggleBookmark} disabled={bookmarkSaving} className={isBookmarked ? 'reader-action-active' : ''} aria-label={isBookmarked ? 'Remove story from library' : 'Save story to library'}>
                             <BookmarkIcon className="w-5 h-5" />
                         </button>
+                        <button onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'reader-action-active reader-appearance-button' : 'reader-appearance-button'} aria-label="Reading appearance and themes"><span className="reader-aa">Aa</span></button>
                         <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
                         <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button"><Flag className="w-4 h-4" /></button>
                         <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>

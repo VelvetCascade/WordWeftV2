@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { User, Chapter, Book, AgeRating, ContentWarning } from '../types';
+import type { User, Chapter, Book, AgeRating, ContentWarning, StoryStatus } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
@@ -30,6 +30,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
     const [coverFileId, setCoverFileId] = useState<string | null>(book.coverFileId || null);
     const [category, setCategory] = useState(book.category || '');
+    const [readingStatus, setReadingStatus] = useState<StoryStatus>(book.readingStatus || 'Ongoing');
     const [isAIGenerated, setIsAIGenerated] = useState(book.isAIGenerated || false);
     const [genres, setGenres] = useState<string[]>(book.genres || []);
     const [allGenres, setAllGenres] = useState<string[]>([]);
@@ -41,8 +42,19 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     useEffect(() => {
         if (isOpen) {
             api.getGenres().then(setAllGenres);
+            setTitle(book.title);
+            setDescription(book.description || '');
+            setCoverUrl(book.coverUrl);
+            setCoverFileId(book.coverFileId || null);
+            setCategory(book.category || '');
+            setReadingStatus(book.readingStatus || 'Ongoing');
+            setGenres(book.genres || []);
+            setAgeRating(book.ageRating || 'ALL_AGES');
+            setContentWarnings(book.contentWarnings || []);
+            setCustomDisclaimer(book.customDisclaimer || '');
+            setIsAIGenerated(book.isAIGenerated || false);
         }
-    }, [isOpen]);
+    }, [isOpen, book]);
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,6 +65,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             coverUrl,
             coverFileId,
             category,
+            readingStatus,
             genres,
             ageRating,
             contentWarnings,
@@ -110,6 +123,15 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Story status</label>
+                            <select value={readingStatus} onChange={e => setReadingStatus(e.target.value as StoryStatus)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
+                                <option value="Ongoing">Ongoing — new chapters are expected</option>
+                                <option value="Hiatus">On hiatus — updates are paused</option>
+                                <option value="Completed">Completed — the story is finished</option>
+                            </select>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">This is shown to readers and can be changed any time.</p>
                         </div>
                         <div>
                             <label className="block text-sm font-bold mb-2 dark:text-dark-text-body">Genres</label>
@@ -370,12 +392,13 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                 {isBookPublished ? <CheckCircleIcon className="w-4 h-4" /> : <i />}
                                 {isBookPublished ? 'Published' : 'Private draft'}
                             </span>
+                            <span className="ww-manage-category">{book.readingStatus}</span>
                             {book.category && <span className="ww-manage-category">{book.category}</span>}
                         </div>
                         <h1>{book.title}</h1>
                         <p>{book.description || 'Add a short description to give this story a clear direction.'}</p>
                         <div className="ww-manage-genres">
-                            {book.genres.map(g => <span key={g}>{g}</span>)}
+                            {book.genres.map(g => <button type="button" key={g} onClick={() => window.location.hash = `/genre/${encodeURIComponent(g)}`}>{g}</button>)}
                         </div>
                         <div className="ww-manage-stats">
                             <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
@@ -490,7 +513,6 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     onClose={() => setShareChapter(null)}
                     book={book}
                     chapter={shareChapter}
-                    url={`${window.location.origin}/#/book/${book.id}`}
                     shareTextOverride={`New chapter alert: '${shareChapter.title}' from '${book.title}'. Read it on WordWeft!`}
                 />
             )}
@@ -530,7 +552,6 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     isOpen={bookShareOpen}
                     onClose={() => setBookShareOpen(false)}
                     book={book}
-                    url={`${window.location.origin}/#/book/${book.id}`}
                     shareTextOverride={`I just published '${book.title}' on WordWeft! Check it out.`}
                 />
             )}

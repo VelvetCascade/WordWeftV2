@@ -3,7 +3,8 @@
     { "source": "/ads.txt", "destination": "/ads.txt" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/share/book/:bookId", "destination": "https://wordweftv2.onrender.com/api/public/share/book/:bookId" },
+    { "source": "/share/author/:authorId", "destination": "https://wordweftv2.onrender.com/api/public/share/author/:authorId" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
- 

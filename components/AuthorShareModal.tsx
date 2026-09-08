@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { authorShareUrl } from '../utils/shareLinks';
 import type { User, Book } from '../types';
 import { ShareIcon, XMarkIcon, DocumentDuplicateIcon, CheckCircleIcon, TwitterIcon, InstagramIcon } from './icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -353,12 +354,13 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     onClose,
     author,
     authorBooks,
-    url = window.location.href,
+    url,
 }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [activeTab, setActiveTab] = useState<'quick' | 'card'>('quick');
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const publicUrl = url || authorShareUrl(author.id);
 
     const shareTitle = `${author.name} on WordWeft`;
     const shareText = `Discover ${author.name}'s stories on WordWeft!`;
@@ -375,16 +377,16 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     if (!isOpen) return null;
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(publicUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
     const shareLinks = {
-        twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + url)}`,
-        telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`
+        twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(shareText)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl)}`,
+        whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + publicUrl)}`,
+        telegram: `https://t.me/share/url?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(shareText)}`
     };
 
     const openLink = (link: string) => {
@@ -394,7 +396,7 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     const handleNativeShare = async () => {
         if (navigator.share) {
             try {
-                await navigator.share({ title: shareTitle, text: shareText, url });
+                await navigator.share({ title: shareTitle, text: shareText, url: publicUrl });
             } catch (e) {
                 console.log('Native share cancelled or failed', e);
             }
@@ -489,7 +491,7 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
                                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Profile Link</label>
                                 <div className="flex gap-2">
                                     <div className="flex-1 bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm text-gray-500 dark:text-gray-400 truncate flex items-center">
-                                        {url}
+                                        {publicUrl}
                                     </div>
                                     <button onClick={handleCopyLink} className={`px-4 py-2 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors ${copied ? 'bg-success/10 text-success' : 'bg-accent text-white hover:bg-primary'}`}>
                                         {copied ? <CheckCircleIcon className="w-5 h-5" /> : <DocumentDuplicateIcon className="w-5 h-5" />}

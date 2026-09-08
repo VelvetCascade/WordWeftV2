@@ -26,11 +26,13 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
+    private static final Set<String> STORY_STATUSES = Set.of("Ongoing", "Hiatus", "Completed");
 
     @Autowired
     BookService bookService;
@@ -200,6 +202,7 @@ public class BookController {
         book.setAuthorId(userDetails.getId());
         book.setPublicationStatus("draft");
         book.setCreatedAt(LocalDate.now());
+        if (!STORY_STATUSES.contains(book.getReadingStatus())) book.setReadingStatus("Ongoing");
         if (book.getAgeRating() == null) book.setAgeRating(AgeRating.ALL_AGES);
         book.setMature(book.getAgeRating().getMinimumAge() >= 18);
         if (book.getCoverUrl() == null || book.getCoverUrl().isEmpty()) {
@@ -236,6 +239,14 @@ public class BookController {
         }
         if (updates.getGenres() != null)
             book.setGenres(updates.getGenres());
+        if (updates.getCategory() != null)
+            book.setCategory(updates.getCategory());
+        if (updates.getReadingStatus() != null) {
+            if (!STORY_STATUSES.contains(updates.getReadingStatus())) {
+                return ResponseEntity.badRequest().body("Story status must be Ongoing, Hiatus, or Completed.");
+            }
+            book.setReadingStatus(updates.getReadingStatus());
+        }
         if (updates.getAgeRating() != null) {
             book.setAgeRating(updates.getAgeRating());
             book.setMature(updates.getAgeRating().getMinimumAge() >= 18);

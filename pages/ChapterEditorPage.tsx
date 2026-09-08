@@ -363,19 +363,19 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                     </div>
 
                     <div className="ww-editor-actions">
-                        <button onClick={() => setShowDemoModal(true)} title="Writing tools tour">
+                        <button className="ww-editor-tour" onClick={() => setShowDemoModal(true)} title="Writing tools tour">
                             <BookOpenIcon className="w-4 h-4" /><span>Tour</span>
                         </button>
-                        <button onClick={() => setIsPreviewOpen(true)} title="Reader preview">
+                        <button className="ww-editor-preview" onClick={() => setIsPreviewOpen(true)} title="Reader preview">
                             <EyeIcon className="w-4 h-4" /><span>Preview</span>
                         </button>
-                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={isSidebarOpen ? 'active' : ''} title="Story bible">
+                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`ww-editor-bible ${isSidebarOpen ? 'active' : ''}`} title="Story bible">
                             <SwatchIcon className="w-4 h-4" /><span>Story bible</span>
                         </button>
-                        <button onClick={() => setIsScannerOpen(true)} title="Scan chapter for characters">
+                        <button className="ww-editor-scan" onClick={() => setIsScannerOpen(true)} title="Scan chapter for characters">
                             <SparklesIcon className="w-4 h-4" /><span>Scan</span>
                         </button>
-                        {!isNewChapter && <button onClick={() => setIsVersionHistoryOpen(true)} title="Open version history"><span>History</span></button>}
+                        {!isNewChapter && <button className="ww-editor-history" onClick={() => setIsVersionHistoryOpen(true)} title="Open version history"><span>History</span></button>}
                         <span className="ww-editor-action-divider" />
                         <button className="ww-editor-save-button" onClick={() => handleSave('draft', content, title)}>Save draft</button>
                         <button
@@ -568,16 +568,12 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             const sharedChapter = publishedChapterId
                 ? book.chapters.find(c => c.id === publishedChapterId)
                 : book.chapters.find(c => c.title === publishedChapterTitle);
-            const publicUrl = sharedChapter
-                ? `${window.location.origin}/#/book/${book.id}`
-                : window.location.href;
             return (
                 <ShareModal
                     isOpen={isChapterShareOpen}
                     onClose={() => { setIsChapterShareOpen(false); replaceHash(`/write/book/${bookId}/manage`); }}
                     book={book}
                     chapter={sharedChapter}
-                    url={publicUrl}
                     shareTextOverride={`I just published a new chapter: '${publishedChapterTitle}' in ${book.title}. Read it on WordWeft!`}
                 />
             );

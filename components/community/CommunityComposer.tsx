@@ -59,8 +59,15 @@ export const CommunityComposer: React.FC<Props> = ({ circles, initialCircleId, i
       {!editing && <fieldset className="community-attachment-picker"><legend><BookOpen size={16} /> Attach a published story {['RELEASE', 'RECOMMENDATION'].includes(draft.type) ? '(required)' : '(optional)'}</legend>
         <label className="community-field"><span className="sr-only">Search published stories</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search stories by title…" /></label>
         {lookupLoading && <p role="status">Looking up stories…</p>}{lookupError && <p className="community-field-error" role="alert">{lookupError}</p>}
-        <label className="community-field"><span className="sr-only">Choose story</span><select value={draft.attachment?.bookId || ''} onChange={event => patch({ attachment: choices.find(item => item.bookId === event.target.value) || null, chapterId: undefined })}><option value="">No story attached</option>{(draft.attachment && !choices.some(item => item.bookId === draft.attachment?.bookId) ? [draft.attachment, ...choices] : choices).map(item => <option key={item.bookId} value={item.bookId}>{item.title} — {item.authorName}</option>)}</select></label>
+        {!lookupLoading && choices.length > 0 && <div className="community-attachment-results" role="listbox" aria-label="Published story results">
+          {choices.slice(0, 8).map(item => <button key={item.bookId} type="button" role="option" aria-selected={draft.attachment?.bookId === item.bookId} onClick={() => patch({ attachment: item, chapterId: undefined })}>
+            {item.coverUrl ? <img src={item.coverUrl} alt="" /> : <span className="community-attachment-cover"><BookOpen size={18} /></span>}
+            <span><strong>{item.title}</strong><small>by {item.authorName}</small></span>
+            <i>{draft.attachment?.bookId === item.bookId ? 'Attached' : 'Attach'}</i>
+          </button>)}
+        </div>}
         {!lookupLoading && !choices.length && !lookupError && <p className="community-muted">No eligible published stories found.</p>}
+        {draft.attachment && <div className="community-attached-summary"><span><strong>{draft.attachment.title}</strong><small>Attached to this post</small></span><button type="button" onClick={() => patch({ attachment: null, chapterId: undefined })}>Remove</button></div>}
         {draft.attachment && <label className="community-field">Chapter (optional)<select value={draft.chapterId || ''} onChange={event => patch({ chapterId: event.target.value || undefined })}><option value="">Whole story</option>{draft.attachment.chapters.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.title}</option>)}</select></label>}{errors.attachment && <small className="community-field-error">{errors.attachment}</small>}
       </fieldset>}
       {editing && <p className="community-muted">The circle, format, attached story, and poll options cannot change after publishing.</p>}
