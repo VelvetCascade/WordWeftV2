@@ -159,6 +159,9 @@ public class BookService {
 
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
+            if (!"published".equals(book.getPublicationStatus()) && !(currentUserId != null && currentUserId.equals(book.getAuthorId()))) {
+                return null;
+            }
             if (!contentAccessService.canAccess(book)) {
                 AgeRating rating = contentAccessService.effectiveRating(book);
                 throw new ContentRestrictedException("This story is rated " + rating.getMinimumAge() + "+. Sign in and enable mature content in your profile if you are eligible.");
@@ -305,7 +308,8 @@ public class BookService {
                 "Urban Fantasy", "War", "Western", "Wuxia",
                 "Young Adult"));
         // Also include any custom genres from existing books
-        bookRepository.findAll().forEach(b -> genres.addAll(b.getGenres()));
+        bookRepository.findByPublicationStatus("published").stream().filter(contentAccessService::canDiscover)
+                .forEach(b -> genres.addAll(b.getGenres()));
         return new ArrayList<>(genres);
     }
 
@@ -338,7 +342,8 @@ public class BookService {
     }
 
     public Map<String, List<Map<String, Object>>> getHomeGenres() {
-        List<Book> publishedBooks = bookRepository.findByPublicationStatus("published");
+        List<Book> publishedBooks = bookRepository.findByPublicationStatus("published").stream()
+                .filter(contentAccessService::canDiscover).toList();
         String currentUserId = getCurrentUserId();
 
         // Collect top 5 genres by frequency

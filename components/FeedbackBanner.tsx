@@ -32,7 +32,7 @@ export const FeedbackBanner: React.FC<Props> = ({ visible, onDismiss }) => {
                     </p>
                     <div className="flex items-center gap-3 flex-shrink-0">
                         <a
-                            href="#/feedback"
+                            href="/feedback"
                             onClick={handleDismiss}
                             className="text-accent font-semibold text-sm hover:underline"
                         >

@@ -6,6 +6,8 @@ import { Footer } from '../components/Footer';
 import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon, SearchIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { applyMetadata } from '../utils/pageMetadata';
+import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
@@ -73,11 +75,15 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   }, []);
 
   useEffect(() => {
+    let active = true;
     setIsLoading(true);
     api.getBooks({ genre: selectedGenres.length > 0 ? selectedGenres[0] : undefined, sort: sortOption }).then(res => {
+      if (!active) return;
       setBooks(res.content);
       setIsLoading(false);
-    });
+      if (window.location.pathname === '/category') applyMetadata(metadataFor(parseRoute('/category'), { books: res.content.filter(isPublicBook) }));
+    }).catch(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
   }, [selectedGenres, sortOption]);
 
   const handleGenreToggle = () => {

@@ -5,6 +5,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 const JWT_KEY = 'wordweft_jwt';
 const BATCH_INTERVAL_MS = 30000; // Flush every 30 seconds
+// Capture useful navigation dimensions without retaining auth/reset tokens or arbitrary queries.
+const analyticsPath = () => {
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page');
+    return window.location.pathname + (page && /^[1-9]\d{0,5}$/.test(page) ? `?page=${page}` : '');
+};
 const MAX_BATCH_SIZE = 20;       // Flush when 20 events accumulated
 
 // --- Types ---
@@ -98,6 +104,7 @@ class AnalyticsServiceImpl {
     private initialized: boolean = false;
 
     constructor() {
+        if (typeof window === 'undefined') return;
         // Initialize session from sessionStorage or create new
         const existingSessionId = sessionStorage.getItem('ww_analytics_session');
         if (existingSessionId) {
@@ -126,7 +133,7 @@ class AnalyticsServiceImpl {
         this.initialized = true;
 
         // Set entry page
-        this.currentPage = window.location.hash || '#/';
+        this.currentPage = analyticsPath();
         if (!this.entryPage) {
             this.entryPage = this.currentPage;
             sessionStorage.setItem('ww_analytics_entry_page', this.entryPage);
@@ -137,6 +144,8 @@ class AnalyticsServiceImpl {
 
         // Listen for hash changes (page navigation)
         window.addEventListener('hashchange', this.handleHashChange);
+        window.addEventListener('wordweft:navigate', this.handleHashChange);
+        window.addEventListener('popstate', this.handleHashChange);
 
         // Flush on page unload
         window.addEventListener('visibilitychange', this.handleVisibilityChange);
@@ -152,6 +161,8 @@ class AnalyticsServiceImpl {
             this.flushTimer = null;
         }
         window.removeEventListener('hashchange', this.handleHashChange);
+        window.removeEventListener('wordweft:navigate', this.handleHashChange);
+        window.removeEventListener('popstate', this.handleHashChange);
         window.removeEventListener('visibilitychange', this.handleVisibilityChange);
         window.removeEventListener('beforeunload', this.handleBeforeUnload);
         this.flush(); // Send remaining events
@@ -220,7 +231,7 @@ class AnalyticsServiceImpl {
 
     private handleHashChange = (): void => {
         try {
-            const newPage = window.location.hash || '#/';
+            const newPage = analyticsPath();
             if (newPage !== this.currentPage) {
                 this.previousPage = this.currentPage;
                 this.currentPage = newPage;

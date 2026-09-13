@@ -8,6 +8,8 @@ import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
 import { StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { applyMetadata } from '../utils/pageMetadata';
+import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
 
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
@@ -357,6 +359,7 @@ export const HomePage: React.FC = () => {
     api.getBooks({ sort: sort as any, page: pageNum, size: 12 }).then(res => {
       setBooks(prev => append ? [...prev, ...res.content] : res.content);
       setHasMore(res.hasMore);
+      if (window.location.pathname === '/home') applyMetadata(metadataFor(parseRoute('/home'), { books: res.content.filter(isPublicBook) }));
       setIsLoading(false);
       if (!append && res.content.length > 0) {
         setSpotlightAuthor(res.content[0].author);
@@ -542,7 +545,7 @@ export const HomePage: React.FC = () => {
           <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="font-sans text-xl sm:text-2xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">{genre}</h2>
             <a
-              href={`#/genre/${encodeURIComponent(genre)}`}
+              href={`/genre/${encodeURIComponent(genre)}`}
               className="flex-shrink-0 font-sans text-sm font-semibold text-accent hover:underline transition-colors whitespace-nowrap"
             >
               View All →

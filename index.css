@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Public reading and writing pages share the application's visual language. */
+.seo-public-nav { display:flex; align-items:center; flex-wrap:wrap; gap:1rem 2rem; padding:1.25rem max(5vw, 1rem); background:var(--ww-paper); border-bottom:1px solid var(--ww-line); font:600 .9rem Inter,sans-serif; }
+.seo-public-nav a:first-child { font-size:1.4rem; margin-right:auto; color:var(--ww-ink); }
+.seo-landing { max-width:1120px; margin:auto; padding:3rem 1.5rem 5rem; color:var(--ww-copy); }
+.seo-landing h1,.seo-landing h2 { color:var(--ww-ink); font-family:Inter,sans-serif; font-weight:750; line-height:1.15; text-wrap:balance; }
+.seo-landing h1 { font-size:clamp(2.25rem,5.5vw,4.5rem); letter-spacing:-.055em; max-width:920px; margin:1rem 0 1.5rem; }
+.seo-landing h2 { font-size:clamp(1.3rem,2.4vw,1.8rem); letter-spacing:-.025em; margin:0 0 1rem; }
+.seo-landing p { line-height:1.85; margin:0 0 1.25rem; }
+.seo-hero { padding:2rem 0 3rem; }
+.seo-intro { max-width:760px; font-size:1.15rem; }
+.seo-back { display:inline-block; font:600 .85rem Inter,sans-serif; margin-bottom:3rem; }
+.seo-cta { display:inline-flex; align-items:center; gap:2rem; background:var(--ww-brand-strong); color:var(--ww-on-brand); border-radius:999px; padding:1rem 1.5rem; margin-top:1rem; font:600 .95rem Inter,sans-serif; }
+.seo-cta:hover { background:var(--ww-brand); }
+.seo-sections { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.5rem; margin:1rem 0 3rem; }
+.seo-sections section { padding:2rem; border:1px solid var(--ww-line); background:var(--ww-paper); border-radius:24px; }
+.seo-steps,.seo-faq { margin:3rem 0; max-width:840px; }
+.seo-steps ol,.seo-chapters { list-style:decimal; padding-left:1.5rem; }
+.seo-steps li,.seo-chapters li { padding:.65rem 0 .65rem .4rem; line-height:1.7; }
+.seo-faq details { border-bottom:1px solid var(--ww-line); padding:1.25rem 0; }
+.seo-faq summary { cursor:pointer; color:var(--ww-ink); font:600 1rem Inter,sans-serif; }
+.seo-faq details p { margin:1rem 0 0; }
+.seo-related { display:flex; flex-wrap:wrap; gap:1rem 1.5rem; padding:2rem 1.5rem; border-top:1px solid var(--ww-line); font:500 .9rem Inter,sans-serif; }
+.seo-related h2 { flex-basis:100%; }
+.seo-related a:hover,.seo-tags a:hover,.seo-pagination a:hover,.seo-chapters a:hover { text-decoration:underline; }
+.seo-book-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2rem; }
+.seo-book-grid img { width:100%; height:auto; aspect-ratio:2/3; object-fit:cover; border-radius:12px; margin-bottom:1rem; }
+.seo-book-grid h2 { font-size:1.1rem; margin-bottom:.5rem; }
+.seo-book-grid p { font-size:.875rem; margin-top:.75rem; }
+.seo-book-header { display:flex; gap:3rem; padding:2rem 0 3rem; align-items:flex-start; }
+.seo-book-header img { width:240px; height:360px; object-fit:cover; border-radius:16px; }
+.seo-book-header h1 { font-size:clamp(2rem,4vw,3.5rem); }
+.seo-tags { display:flex; flex-wrap:wrap; gap:.5rem 1rem; margin:1rem 0; font-size:.875rem; }
+.seo-tags h2 { flex-basis:100%; }
+.seo-pagination { display:flex; justify-content:space-between; gap:1.5rem; padding:2rem 0; font:600 .95rem Inter,sans-serif; }
+.seo-manuscript { max-width:760px; margin:2rem auto; font-size:1.125rem; }
+[data-server-rendered] .ft-hero,[data-server-rendered] .ft-section,[data-server-rendered] .ft-upcoming-card { opacity:1!important; transform:none!important; }
+@media(max-width:700px) { .seo-sections { grid-template-columns:1fr; } .seo-sections section { padding:1.5rem; } .seo-book-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; } .seo-book-header { flex-direction:column; gap:1.5rem; } .seo-landing { padding-top:1rem; } .seo-hero { padding-top:1rem; } }
+
 /* WordWeft 2026 visual system — shared application shell */
 :root {
     --ww-canvas: #f7f2eb;

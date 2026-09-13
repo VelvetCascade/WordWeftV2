@@ -1,3 +1,5 @@
+import { applyMetadata } from '../utils/pageMetadata';
+import { metadataFor, parseRoute, chapterPath } from '../seo/metadata.mjs';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Flag } from 'lucide-react';
 import type { User, Book, BookProgress, Comment, Character  } from '../types';
@@ -27,6 +29,7 @@ type ReaderWidth = 'narrow' | 'standard' | 'wide';
 interface ReaderPageProps {
     bookId: string;
     chapterIndex: number;
+    chapterId?: string;
     currentUser: User | null;
     onUserUpdate: (user: User) => void;
 }
@@ -217,7 +220,7 @@ const CommentDrawer: React.FC<{
     );
 };
 
-export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, currentUser, onUserUpdate }) => {
+export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, chapterId, currentUser, onUserUpdate }) => {
     const { theme: globalTheme } = useTheme();
     const [initialReaderPreferences] = useState(() => {
         try {
@@ -270,6 +273,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
+    useEffect(() => {
+        if (book && chapter && window.location.pathname === chapterPath(book.id, chapter.id)) applyMetadata(metadataFor(parseRoute(chapterPath(book.id, chapter.id)), book));
+    }, [book, chapter]);
     const isBookmarked = useMemo(
         () => !!currentUser?.library.some(shelf => shelf.books.some(savedBook => savedBook.id === bookId)),
         [currentUser, bookId],
@@ -284,15 +290,21 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
     };
 
     useEffect(() => {
+        let active = true;
         setIsLoading(true);
         startReadingTimer();
         api.getBookById(bookId).then(fetchedBook => {
+            if (!active) return;
             setBook(fetchedBook);
+            const resolvedIndex = chapterId ? fetchedBook?.chapters.findIndex(ch => ch.id === chapterId) ?? -1 : chapterIndex;
+            setCurrentChapterIndex(resolvedIndex);
+            const selected = fetchedBook?.chapters[resolvedIndex];
+            if (selected) replaceReaderChapter(bookId, resolvedIndex, selected.id);
             setIsLoading(false);
-        });
-        api.getCharactersByBookId(bookId).then(setCharacters).catch(() => setCharacters([]));
-        return () => { checkReadingDuration(); };
-    }, [bookId]);
+        }).catch(() => { if (active) { setBook(null); setIsLoading(false); } });
+        api.getCharactersByBookId(bookId).then(result => { if (active) setCharacters(result); }).catch(() => { if (active) setCharacters([]); });
+        return () => { active = false; checkReadingDuration(); };
+    }, [bookId, chapterId, chapterIndex]);
 
     useEffect(() => {
         if (chapter) setIsDisclaimerOpen(disclaimerRequired && sessionStorage.getItem(disclaimerKey) !== 'accepted');
@@ -438,7 +450,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, cu
         saveProgress();
         trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setCurrentChapterIndex(index);
-        replaceReaderChapter(book.id, index);
+        replaceReaderChapter(book.id, index, book.chapters[index].id);
     };
 
     const handleReturnToStory = () => {

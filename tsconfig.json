@@ -1,4 +1,5 @@
 {
+  "include": ["App.tsx", "index.tsx", "constants.ts", "types.ts", "vite*.ts", "api/**/*.ts", "components/**/*", "contexts/**/*", "hooks/**/*.ts", "pages/**/*.tsx", "types/**/*.ts", "utils/**/*.ts", "tests/**/*.ts", "seo/*.tsx"],
   "compilerOptions": {
     "target": "ES2022",
     "experimentalDecorators": true,

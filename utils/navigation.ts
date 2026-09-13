@@ -1,44 +1,49 @@
-const toHashUrl = (path: string) => `#${path.startsWith('/') ? path : `/${path}`}`;
-
-/** Go to the previous entry without adding a route that points back at this page. */
+import { chapterPath } from '../seo/metadata.mjs';
+export const routePath = () => window.location.pathname + window.location.search;
+export const navigatePath = (path: string, replace = false) => {
+    const target = new URL(path.replace(/^#/, ''), window.location.origin);
+    if (target.origin !== window.location.origin) return;
+    const next = target.pathname + target.search + target.hash;
+    if (next === routePath() + window.location.hash) return;
+    window.history[replace ? 'replaceState' : 'pushState'](replace ? window.history.state : null, '', next);
+    window.dispatchEvent(new Event('wordweft:navigate'));
+};
+/** Preserve old shared #/ links and editor actions while exposing crawlable URLs. */
+export const installNavigation = () => {
+    const migrateHash = () => {
+        if (window.location.hash.startsWith('#/')) {
+            const target = window.location.hash.slice(1);
+            if (!target.startsWith('//')) window.history.replaceState(window.history.state, '', target);
+        }
+    };
+    migrateHash();
+    window.addEventListener('hashchange', migrateHash);
+    const click = (event: MouseEvent) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
+        if (!anchor || anchor.hasAttribute('download') || (anchor.target && anchor.target !== '_self') || anchor.dataset.nativeNavigation !== undefined) return;
+        const raw = anchor.getAttribute('href') || '';
+        if (raw.startsWith('#') && !raw.startsWith('#/')) return;
+        const target = new URL(raw.replace(/^#\//, '/'), window.location.href);
+        if (target.origin !== window.location.origin || /\.[a-z0-9]+$/i.test(target.pathname) || target.pathname.startsWith('/api/')) return;
+        event.preventDefault(); navigatePath(target.pathname + target.search + target.hash);
+    };
+    document.addEventListener('click', click);
+    return () => { document.removeEventListener('click', click); window.removeEventListener('hashchange', migrateHash); };
+};
 export const goBackOrReplace = (fallbackPath: string) => {
-    if (window.history.length > 1) {
-        window.history.back();
-        return;
-    }
-
-    window.location.replace(toHashUrl(fallbackPath));
+    if (window.history.length > 1) { window.history.back(); return; }
+    navigatePath(fallbackPath, true);
 };
-
-/** Complete/cancel a flow without leaving the flow page behind in history. */
-export const replaceHash = (path: string) => {
-    window.location.replace(toHashUrl(path));
+export const replaceHash = (path: string) => navigatePath(path, true);
+export const openReaderFromStory = (bookId: string, chapterIndex: number, chapterId?: string) => {
+    navigatePath(chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
+    window.history.replaceState({ ...window.history.state, wordWeftReaderParent: bookId }, '');
 };
-
-/** Open a reader entry and remember the story entry that owns it. */
-export const openReaderFromStory = (bookId: string, chapterIndex: number) => {
-    window.location.hash = `/read/book/${bookId}/chapter/${chapterIndex}`;
-    window.history.replaceState(
-        { ...window.history.state, wordWeftReaderParent: bookId },
-        document.title,
-    );
+export const replaceReaderChapter = (bookId: string, chapterIndex: number, chapterId?: string) => {
+    window.history.replaceState(window.history.state, '', chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
 };
-
-/** Chapter-to-chapter movement stays within the same reader history entry. */
-export const replaceReaderChapter = (bookId: string, chapterIndex: number) => {
-    window.history.replaceState(
-        window.history.state,
-        document.title,
-        toHashUrl(`/read/book/${bookId}/chapter/${chapterIndex}`),
-    );
-};
-
-/** Return to the existing story entry, or replace a directly opened reader URL. */
 export const returnToStory = (bookId: string) => {
-    if (window.history.state?.wordWeftReaderParent === bookId && window.history.length > 1) {
-        window.history.back();
-        return;
-    }
-
-    replaceHash(`/book/${bookId}`);
+    if (window.history.state?.wordWeftReaderParent === bookId && window.history.length > 1) { window.history.back(); return; }
+    navigatePath(`/book/${encodeURIComponent(bookId)}`, true);
 };

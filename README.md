@@ -18,3 +18,10 @@ View your app in AI Studio: https://ai.studio/apps/temp/1
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+
+## Production SEO
+
+Use Node 22.18+ or Node 24. `npm run build` generates the Vercel Build Output API deployment, including public HTML and live sitemaps. Deploy the backend SEO endpoints first and configure both API URLs before deploying the frontend. See [the SEO launch guide](docs/SEO-LAUNCH.md) for indexing rules, search intent, environment settings, verification commands and Search Console setup.
+
+Use `npm run preview:seo` to check crawler-visible HTML locally; Vite's static preview does not run the SEO renderer.

@@ -246,7 +246,7 @@ export const FeedbackPage: React.FC = () => {
                             Thanks for helping shape WordWeft. You're literally influencing what gets built next.
                         </p>
                         <a
-                            href="#/"
+                            href="/"
                             className="inline-block bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-all text-sm"
                         >
                             Back to WordWeft

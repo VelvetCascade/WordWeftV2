@@ -19,7 +19,7 @@ import { ReportModal } from '../components/ReportModal';
 import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 import { applyBookMetadata } from '../utils/entityMetadata';
 
-const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ chapter, index, onRead, progress, onToggleLike }) => {
+const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ bookId, chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
     const isInProgress = progress > 0 && progress < 90;
 
@@ -33,13 +33,13 @@ const ChapterItem: React.FC<{ chapter: Book['chapters'][0]; index: number; onRea
                 <div className="flex-1 min-w-0 pr-2">
                     <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich line-clamp-2 leading-tight">
                         {chapter.status === 'published' ? (
-                            <button
-                                type="button"
+                            <a
+                                href={`/book/${encodeURIComponent(bookId)}/chapter/${encodeURIComponent(chapter.id)}`}
                                 className="text-left hover:text-accent focus-visible:text-accent transition-colors"
-                                onClick={(event) => { event.stopPropagation(); onRead(); }}
+                                onClick={(event) => { event.stopPropagation(); if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onRead(); } }}
                             >
                                 {chapter.title}
-                            </button>
+                            </a>
                         ) : chapter.title}
                     </h4>
                     <div className="ww-reader-chapter-meta flex items-center gap-4 mt-2">
@@ -304,21 +304,22 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
 
     useEffect(() => {
+        let active = true;
         setIsLoading(true);
         api.getBookById(bookId).then(fetchedBook => {
+            if (!active) return;
             setBook(fetchedBook);
             if (fetchedBook) {
                 trackEvent('content', 'book_view', fetchedBook.title, undefined, { bookId, authorId: fetchedBook.author.id, genre: fetchedBook.genres[0] });
-                api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(setAuthorBooks);
+                api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(result => { if (active) setAuthorBooks(result); }).catch(() => {});
             }
             setIsLoading(false);
-        });
-
-        api.getBookReviews(bookId).then(setAllReviews);
-
+        }).catch(() => { if (active) { setBook(null); setIsLoading(false); } });
+        api.getBookReviews(bookId).then(result => { if (active) setAllReviews(result); }).catch(() => {});
         if (currentUser) {
-            api.getReadingProgressForBook(currentUser.id, bookId).then(setReadingProgress);
+            api.getReadingProgressForBook(currentUser.id, bookId).then(result => { if (active) setReadingProgress(result); }).catch(() => {});
         }
+        return () => { active = false; };
     }, [currentUser, bookId]);
 
     useEffect(() => book ? applyBookMetadata(book) : undefined, [book]);
@@ -376,12 +377,12 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!book) return;
         const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
         trackEvent('reading', 'start_reading', book.title, undefined, { bookId: book.id, chapterIndex: startChapter });
-        openReaderFromStory(book.id, startChapter);
+        openReaderFromStory(book.id, startChapter, book.chapters[startChapter]?.id);
     };
 
     const handleReadChapterClick = (chapterIndex: number) => {
         if (!book) return;
-        openReaderFromStory(book.id, chapterIndex);
+        openReaderFromStory(book.id, chapterIndex, book.chapters[chapterIndex]?.id);
     }
 
     const handleSubmitReview = async (e: React.FormEvent) => {
@@ -496,7 +497,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     <div className="ww-story-intro md:col-span-2 lg:col-span-3">
                         <span className="ww-page-eyebrow">A WordWeft story</span>
                         <h1 className="font-sans text-4xl lg:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich leading-tight mb-2">{book.title}</h1>
-                        <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <button onClick={handleAuthorClick} className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</button></p>
+                        <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <a href={`/author/${encodeURIComponent(book.author.id)}`} className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</a></p>
 
                         {/* Book Stats */}
                         <div className="ww-story-stats flex flex-wrap items-center gap-6 mb-6 text-gray-600 dark:text-gray-400">
@@ -534,8 +535,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <div className="flex flex-wrap items-center gap-2 mb-6">
                             <AgeRatingBadge rating={book.ageRating} />
                             {book.isAIGenerated && <AIBadge />}
-                            {book.genres.map(g => <button key={g} onClick={() => window.location.hash = `/genre/${encodeURIComponent(g)}`} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full hover:text-accent hover:ring-1 hover:ring-accent/30 transition-colors">{g}</button>)}
-                            {book.tags?.filter(tag => !book.genres.includes(tag)).map(tag => <button key={tag} onClick={() => window.location.hash = `/search?q=${encodeURIComponent(tag)}`} className="text-sm font-sans font-medium text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full hover:text-accent">#{tag}</button>)}
+                            {book.genres.map(g => <a key={g} href={`/genre/${encodeURIComponent(g)}`} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full hover:text-accent hover:ring-1 hover:ring-accent/30 transition-colors">{g}</a>)}
+                            {book.tags?.filter(tag => !book.genres.includes(tag)).map(tag => <a key={tag} href={`/tag/${encodeURIComponent(tag)}`} className="text-sm font-sans font-medium text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full hover:text-accent">#{tag}</a>)}
                         </div>
 
                         <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}>
@@ -643,6 +644,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                     const chapterProgress = readingProgress?.chapters[chapter.id]?.progress || 0;
                                     return (
                                         <ChapterItem
+                                            bookId={book.id}
                                             key={chapter.id}
                                             chapter={chapter}
                                             index={i}

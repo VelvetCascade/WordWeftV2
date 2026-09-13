@@ -13,6 +13,7 @@ import { ShareModal } from '../components/ShareModal';
 import { AuthorShareModal } from '../components/AuthorShareModal';
 import { ReportModal } from '../components/ReportModal';
 import { applyAuthorMetadata } from '../utils/entityMetadata';
+import { authorPath, isPublicBook, parseRoute, publicChapters } from '../seo/metadata.mjs';
 
 // ── Inline icons not in the shared set ──
 
@@ -85,6 +86,15 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>('published');
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const page = parseRoute(window.location.pathname + window.location.search).page || 1;
+    const pageSize = 24;
+    // Keep anonymous portfolios aligned with the public renderer's visibility and ordering.
+    // Authenticated readers retain stories allowed by their existing account preferences.
+    const listedBooks = useMemo(() => authorBooks
+        .filter(book => currentUser || (isPublicBook(book) && publicChapters(book).length > 0))
+        .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), [authorBooks, currentUser]);
+    const pageBooks = useMemo(() => listedBooks.slice((page - 1) * pageSize, page * pageSize), [listedBooks, page]);
+    const hasNextPage = listedBooks.length > page * pageSize;
 
     useEffect(() => {
         let active = true;
@@ -104,7 +114,11 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         return () => { active = false; };
     }, [authorId]);
 
-    useEffect(() => author ? applyAuthorMetadata(author, authorBooks) : undefined, [author, authorBooks]);
+    useEffect(() => {
+        if (author) applyAuthorMetadata(author, pageBooks);
+    }, [author, pageBooks, page]);
+
+    useEffect(() => { setActiveTab('published'); }, [authorId, page]);
 
     const handleFollowToggle = async () => {
         if (!author) return;
@@ -230,7 +244,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich tracking-tight leading-tight">
                                     {author.name}
                                 </h1>
-                                {isOwnProfile ? <a href="#/edit-profile" className="ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit portfolio</a> : <button
+                                {isOwnProfile ? <a href="/edit-profile" className="ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit portfolio</a> : <button
                                     onClick={handleFollowToggle}
                                     disabled={isFollowLoading}
                                     className={`ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95 flex-shrink-0 ${
@@ -414,19 +428,24 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                             </div>
                         )}
 
-                        {authorBooks.length > 0 ? (
+                        {pageBooks.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
-                                {authorBooks.map(book => (
+                                {pageBooks.map(book => (
                                     <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`}/>
                                 ))}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-dark-surface rounded-3xl border-2 border-dashed border-gray-200 dark:border-dark-border">
                                 <QuillIcon className="w-12 h-12 text-gray-300 dark:text-dark-border mb-4" />
-                                <p className="font-sans font-semibold text-text-body dark:text-dark-text-body text-lg mb-1">No published works yet</p>
-                                <p className="text-sm text-gray-400 dark:text-gray-500">This author hasn't published any books yet. Check back later!</p>
+                                <p className="font-sans font-semibold text-text-body dark:text-dark-text-body text-lg mb-1">{page > 1 ? 'No stories on this page' : 'No published works yet'}</p>
+                                <p className="text-sm text-gray-400 dark:text-gray-500">{page > 1 ? <a href={authorPath(author.id)}>Return to the first page of this portfolio.</a> : "This author hasn't published any books yet. Check back later!"}</p>
                             </div>
                         )}
+                        {(page > 1 || hasNextPage) && <nav className="seo-pagination" aria-label="Published stories pagination">
+                            {page > 1 && <a rel="prev" href={`${authorPath(author.id)}${page > 2 ? `?page=${page - 1}` : ''}`}>Previous page</a>}
+                            <span>Page {page}</span>
+                            {hasNextPage && <a rel="next" href={`${authorPath(author.id)}?page=${page + 1}`}>Next page</a>}
+                        </nav>}
                     </>
                 )}
 

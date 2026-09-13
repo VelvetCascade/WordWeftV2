@@ -113,7 +113,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
                                         <a href="mailto:wordweftstudio@gmail.com" className="text-accent font-semibold hover:underline">wordweftstudio@gmail.com</a>
                                     </p>
                                     <a
-                                        href="#/auth"
+                                        href="/auth"
                                         className="inline-block bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-primary transition-all hover:scale-105 duration-300 shadow-lg text-sm"
                                     >
                                         Log In or Register

@@ -46,15 +46,21 @@ const getPageContext = (hash: string): PageContext => {
 };
 
 export const WriterLayout: React.FC<WriterLayoutProps> = ({ children }) => {
-  const [currentHash, setCurrentHash] = useState(window.location.hash);
+  const [currentHash, setCurrentHash] = useState('#' + window.location.pathname);
 
   useEffect(() => {
     const handleHashChange = () => {
-      setCurrentHash(window.location.hash);
+      setCurrentHash('#' + window.location.pathname);
     };
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    window.addEventListener('wordweft:navigate', handleHashChange);
     handleHashChange();
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+      window.removeEventListener('wordweft:navigate', handleHashChange);
+    };
   }, []);
 
   const ctx = getPageContext(currentHash);
@@ -79,7 +85,7 @@ export const WriterLayout: React.FC<WriterLayoutProps> = ({ children }) => {
               <ArrowLeftIcon />
               <span>{ctx.backLabel}</span>
             </button>
-            <a href="#/write" onClick={(e) => { e.preventDefault(); window.location.hash = '/write'; }} className="writer-topbar-logo">
+            <a href="/write" onClick={(e) => { e.preventDefault(); window.location.hash = '/write'; }} className="writer-topbar-logo">
               <WordWeftLogo className="w-9 h-9" />
               <span className="writer-topbar-studio">Writer Studio</span>
             </a>

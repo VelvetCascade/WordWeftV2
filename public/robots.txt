@@ -1,13 +1,3 @@
-# Standard Search Crawlers (Search Engine & AdSense Verification)
-User-agent: Googlebot
-Allow: /
-
-User-agent: Mediapartners-Google
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
 # Block AI Model Training & Data Extraction Bots
 User-agent: GPTBot
 Disallow: /
@@ -48,16 +38,14 @@ Disallow: /
 User-agent: Cohere-ai
 Disallow: /
 
-User-agent: Om giliBot
+User-agent: omgilibot
 Disallow: /
 
 # Default Rules for General Crawlers
 User-agent: *
 Allow: /
-Disallow: /write/
 Disallow: /api/
-Disallow: /auth
-Disallow: /profile
+# Account, auth and search pages remain crawlable so their noindex can be read.
 
 Sitemap: https://wordweftstudio.com/sitemap.xml
 

@@ -8,7 +8,7 @@ import AdUnit from '../components/AdUnit';
 
 type SearchTab = 'all' | 'books' | 'authors';
 
-export const SearchResultsPage: React.FC = () => {
+export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQuery = '' }) => {
     const { trackEvent } = useAnalytics();
     const [query, setQuery] = useState('');
     const [activeTab, setActiveTab] = useState<SearchTab>('all');
@@ -17,16 +17,7 @@ export const SearchResultsPage: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [inputValue, setInputValue] = useState('');
 
-    // Parse query from hash
-    useEffect(() => {
-        const hash = window.location.hash;
-        const match = hash.match(/[?&]q=([^&]*)/);
-        if (match) {
-            const q = decodeURIComponent(match[1]);
-            setQuery(q);
-            setInputValue(q);
-        }
-    }, []);
+    useEffect(() => { setQuery(searchQuery); setInputValue(searchQuery); }, [searchQuery]);
 
     const fetchResults = useCallback(async (q: string, tab: SearchTab, page: number) => {
         if (q.trim().length < 2) return;

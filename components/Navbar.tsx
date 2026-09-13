@@ -85,7 +85,13 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
   useEffect(() => {
     const handleHashChange = () => setActiveRoute(getActiveRoute());
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    window.addEventListener('wordweft:navigate', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+      window.removeEventListener('wordweft:navigate', handleHashChange);
+    };
   }, []);
 
   // Keyboard shortcut: Ctrl+K or Cmd+K to open search
@@ -192,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
       {/* Desktop Navbar */}
       <header className={`ww-site-header fixed top-0 left-0 right-0 z-50 hidden xl:block ${isOnHero ? 'ww-site-header-hero' : 'ww-site-header-solid'}`}>
         <div className="ww-site-header-inner container mx-auto px-6 flex justify-between items-center">
-          <a className="ww-brand-lockup" href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
+          <a className="ww-brand-lockup" href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
             <span className="ww-brand-mark"><WordWeftLogo className="w-9 h-9" /></span>
             <span className="ww-brand-name">Word<span>Weft</span></span>
           </a>
@@ -259,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
 
       {/* Mobile Top Bar */}
       <header className="ww-mobile-topbar xl:hidden">
-        <a className="ww-mobile-brand" href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
+        <a className="ww-mobile-brand" href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
           <WordWeftLogo className="w-7 h-7" />
           <span>Word<span>Weft</span></span>
         </a>
