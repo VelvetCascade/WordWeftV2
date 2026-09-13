@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
@@ -49,13 +49,22 @@ import { useNotifications } from './hooks/useNotifications';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
 import { replaceHash } from './utils/navigation';
+import { updateRouteMetadata } from './utils/pageMetadata';
+import { landingPages } from './seo/content.mjs';
+import { parseRoute } from './seo/metadata.mjs';
+const DiscoveryLandingPage = lazy(() => import('./pages/DiscoveryLandingPage').then(m => ({ default: m.DiscoveryLandingPage })));
+const NotFoundPage = lazy(() => import('./pages/DiscoveryLandingPage').then(m => ({ default: m.NotFoundPage })));
+const PublicCatalogPage = lazy(() => import('./pages/PublicCatalogPage').then(m => ({ default: m.PublicCatalogPage })));
 import { communityReturnLink } from './utils/community';
 
 export type Page =
   | { name: 'home' }
+  | { name: 'discovery-landing'; path: string }
+  | { name: 'public-catalog'; path: string }
+  | { name: 'not-found' }
   | { name: 'category'; genre: string | null }
   | { name: 'book-details'; bookId: string }
-  | { name: 'reader'; bookId: string; chapterIndex: number }
+  | { name: 'reader'; bookId: string; chapterIndex: number; chapterId?: string }
   | { name: 'writer-dashboard' }
   | { name: 'writer-create-book' }
   | { name: 'writer-manage-book'; bookId: string }
@@ -96,6 +105,8 @@ const PageLoadingFallback: React.FC = () => (
 const App: React.FC = () => {
   const [page, setPage] = useState<Page>({ name: 'home' });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Hash events may run before React commits a successful login. Keep the guard current.
+  const sessionAuthenticated = useRef(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
@@ -103,14 +114,21 @@ const App: React.FC = () => {
   const notif = useNotifications(isAuthenticated);
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
 
-  // Helper to navigate by converting Page to hash URL
+  // Preserve the complete intended destination through sign-in and onboarding.
   const navigateTo = (target: Page) => {
     switch (target.name) {
       case 'home': window.location.hash = '/home'; break;
       case 'category': window.location.hash = '/category'; break;
       case 'book-details': window.location.hash = `/book/${target.bookId}`; break;
-      case 'reader': window.location.hash = `/read/book/${target.bookId}/chapter/${target.chapterIndex}`; break;
+      case 'reader': window.location.hash = target.chapterId ? `/book/${encodeURIComponent(target.bookId)}/chapter/${encodeURIComponent(target.chapterId)}` : `/read/book/${encodeURIComponent(target.bookId)}/chapter/${target.chapterIndex}`; break;
       case 'writer-dashboard': window.location.hash = '/write'; break;
+      case 'writer-create-book': window.location.hash = '/write/book/create'; break;
+      case 'writer-manage-book': window.location.hash = `/write/book/${encodeURIComponent(target.bookId)}/manage`; break;
+      case 'writer-edit-chapter': window.location.hash = `/write/book/${encodeURIComponent(target.bookId)}/chapter/${encodeURIComponent(target.chapterId)}/edit`; break;
+      case 'writer-analytics': window.location.hash = '/write/analytics'; break;
+      case 'writer-settings': window.location.hash = '/write/settings'; break;
+      case 'discovery-landing': case 'public-catalog': window.location.hash = target.path; break;
+      case 'genre-page': window.location.hash = `/genre/${encodeURIComponent(target.genre)}`; break;
       case 'author': window.location.hash = `/author/${target.authorId}`; break;
       case 'community': window.location.hash = `/community${target.circleSlug ? `/circle/${encodeURIComponent(target.circleSlug)}` : ''}${target.query ? `?${target.query}` : ''}`; break;
       case 'community-post': window.location.hash = `/community/post/${encodeURIComponent(target.postId)}`; break;
@@ -139,6 +157,7 @@ const App: React.FC = () => {
     const checkSession = async () => {
       const user = await api.getMe();
       if (user) {
+        sessionAuthenticated.current = true;
         setIsAuthenticated(true);
         setCurrentUser(user);
       }
@@ -148,6 +167,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (user: User) => {
+    sessionAuthenticated.current = true;
     setIsAuthenticated(true);
     setCurrentUser(user);
 
@@ -168,23 +188,7 @@ const App: React.FC = () => {
 
     const targetPage = intendedPage || { name: 'home' };
 
-    if (targetPage.name === 'community' || targetPage.name === 'community-post') {
-      navigateTo(targetPage);
-    } else if (targetPage.name === 'book-details') {
-      window.location.hash = `/book/${targetPage.bookId}`;
-    } else if (targetPage.name === 'author') {
-      window.location.hash = `/author/${targetPage.authorId}`;
-    } else if (targetPage.name === 'reader') {
-      window.location.hash = `/read/book/${targetPage.bookId}/chapter/${targetPage.chapterIndex}`;
-    } else if (targetPage.name === 'hook-feed') {
-      window.location.hash = '/hooks';
-    } else if (targetPage.name === 'reading-growth') {
-      window.location.hash = '/events';
-    } else if (targetPage.name !== 'home' && targetPage.name !== 'auth') {
-      window.location.hash = `/${targetPage.name}`;
-    } else {
-      window.location.hash = '/';
-    }
+    navigateTo(targetPage.name === 'auth' ? { name: 'home' } : targetPage);
 
     setIntendedPage(null);
   };
@@ -195,6 +199,7 @@ const App: React.FC = () => {
     await analytics.flush();
 
     await api.logout();
+    sessionAuthenticated.current = false;
     setIsAuthenticated(false);
     setCurrentUser(null);
     window.location.hash = '/';
@@ -225,64 +230,26 @@ const App: React.FC = () => {
     // resolve to the correct page without breaking any existing links.
     const getEffectiveHash = (): string => {
       const h = window.location.hash;
-      if (h && h.length > 2) return h.replace('#/', '');
+      if (h.startsWith('#/')) return h.slice(2);
       // Clean URL support: /features -> 'features', / -> ''
-      return window.location.pathname.replace(/^\//, '');
+      return (window.location.pathname + window.location.search).replace(/^\//, '');
     };
-
-    // Updates <title>, <meta name="description">, and <link rel="canonical">
-    // for every page change so crawlers index accurate, unique metadata.
-    const updatePageMeta = (p: Page, bookCoverUrl?: string) => {
-      type MetaEntry = { title: string; description: string; canonical: string };
-      const base = 'https://wordweftstudio.com';
-      const defaultOgImage = `${base}/og-banner.png`;
-      const metaMap: Partial<Record<Page['name'], MetaEntry>> = {
-        home:           { title: 'WordWeft — Where Stories Come Alive | Immersive Fiction Platform', description: 'WordWeft gives writers superpowers and readers immersive experiences. Mood-shifting atmospheres, hidden spoilers, living characters, and a world-building toolkit.', canonical: base + '/' },
-        features:       { title: 'Features — WordWeft | Atmosphere Engine, Spoiler Guard & More', description: 'Discover WordWeft\'s powerful storytelling features: Atmosphere Engine, Spoiler Guard, Immersive Reader, Character Universe, and World-Building Toolkit.', canonical: base + '/features' },
-        category:       { title: 'Browse Books by Genre — WordWeft', description: 'Explore thousands of stories across Fantasy, Romance, Sci-Fi, Mystery, Horror and more on WordWeft.', canonical: base + '/category' },
-        terms:          { title: 'Terms of Service — WordWeft', description: 'Read the WordWeft Terms of Service — your rights and responsibilities as a reader or writer on our platform.', canonical: base + '/terms' },
-        privacy:        { title: 'Privacy Policy — WordWeft', description: 'Learn how WordWeft collects, uses, and protects your personal data.', canonical: base + '/privacy' },
-        safety:         { title: 'Community Safety Rules — WordWeft', description: 'WordWeft\'s content guidelines and community safety rules for a respectful storytelling environment.', canonical: base + '/safety' },
-        contact:        { title: 'Contact Us — WordWeft', description: 'Get in touch with the WordWeft team. We\'d love to hear from you.', canonical: base + '/contact' },
-        feedback:       { title: 'Share Feedback — WordWeft', description: 'Help us make WordWeft better. Share your thoughts, ideas, and suggestions.', canonical: base + '/feedback' },
-        about:          { title: 'About WordWeft Studio — A Home for Story People', description: 'Meet WordWeft Studio and the principles behind our thoughtful home for readers and independent writers.', canonical: base + '/about' },
-        auth:           { title: 'Sign In or Join — WordWeft', description: 'Create a free WordWeft account to start reading or publishing your own stories.', canonical: base + '/auth' },
-        'hook-feed':    { title: 'Hook Feed — Find Your Next Story | WordWeft', description: 'Sample opening lines from published WordWeft stories and find the writing that hooks you.', canonical: base + '/hooks' },
-        'reading-growth': { title: 'Reading Challenges & Genre Events | WordWeft', description: 'Join personal reading challenges and discover curated genre events on WordWeft.', canonical: base + '/events' },
-        community:      { title: 'Community — Conversations Around Stories | WordWeft', description: 'Join readers and writers discussing craft, releases, recommendations, and the stories they love.', canonical: base + '/community' },
-        search:         { title: 'Search Stories and Authors — WordWeft', description: 'Search WordWeft for books, writers, genres, and your next memorable read.', canonical: base + '/search' },
-      };
-      const entry = metaMap[p.name];
-      if (!entry) return;
-      document.title = entry.title;
-      const desc = document.querySelector('meta[name="description"]');
-      if (desc) desc.setAttribute('content', entry.description);
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', entry.title);
-      const ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute('content', entry.description);
-      const ogUrl = document.querySelector('meta[property="og:url"]');
-      if (ogUrl) ogUrl.setAttribute('content', entry.canonical);
-      // Update og:image — use book cover for book/reader pages, default banner otherwise
-      const ogImage = document.querySelector('meta[property="og:image"]');
-      if (ogImage) ogImage.setAttribute('content', bookCoverUrl || defaultOgImage);
-      const twImage = document.querySelector('meta[name="twitter:image"]');
-      if (twImage) twImage.setAttribute('content', bookCoverUrl || defaultOgImage);
-      let canonical = document.querySelector('link[rel="canonical"]');
-      if (!canonical) {
-        canonical = document.createElement('link');
-        canonical.setAttribute('rel', 'canonical');
-        document.head.appendChild(canonical);
-      }
-      canonical.setAttribute('href', entry.canonical);
-    };
-
 
     const handleHashChange = () => {
       const hash = getEffectiveHash();
+      const publicRoute = parseRoute('/' + hash);
+      const cleanPath = window.location.pathname;
       let targetPage: Page;
 
-      if (hash.startsWith('community/post/')) {
+      if (landingPages[cleanPath]) {
+        targetPage = { name: 'discovery-landing', path: cleanPath };
+      } else if (publicRoute.kind === 'chapter') {
+        targetPage = { name: 'reader', bookId: publicRoute.id, chapterId: publicRoute.chapterId, chapterIndex: -1 };
+      } else if (publicRoute.kind === 'catalog' && (publicRoute.filter || publicRoute.page > 1)) {
+        targetPage = { name: 'public-catalog', path: '/' + hash };
+      } else if (publicRoute.kind === 'missing' || publicRoute.page === 0) {
+        targetPage = { name: 'not-found' };
+      } else if (hash.startsWith('community/post/')) {
         const postId = hash.split('?')[0].split('/')[2];
         targetPage = postId ? { name: 'community-post', postId } : { name: 'community' };
       } else if (hash.startsWith('community')) {
@@ -291,10 +258,10 @@ const App: React.FC = () => {
         try { if (circleSlug) circleSlug = decodeURIComponent(circleSlug); } catch { circleSlug = undefined; }
         targetPage = { name: 'community', circleSlug, query: hash.split('?')[1] || undefined };
       } else if (hash.startsWith('book/')) {
-        const bookId = hash.split('/')[1];
+        const bookId = publicRoute.id;
         targetPage = bookId ? { name: 'book-details', bookId } : { name: 'home' };
       } else if (hash.startsWith('author/')) {
-        const authorId = hash.split('/')[1];
+        const authorId = publicRoute.id;
         targetPage = authorId ? { name: 'author', authorId } : { name: 'home' };
       } else if (hash.startsWith('read/book/')) {
         const parts = hash.split('/');
@@ -367,7 +334,7 @@ const App: React.FC = () => {
 
       const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications'];
 
-      if (protectedRoutes.includes(targetPage.name) && !isAuthenticated) {
+      if (protectedRoutes.includes(targetPage.name) && !sessionAuthenticated.current) {
         setIntendedPage(targetPage);
         window.location.hash = '/auth'; // This re-triggers the hashchange event
         return; // Stop processing to avoid rendering the protected page
@@ -375,16 +342,19 @@ const App: React.FC = () => {
 
       window.scrollTo(0, 0);
       setPage(targetPage);
-      updatePageMeta(targetPage);
-      // Signal to @prerenderer/renderer-puppeteer that the page is fully rendered.
-      // In normal browser usage this event is ignored.
-      document.dispatchEvent(new Event('render-event'));
+      updateRouteMetadata();
     };
 
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    window.addEventListener('wordweft:navigate', handleHashChange);
     handleHashChange(); // Initial check for the current hash or pathname
 
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+      window.removeEventListener('wordweft:navigate', handleHashChange);
+    };
   }, [isAuthenticated, isInitialAuthCheckDone]);
 
 
@@ -434,6 +404,9 @@ const App: React.FC = () => {
     }
 
     switch (page.name) {
+      case 'discovery-landing': return <DiscoveryLandingPage path={page.path} />;
+      case 'public-catalog': return <PublicCatalogPage path={page.path} />;
+      case 'not-found': return <NotFoundPage />;
       case 'home':
         return <HomePage />;
       case 'category':
@@ -441,7 +414,7 @@ const App: React.FC = () => {
       case 'book-details':
         return <BookDetailsPage bookId={page.bookId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       case 'reader':
-        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
+        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} chapterId={page.chapterId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
       case 'writer-dashboard':
         return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'writer-create-book':
@@ -496,7 +469,7 @@ const App: React.FC = () => {
       case 'genre-page':
         return <GenrePage genre={page.genre} />;
       case 'search':
-        return <SearchResultsPage />;
+        return <SearchResultsPage searchQuery={page.query} />;
       case 'features':
         return <FeaturesPage />;
       case 'about':
@@ -587,8 +560,7 @@ const App: React.FC = () => {
               // Preserve a public acquisition destination through first-time onboarding.
               if (communityReturn) {
                 window.location.hash = communityReturn;
-              } else if (destination?.name === 'hook-feed' || destination?.name === 'reading-growth'
-                || destination?.name === 'book-details' || destination?.name === 'author' || destination?.name === 'reader') {
+              } else if (destination && !['home', 'auth'].includes(destination.name)) {
                 navigateTo(destination);
               } else if (role === 'writer') {
                 window.location.hash = '/write';

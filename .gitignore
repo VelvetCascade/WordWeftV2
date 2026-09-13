@@ -26,3 +26,6 @@ dist-ssr
 /backend/tokens/
 /.env
 scratch/
+
+/.vercel/
+/.npm-cache/

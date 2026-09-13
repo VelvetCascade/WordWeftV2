@@ -6,8 +6,8 @@ import { authorShareUrl, storyShareUrl } from '../utils/shareLinks.ts';
 import { uploadErrorMessage } from '../utils/uploadDiagnostics.ts';
 
 test('share URLs use crawler-visible routes instead of hash fragments', () => {
-    assert.equal(storyShareUrl('book 1', 'https://example.com/'), 'https://example.com/share/book/book%201');
-    assert.equal(authorShareUrl('author/1', 'https://example.com'), 'https://example.com/share/author/author%2F1');
+    assert.equal(storyShareUrl('book 1', 'https://example.com/'), 'https://example.com/book/book%201');
+    assert.equal(authorShareUrl('author/1', 'https://example.com'), 'https://example.com/author/author%2F1');
 });
 test('reader progress is scoped to manuscript bounds', () => {
     assert.equal(manuscriptProgress({ contentTop: 100, contentHeight: 2100, viewportHeight: 600, scrollY: 100 }), 0);

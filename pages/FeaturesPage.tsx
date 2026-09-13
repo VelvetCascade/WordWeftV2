@@ -501,7 +501,7 @@ export const FeaturesPage: React.FC = () => {
                             <SparklesIcon className="w-5 h-5 text-current relative z-10" />
                             <span className="relative z-10 font-bold">Try the writing tools</span>
                         </button>
-                        <a href="#/category" className="ft-btn ft-btn-secondary">
+                        <a href="/category" className="ft-btn ft-btn-secondary">
                             <BookOpenIcon /> Browse stories
                         </a>
                     </div>
@@ -549,7 +549,7 @@ export const FeaturesPage: React.FC = () => {
                             <span>For readers</span>
                             <h3>Settle into the story.</h3>
                             <p>A clean, adjustable reader with saved progress, thoughtful discussion, character context, and atmosphere that follows the prose.</p>
-                            <a href="#/category">Find something to read <ArrowRightIcon /></a>
+                            <a href="/category">Find something to read <ArrowRightIcon /></a>
                         </div>
                         <div className="ft-audience-mini-reader"><i /><strong>The sea remembered every name.</strong><p>By dusk, the lighthouse had begun to answer.</p><span>42% read</span></div>
                     </article>
@@ -558,7 +558,7 @@ export const FeaturesPage: React.FC = () => {
                             <span>For writers</span>
                             <h3>Keep the whole world close.</h3>
                             <p>Draft chapters beside your characters, scenes, notes, and lore—then publish without surrendering the rhythm of your writing.</p>
-                            <a href="#/auth">Open the writer studio <ArrowRightIcon /></a>
+                            <a href="/auth">Open the writer studio <ArrowRightIcon /></a>
                         </div>
                         <div className="ft-audience-mini-studio"><span><i /> Drafting</span><h4>Chapter 12 · The Crossing</h4><div><b /><b /><b /><b /></div><small>1,842 words · saved</small></div>
                     </article>
@@ -679,10 +679,10 @@ export const FeaturesPage: React.FC = () => {
                         Join thousands of writers and readers on the most immersive storytelling platform.
                     </p>
                     <div className="ft-cta-buttons">
-                        <a href="#/auth" className="ft-btn ft-btn-primary ft-btn-lg">
+                        <a href="/auth" className="ft-btn ft-btn-primary ft-btn-lg">
                             Start Writing Free <ArrowRightIcon />
                         </a>
-                        <a href="#/category" className="ft-btn ft-btn-ghost ft-btn-lg">
+                        <a href="/category" className="ft-btn ft-btn-ghost ft-btn-lg">
                             Browse Stories <ArrowRightIcon />
                         </a>
                     </div>

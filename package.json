@@ -3,13 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": { "node": ">=22.18.0 <25" },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-seo.mjs",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.ts",
+    "test": "node scripts/test.mjs",
     "typecheck": "tsc --noEmit",
-    "check:bundle": "node scripts/check-entry-bundle.mjs"
+    "check:bundle": "node scripts/check-entry-bundle.mjs",
+    "preview:seo": "node scripts/serve-seo.mjs",
+    "test:seo": "node --test tests/seo.test.mjs"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",
@@ -39,7 +42,10 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.6.0",
+    "postcss": "^8.5.28",
     "react-snap": "^1.23.0",
+    "tailwindcss": "^3.4.19",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

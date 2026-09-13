@@ -6,15 +6,14 @@ const normalizedOrigin = (origin?: string) => {
 };
 
 /**
- * Social networks do not receive the hash portion of a URL. These routes are
- * resolved by the hosting layer to small public preview pages with story- or
- * author-specific Open Graph metadata, then forward people to the SPA.
+ * Canonical public pages include social metadata in the initial HTML.
+ * The hosting layer permanently redirects older /share/ links to these paths.
  */
 export const storyShareUrl = (bookId: string, origin?: string) =>
-    `${normalizedOrigin(origin)}/share/book/${encodeURIComponent(bookId)}`;
+    `${normalizedOrigin(origin)}/book/${encodeURIComponent(bookId)}`;
 
 export const authorShareUrl = (authorId: string, origin?: string) =>
-    `${normalizedOrigin(origin)}/share/author/${encodeURIComponent(authorId)}`;
+    `${normalizedOrigin(origin)}/author/${encodeURIComponent(authorId)}`;
 
 export const storyCanonicalUrl = (bookId: string) =>
     `${PRODUCTION_ORIGIN}/book/${encodeURIComponent(bookId)}`;

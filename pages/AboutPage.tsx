@@ -310,7 +310,7 @@ export const AboutPage: React.FC = () => {
                     {/* CTA */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a
-                            href="#/"
+                            href="/"
                             className="inline-flex items-center gap-2 bg-accent text-white font-sans font-semibold px-8 py-3.5 rounded-xl hover:bg-primary transition-colors shadow-sm hover:shadow-md"
                         >
                             Start reading
@@ -319,7 +319,7 @@ export const AboutPage: React.FC = () => {
                             </svg>
                         </a>
                         <a
-                            href="#/write"
+                            href="/write"
                             className="inline-flex items-center gap-2 bg-white dark:bg-dark-surface text-text-rich dark:text-dark-text-rich font-sans font-semibold px-8 py-3.5 rounded-xl border border-gray-200/80 dark:border-dark-border hover:border-accent dark:hover:border-accent transition-colors shadow-sm hover:shadow-md"
                         >
                             Start writing

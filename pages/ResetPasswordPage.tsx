@@ -71,7 +71,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
     return (
         <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
             <div className="w-full max-w-md">
-                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="flex justify-center mb-6">
+                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="flex justify-center mb-6">
                     <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
                 </a>
                 <div className="bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">

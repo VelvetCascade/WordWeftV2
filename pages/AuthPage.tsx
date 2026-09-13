@@ -500,7 +500,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         <div className="ww-auth-page min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
             <div className="ww-auth-layout">
             <aside className="ww-auth-story">
-                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-story-brand">
+                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-story-brand">
                     <span><WordWeftLogo className="w-9 h-9" /></span><strong>WordWeft</strong>
                 </a>
                 <div className="ww-auth-story-copy">
@@ -515,7 +515,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 </div>
             </aside>
             <div className="ww-auth-form-shell w-full max-w-md">
-                <a href="#/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6" aria-label="WordWeft home">
+                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6" aria-label="WordWeft home">
                     <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
                 </a>
                 <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">

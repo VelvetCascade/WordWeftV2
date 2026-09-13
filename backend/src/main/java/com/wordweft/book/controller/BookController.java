@@ -258,6 +258,7 @@ public class BookController {
         if (updates.isAIGenerated() != book.isAIGenerated())
             book.setAIGenerated(updates.isAIGenerated());
 
+        if ("published".equals(book.getPublicationStatus())) book.setLastUpdatedAt(LocalDate.now());
         bookRepository.save(book);
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }

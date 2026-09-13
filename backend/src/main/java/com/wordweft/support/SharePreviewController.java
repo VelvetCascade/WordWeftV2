@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Comparator;
 
 /**
@@ -27,7 +26,7 @@ import java.util.Comparator;
 @RequestMapping("/api/public/share")
 public class SharePreviewController {
     private static final String SITE_ORIGIN = "https://wordweftstudio.com";
-    private static final String DEFAULT_IMAGE = SITE_ORIGIN + "/og-banner.png";
+    private static final String DEFAULT_IMAGE = SITE_ORIGIN + "/og-banner.jpg";
 
     private final BookRepository books;
     private final UserRepository users;
@@ -40,7 +39,7 @@ public class SharePreviewController {
     @GetMapping(value = "/book/{bookId}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> book(@PathVariable String bookId) {
         Book book = books.findById(bookId)
-                .filter(item -> "published".equals(item.getPublicationStatus()))
+                .filter(com.wordweft.seo.PublicSeoService::isPublic)
                 .orElse(null);
         if (book == null) return ResponseEntity.notFound().build();
 
@@ -57,7 +56,8 @@ public class SharePreviewController {
         User author = users.findById(authorId).orElse(null);
         if (author == null) return ResponseEntity.notFound().build();
 
-        var published = books.findByAuthorIdAndPublicationStatus(authorId, "published");
+        var published = books.findByAuthorIdAndPublicationStatus(authorId, "published").stream()
+                .filter(com.wordweft.seo.PublicSeoService::isPublic).toList();
         String title = author.getUsername() + " — Author Portfolio on WordWeft";
         String description = firstUseful(author.getBio(),
                 published.isEmpty() ? null : "Explore " + published.size() + " published " + (published.size() == 1 ? "story" : "stories") + ".",
@@ -93,7 +93,8 @@ public class SharePreviewController {
                 safeCanonical, safeTitle);
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_HTML)
-                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(15)).cachePublic())
+                .cacheControl(CacheControl.noStore())
+                .header("X-Robots-Tag", "noindex, follow")
                 .body(body);
     }
 
