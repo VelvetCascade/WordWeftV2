@@ -1,4 +1,4 @@
-const PRODUCTION_ORIGIN = 'https://wordweftstudio.com';
+const PRODUCTION_ORIGIN = 'https://www.wordweftstudio.com';
 
 const normalizedOrigin = (origin?: string) => {
     const value = origin || (typeof window !== 'undefined' ? window.location.origin : PRODUCTION_ORIGIN);

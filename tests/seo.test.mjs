@@ -8,7 +8,7 @@ import { buildResponse } from '../seo/render.mjs';
 const template = '<html><head><!--SEO_HEAD--></head><body><div id="root"><!--SEO_BODY--></div></body></html>';
 const author = { id: 'writer', name: 'A Writer', bio: 'Writes fantasy.' };
 const book = { id: 'story', title: 'A & B', summary: 'An original fantasy adventure.', description: '<p>A traveller finds a door.</p>', publicationStatus: 'published', ageRating: 'ALL_AGES', isMature: false, author, genres: ['Fantasy'], tags: ['found family'], chapters: [{ id: 'first', title: 'The Beginning', status: 'published', content: '<p>A new beginning.</p>', wordCount: 3 }, { id: 'secret', title: 'Secret draft', status: 'draft', content: 'DO NOT PUBLISH' }, { id: 'second', title: 'A New Road', status: 'published', content: '<p>The next day.</p>' }] };
-const response = (url, options = {}) => buildResponse({ url, template, host: 'wordweftstudio.com', staticBodies: { '/': '<h1>Read and write</h1>' }, fetchJson: async path => path.startsWith('/book/') ? book : { books: [book], author, hasMore: false }, ...options });
+const response = (url, options = {}) => buildResponse({ url, template, host: 'www.wordweftstudio.com', staticBodies: { '/': '<h1>Read and write</h1>' }, fetchJson: async path => path.startsWith('/book/') ? book : { books: [book], author, hasMore: false }, ...options });
 
 test('public URLs preserve meaningful queries and reject malformed routes', () => {
   assert.equal(parseRoute('/genre/Fantasy?page=2').page, 2);
@@ -30,7 +30,7 @@ test('book HTML contains public content, links, metadata and no unpublished chap
   const result = await response('/book/story?utm_source=test');
   assert.equal(result.status, 200);
   assert.match(result.body, /<title>A &amp; B by A Writer/);
-  assert.match(result.body, /href="https:\/\/wordweftstudio.com\/book\/story"/);
+  assert.match(result.body, /href="https:\/\/www.wordweftstudio.com\/book\/story"/);
   assert.match(result.body, /href="\/book\/story\/chapter\/first"/);
   assert.match(result.body, /href="\/tag\/found%20family"/);
   assert.doesNotMatch(result.body, /Secret draft|DO NOT PUBLISH|\/chapter\/secret/);
@@ -70,7 +70,7 @@ test('unknown URLs return 404 and aliases redirect permanently', async () => {
   assert.equal((await response('/not-a-route')).status, 404);
   assert.equal((await response('/share/book/story')).headers.Location, '/book/story');
   assert.equal((await response('/features/')).headers.Location, '/features');
-  assert.equal((await response('/book/story', { host: 'www.wordweftstudio.com' })).headers.Location, 'https://wordweftstudio.com/book/story');
+  assert.equal((await response('/book/story', { host: 'wordweftstudio.com' })).headers.Location, 'https://www.wordweftstudio.com/book/story');
 });
 test('preview host and preview environment always send noindex', async () => {
   for (const options of [{ host: 'preview.vercel.app' }, { preview: true }]) {
@@ -87,7 +87,7 @@ test('metadata and server body escape hostile user content without executable ma
 });
 test('pagination has self canonical URLs and real next/previous links', async () => {
   const result = await response('/genre/Fantasy?page=2', { fetchJson: async () => ({ books: [book], hasMore: true }) });
-  assert.match(result.body, /href="https:\/\/wordweftstudio.com\/genre\/Fantasy\?page=2"/);
+  assert.match(result.body, /href="https:\/\/www.wordweftstudio.com\/genre\/Fantasy\?page=2"/);
   assert.match(result.body, /rel="prev" href="\/genre\/Fantasy"/);
   assert.match(result.body, /rel="next" href="\/genre\/Fantasy\?page=3"/);
   assert.equal((await response('/genre/Empty', { fetchJson: async () => ({ books: [], hasMore: false }) })).status, 404);
@@ -114,7 +114,7 @@ test('robots lets crawlers read noindex while maintaining existing training opt-
   const robots = readFileSync('public/robots.txt', 'utf8');
   assert.match(robots, /User-agent: GPTBot\r?\nDisallow: \//);
   assert.doesNotMatch(robots, /Disallow: \/(?:auth|profile|write)/);
-  assert.match(robots, /Sitemap: https:\/\/wordweftstudio.com\/sitemap.xml/);
+  assert.match(robots, /Sitemap: https:\/\/www.wordweftstudio.com\/sitemap.xml/);
 });
 
 
@@ -126,7 +126,7 @@ test('pagination schema and canonical identify the same individual page', () => 
 });
 
 test('missing images use a real fallback with truthful dimensions', () => {
-  for (const value of [undefined, null, '', '   ', 'javascript:alert(1)']) assert.equal(safeImage(value), 'https://wordweftstudio.com/og-banner.jpg');
+  for (const value of [undefined, null, '', '   ', 'javascript:alert(1)']) assert.equal(safeImage(value), 'https://www.wordweftstudio.com/og-banner.jpg');
   const head = renderHead(metadataFor(parseRoute('/')));
   assert.match(head, /property="og:image:width" content="1024"/);
   assert.match(head, /property="og:image:height" content="1024"/);

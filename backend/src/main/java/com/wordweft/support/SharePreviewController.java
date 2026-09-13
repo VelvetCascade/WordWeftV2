@@ -25,7 +25,7 @@ import java.util.Comparator;
 @RestController
 @RequestMapping("/api/public/share")
 public class SharePreviewController {
-    private static final String SITE_ORIGIN = "https://wordweftstudio.com";
+    private static final String SITE_ORIGIN = "https://www.wordweftstudio.com";
     private static final String DEFAULT_IMAGE = SITE_ORIGIN + "/og-banner.jpg";
 
     private final BookRepository books;

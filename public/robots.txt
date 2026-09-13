@@ -47,5 +47,5 @@ Allow: /
 Disallow: /api/
 # Account, auth and search pages remain crawlable so their noindex can be read.
 
-Sitemap: https://wordweftstudio.com/sitemap.xml
+Sitemap: https://www.wordweftstudio.com/sitemap.xml
 

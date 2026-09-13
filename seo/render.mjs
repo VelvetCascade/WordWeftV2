@@ -39,7 +39,7 @@ export async function buildResponse({ url: input, host = '', template, staticBod
   const redirect = path => ({ status: 308, headers: { ...headers, Location: path }, body: '' });
   const error = (status, title, message) => ({ status, headers: { ...headers, 'X-Robots-Tag': 'noindex, follow', ...(status === 503 ? { 'Retry-After': '60' } : {}) }, body: documentHtml(template, { ...metadataFor({ kind: 'missing', path: route.path }), title }, wrapPublic(`<h1>${h(title)}</h1><p>${h(message)}</p><a href="/category">Browse stories</a>`), { noindex: true, persistNoindex: noindex }) });
   if (!['http:', 'https:'].includes(url.protocol)) return error(404, 'Page not found', 'This address is unavailable.');
-  if (host === 'www.wordweftstudio.com') return redirect(SITE_ORIGIN + url.pathname + url.search);
+  if (host === 'wordweftstudio.com') return redirect(SITE_ORIGIN + url.pathname + url.search);
   if (url.pathname.length > 1 && /\/$/.test(url.pathname)) return redirect(url.pathname.replace(/\/+$/, '') + url.search);
   if (url.pathname === '/index.html') return redirect('/' + url.search);
   if (url.pathname === '/challenges') return redirect('/events' + url.search);

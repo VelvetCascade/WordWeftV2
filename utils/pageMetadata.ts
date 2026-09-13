@@ -13,7 +13,7 @@ export function updateRouteMetadata() {
     if (['book', 'chapter', 'legacy-chapter', 'author', 'catalog'].includes(route.kind)) {
         // Keep correct initial server metadata while the public content loads.
         const current = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
-        if (current === `https://wordweftstudio.com${window.location.pathname}${window.location.search}`) return;
+        if (current === `https://www.wordweftstudio.com${window.location.pathname}${window.location.search}`) return;
     }
     applyMetadata(metadataFor(route));
 }

@@ -1,5 +1,5 @@
 // Shared by the visible pages, HTML renderer and sitemap. Claims describe shipped features.
-export const SITE_ORIGIN = 'https://wordweftstudio.com';
+export const SITE_ORIGIN = 'https://www.wordweftstudio.com';
 export const SITE_NAME = 'WordWeft';
 export const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-banner.jpg`;
 

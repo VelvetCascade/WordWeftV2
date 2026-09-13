@@ -1,4 +1,4 @@
-// Run after deploying the backend, then frontend: node scripts/verify-seo.mjs https://wordweftstudio.com
+// Run after deploying the backend, then frontend: node scripts/verify-seo.mjs https://www.wordweftstudio.com
 import assert from 'node:assert/strict';
 const origin = (process.argv[2] || 'http://127.0.0.1:4173').replace(/\/$/, '');
 const get = path => fetch(origin + path, { redirect: 'manual', signal: AbortSignal.timeout(20000) });
@@ -7,7 +7,7 @@ for (const path of ['/', '/read-online', '/writing-tools', '/publish-stories', '
     assert.equal(response.status, 200, `${path}: status`);
     assert.match(html, /<h1[ >]/, `${path}: initial HTML heading`);
     assert.match(html, /<link rel="canonical"/);
-    if (new URL(origin).hostname === 'wordweftstudio.com') {
+    if (new URL(origin).hostname === 'www.wordweftstudio.com') {
         assert.match(html, /name="robots" content="index, follow/);
         assert.doesNotMatch(response.headers.get('x-robots-tag') || '', /noindex/);
     }
