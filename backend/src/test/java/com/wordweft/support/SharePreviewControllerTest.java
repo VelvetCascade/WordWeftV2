@@ -41,7 +41,7 @@ class SharePreviewControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertTrue(response.getBody().contains("https://images.example.test/north-star.jpg"));
-        assertTrue(response.getBody().contains("https://wordweftstudio.com/book/story-1"));
+        assertTrue(response.getBody().contains("https://www.wordweftstudio.com/book/story-1"));
         assertTrue(response.getBody().contains("North Star by River Quinn"));
     }
 
