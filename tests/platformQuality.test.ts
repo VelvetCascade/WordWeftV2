@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { manuscriptProgress } from '../utils/readerProgress.ts';
 import { authorShareUrl, storyShareUrl } from '../utils/shareLinks.ts';
@@ -21,4 +22,17 @@ test('upload failures are converted to actionable reader-safe messages', () => {
     assert.match(uploadErrorMessage(403, 'bad signature'), /session expired/i);
     assert.match(uploadErrorMessage(429), /busy/i);
     assert.doesNotMatch(uploadErrorMessage(500, 'provider internals'), /provider internals/i);
+});
+
+test('reader sign-in gate ships enabled with the approved reader language', () => {
+    const env = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
+    const properties = readFileSync(new URL('../backend/src/main/resources/application.properties', import.meta.url), 'utf8');
+    const story = readFileSync(new URL('../pages/BookDetailsPage.tsx', import.meta.url), 'utf8');
+    const gate = readFileSync(new URL('../components/ReaderSignInGate.tsx', import.meta.url), 'utf8');
+    const seo = readFileSync(new URL('../seo/render.mjs', import.meta.url), 'utf8');
+
+    assert.match(env, /^READER_SIGN_IN_GATE_ENABLED=true$/m);
+    assert.match(properties, /\$\{READER_SIGN_IN_GATE_ENABLED:true\}/);
+    assert.match(`${story}\n${gate}\n${seo}`, /Sign in to read/);
+    assert.doesNotMatch(`${story}\n${gate}\n${seo}`, /Free account required/i);
 });

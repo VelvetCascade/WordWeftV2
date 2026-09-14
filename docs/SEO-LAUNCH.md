@@ -13,7 +13,8 @@ Public pages return meaningful HTML before JavaScript runs. Existing interactive
 | Homepage, About, Contact, policies, and four discovery pages | Public HTML, distinct metadata, canonical URLs |
 | `/features` | Same feature showcase as the anonymous homepage; canonical points to `/` |
 | Published book with at least one published chapter, ALL_AGES or TEEN_13 | Indexable synopsis, author, genres, tags, cover and chapter links |
-| Published chapters of eligible books | Indexable chapter text; manuscript marked `data-nosnippet` to reduce spoilers in search snippets |
+| First published chapter of eligible books | Indexable, deterministic excerpt followed by a clear sign-in gate; the complete manuscript is never placed in anonymous HTML |
+| Later published chapters of eligible books | Indexable title, story context, canonical navigation, and `Sign in to read` actions; no manuscript text is included |
 | Authors with eligible published books | Public bio and paginated book directory; empty portfolios are noindex |
 | Genre pages with eligible books | Indexable, paginated directory |
 | Tags shared by at least three eligible books | Indexable, paginated directory; thinner tags remain browsable with noindex |
@@ -44,12 +45,14 @@ The four acquisition pages contain useful product-specific explanations, practic
 
 ## Deployment order
 
-1. **Deploy the backend first**, using the existing Spring Boot/Render process. It adds anonymous read-only `/api/public/seo/book/{id}`, `/author/{id}`, `/catalog`, `/sitemap`, and `/sitemap/{kind}` endpoints. No database content migration or credential change is needed. Keep existing authentication and content-access configuration.
+1. **Deploy the backend first**, using the existing Spring Boot/Render process. Set `READER_SIGN_IN_GATE_ENABLED=true` (the application also fails safe to `true` when it is absent). The backend adds anonymous read-only `/api/public/seo/book/{id}`, `/author/{id}`, `/catalog`, `/sitemap`, and `/sitemap/{kind}` endpoints plus the focused chapter-content endpoint. No database content migration or credential change is needed. Keep existing authentication and content-access configuration.
 2. **Set both API addresses in Vercel** to the deployed backend, including `/api`: `VITE_API_BASE_URL` for the browser and `SEO_API_BASE_URL` for server rendering. The existing project's expected backend is `https://wordweftv2.onrender.com/api`; confirm that this is still the active service. Neither variable may point at localhost on Vercel. The backend's existing CORS configuration must allow `https://www.wordweftstudio.com` for the browser API.
 3. Use **Node 22.18+ (22.x) or Node 24** for installation/build/tests. Run `npm ci` and `npm run build`. Vercel uses the committed `vercel.json` and generated **Build Output API** artifact at `.vercel/output`; the HTML function uses Node 22. Do not deploy only `dist/` as a static SPA: that omits dynamic book HTML, correct statuses and sitemaps. Remove any dashboard override that bypasses the repository build command or rewrites every URL to `index.html`.
 4. Keep **`SEO_NOINDEX=false` or unset on production**. Vercel preview builds are noindex automatically. `SEO_NOINDEX=true` can explicitly protect a staging environment. If its build-time value changes, rebuild; a noindex build remains protected.
 5. Confirm `www.wordweftstudio.com` is the production domain and HTTPS works. Keep the apex `wordweftstudio.com` attached to the same Vercel project so it permanently redirects to `www`. Changing the production domain later requires updating `seo/content.mjs`, `public/robots.txt`, preview hostname checks, backend share URLs, and any existing auth/CORS settings together.
 6. Run `node scripts/verify-seo.mjs https://www.wordweftstudio.com` after both deployments. It checks initial HTML, noindex routes, real 404s, redirects, sitemap availability and a real published book/chapter if present. Use a Vercel preview first to check rendering and login; preview intentionally remains noindex.
+
+The reader release must preserve the exact public labels `Preview` and `Sign in to read`; its inline boundary says `Sign in to keep reading`. Search snippets use the public synopsis instead of locked chapter text. See `docs/READER-SIGN-IN-GATE.md` for access rules, leak probes, analytics, rollback, and the manual acceptance checklist.
 
 The dynamic renderer has a 12-second upstream deadline. Keep the backend available and monitor response times; frequent cold starts/timeouts will return 503 and hurt crawling. Dynamic pages deliberately avoid CDN caching so unpublishing a story takes effect on the next request. Public static pages use one-hour CDN caching; previews stay uncached. Hashed application assets receive immutable caching. Tailwind is compiled during the build instead of running the CDN compiler in visitors' browsers.
 
@@ -74,7 +77,7 @@ No SEO implementation can guarantee first place, indexing every page, or appeari
 
 ## Verification and maintenance
 
-Verified locally on September 13, 2026: 41 frontend tests and 94 backend tests passed, TypeScript compilation and the production build passed, and the existing entry-bundle budget passed (about 143.5 kB gzip). The fixture browser regression passed nine public routes with JavaScript disabled, mobile overflow checks, desktop click-throughs, legacy links, chapter/back navigation, author and genre pagination, returning-user sign-in, first-time onboarding, and preview noindex persistence. These checks used isolated sample data and installed headless Edge.
+The original SEO release was verified locally on September 13, 2026. The reader-gate verification record is maintained in `docs/READER-SIGN-IN-GATE.md`; use its current commands and acceptance checks instead of relying on historical test totals here. The retained fixture browser regression covers public routes with JavaScript disabled, mobile overflow, desktop click-throughs, legacy links, chapter/back navigation, author and genre pagination, returning-user sign-in, first-time onboarding, and preview noindex persistence. These checks use isolated sample data and an installed Chromium-based browser.
 
 Local commands:
 
