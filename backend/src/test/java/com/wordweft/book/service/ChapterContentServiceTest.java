@@ -9,6 +9,7 @@ import com.wordweft.exception.AuthRequiredException;
 import com.wordweft.exception.ContentRestrictedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +62,18 @@ class ChapterContentServiceTest {
     void signedInEligibleReaderGetsFullText() {
         when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
         when(contentAccess.currentUserId()).thenReturn("reader");
+
+        ChapterContentResponse response = service.load("book", "second");
+
+        assertEquals(FULL, response.access());
+        assertEquals("SECOND_FULL", response.content());
+    }
+
+    @Test
+    void emergencyRollbackFlagRestoresLegacyGuestReading() {
+        when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
+        when(contentAccess.currentUserId()).thenReturn(null);
+        ReflectionTestUtils.setField(service, "readerSignInGateEnabled", false);
 
         ChapterContentResponse response = service.load("book", "second");
 

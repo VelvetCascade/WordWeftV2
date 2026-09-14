@@ -9,6 +9,7 @@ import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.exception.ContentRestrictedException;
 import com.wordweft.manuscript.repository.ChapterRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,8 @@ public class BookService {
     ChapterRevisionRepository chapterRevisionRepository;
     @Autowired
     ContentAccessService contentAccessService;
+    @Value("${wordweft.reader-sign-in-gate-enabled:true}")
+    private boolean readerSignInGateEnabled = true;
 
     public void deleteBook(String bookId) {
         // Delete the book document
@@ -244,7 +247,7 @@ public class BookService {
             cMap.put("title", ch.getTitle());
             cMap.put("wordCount", ch.getWordCount());
             cMap.put("status", ch.getStatus());
-            cMap.put("accessLabel", currentUserId != null
+            cMap.put("accessLabel", currentUserId != null || !readerSignInGateEnabled
                     ? "FULL"
                     : Objects.equals(ch.getId(), firstPublishedChapterId) ? "PREVIEW" : "SIGN_IN");
 

@@ -7,6 +7,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.exception.AuthRequiredException;
 import com.wordweft.exception.ContentRestrictedException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,6 +24,9 @@ public class ChapterContentService {
     private final BookRepository bookRepository;
     private final ContentAccessService contentAccessService;
     private final ChapterPreviewService chapterPreviewService;
+
+    @Value("${wordweft.reader-sign-in-gate-enabled:true}")
+    private boolean readerSignInGateEnabled = true;
 
     public ChapterContentService(
             BookRepository bookRepository,
@@ -61,7 +65,7 @@ public class ChapterContentService {
         String fullContent = Objects.requireNonNullElse(chapter.getContent(), "");
         ChapterPreviewService.Preview preview = chapterPreviewService.preview(fullContent);
 
-        if (currentUserId == null) {
+        if (currentUserId == null && readerSignInGateEnabled) {
             if (chapterIndex != 0) {
                 throw new AuthRequiredException();
             }
