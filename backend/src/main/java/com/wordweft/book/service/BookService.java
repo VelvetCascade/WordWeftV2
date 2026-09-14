@@ -194,6 +194,11 @@ public class BookService {
         List<Chapter> visibleChapters = isOwner
                 ? allChapters
                 : allChapters.stream().filter(chapter -> "published".equals(chapter.getStatus())).toList();
+        String firstPublishedChapterId = allChapters.stream()
+                .filter(chapter -> "published".equals(chapter.getStatus()))
+                .map(Chapter::getId)
+                .findFirst()
+                .orElse(null);
         Map<String, Object> map = new HashMap<>();
         map.put("id", book.getId());
         map.put("title", book.getTitle());
@@ -238,8 +243,10 @@ public class BookService {
             cMap.put("id", ch.getId());
             cMap.put("title", ch.getTitle());
             cMap.put("wordCount", ch.getWordCount());
-            cMap.put("content", ch.getContent());
             cMap.put("status", ch.getStatus());
+            cMap.put("accessLabel", currentUserId != null
+                    ? "FULL"
+                    : Objects.equals(ch.getId(), firstPublishedChapterId) ? "PREVIEW" : "SIGN_IN");
 
             // Chapter Stats
             cMap.put("viewCount", ch.getViewCount());

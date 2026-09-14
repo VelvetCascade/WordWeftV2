@@ -4,6 +4,7 @@ import com.wordweft.analytics.service.ChapterReadEventService;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.book.service.ChapterPublishingService;
+import com.wordweft.book.service.ChapterContentService;
 import com.wordweft.config.SecurityConfig;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.manuscript.service.ManuscriptImportService;
@@ -50,6 +51,7 @@ class BookSchedulingControllerTest {
     @MockBean NotificationService notificationService;
     @MockBean ImageKitService imageKitService;
     @MockBean ChapterPublishingService publishing;
+    @MockBean ChapterContentService chapterContentService;
     @MockBean ChapterReadEventService readEvents;
     @MockBean ManuscriptImportService manuscriptImportService;
     @MockBean ChapterRevisionService chapterRevisionService;

@@ -1,0 +1,108 @@
+package com.wordweft.book.service;
+
+import com.wordweft.book.dto.ChapterContentResponse;
+import com.wordweft.book.model.AgeRating;
+import com.wordweft.book.model.Book;
+import com.wordweft.book.model.Chapter;
+import com.wordweft.book.repository.BookRepository;
+import com.wordweft.exception.AuthRequiredException;
+import com.wordweft.exception.ContentRestrictedException;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.util.List;
+import java.util.Objects;
+
+import static com.wordweft.book.dto.ChapterContentResponse.ChapterAccess.FULL;
+import static com.wordweft.book.dto.ChapterContentResponse.ChapterAccess.PREVIEW;
+
+@Service
+public class ChapterContentService {
+
+    private final BookRepository bookRepository;
+    private final ContentAccessService contentAccessService;
+    private final ChapterPreviewService chapterPreviewService;
+
+    public ChapterContentService(
+            BookRepository bookRepository,
+            ContentAccessService contentAccessService,
+            ChapterPreviewService chapterPreviewService) {
+        this.bookRepository = bookRepository;
+        this.contentAccessService = contentAccessService;
+        this.chapterPreviewService = chapterPreviewService;
+    }
+
+    public ChapterContentResponse load(String bookId, String chapterId) {
+        Book book = bookRepository.findById(bookId).orElseThrow(ContentNotFoundException::new);
+        String currentUserId = contentAccessService.currentUserId();
+        boolean owner = currentUserId != null && currentUserId.equals(book.getAuthorId());
+
+        if (!owner && !"published".equals(book.getPublicationStatus())) {
+            throw new ContentNotFoundException();
+        }
+        if (!contentAccessService.canAccess(book)) {
+            AgeRating rating = contentAccessService.effectiveRating(book);
+            throw new ContentRestrictedException(
+                    "This story is rated " + rating.getMinimumAge()
+                            + "+. Sign in and enable mature content in your profile if you are eligible.");
+        }
+
+        List<Chapter> allChapters = Objects.requireNonNullElse(book.getChapters(), List.of());
+        List<Chapter> visibleChapters = owner
+                ? allChapters
+                : allChapters.stream().filter(chapter -> "published".equals(chapter.getStatus())).toList();
+        int chapterIndex = indexOf(visibleChapters, chapterId);
+        if (chapterIndex < 0) {
+            throw new ContentNotFoundException();
+        }
+
+        Chapter chapter = visibleChapters.get(chapterIndex);
+        String fullContent = Objects.requireNonNullElse(chapter.getContent(), "");
+        ChapterPreviewService.Preview preview = chapterPreviewService.preview(fullContent);
+
+        if (currentUserId == null) {
+            if (chapterIndex != 0) {
+                throw new AuthRequiredException();
+            }
+            return response(book, chapter, chapterIndex, PREVIEW, preview.html(), preview);
+        }
+
+        return response(book, chapter, chapterIndex, FULL, fullContent, preview);
+    }
+
+    private ChapterContentResponse response(
+            Book book,
+            Chapter chapter,
+            int chapterIndex,
+            ChapterContentResponse.ChapterAccess access,
+            String content,
+            ChapterPreviewService.Preview preview) {
+        return new ChapterContentResponse(
+                book.getId(),
+                Objects.requireNonNullElse(book.getTitle(), ""),
+                chapter.getId(),
+                Objects.requireNonNullElse(chapter.getTitle(), ""),
+                chapterIndex,
+                access,
+                content,
+                access == PREVIEW ? preview.previewWordCount() : preview.fullWordCount(),
+                preview.fullWordCount());
+    }
+
+    private int indexOf(List<Chapter> chapters, String chapterId) {
+        for (int index = 0; index < chapters.size(); index++) {
+            if (Objects.equals(chapters.get(index).getId(), chapterId)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public static class ContentNotFoundException extends RuntimeException {
+        public ContentNotFoundException() {
+            super("Story or chapter not found.");
+        }
+    }
+}
