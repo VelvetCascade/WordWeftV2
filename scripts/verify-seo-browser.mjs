@@ -9,15 +9,25 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright')
 const port=Number(process.env.SEO_TEST_PORT || 4173);
 const origin=`http://127.0.0.1:${port}`;
 await mkdir('scratch/seo', { recursive: true });
+const firstPreview='<p>The first lantern glowed beside the old stone bridge.</p><p>Mira opened her map and stepped into the mist.</p>';
+const firstFull=firstPreview+'<p>At sunrise, the hidden city finally answered.</p>';
+const secondFull='<p>Beyond the bridge, a door appeared in the mist.</p>';
 const author={id:'writer', name:'Mira Rowan', username:'Mira Rowan', bio:'Stories about unexpected journeys and found family.', avatarUrl:origin+'/og-banner.jpg', followersCount:0, followingCount:0, joinDate:'2025-01-01', favoriteGenres:['Fantasy'], socials:{}};
-const books=Array.from({length:30},(_,i)=>({id:'b'+String(i+1).padStart(2,'0'),title:'The Lantern Road '+String(i+1).padStart(2,'0'),author,authorId:author.id, summary:'A mapmaker follows a trail of lanterns into a forgotten city.',description:'<p>A mapmaker follows a trail of lanterns into a forgotten city.</p>',genres:['Fantasy'],tags:['found family'],category:'Fiction',publicationStatus:'published',ageRating:'ALL_AGES',isMature:false,readingStatus:'Ongoing',coverUrl:origin+'/og-banner.jpg',rating:0,reviewsCount:0,commentCount:0,isLiked:false,likesCount:0,viewCount:0,readCount:0,likes:[],publishedDate:'2026-09-01',contentWarnings:[],chapters:[{id:'c01',title:'The First Lantern',status:'published',content:'<p>The first lantern glowed beside the old stone bridge.</p><p>Mira opened her map and stepped into the mist.</p>',wordCount:24,likesCount:0,commentCount:0,isLiked:false,viewCount:0,likes:[]},{id:'c02',title:'A Door in the Mist',status:'published',content:'<p>Beyond the bridge, a door appeared in the mist.</p>',wordCount:11,likesCount:0,commentCount:0,isLiked:false,viewCount:0,likes:[]}]}));
-function fixture(url){
+const books=Array.from({length:30},(_,i)=>({id:'b'+String(i+1).padStart(2,'0'),title:'The Lantern Road '+String(i+1).padStart(2,'0'),author,authorId:author.id, summary:'A mapmaker follows a trail of lanterns into a forgotten city.',description:'<p>A mapmaker follows a trail of lanterns into a forgotten city.</p>',genres:['Fantasy'],tags:['found family'],category:'Fiction',publicationStatus:'published',ageRating:'ALL_AGES',isMature:false,readingStatus:'Ongoing',coverUrl:origin+'/og-banner.jpg',rating:0,reviewsCount:0,commentCount:0,isLiked:false,likesCount:0,viewCount:0,readCount:0,likes:[],publishedDate:'2026-09-01',contentWarnings:[],chapters:[{id:'c01',title:'The First Lantern',status:'published',access:'PREVIEW',accessLabel:'PREVIEW',wordCount:24,likesCount:0,commentCount:0,isLiked:false,viewCount:0,likes:[]},{id:'c02',title:'A Door in the Mist',status:'published',access:'AUTH_REQUIRED',accessLabel:'SIGN_IN',wordCount:11,likesCount:0,commentCount:0,isLiked:false,viewCount:0,likes:[]}]}));
+const fixtureResult=(status,body)=>({__fixtureResult:true,status,body});
+function fixture(url,headers={}){
  const u=new URL(url,origin),p=u.pathname.replace(/^\/api/,'');
  if(p.startsWith('/public/seo/')){
   const q=p.slice('/public/seo'.length),page=Number(u.searchParams.get('page')||1),slice=books.slice((page-1)*24,page*24);
   if(q==='/sitemap')return {books:30,chapters:60,authors:1,genres:1,tags:1};
   if(q.startsWith('/sitemap/')){const kind=q.split('/')[2]; return kind==='books'?books.map(b=>({path:'/book/'+b.id,lastmod:'2026-09-01'})):kind==='chapters'?books.flatMap(b=>b.chapters.map(c=>({path:`/book/${b.id}/chapter/${c.id}`}))):kind==='authors'?[{path:'/author/writer'}]:kind==='genres'?[{path:'/genre/Fantasy'}]:[{path:'/tag/found%20family'}];}
-  if(q.startsWith('/book/'))return books.find(b=>b.id===q.split('/')[2])||null;
+  if(q.startsWith('/book/')){
+   const book=books.find(b=>b.id===q.split('/')[2]);
+   if(!book)return null;
+   const projection=structuredClone(book),chapterId=u.searchParams.get('chapterId');
+   if(chapterId==='c01')projection.chapters[0].content=firstPreview;
+   return projection;
+  }
   if(q.startsWith('/author/'))return q==='/author/writer'?{author,books:slice,hasMore:page===1}:null;
   if(q==='/catalog')return {books:slice,hasMore:page===1};
  }
@@ -29,11 +39,19 @@ function fixture(url){
  if(p==='/books/home-genres')return {Fantasy:books.slice(0,6)};
  if(p.includes('genres/ranked')||p.includes('genres-ranked'))return [{name:'Fantasy',bookCount:30,readCount:0}];
  if(p.endsWith('/genres'))return ['Fantasy'];
+ const chapterContent=p.match(/^\/books\/(b\d\d)\/chapters\/(c0[12])\/content$/);
+ if(chapterContent){
+  const [,bookId,chapterId]=chapterContent,book=books.find(candidate=>candidate.id===bookId),chapter=book?.chapters.find(candidate=>candidate.id===chapterId);
+  if(!book||!chapter)return fixtureResult(404,{message:'Story or chapter not found.'});
+  const authenticated=headers.authorization==='Bearer LOCAL_FIXTURE_ONLY';
+  if(!authenticated&&chapterId==='c02')return fixtureResult(401,{errorCode:'AUTH_REQUIRED',message:'Sign in to read this chapter.'});
+  return {bookId,bookTitle:book.title,chapterId,chapterTitle:chapter.title,chapterIndex:chapterId==='c01'?0:1,access:authenticated?'FULL':'PREVIEW',content:authenticated?(chapterId==='c01'?firstFull:secondFull):firstPreview,previewWordCount:authenticated?(chapterId==='c01'?18:9):14,fullWordCount:chapterId==='c01'?18:9};
+ }
  if(/^\/books\/b\d\d$/.test(p))return books.find(b=>b.id===p.split('/')[2])||null;
  if(p.includes('search'))return {books:[],authors:[],totalBooks:0,totalAuthors:0};
  return [];
 }
-const api=http.createServer((req,res)=>{const value=fixture(req.url);res.writeHead(value===null?404:200,{'Content-Type':'application/json'});res.end(JSON.stringify(value));});
+const api=http.createServer((req,res)=>{const value=fixture(req.url,req.headers),result=value?.__fixtureResult?value:{status:value===null?404:200,body:value};res.writeHead(result.status,{'Content-Type':'application/json'});res.end(JSON.stringify(result.body));});
 await new Promise(r=>api.listen(0,'127.0.0.1',r));
 // Deliberate trailing slash exercises runtime normalization.
 process.env.SEO_API_BASE_URL=`http://127.0.0.1:${api.address().port}/api/`;
@@ -44,21 +62,24 @@ const server=http.createServer(async(req,res)=>{try {const path=resolve(root,'.'
 await new Promise(r=>server.listen(port,'127.0.0.1',r));
 const browser=await chromium.launch({...(process.env.SEO_BROWSER_EXECUTABLE ? { executablePath: process.env.SEO_BROWSER_EXECUTABLE } : {}),headless:true});
 const errors=[];
-const setup=async(options={})=>{const ctx=await browser.newContext(options);await ctx.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.pathname.startsWith('/api/')){const value=fixture(req.url());return route.fulfill({status:value===null?404:200,contentType:'application/json',body:JSON.stringify(value)});}if(u.origin===origin)return route.continue();return route.abort();}); const page=await ctx.newPage();page.on('pageerror',e=>errors.push(e.message));return {ctx,page};};
+const setup=async(options={})=>{const ctx=await browser.newContext(options);await ctx.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.pathname.startsWith('/api/')){const value=fixture(req.url(),req.headers()),result=value?.__fixtureResult?value:{status:value===null?404:200,body:value};return route.fulfill({status:result.status,contentType:'application/json',body:JSON.stringify(result.body)});}if(u.origin===origin)return route.continue();return route.abort();}); const page=await ctx.newPage();page.on('pageerror',e=>errors.push(e.message));return {ctx,page};};
 const meta=async page=>({title:await page.title(),canonical:await page.locator('link[rel=canonical]').getAttribute('href'),robots:await page.locator('meta[name=robots]').getAttribute('content')});
 try{
  const {ctx:nojs,page:n}=await setup({javaScriptEnabled:false,viewport:{width:390,height:844}});
- for(const path of ['/','/writing-tools','/read-online','/world-building-tools','/publish-stories','/book/b01','/book/b01/chapter/c01','/author/writer?page=2','/genre/Fantasy?page=2']){
+ for(const path of ['/','/writing-tools','/read-online','/world-building-tools','/publish-stories','/book/b01','/book/b01/chapter/c01','/book/b01/chapter/c02','/author/writer?page=2','/genre/Fantasy?page=2']){
   const response=await n.goto(origin+path,{waitUntil:'domcontentloaded'});assert.equal(response.status(),200,path);assert.ok(await n.locator('h1').count(),path);assert.equal(await n.locator('link[rel=canonical]').count(),1);const m=await meta(n);assert.match(m.robots,/^index/);assert.equal(await n.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),true,'mobile overflow '+path);
  }
  await n.goto(origin+'/writing-tools');await n.screenshot({path:'scratch/seo/writing-tools-mobile-nojs.png',fullPage:true});
+ await n.goto(origin+'/book/b01/chapter/c01');await n.getByRole('heading',{name:'Sign in to keep reading'}).waitFor();assert.equal(await n.getByText('At sunrise, the hidden city finally answered.',{exact:true}).count(),0);await n.screenshot({path:'scratch/seo/reader-preview-mobile-nojs.png',fullPage:true});
+ await n.goto(origin+'/book/b01/chapter/c02');await n.getByRole('heading',{name:'Sign in to read this chapter'}).waitFor();assert.equal(await n.getByText('Beyond the bridge, a door appeared in the mist.',{exact:true}).count(),0);await n.screenshot({path:'scratch/seo/reader-locked-mobile-nojs.png',fullPage:true});
  await nojs.close();
- console.log('PASS: 9 HTML-first public routes, metadata, and mobile widths with JavaScript disabled.');
+ console.log('PASS: 10 HTML-first public routes, both reader gates, manuscript privacy, metadata, and mobile widths with JavaScript disabled.');
  const {ctx,page}=await setup({viewport:{width:1440,height:1000}});
  await page.goto(origin+'/writing-tools');await page.getByRole('heading',{name:'A writing studio for the story you want to tell.'}).waitFor();
  await page.locator('a[href="/category"]').first().click();await page.waitForURL('**/category');await page.getByRole('heading',{name:'All Books',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('meta[name=robots]')?.content.startsWith('index'));
  await page.locator('a[href="/book/b01"]').first().click();await page.waitForURL('**/book/b01');await page.getByRole('heading',{name:'The Lantern Road 01',exact:true}).last().waitFor();
- await page.locator('a[href="/book/b01/chapter/c01"]').first().click();await page.waitForURL('**/book/b01/chapter/c01');await page.getByText('The first lantern glowed beside the old stone bridge.',{exact:true}).waitFor();assert.match((await meta(page)).canonical,/\/book\/b01\/chapter\/c01$/);
+ await page.getByText('Preview',{exact:true}).waitFor();await page.getByText('Sign in to read',{exact:true}).waitFor();
+ await page.locator('a[href="/book/b01/chapter/c01"]').first().click();await page.waitForURL('**/book/b01/chapter/c01');await page.getByText('The first lantern glowed beside the old stone bridge.',{exact:true}).waitFor();await page.getByRole('heading',{name:'Sign in to keep reading'}).waitFor();assert.equal(await page.getByText('At sunrise, the hidden city finally answered.',{exact:true}).count(),0);assert.match((await meta(page)).canonical,/\/book\/b01\/chapter\/c01$/);
  await page.goBack();await page.waitForURL('**/book/b01');await page.getByRole('heading',{name:'The Lantern Road 01',exact:true}).last().waitFor();
  await page.goto(origin+'/author/writer?page=2');await page.getByRole('heading',{name:'The Lantern Road 25',exact:true}).waitFor();assert.match((await meta(page)).canonical,/\?page=2$/);assert.equal(await page.getByRole('heading',{name:'The Lantern Road 01',exact:true}).count(),0);
  await page.getByRole('link',{name:'Previous page',exact:true}).click();await page.waitForURL('**/author/writer');await page.getByRole('heading',{name:'The Lantern Road 01',exact:true}).last().waitFor();assert.equal((await meta(page)).canonical,'https://www.wordweftstudio.com/author/writer');
@@ -76,6 +97,13 @@ try{
 
  console.log('PASS: client navigation, legacy hash migration, author/catalog pagination, chapter links/back, discovery-to-login, and metadata.');
  await ctx.close();
+ const {ctx:readerCtx,page:reader}=await setup({viewport:{width:390,height:844}});
+ await reader.goto(origin+'/book/b01/chapter/c02');await reader.getByRole('heading',{name:'Sign in to read this chapter'}).waitFor();assert.equal(await reader.getByText('Beyond the bridge, a door appeared in the mist.',{exact:true}).count(),0);await reader.screenshot({path:'scratch/seo/reader-locked-mobile.png',fullPage:true});
+ await reader.getByRole('button',{name:'Sign in',exact:true}).click();await reader.waitForURL('**/auth');
+ await reader.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');await reader.locator('input[type=password]').fill('Fixture-only-123!');await reader.locator('button[type=submit]').click();
+ await reader.waitForURL('**/book/b01/chapter/c02');await reader.getByText('Beyond the bridge, a door appeared in the mist.',{exact:true}).waitFor();await reader.getByText("You're signed in — keep reading",{exact:true}).waitFor();
+ await reader.screenshot({path:'scratch/seo/reader-resume-mobile.png',fullPage:true});await readerCtx.close();
+ console.log('PASS: locked chapter sign-in resumes the exact chapter with full content at mobile width.');
  const {ctx:newUser,page:firstVisit}=await setup();
  await firstVisit.goto(origin+'/write/book/create');await firstVisit.waitForURL('**/auth');
  await firstVisit.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');await firstVisit.locator('input[type=password]').fill('Fixture-only-123!');await firstVisit.locator('button[type=submit]').click();

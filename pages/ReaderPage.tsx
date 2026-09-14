@@ -1008,8 +1008,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 <div className="reader-shortcuts"><span><kbd>F</kbd> Focus</span><span><kbd>[</kbd><kbd>]</kbd> Text size</span><span><kbd>Esc</kbd> Close panels</span></div>
             </section>
 
-            {/* Unified Reader Dock */}
-            <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
+            {/* Keep the primary authentication actions unobstructed on a locked chapter. */}
+            {chapterContent.access !== 'AUTH_REQUIRED' ? <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
                 <button aria-label="Open contents" onClick={() => setIsTocVisible(true)} data-label="Contents"><Bars3Icon className="w-5 h-5" /></button>
                 <span className="reader-dock-divider" />
                 <button aria-label="Previous chapter" onClick={() => goToChapter(currentChapterIndex - 1)} disabled={currentChapterIndex === 0} data-label="Previous"><ChevronLeftIcon className="w-5 h-5" /></button>
@@ -1019,7 +1019,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 <button aria-label="Open reading appearance settings" onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'active' : ''} data-label="Appearance"><span className="reader-aa">Aa</span></button>
                 <button aria-label="Open chapter discussion" onClick={() => openCommentDrawer(null)} disabled={chapterContent.access !== 'FULL'} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
                 <button aria-label="Enter focus mode" onClick={() => setIsFocusMode(true)} data-label="Focus"><EyeIcon className="w-5 h-5" /></button>
-            </nav>
+            </nav> : null}
 
             {chapterContent.access === 'FULL' ? <CommentDrawer
                 isOpen={isCommentDrawerOpen}

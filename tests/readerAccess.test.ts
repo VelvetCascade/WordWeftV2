@@ -24,6 +24,7 @@ test('story, reader, and auth screens implement the approved contextual sign-in 
     assert.match(story, /Sign in to read/);
     assert.match(reader, /getChapterContent/);
     assert.match(reader, /consumeReaderResumeIntent/);
+    assert.match(reader, /chapterContent\.access\s*!==\s*'AUTH_REQUIRED'\s*\?\s*<nav className=\{`reader-dock/);
     assert.match(gate, /Sign in to keep reading/);
     assert.match(gate, /Sign in to read this chapter/);
     assert.match(gate, />Sign in</);
