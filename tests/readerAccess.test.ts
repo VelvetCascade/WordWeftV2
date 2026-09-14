@@ -55,3 +55,13 @@ test('reader gate analytics cover the funnel without manuscript metadata', () =>
     assert.doesNotMatch(analytics, /if\s*\(!token\)\s*return;\s*\/\/ Don't send analytics/);
     assert.doesNotMatch(analytics, /events\?token=/);
 });
+
+test('a rejected signed-in session clears both the token and the app account state', () => {
+    const client = readFileSync(new URL('../api/client.ts', import.meta.url), 'utf8');
+    const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+
+    assert.match(client, /response\.status\s*===\s*401[\s\S]*invalidateAuthSession\(\)/);
+    assert.match(client, /getChapterContent[\s\S]*invalidateAuthSession\(\)/);
+    assert.match(app, /addEventListener\(api\.AUTH_SESSION_INVALID_EVENT/);
+    assert.match(app, /handleInvalidSession[\s\S]*sessionAuthenticated\.current\s*=\s*false[\s\S]*setIsAuthenticated\(false\)[\s\S]*setCurrentUser\(null\)/);
+});

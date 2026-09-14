@@ -467,7 +467,10 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         return <div className="min-h-screen flex items-center justify-center">Book not found.</div>;
     }
 
-    const hasStartedReading = readingProgress && readingProgress.overallProgress > 0 || (readingProgress && Object.keys(readingProgress.chapters).length > 0);
+    const hasStartedReading = Boolean(
+        readingProgress
+        && (readingProgress.overallProgress > 0 || Object.keys(readingProgress.chapters || {}).length > 0),
+    );
     const mainButtonText = hasStartedReading
         ? `Continue Reading (Ch. ${readingProgress.lastReadChapterIndex + 1})`
         : 'Read from Start';
@@ -649,7 +652,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Chapters</h3>
                             <div className="bg-surface dark:bg-dark-surface rounded-2xl border border-gray-200/80 dark:border-dark-border overflow-hidden">
                                 {book.chapters.map((chapter, i) => {
-                                    const chapterProgress = readingProgress?.chapters[chapter.id]?.progress || 0;
+                                    const chapterProgress = readingProgress?.chapters?.[chapter.id]?.progress || 0;
                                     return (
                                         <ChapterItem
                                             bookId={book.id}

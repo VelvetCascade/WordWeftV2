@@ -1,11 +1,14 @@
 
 
 import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent } from '../types';
+import { invalidateAuthSession, JWT_STORAGE_KEY } from '../utils/authSession';
+
+export { AUTH_SESSION_INVALID_EVENT } from '../utils/authSession';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 
-const JWT_KEY = 'wordweft_jwt';
+const JWT_KEY = JWT_STORAGE_KEY;
 
 // --- Helper Functions ---
 
@@ -19,6 +22,9 @@ const getHeaders = () => {
 
 const handleResponse = async (response: Response) => {
     if (!response.ok) {
+        // Any authenticated request rejected as unauthorized makes the locally
+        // cached account stale. Keep the app shell and token in sync.
+        if (response.status === 401) invalidateAuthSession();
         const errorData = await response.text();
         throw new Error(errorData || response.statusText);
     }
@@ -31,7 +37,16 @@ const handleResponse = async (response: Response) => {
 
 // --- Auth & User API ---
 
-export async function login(email: string, password_used: string): Promise<User | null> {
+async function establishSession(token: string): Promise<User> {
+    localStorage.setItem(JWT_KEY, token);
+    const user = await getMe();
+    if (!user) {
+        throw new Error('Sign-in completed, but the session could not be verified. Please sign in again.');
+    }
+    return user;
+}
+
+export async function login(email: string, password_used: string): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,10 +56,9 @@ export async function login(email: string, password_used: string): Promise<User 
     const data = await handleResponse(response);
 
     if (data && data.token) {
-        localStorage.setItem(JWT_KEY, data.token);
-        return await getMe();
+        return establishSession(data.token);
     }
-    return null;
+    throw new Error('Sign in failed. Please try again.');
 }
 
 export async function signup(username: string, email: string, password: string, dateOfBirth: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
@@ -63,8 +77,7 @@ export async function signup(username: string, email: string, password: string, 
 
     // Fallback for immediate login (e.g. if OTP is disabled later)
     if (data && data.token) {
-        localStorage.setItem(JWT_KEY, data.token);
-        return { requiresOtp: false, message: "Signup successful", user: mapBackendUserToFrontend(data) };
+        return { requiresOtp: false, message: "Signup successful", user: await establishSession(data.token) };
     }
     throw new Error("Signup failed");
 }
@@ -79,8 +92,7 @@ export async function verifyOtp(email: string, otp: string): Promise<User> {
     const data = await handleResponse(response);
 
     if (data && data.token) {
-        localStorage.setItem(JWT_KEY, data.token);
-        return (await getMe()) || mapBackendUserToFrontend(data);
+        return establishSession(data.token);
     }
     throw new Error("OTP Verification failed");
 }
@@ -122,11 +134,8 @@ export async function googleLogin(idToken: string): Promise<{ user: User; needsP
     const data = await handleResponse(response);
 
     if (data && data.token) {
-        localStorage.setItem(JWT_KEY, data.token);
-        const user = await getMe();
-        if (user) {
-            return { user, needsProfileCompletion: !!data.needsProfileCompletion };
-        }
+        const user = await establishSession(data.token);
+        return { user, needsProfileCompletion: !!data.needsProfileCompletion };
     }
     return null;
 }
@@ -142,21 +151,21 @@ export async function getMe(): Promise<User | null> {
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
 
-        // If it's explicitly an auth error, wipe the token
+        // A rejected profile request is authoritative: clear both the token and
+        // the React account state through the shared invalidation event.
         if (response.status === 401 || response.status === 403) {
             console.error("Session invalid: 401/403");
-            localStorage.removeItem(JWT_KEY);
+            invalidateAuthSession();
             return null;
         }
 
         const backendUser = await handleResponse(response);
         return mapBackendUserToFrontend(backendUser);
     } catch (e) {
-        // This catches network errors (Failed to fetch) and other server errors (500)
-        // We DO NOT want to wipe the token here, as the user is still logged in, 
-        // the server is just unreachable.
+        // Network and server failures are not proof that the session is invalid.
+        // Preserve the token and let callers display/retry the actual failure.
         console.error("Error fetching user profile (kept session):", e);
-        return null;
+        throw e;
     }
 }
 
@@ -369,6 +378,10 @@ export async function getChapterContent(bookId: string, chapterId: string): Prom
         { headers: getHeaders() },
     );
     if (response.status === 401) {
+        // An anonymous visitor is expected to receive AUTH_REQUIRED. If a token
+        // was sent, however, this response also means the visible account state
+        // must be invalidated before rendering the gate.
+        invalidateAuthSession();
         let errorCode = '';
         try {
             errorCode = (await response.json())?.errorCode || '';

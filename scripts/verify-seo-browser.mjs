@@ -32,7 +32,10 @@ function fixture(url,headers={}){
   if(q==='/catalog')return {books:slice,hasMore:page===1};
  }
  if(p==='/auth/login')return {token:'LOCAL_FIXTURE_ONLY'};
- if(p==='/users/me')return {...author,email:'fixture@example.test',hasSeenWritingDemo:true,writtenBooks:[],library:[]};
+ if(p==='/users/me')return headers.authorization==='Bearer LOCAL_FIXTURE_ONLY'?{...author,email:'fixture@example.test',hasSeenWritingDemo:true,writtenBooks:[],library:[]}:fixtureResult(401,{message:'Session expired.'});
+ if(/^\/reading\/progress\/b\d\d$/.test(p))return headers.authorization==='Bearer LOCAL_FIXTURE_ONLY'?null:fixtureResult(401,{message:'Session expired.'});
+ if(p==='/notifications/unread-count')return {count:0};
+ if(p==='/notifications')return {notifications:[],hasNext:false,totalPages:0,totalElements:0,currentPage:0};
  if(p==='/books') {const page=Number(u.searchParams.get('page')||0),size=Number(u.searchParams.get('size')||12);return {content:books.slice(page*size,(page+1)*size),hasMore:(page+1)*size<30,totalElements:30,page};}
  if(p==='/books/author/writer')return books;
  if(p==='/users/writer/profile')return author;
@@ -102,8 +105,15 @@ try{
  await reader.getByRole('button',{name:'Sign in',exact:true}).click();await reader.waitForURL('**/auth');
  await reader.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');await reader.locator('input[type=password]').fill('Fixture-only-123!');await reader.locator('button[type=submit]').click();
  await reader.waitForURL('**/book/b01/chapter/c02');await reader.getByText('Beyond the bridge, a door appeared in the mist.',{exact:true}).waitFor();await reader.getByText("You're signed in — keep reading",{exact:true}).waitFor();
- await reader.screenshot({path:'scratch/seo/reader-resume-mobile.png',fullPage:true});await readerCtx.close();
- console.log('PASS: locked chapter sign-in resumes the exact chapter with full content at mobile width.');
+ await reader.screenshot({path:'scratch/seo/reader-resume-mobile.png',fullPage:true});
+ await reader.evaluate(()=>localStorage.setItem('wordweft_jwt','EXPIRED_FIXTURE_TOKEN'));
+ await reader.evaluate(()=>{history.pushState(null,'','/book/b01/chapter/c01');window.dispatchEvent(new Event('wordweft:navigate'));});
+ await reader.waitForURL('**/book/b01/chapter/c01');await reader.getByRole('heading',{name:'Sign in to keep reading'}).waitFor();
+ await reader.getByRole('button',{name:'Next chapter'}).click();await reader.waitForURL('**/book/b01/chapter/c02');
+ await reader.getByRole('heading',{name:'Sign in to read this chapter'}).waitFor();
+ assert.equal(await reader.evaluate(()=>localStorage.getItem('wordweft_jwt')),null);
+ await reader.screenshot({path:'scratch/seo/reader-expired-session-mobile.png',fullPage:true});await readerCtx.close();
+ console.log('PASS: locked chapter sign-in resumes full content, and a later rejected token clears the stale account before gating.');
  const {ctx:newUser,page:firstVisit}=await setup();
  await firstVisit.goto(origin+'/write/book/create');await firstVisit.waitForURL('**/auth');
  await firstVisit.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');await firstVisit.locator('input[type=password]').fill('Fixture-only-123!');await firstVisit.locator('button[type=submit]').click();

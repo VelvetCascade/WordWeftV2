@@ -154,18 +154,37 @@ const App: React.FC = () => {
 
   const feedback = useFeedbackTriggers(isAuthenticated);
 
+  // API calls can discover an expired/rejected token after the initial load.
+  // Clear every in-memory auth signal together so the UI never looks signed in
+  // while the backend is serving anonymous reader access.
+  useEffect(() => {
+    const handleInvalidSession = () => {
+      sessionAuthenticated.current = false;
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+    };
+
+    window.addEventListener(api.AUTH_SESSION_INVALID_EVENT, handleInvalidSession);
+    return () => window.removeEventListener(api.AUTH_SESSION_INVALID_EVENT, handleInvalidSession);
+  }, []);
+
   // Check for existing session on initial load
   useEffect(() => {
     const checkSession = async () => {
-      const user = await api.getMe();
-      if (user) {
-        sessionAuthenticated.current = true;
-        setIsAuthenticated(true);
-        setCurrentUser(user);
+      try {
+        const user = await api.getMe();
+        if (user) {
+          sessionAuthenticated.current = true;
+          setIsAuthenticated(true);
+          setCurrentUser(user);
+        }
+      } catch (error) {
+        console.error('Unable to verify the existing session:', error);
+      } finally {
+        setIsInitialAuthCheckDone(true);
       }
-      setIsInitialAuthCheckDone(true);
     };
-    checkSession();
+    void checkSession();
   }, []);
 
   const handleLogin = (user: User) => {
