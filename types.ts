@@ -68,6 +68,7 @@ export interface Chapter {
   title: string;
   wordCount: number;
   content: string;
+  accessLabel?: 'FULL' | 'PREVIEW' | 'SIGN_IN';
   status: 'draft' | 'scheduled' | 'published';
   scheduledAt?: string | null;
   publishedAt?: string | null;
@@ -78,6 +79,20 @@ export interface Chapter {
   isLiked: boolean;
   contentWarnings: ContentWarning[];
   disclaimerNote?: string;
+}
+
+export type ChapterAccess = 'FULL' | 'PREVIEW' | 'AUTH_REQUIRED';
+
+export interface ChapterContentResult {
+  bookId: string;
+  bookTitle: string;
+  chapterId: string;
+  chapterTitle: string;
+  chapterIndex: number;
+  access: ChapterAccess;
+  content: string;
+  previewWordCount: number;
+  fullWordCount: number;
 }
 
 export interface ChapterRevision {

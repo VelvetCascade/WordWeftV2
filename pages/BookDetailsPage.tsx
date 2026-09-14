@@ -22,6 +22,12 @@ import { applyBookMetadata } from '../utils/entityMetadata';
 const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ bookId, chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
     const isInProgress = progress > 0 && progress < 90;
+    const accessLabel = chapter.accessLabel ?? 'FULL';
+    const actionLabel = accessLabel === 'PREVIEW'
+        ? 'Preview'
+        : accessLabel === 'SIGN_IN'
+            ? 'Sign in to read'
+            : isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Read';
 
     return (
         <div 
@@ -35,6 +41,7 @@ const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; inde
                         {chapter.status === 'published' ? (
                             <a
                                 href={`/book/${encodeURIComponent(bookId)}/chapter/${encodeURIComponent(chapter.id)}`}
+                                aria-label={`${chapter.title} — ${actionLabel}`}
                                 className="text-left hover:text-accent focus-visible:text-accent transition-colors"
                                 onClick={(event) => { event.stopPropagation(); if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onRead(); } }}
                             >
@@ -76,8 +83,9 @@ const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; inde
             </div>
             {chapter.status === 'published' ? (
                 <div className="ww-reader-chapter-cta flex items-center gap-2">
-                    <span className="hidden sm:block font-sans font-semibold text-sm text-accent opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
-                        {isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Read'}
+                    {accessLabel === 'SIGN_IN' ? <LockClosedIcon className="w-4 h-4 text-gray-400" aria-hidden="true" /> : null}
+                    <span className={`font-sans font-semibold text-sm whitespace-nowrap ml-2 ${accessLabel === 'FULL' ? 'hidden sm:block text-accent opacity-0 group-hover:opacity-100 transition-opacity' : 'text-accent'}`}>
+                        {actionLabel}
                     </span>
                     <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 sm:hidden transition-opacity flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

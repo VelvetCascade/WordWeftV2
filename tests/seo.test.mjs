@@ -7,7 +7,7 @@ import { buildResponse } from '../seo/render.mjs';
 
 const template = '<html><head><!--SEO_HEAD--></head><body><div id="root"><!--SEO_BODY--></div></body></html>';
 const author = { id: 'writer', name: 'A Writer', bio: 'Writes fantasy.' };
-const book = { id: 'story', title: 'A & B', summary: 'An original fantasy adventure.', description: '<p>A traveller finds a door.</p>', publicationStatus: 'published', ageRating: 'ALL_AGES', isMature: false, author, genres: ['Fantasy'], tags: ['found family'], chapters: [{ id: 'first', title: 'The Beginning', status: 'published', content: '<p>A new beginning.</p>', wordCount: 3 }, { id: 'secret', title: 'Secret draft', status: 'draft', content: 'DO NOT PUBLISH' }, { id: 'second', title: 'A New Road', status: 'published', content: '<p>The next day.</p>' }] };
+const book = { id: 'story', title: 'A & B', summary: 'An original fantasy adventure.', description: '<p>A traveller finds a door.</p>', publicationStatus: 'published', ageRating: 'ALL_AGES', isMature: false, author, genres: ['Fantasy'], tags: ['found family'], chapters: [{ id: 'first', title: 'The Beginning', status: 'published', access: 'PREVIEW', content: '<p>A new beginning.</p>', fullContent: 'FIRST_END_SECRET', wordCount: 700 }, { id: 'secret', title: 'Secret draft', status: 'draft', content: 'DO NOT PUBLISH' }, { id: 'second', title: 'A New Road', status: 'published', access: 'AUTH_REQUIRED', fullContent: 'SECOND_FULL_SECRET' }] };
 const response = (url, options = {}) => buildResponse({ url, template, host: 'www.wordweftstudio.com', staticBodies: { '/': '<h1>Read and write</h1>' }, fetchJson: async path => path.startsWith('/book/') ? book : { books: [book], author, hasMore: false }, ...options });
 
 test('public URLs preserve meaningful queries and reject malformed routes', () => {
@@ -40,11 +40,23 @@ test('chapter URLs use IDs and survive chapter reorder', async () => {
   const result = await response(chapterPath('story', 'first'));
   assert.equal(result.status, 200); assert.match(result.body, /A new beginning/);
   assert.match(result.body, /"@type":"Chapter"/);
-  assert.match(result.body, /data-nosnippet/);
+  assert.match(result.body, /Sign in to keep reading/);
+  assert.doesNotMatch(result.body, /FIRST_END_SECRET/);
+  assert.match(result.body, /"isAccessibleForFree":false/);
+  assert.match(result.body, /"cssSelector":"\.reader-sign-in-gate"/);
   const reordered = await response(chapterPath('story', 'first'), { fetchJson: async () => ({ ...book, chapters: [...book.chapters].reverse() }) });
   assert.match(reordered.body, /A new beginning/);
   const old = await response('/read/book/story/chapter/1');
   assert.equal(old.status, 308); assert.equal(old.headers.Location, '/book/story/chapter/second');
+});
+test('later chapter SEO keeps context and sign-in actions without manuscript text', async () => {
+  const result = await response(chapterPath('story', 'second'));
+  assert.equal(result.status, 200);
+  assert.match(result.body, /Sign in to read this chapter/);
+  assert.match(result.body, />Sign in</);
+  assert.match(result.body, />Create account</);
+  assert.match(result.body, /Read the preview/);
+  assert.doesNotMatch(result.body, /SECOND_FULL_SECRET|The next day/);
 });
 test('drafts, scheduled chapters, restricted and deleted content stay out of public HTML', async () => {
   for (const changes of [{ publicationStatus: 'draft' }, { ageRating: 'MATURE_18' }, { isMature: true }, { chapters: [] }]) {

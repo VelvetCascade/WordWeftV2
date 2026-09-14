@@ -271,21 +271,23 @@ class AnalyticsServiceImpl {
 
         try {
             const token = localStorage.getItem(JWT_KEY);
-            if (!token) return; // Don't send analytics if user is not authenticated
 
             const batch: AnalyticsBatch = {
                 events: eventsToSend,
                 session: this.getSessionInfo(),
             };
 
-            await fetch(`${API_BASE_URL}/analytics/events`, {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers.Authorization = `Bearer ${token}`;
+
+            const response = await fetch(`${API_BASE_URL}/analytics/events`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
+                headers,
                 body: JSON.stringify(batch),
             });
+            if (!response.ok) throw new Error(`Analytics endpoint returned ${response.status}`);
         } catch (e) {
             // On failure, push events back to queue for retry
             this.eventQueue.unshift(...eventsToSend);
@@ -300,9 +302,6 @@ class AnalyticsServiceImpl {
         if (this.eventQueue.length === 0) return;
 
         try {
-            const token = localStorage.getItem(JWT_KEY);
-            if (!token) return;
-
             const batch: AnalyticsBatch = {
                 events: [...this.eventQueue],
                 session: this.getSessionInfo(),
@@ -310,11 +309,11 @@ class AnalyticsServiceImpl {
 
             const blob = new Blob([JSON.stringify(batch)], { type: 'application/json' });
 
-            // sendBeacon doesn't support custom headers, so we append token as query param
-            // The backend should also support token via query param for this endpoint
-            navigator.sendBeacon(`${API_BASE_URL}/analytics/events?token=${token}`, blob);
-
-            this.eventQueue = [];
+            // Beacons cannot set an Authorization header. Treat unload events as anonymous
+            // instead of putting a JWT in URLs, browser history, proxy logs, or referrers.
+            if (navigator.sendBeacon(`${API_BASE_URL}/analytics/events`, blob)) {
+                this.eventQueue = [];
+            }
         } catch (e) {
             console.warn('[Analytics] Sync flush failed:', e);
         }

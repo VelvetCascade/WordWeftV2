@@ -9,6 +9,7 @@ import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.exception.ContentRestrictedException;
 import com.wordweft.manuscript.repository.ChapterRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,8 @@ public class BookService {
     ChapterRevisionRepository chapterRevisionRepository;
     @Autowired
     ContentAccessService contentAccessService;
+    @Value("${wordweft.reader-sign-in-gate-enabled:true}")
+    private boolean readerSignInGateEnabled = true;
 
     public void deleteBook(String bookId) {
         // Delete the book document
@@ -194,6 +197,11 @@ public class BookService {
         List<Chapter> visibleChapters = isOwner
                 ? allChapters
                 : allChapters.stream().filter(chapter -> "published".equals(chapter.getStatus())).toList();
+        String firstPublishedChapterId = allChapters.stream()
+                .filter(chapter -> "published".equals(chapter.getStatus()))
+                .map(Chapter::getId)
+                .findFirst()
+                .orElse(null);
         Map<String, Object> map = new HashMap<>();
         map.put("id", book.getId());
         map.put("title", book.getTitle());
@@ -238,8 +246,10 @@ public class BookService {
             cMap.put("id", ch.getId());
             cMap.put("title", ch.getTitle());
             cMap.put("wordCount", ch.getWordCount());
-            cMap.put("content", ch.getContent());
             cMap.put("status", ch.getStatus());
+            cMap.put("accessLabel", currentUserId != null || !readerSignInGateEnabled
+                    ? "FULL"
+                    : Objects.equals(ch.getId(), firstPublishedChapterId) ? "PREVIEW" : "SIGN_IN");
 
             // Chapter Stats
             cMap.put("viewCount", ch.getViewCount());

@@ -5,8 +5,10 @@ import com.wordweft.analytics.service.ChapterReadEventService;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.AgeRating;
+import com.wordweft.book.dto.ChapterContentResponse;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
+import com.wordweft.book.service.ChapterContentService;
 import com.wordweft.book.service.ChapterPublishingService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.manuscript.service.ManuscriptImportService;
@@ -16,6 +18,7 @@ import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,6 +53,8 @@ public class BookController {
     ManuscriptImportService manuscriptImportService;
     @Autowired
     ChapterRevisionService chapterRevisionService;
+    @Autowired
+    ChapterContentService chapterContentService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
 
@@ -100,6 +105,19 @@ public class BookController {
         if (book == null)
             return ResponseEntity.notFound().build();
         return ResponseEntity.ok(book);
+    }
+
+    @GetMapping("/{bookId}/chapters/{chapterId}/content")
+    public ResponseEntity<ChapterContentResponse> getChapterContent(
+            @PathVariable String bookId,
+            @PathVariable String chapterId) {
+        ChapterContentResponse content = chapterContentService.load(bookId, chapterId);
+        String cacheControl = content.access() == ChapterContentResponse.ChapterAccess.FULL
+                ? "private, no-store"
+                : "public, max-age=300";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, cacheControl)
+                .body(content);
     }
 
     @GetMapping("/author/{authorId}")

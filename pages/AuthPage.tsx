@@ -6,6 +6,7 @@ import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { GoogleProfileCompletion } from '../components/GoogleProfileCompletion';
 import { ModernBirthdaySelector } from '../components/ModernBirthdaySelector';
+import type { ReaderAuthView } from '../utils/readerAuthIntent';
 
 
 // Module-level flag: Google GIS must only be initialized ONCE per page session.
@@ -14,6 +15,7 @@ let googleGsiInitialized = false;
 
 interface AuthPageProps {
     onLogin: (user: User) => void;
+    initialView?: ReaderAuthView;
 }
 
 // ... PasswordRequirements and InputField ...
@@ -107,8 +109,8 @@ const LegalModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string
     );
 };
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
-    const [view, setView] = useState<'login' | 'signup' | 'forgot' | 'otp'>('login');
+export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'login' }) => {
+    const [view, setView] = useState<'login' | 'signup' | 'forgot' | 'otp'>(initialView);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');

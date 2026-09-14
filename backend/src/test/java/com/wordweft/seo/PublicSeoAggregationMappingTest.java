@@ -30,7 +30,7 @@ class PublicSeoAggregationMappingTest {
             MongoTemplate mongo = mock(MongoTemplate.class);
             when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Document.class)))
                     .thenReturn(new AggregationResults<>(List.of(), new Document()));
-            new PublicSeoService(mongo).sitemap(kind, 2);
+            new PublicSeoService(mongo, new com.wordweft.book.service.ChapterPreviewService()).sitemap(kind, 2);
             var capture = ArgumentCaptor.forClass(Aggregation.class);
             verify(mongo).aggregate(capture.capture(), eq(Book.class), eq(Document.class));
             List<Document> stages = assertDoesNotThrow(() -> capture.getValue().toPipeline(context), kind);
