@@ -181,6 +181,13 @@ const App: React.FC = () => {
 
     const readerIntent = markReaderAuthComplete();
     if (readerIntent) {
+      analytics.trackEvent('reader_gate', 'reader_gate_auth_completed', undefined, undefined, {
+        bookId: readerIntent.bookId,
+        chapterId: readerIntent.chapterId,
+        chapterIndex: readerIntent.chapterIndex,
+        accessState: 'FULL',
+        authChoice: readerIntent.authView,
+      });
       if (!localStorage.getItem('ww_welcomeJourneyCompleted')) {
         localStorage.setItem('ww_welcomeJourneyPending', 'true');
       }

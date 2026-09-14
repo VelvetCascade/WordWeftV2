@@ -274,6 +274,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const hasRecordedView = useRef<string | null>(null);
     const lastSaveTimeRef = useRef<number>(0);
     const maxPercentageRef = useRef<number>(0);
+    const trackedAccessEventsRef = useRef(new Set<string>());
 
     const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
     const { trackEvent } = useAnalytics();
@@ -334,9 +335,34 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                         : chapterItem),
                 } : current);
 
+                const accessEventKey = `${selectedChapterId}:${result.access}`;
+                if (!trackedAccessEventsRef.current.has(accessEventKey)) {
+                    const accessMetadata = {
+                        bookId: book.id,
+                        chapterId: selectedChapterId,
+                        chapterIndex: result.chapterIndex,
+                        accessState: result.access,
+                    };
+                    if (result.access === 'PREVIEW') {
+                        trackEvent('reader_gate', 'reader_preview_started', undefined, undefined, accessMetadata);
+                        trackEvent('reader_gate', 'reader_preview_gate_viewed', undefined, undefined, accessMetadata);
+                    } else if (result.access === 'AUTH_REQUIRED') {
+                        trackEvent('reader_gate', 'locked_chapter_viewed', undefined, undefined, accessMetadata);
+                    } else if (result.chapterIndex > 0) {
+                        trackEvent('reader_gate', 'reader_next_chapter_started', undefined, undefined, accessMetadata);
+                    }
+                    trackedAccessEventsRef.current.add(accessEventKey);
+                }
+
                 if (result.access === 'FULL') {
                     const resume = consumeReaderResumeIntent(book.id, selectedChapterId);
                     if (resume) {
+                        trackEvent('reader_gate', 'reader_full_content_resumed', undefined, undefined, {
+                            bookId: book.id,
+                            chapterId: selectedChapterId,
+                            chapterIndex: result.chapterIndex,
+                            accessState: result.access,
+                        });
                         setResumedChapterId(selectedChapterId);
                         setResumeAnnouncement("You're signed in — keep reading");
                         window.setTimeout(() => window.scrollTo({ top: resume.scrollY, behavior: 'instant' }), 100);
@@ -501,6 +527,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
     const handleAuthenticate = (authView: ReaderAuthView) => {
         if (!book || !chapter) return;
+        trackEvent('reader_gate', 'reader_gate_auth_clicked', undefined, undefined, {
+            bookId: book.id,
+            chapterId: chapter.id,
+            chapterIndex: currentChapterIndex,
+            accessState: chapterContent?.access || 'AUTH_REQUIRED',
+            authChoice: authView,
+        });
         saveReaderAuthIntent({
             returnPath: readerChapterPath(book.id, chapter.id),
             bookId: book.id,
