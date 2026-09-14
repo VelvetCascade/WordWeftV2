@@ -20,7 +20,7 @@ This is an account gate, not a paywall. Do not describe it as a free plan, subsc
 GET /api/books/{bookId}/chapters/{chapterId}/content
 ```
 
-For an anonymous request, the first published chapter returns `PREVIEW`; later published chapters return HTTP 401 with `errorCode: AUTH_REQUIRED`. An eligible authenticated request returns `FULL`. Preview responses may be publicly cached for five minutes; complete responses send `Cache-Control: private, no-store`.
+For an anonymous request, the first published chapter returns `PREVIEW`; later published chapters return HTTP 401 with `errorCode: AUTH_REQUIRED`. An eligible authenticated request returns `FULL`. Because the same chapter URL changes from `PREVIEW` to `FULL` when authentication changes, every chapter-content response sends `Cache-Control: private, no-store` and `Vary: Authorization`; the browser client also uses `cache: no-store`.
 
 The public SEO projection applies the same safe excerpt algorithm. First-chapter HTML contains only the excerpt and gate; later-chapter HTML contains public metadata and gate actions but no manuscript text. Canonical chapter URLs and sitemap entries remain unchanged. Chapter structured data states `isAccessibleForFree: false` and identifies the visible gate. Crawlers are never given content that an ordinary signed-out reader cannot receive.
 
@@ -56,7 +56,7 @@ Expected results:
 - chapter one is HTTP 200 with `access: PREVIEW`, omits the ending sentinel, and never returns the complete text;
 - chapter two is HTTP 401 with `AUTH_REQUIRED` and omits its sentinel;
 - server-rendered chapter two is HTTP 200 for discoverability, includes `Sign in to read this chapter`, and omits manuscript text;
-- an authenticated chapter request returns `FULL` and `Cache-Control: private, no-store`.
+- guest and authenticated chapter requests are both `private, no-store`, vary on authorization, and an authenticated request returns `FULL`.
 
 ## Manual acceptance checklist
 

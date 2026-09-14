@@ -1,6 +1,7 @@
 package com.wordweft.exception;
 
 import com.wordweft.book.service.ChapterContentService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -16,9 +17,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthRequiredException.class)
     public ResponseEntity<Map<String, Object>> handleAuthRequired(AuthRequiredException ex) {
-        return new ResponseEntity<>(Map.of(
-                "errorCode", "AUTH_REQUIRED",
-                "message", ex.getMessage()), HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .header(HttpHeaders.VARY, HttpHeaders.AUTHORIZATION)
+                .body(Map.of(
+                        "errorCode", "AUTH_REQUIRED",
+                        "message", ex.getMessage()));
     }
 
     @ExceptionHandler(ChapterContentService.ContentNotFoundException.class)

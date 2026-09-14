@@ -37,6 +37,13 @@ import java.util.Set;
 public class BookController {
     private static final Set<String> STORY_STATUSES = Set.of("Ongoing", "Hiatus", "Completed");
 
+    private static <T> ResponseEntity<T> viewerScoped(T body) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .header(HttpHeaders.VARY, HttpHeaders.AUTHORIZATION)
+                .body(body);
+    }
+
     @Autowired
     BookService bookService;
     @Autowired
@@ -81,12 +88,12 @@ public class BookController {
             @RequestParam(required = false) String genre,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
-        return ResponseEntity.ok(bookService.getAllBooks(sort, genre, page, size));
+        return viewerScoped(bookService.getAllBooks(sort, genre, page, size));
     }
 
     @GetMapping("/home-genres")
     public ResponseEntity<?> getHomeGenres() {
-        return ResponseEntity.ok(bookService.getHomeGenres());
+        return viewerScoped(bookService.getHomeGenres());
     }
 
     @GetMapping("/genre/{name}")
@@ -95,7 +102,7 @@ public class BookController {
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
-        return ResponseEntity.ok(bookService.getBooksByGenre(name, sort, page, size));
+        return viewerScoped(bookService.getBooksByGenre(name, sort, page, size));
     }
 
     @GetMapping("/{id}")
@@ -104,7 +111,7 @@ public class BookController {
         Map<String, Object> book = bookService.getBookById(id, true);
         if (book == null)
             return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(book);
+        return viewerScoped(book);
     }
 
     @GetMapping("/{bookId}/chapters/{chapterId}/content")
@@ -112,17 +119,12 @@ public class BookController {
             @PathVariable String bookId,
             @PathVariable String chapterId) {
         ChapterContentResponse content = chapterContentService.load(bookId, chapterId);
-        String cacheControl = content.access() == ChapterContentResponse.ChapterAccess.FULL
-                ? "private, no-store"
-                : "public, max-age=300";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, cacheControl)
-                .body(content);
+        return viewerScoped(content);
     }
 
     @GetMapping("/author/{authorId}")
     public ResponseEntity<?> getBooksByAuthor(@PathVariable String authorId) {
-        return ResponseEntity.ok(bookService.getBooksByAuthor(authorId));
+        return viewerScoped(bookService.getBooksByAuthor(authorId));
     }
 
     @GetMapping("/genres")

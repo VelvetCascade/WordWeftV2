@@ -10,6 +10,7 @@ test('frontend chapter contract models server-enforced access states', () => {
     assert.match(types, /accessLabel\??:\s*'FULL'\s*\|\s*'PREVIEW'\s*\|\s*'SIGN_IN'/);
     assert.match(client, /getChapterContent/);
     assert.match(client, /AUTH_REQUIRED/);
+    assert.match(client, /getChapterContent[\s\S]*cache:\s*'no-store'/);
 });
 
 test('story, reader, and auth screens implement the approved contextual sign-in flow', () => {
