@@ -3,6 +3,7 @@ package com.wordweft.seo;
 import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
+import com.wordweft.book.service.ChapterPreviewService;
 import com.wordweft.user.model.User;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -24,8 +25,12 @@ public class PublicSeoService {
     public static final int SITEMAP_SIZE = 1000;
     private static final Set<String> SITEMAP_KINDS = Set.of("books", "chapters", "authors", "genres", "tags");
     private final MongoTemplate mongo;
+    private final ChapterPreviewService chapterPreviewService;
 
-    public PublicSeoService(MongoTemplate mongo) { this.mongo = mongo; }
+    public PublicSeoService(MongoTemplate mongo, ChapterPreviewService chapterPreviewService) {
+        this.mongo = mongo;
+        this.chapterPreviewService = chapterPreviewService;
+    }
 
     public static boolean isPublic(Book book) {
         return book != null && "published".equals(book.getPublicationStatus()) && !book.isMature()
@@ -46,12 +51,20 @@ public class PublicSeoService {
     public Map<String, Object> book(String id, String chapterId) {
         Book book = mongo.findById(id, Book.class);
         if (!isPublic(book)) return null;
-        Map<String, Object> result = bookDto(book, false);
+        Map<String, Object> result = bookDto(book);
         if (chapterId != null) {
             @SuppressWarnings("unchecked") var chapters = (List<Map<String, Object>>) result.get("chapters");
-            for (var chapter : chapters) if (chapterId.equals(chapter.get("id"))) {
-                book.getChapters().stream().filter(ch -> chapterId.equals(ch.getId()) && "published".equals(ch.getStatus()))
-                        .findFirst().ifPresent(ch -> chapter.put("content", ch.getContent()));
+            String firstChapterId = chapters.isEmpty() ? null : String.valueOf(chapters.get(0).get("id"));
+            for (var chapter : chapters) if (chapterId.equals(chapter.get("id")) && chapterId.equals(firstChapterId)) {
+                book.getChapters().stream()
+                        .filter(ch -> chapterId.equals(ch.getId()) && "published".equals(ch.getStatus()))
+                        .findFirst()
+                        .ifPresent(ch -> {
+                            ChapterPreviewService.Preview preview = chapterPreviewService.preview(ch.getContent());
+                            chapter.put("content", preview.html());
+                            chapter.put("previewWordCount", preview.previewWordCount());
+                            chapter.put("fullWordCount", preview.fullWordCount());
+                        });
             }
         }
         return result;
@@ -71,7 +84,7 @@ public class PublicSeoService {
         query.fields().exclude("chapters.content").exclude("chapters.likes").exclude("likes");
         List<Book> matches = mongo.find(query, Book.class);
         boolean hasMore = matches.size() > PAGE_SIZE;
-        List<Map<String, Object>> books = matches.stream().limit(PAGE_SIZE).map(b -> bookDto(b, false)).toList();
+        List<Map<String, Object>> books = matches.stream().limit(PAGE_SIZE).map(this::bookDto).toList();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("books", books); result.put("page", page); result.put("hasMore", hasMore);
         return result;
@@ -94,7 +107,7 @@ public class PublicSeoService {
         return result;
     }
 
-    Map<String, Object> bookDto(Book book, boolean includeContent) {
+    Map<String, Object> bookDto(Book book) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", book.getId()); result.put("title", book.getTitle());
         result.put("summary", book.getSummary()); result.put("description", book.getDescription());
@@ -107,12 +120,16 @@ public class PublicSeoService {
         result.put("contentWarnings", book.getContentWarnings()); result.put("customDisclaimer", book.getCustomDisclaimer());
         result.put("authorId", book.getAuthorId());
         result.put("author", authorDto(mongo.findById(book.getAuthorId(), User.class), book.getAuthorId()));
-        result.put("chapters", book.getChapters().stream().filter(ch -> "published".equals(ch.getStatus())).map(ch -> {
+        List<Chapter> publishedChapters = book.getChapters().stream()
+                .filter(ch -> "published".equals(ch.getStatus()))
+                .toList();
+        String firstChapterId = publishedChapters.isEmpty() ? null : publishedChapters.get(0).getId();
+        result.put("chapters", publishedChapters.stream().map(ch -> {
             Map<String, Object> dto = new LinkedHashMap<>();
             dto.put("id", ch.getId()); dto.put("title", ch.getTitle()); dto.put("status", "published");
+            dto.put("access", Objects.equals(ch.getId(), firstChapterId) ? "PREVIEW" : "AUTH_REQUIRED");
             dto.put("wordCount", ch.getWordCount()); dto.put("publishedAt", ch.getPublishedAt());
             dto.put("contentWarnings", ch.getContentWarnings()); dto.put("disclaimerNote", ch.getDisclaimerNote());
-            if (includeContent) dto.put("content", ch.getContent());
             return dto;
         }).toList());
         return result;

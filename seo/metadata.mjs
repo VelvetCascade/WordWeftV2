@@ -58,7 +58,16 @@ export function metadataFor(route, data = null) {
       // Use the synopsis for snippets so chapter spoilers aren't used as the description.
       description = excerpt(`Read ${chapter.title} from ${book.title} by ${author.name}. ${plainText(book.summary)}`);
       type = 'article';
-      graph = [{ '@type': 'Chapter', name: chapter.title, url: SITE_ORIGIN + path, isPartOf: entity, author: entity.author, ...(chapter.wordCount > 0 ? { wordCount: chapter.wordCount } : {}) }];
+      graph = [{
+        '@type': 'Chapter',
+        name: chapter.title,
+        url: SITE_ORIGIN + path,
+        isPartOf: entity,
+        author: entity.author,
+        isAccessibleForFree: false,
+        hasPart: { '@type': 'WebPageElement', cssSelector: '.reader-sign-in-gate', isAccessibleForFree: false },
+        ...(chapter.wordCount > 0 ? { wordCount: chapter.wordCount } : {}),
+      }];
       crumbs.push([chapter.title, path]);
     } else graph = [entity];
     graph.push(breadcrumbs(crumbs));
