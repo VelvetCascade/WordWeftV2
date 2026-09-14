@@ -439,25 +439,41 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     useEffect(() => {
         if (!currentUser || !chapter || chapterContent?.access !== 'FULL' || resumedChapterId === chapter.id) return;
 
+        let cancelled = false;
+
         const restorePosition = async () => {
-            maxPercentageRef.current = 0;
-            const savedProgress = await api.getReadingProgressForBook(currentUser.id, bookId);
-            if (savedProgress && savedProgress.chapters[chapter.id]) {
-                const savedScroll = savedProgress.chapters[chapter.id].scrollPosition;
-                if (savedProgress.chapters[chapter.id].progress) {
-                    maxPercentageRef.current = savedProgress.chapters[chapter.id].progress;
-                }
-                if (savedScroll > 0) {
-                    window.scrollTo({ top: savedScroll, behavior: 'instant' });
+            try {
+                const savedProgress = await api.getReadingProgressForBook(currentUser.id, bookId);
+                if (cancelled) return;
+
+                maxPercentageRef.current = 0;
+                const savedChapterProgress = savedProgress?.chapters?.[chapter.id];
+                if (savedChapterProgress) {
+                    const savedScroll = savedChapterProgress.scrollPosition;
+                    if (savedChapterProgress.progress) {
+                        maxPercentageRef.current = savedChapterProgress.progress;
+                    }
+                    if (savedScroll > 0) {
+                        window.scrollTo({ top: savedScroll, behavior: 'instant' });
+                    } else {
+                        window.scrollTo(0, 0);
+                    }
                 } else {
                     window.scrollTo(0, 0);
                 }
-            } else {
-                window.scrollTo(0, 0);
+            } catch (error) {
+                // A concurrent session expiry is already handled centrally by
+                // the API client; progress restoration must not become an
+                // unhandled browser error while the reader switches to a gate.
+                console.warn('Reading progress could not be restored', error);
             }
         };
 
-        setTimeout(restorePosition, 100);
+        const timerId = window.setTimeout(() => { void restorePosition(); }, 100);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timerId);
+        };
     }, [bookId, chapter, currentUser, chapterContent?.access, resumedChapterId]);
 
     useEffect(() => {
