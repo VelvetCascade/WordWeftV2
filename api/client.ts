@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -361,6 +361,36 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
         })
     });
     await handleResponse(response);
+}
+
+export async function getChapterContent(bookId: string, chapterId: string): Promise<ChapterContentResult> {
+    const response = await fetch(
+        `${API_BASE_URL}/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}/content`,
+        { headers: getHeaders() },
+    );
+    if (response.status === 401) {
+        let errorCode = '';
+        try {
+            errorCode = (await response.json())?.errorCode || '';
+        } catch {
+            // A malformed error body still remains an authentication failure.
+        }
+        if (errorCode === 'AUTH_REQUIRED' || !errorCode) {
+            return {
+                bookId,
+                bookTitle: '',
+                chapterId,
+                chapterTitle: '',
+                chapterIndex: -1,
+                access: 'AUTH_REQUIRED',
+                content: '',
+                previewWordCount: 0,
+                fullWordCount: 0,
+            };
+        }
+        throw new Error('Sign in is required to read this chapter.');
+    }
+    return await handleResponse(response) as ChapterContentResult;
 }
 
 export async function getHookFeed(excludedBookIds: string[] = [], genres: string[] = [], limit = 10): Promise<HookFeedResponse> {
@@ -874,7 +904,11 @@ function mapBackendBookToFrontend(backendBook: any): Book {
         ageRating: backendBook.ageRating ?? ((backendBook.isMature ?? backendBook.mature) ? 'MATURE_18' : 'ALL_AGES'),
         readingStatus: backendBook.readingStatus || 'Ongoing',
         contentWarnings: backendBook.contentWarnings || [],
-        chapters: (backendBook.chapters || []).map((chapter: any) => ({ ...chapter, contentWarnings: chapter.contentWarnings || [] })),
+        chapters: (backendBook.chapters || []).map((chapter: any) => ({
+            ...chapter,
+            content: chapter.content || '',
+            contentWarnings: chapter.contentWarnings || [],
+        })),
     };
 }
 
