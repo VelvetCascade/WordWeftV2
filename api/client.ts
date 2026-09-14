@@ -299,7 +299,10 @@ export async function getBooksByGenre(genre: string, filters: {
 }
 
 export async function getBookById(id: string): Promise<Book | null> {
-    const response = await fetch(`${API_BASE_URL}/books/${id}`, { headers: getHeaders() });
+    const response = await fetch(`${API_BASE_URL}/books/${id}`, {
+        headers: getHeaders(),
+        cache: 'no-store',
+    });
     if (!response.ok) return null;
     return mapBackendBookToFrontend(await handleResponse(response));
 }
@@ -375,7 +378,12 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
 export async function getChapterContent(bookId: string, chapterId: string): Promise<ChapterContentResult> {
     const response = await fetch(
         `${API_BASE_URL}/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}/content`,
-        { headers: getHeaders() },
+        {
+            headers: getHeaders(),
+            // The same URL returns PREVIEW for a guest and FULL after sign-in.
+            // Never reuse the anonymous response for an authenticated request.
+            cache: 'no-store',
+        },
     );
     if (response.status === 401) {
         // An anonymous visitor is expected to receive AUTH_REQUIRED. If a token

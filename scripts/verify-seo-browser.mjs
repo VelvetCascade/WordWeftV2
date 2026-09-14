@@ -114,6 +114,15 @@ try{
  assert.equal(await reader.evaluate(()=>localStorage.getItem('wordweft_jwt')),null);
  await reader.screenshot({path:'scratch/seo/reader-expired-session-mobile.png',fullPage:true});await readerCtx.close();
  console.log('PASS: locked chapter sign-in resumes full content, and a later rejected token clears the stale account before gating.');
+ const {ctx:previewResumeCtx,page:previewResume}=await setup({viewport:{width:390,height:844}});
+ await previewResume.goto(origin+'/book/b01/chapter/c01');await previewResume.getByText('The first lantern glowed beside the old stone bridge.',{exact:true}).waitFor();await previewResume.getByRole('heading',{name:'Sign in to keep reading'}).waitFor();
+ assert.equal(await previewResume.getByText('At sunrise, the hidden city finally answered.',{exact:true}).count(),0);
+ await previewResume.getByRole('button',{name:'Sign in',exact:true}).click();await previewResume.waitForURL('**/auth');
+ await previewResume.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');await previewResume.locator('input[type=password]').fill('Fixture-only-123!');await previewResume.locator('button[type=submit]').click();
+ await previewResume.waitForURL('**/book/b01/chapter/c01');await previewResume.getByText('At sunrise, the hidden city finally answered.',{exact:true}).waitFor();await previewResume.getByText("You're signed in — keep reading",{exact:true}).waitFor();
+ assert.equal(await previewResume.getByRole('heading',{name:'Sign in to keep reading'}).count(),0);
+ await previewResume.screenshot({path:'scratch/seo/reader-preview-resume-mobile.png',fullPage:true});await previewResumeCtx.close();
+ console.log('PASS: first-chapter guest preview signs in and resumes the same URL with full content, without a repeated gate.');
  const {ctx:newUser,page:firstVisit}=await setup();
  await firstVisit.goto(origin+'/write/book/create');await firstVisit.waitForURL('**/auth');
  await firstVisit.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');await firstVisit.locator('input[type=password]').fill('Fixture-only-123!');await firstVisit.locator('button[type=submit]').click();

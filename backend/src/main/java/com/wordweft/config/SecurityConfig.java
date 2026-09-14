@@ -65,7 +65,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         // Allow all local dev origins
         config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:*", "https://word-weft-v2.vercel.app", "https://wordweftv2-staging.onrender.com", "https://www.wordweftstudio.com", "https://wordweftstudio.com"));
-        config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
+        config.setAllowedHeaders(Arrays.asList(
+                "Origin", "Content-Type", "Accept", "Authorization", "Cache-Control", "Pragma"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
         config.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", config);
