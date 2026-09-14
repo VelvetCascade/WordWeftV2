@@ -56,6 +56,7 @@ const DiscoveryLandingPage = lazy(() => import('./pages/DiscoveryLandingPage').t
 const NotFoundPage = lazy(() => import('./pages/DiscoveryLandingPage').then(m => ({ default: m.NotFoundPage })));
 const PublicCatalogPage = lazy(() => import('./pages/PublicCatalogPage').then(m => ({ default: m.PublicCatalogPage })));
 import { communityReturnLink } from './utils/community';
+import { markReaderAuthComplete, readReaderAuthIntent, type ReaderAuthView } from './utils/readerAuthIntent';
 
 export type Page =
   | { name: 'home' }
@@ -111,6 +112,7 @@ const App: React.FC = () => {
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
   const [showForYouModal, setShowForYouModal] = useState(false);
   const [showWelcomeJourney, setShowWelcomeJourney] = useState(false);
+  const [authInitialView, setAuthInitialView] = useState<ReaderAuthView>('login');
   const notif = useNotifications(isAuthenticated);
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
 
@@ -176,6 +178,21 @@ const App: React.FC = () => {
       userId: user.id,
       method: 'session',
     });
+
+    const readerIntent = markReaderAuthComplete();
+    if (readerIntent) {
+      if (!localStorage.getItem('ww_welcomeJourneyCompleted')) {
+        localStorage.setItem('ww_welcomeJourneyPending', 'true');
+      }
+      navigateTo({
+        name: 'reader',
+        bookId: readerIntent.bookId,
+        chapterId: readerIntent.chapterId,
+        chapterIndex: readerIntent.chapterIndex,
+      });
+      setIntendedPage(null);
+      return;
+    }
 
     // Check if user should see the Welcome Journey
     const hasCompletedJourney = localStorage.getItem('ww_welcomeJourneyCompleted');
@@ -340,6 +357,21 @@ const App: React.FC = () => {
         return; // Stop processing to avoid rendering the protected page
       }
 
+      if (targetPage.name === 'auth') {
+        setAuthInitialView(readReaderAuthIntent()?.authView ?? 'login');
+      }
+
+      if (
+        sessionAuthenticated.current
+        && targetPage.name !== 'reader'
+        && targetPage.name !== 'auth'
+        && localStorage.getItem('ww_welcomeJourneyPending') === 'true'
+      ) {
+        localStorage.removeItem('ww_welcomeJourneyPending');
+        setIntendedPage(targetPage);
+        setShowWelcomeJourney(true);
+      }
+
       window.scrollTo(0, 0);
       setPage(targetPage);
       updateRouteMetadata();
@@ -436,7 +468,7 @@ const App: React.FC = () => {
       case 'edit-profile':
         return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'auth':
-        return <AuthPage onLogin={handleLogin} />;
+        return <AuthPage onLogin={handleLogin} initialView={authInitialView} />;
       case 'terms':
         return <TermsPage />;
       case 'privacy':

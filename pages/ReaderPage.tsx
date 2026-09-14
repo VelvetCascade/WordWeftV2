@@ -2,7 +2,7 @@ import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, chapterPath } from '../seo/metadata.mjs';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Flag } from 'lucide-react';
-import type { User, Book, BookProgress, Comment, Character  } from '../types';
+import type { User, Book, BookProgress, ChapterContentResult, Comment, Character  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
@@ -21,6 +21,8 @@ import parse, { domToReact } from 'html-react-parser';
 import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 import { readReaderPreferences } from '../utils/runtimeLifecycle';
 import { manuscriptProgress } from '../utils/readerProgress';
+import { ReaderSignInGate } from '../components/ReaderSignInGate';
+import { consumeReaderResumeIntent, readerChapterPath, saveReaderAuthIntent, type ReaderAuthView } from '../utils/readerAuthIntent';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -231,7 +233,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     });
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isChapterLoading, setIsChapterLoading] = useState(false);
+    const [chapterContent, setChapterContent] = useState<ChapterContentResult | null>(null);
     const [currentChapterIndex, setCurrentChapterIndex] = useState(chapterIndex);
+    const [resumedChapterId, setResumedChapterId] = useState<string | null>(null);
+    const [resumeAnnouncement, setResumeAnnouncement] = useState('');
     const [fontSize, setFontSize] = useState(initialReaderPreferences.fontSize);
     const [contentTheme, setContentTheme] = useState<ContentTheme>(initialReaderPreferences.contentTheme);
     const [readerFont, setReaderFont] = useState<ReaderFont>(initialReaderPreferences.readerFont);
@@ -293,7 +299,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         let active = true;
         setIsLoading(true);
         startReadingTimer();
-        api.getBookById(bookId).then(fetchedBook => {
+        const bookRequest = api.getBookById(bookId).then(fetchedBook => {
             if (!active) return;
             setBook(fetchedBook);
             const resolvedIndex = chapterId ? fetchedBook?.chapters.findIndex(ch => ch.id === chapterId) ?? -1 : chapterIndex;
@@ -302,16 +308,53 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             if (selected) replaceReaderChapter(bookId, resolvedIndex, selected.id);
             setIsLoading(false);
         }).catch(() => { if (active) { setBook(null); setIsLoading(false); } });
-        api.getCharactersByBookId(bookId).then(result => { if (active) setCharacters(result); }).catch(() => { if (active) setCharacters([]); });
+        const charactersRequest = api.getCharactersByBookId(bookId)
+            .then(result => { if (active) setCharacters(result); })
+            .catch(() => { if (active) setCharacters([]); });
+        void Promise.allSettled([bookRequest, charactersRequest]);
         return () => { active = false; checkReadingDuration(); };
     }, [bookId, chapterId, chapterIndex]);
+
+    const selectedChapterId = book?.chapters[currentChapterIndex]?.id;
+    useEffect(() => {
+        if (!book || !selectedChapterId) return;
+        let active = true;
+        setIsChapterLoading(true);
+        setChapterContent(null);
+        setComments([]);
+
+        api.getChapterContent(book.id, selectedChapterId)
+            .then(result => {
+                if (!active) return;
+                setChapterContent(result);
+                setBook(current => current ? {
+                    ...current,
+                    chapters: current.chapters.map(chapterItem => chapterItem.id === selectedChapterId
+                        ? { ...chapterItem, content: result.content }
+                        : chapterItem),
+                } : current);
+
+                if (result.access === 'FULL') {
+                    const resume = consumeReaderResumeIntent(book.id, selectedChapterId);
+                    if (resume) {
+                        setResumedChapterId(selectedChapterId);
+                        setResumeAnnouncement("You're signed in — keep reading");
+                        window.setTimeout(() => window.scrollTo({ top: resume.scrollY, behavior: 'instant' }), 100);
+                    }
+                }
+            })
+            .catch(() => { if (active) setChapterContent(null); })
+            .finally(() => { if (active) setIsChapterLoading(false); });
+
+        return () => { active = false; };
+    }, [book?.id, selectedChapterId, currentUser?.id]);
 
     useEffect(() => {
         if (chapter) setIsDisclaimerOpen(disclaimerRequired && sessionStorage.getItem(disclaimerKey) !== 'accepted');
     }, [chapter?.id, disclaimerRequired, disclaimerKey]);
 
     useEffect(() => {
-        if (book && chapter) {
+        if (book && chapter && chapterContent?.access === 'FULL') {
             api.getChapterComments(bookId, chapter.id).then(setComments);
 
             if ((!disclaimerRequired || sessionStorage.getItem(disclaimerKey) === 'accepted') && hasRecordedView.current !== chapter.id) {
@@ -320,7 +363,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 hasRecordedView.current = chapter.id;
             }
         }
-    }, [bookId, chapter, isDisclaimerOpen, disclaimerRequired, disclaimerKey]);
+    }, [bookId, chapter, chapterContent?.access, isDisclaimerOpen, disclaimerRequired, disclaimerKey]);
 
     useEffect(() => {
         try {
@@ -343,7 +386,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     }, []);
 
     const saveProgress = useCallback(() => {
-        if (!currentUser || !book || !chapter) return;
+        if (!currentUser || !book || !chapter || chapterContent?.access !== 'FULL') return;
 
         const now = Date.now();
         if (now - lastSaveTimeRef.current < 500) {
@@ -365,10 +408,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             scrollTop,
             maxPercentageRef.current
         ).catch(error => console.warn('Reading progress could not be saved', error));
-    }, [currentUser, book, currentChapterIndex, chapter, calculateProgress]);
+    }, [currentUser, book, currentChapterIndex, chapter, chapterContent?.access, calculateProgress]);
 
     useEffect(() => {
-        if (!currentUser || !chapter) return;
+        if (!currentUser || !chapter || chapterContent?.access !== 'FULL' || resumedChapterId === chapter.id) return;
 
         const restorePosition = async () => {
             maxPercentageRef.current = 0;
@@ -389,7 +432,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         };
 
         setTimeout(restorePosition, 100);
-    }, [bookId, chapter, currentUser]);
+    }, [bookId, chapter, currentUser, chapterContent?.access, resumedChapterId]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -449,8 +492,25 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         if (!book || (index < 0 || index >= book.chapters.length)) return;
         saveProgress();
         trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
+        setChapterContent(null);
+        setResumedChapterId(null);
+        setResumeAnnouncement('');
         setCurrentChapterIndex(index);
         replaceReaderChapter(book.id, index, book.chapters[index].id);
+    };
+
+    const handleAuthenticate = (authView: ReaderAuthView) => {
+        if (!book || !chapter) return;
+        saveReaderAuthIntent({
+            returnPath: readerChapterPath(book.id, chapter.id),
+            bookId: book.id,
+            chapterId: chapter.id,
+            chapterIndex: currentChapterIndex,
+            source: chapterContent?.access === 'AUTH_REQUIRED' ? 'locked_chapter' : 'preview',
+            authView,
+            scrollY: window.scrollY,
+        });
+        window.location.hash = '/auth';
     };
 
     const handleReturnToStory = () => {
@@ -560,11 +620,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                                         goToChapter(index);
                                         setIsTocVisible(false);
                                     }}
-                                    className={`reader-toc-item ${index === currentChapterIndex ? 'reader-toc-item-active' : ''} ${chap.status !== 'published' ? 'reader-toc-item-locked' : ''}`}
+                                    className={`reader-toc-item ${index === currentChapterIndex ? 'reader-toc-item-active' : ''} ${chap.status !== 'published' || chap.accessLabel === 'SIGN_IN' ? 'reader-toc-item-locked' : ''}`}
                                     disabled={chap.status !== 'published'}
                                 >
                                     <span className="reader-toc-number">{String(index + 1).padStart(2, '0')}</span>
-                                    <span className="reader-toc-title"><strong>{chap.title}</strong><small>{index === currentChapterIndex ? `${Math.round(scrollProgress)}% read` : chap.status !== 'published' ? 'Not released' : index < currentChapterIndex ? 'Completed' : 'Ready to read'}</small></span>
+                                    <span className="reader-toc-title"><strong>{chap.title}</strong><small>{chap.status !== 'published' ? 'Not released' : chap.accessLabel === 'SIGN_IN' ? 'Sign in to read' : chap.accessLabel === 'PREVIEW' ? 'Preview' : index === currentChapterIndex ? `${Math.round(scrollProgress)}% read` : index < currentChapterIndex ? 'Completed' : 'Ready to read'}</small></span>
                                     <ChevronRightIcon className="w-4 h-4" />
                                 </button>
                             </li>
@@ -575,8 +635,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         );
     }
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
+    if (isLoading || isChapterLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
     if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
+    if (!chapterContent) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
     const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
     const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
@@ -648,16 +709,18 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             { ...domNode.attribs, className: `${domNode.attribs.className || ''} relative z-10` },
                             domToReact(domNode.children, parseOptions)
                         )}
-                        <button
-                            onClick={() => openCommentDrawer(index)}
-                            className={`absolute -right-4 md:-right-12 top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
-                            title="Add comment"
-                        >
-                            <div className="relative">
-                                <PlusIcon className="w-5 h-5" />
-                                {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
-                            </div>
-                        </button>
+                        {chapterContent.access === 'FULL' ? (
+                            <button
+                                onClick={() => openCommentDrawer(index)}
+                                className={`absolute -right-4 md:-right-12 top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
+                                title="Add comment"
+                            >
+                                <div className="relative">
+                                    <PlusIcon className="w-5 h-5" />
+                                    {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
+                                </div>
+                            </button>
+                        ) : null}
                     </div>
                 );
             }
@@ -665,7 +728,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     };
 
     const plainChapterText = chapter.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim();
-    const wordCount = plainChapterText ? plainChapterText.split(/\s+/).length : 0;
+    const wordCount = chapterContent.fullWordCount || (plainChapterText ? plainChapterText.split(/\s+/).length : chapter.wordCount);
     const readingMinutes = Math.max(1, Math.ceil(wordCount / 230));
 
     // Reset block index
@@ -673,14 +736,17 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
     return (
         <div className={`reader-experience transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''}`}>
+            <div className="sr-only" role="status" aria-live="polite">{resumeAnnouncement}</div>
             {/* Contextual Reader Onboarding */}
-            <ReaderDiscoveryCoach 
-                hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')} 
-                hasSpoilers={chapter?.content?.includes('data-spoiler') || chapter?.content?.includes('spoiler-text')}
-            />
+            {chapterContent.access !== 'AUTH_REQUIRED' ? (
+                <ReaderDiscoveryCoach
+                    hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')}
+                    hasSpoilers={chapter?.content?.includes('data-spoiler') || chapter?.content?.includes('spoiler-text')}
+                />
+            ) : null}
 
             {/* Mood Atmosphere — page-level immersive overlay */}
-            <MoodAtmosphere contentRef={moodContentRef} active={true} />
+            <MoodAtmosphere contentRef={moodContentRef} active={chapterContent.access !== 'AUTH_REQUIRED'} />
 
             <TableOfContents />
 
@@ -738,18 +804,35 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 <div className="reader-chapter-intro">
                     <span>Chapter {String(currentChapterIndex + 1).padStart(2, '0')}</span>
                     <h1>{chapter.title}</h1>
-                    <div className="reader-chapter-meta"><span>{readingMinutes} min read</span><i /><span>{wordCount.toLocaleString()} words</span><i /><span>{Math.round(scrollProgress)}% complete</span></div>
+                    {chapterContent.access === 'AUTH_REQUIRED' ? (
+                        <div className="reader-chapter-meta"><span>Sign in to read</span></div>
+                    ) : (
+                        <div className="reader-chapter-meta"><span>{readingMinutes} min read</span><i /><span>{wordCount.toLocaleString()} words</span><i /><span>{chapterContent.access === 'PREVIEW' ? 'Preview' : `${Math.round(scrollProgress)}% complete`}</span></div>
+                    )}
                 </div>
-                <div
-                    ref={moodContentRef}
-                    className={`ww-prose reader-copy reader-font-${readerFont}`}
-                    style={{ fontSize: `${fontSize}px`, lineHeight }}
-                >
-                    {parse(chapter.content, parseOptions)}
-                </div>
+                {chapterContent.access !== 'AUTH_REQUIRED' ? (
+                    <div
+                        ref={moodContentRef}
+                        className={`ww-prose reader-copy reader-font-${readerFont}`}
+                        style={{ fontSize: `${fontSize}px`, lineHeight }}
+                    >
+                        {parse(chapter.content, parseOptions)}
+                    </div>
+                ) : null}
+
+                {chapterContent.access === 'PREVIEW' ? (
+                    <ReaderSignInGate locked={false} bookTitle={book.title} onAuthenticate={handleAuthenticate} />
+                ) : chapterContent.access === 'AUTH_REQUIRED' ? (
+                    <ReaderSignInGate
+                        locked
+                        bookTitle={book.title}
+                        onAuthenticate={handleAuthenticate}
+                        onReadPreview={book.chapters[0] ? () => goToChapter(0) : undefined}
+                    />
+                ) : null}
 
                 {/* A calm chapter ending: react, continue, or return to the story. */}
-                <section className="reader-chapter-end">
+                {chapterContent.access === 'FULL' ? <section className="reader-chapter-end">
                     <span className="reader-end-kicker">{currentChapterIndex < book.chapters.length - 1 ? 'End of chapter' : 'Story complete'}</span>
                     <h2>{currentChapterIndex < book.chapters.length - 1 ? book.chapters[currentChapterIndex + 1].title : `You finished ${book.title}`}</h2>
                     <p>{currentChapterIndex < book.chapters.length - 1 ? 'Ready when you are. Your place in this chapter has been saved.' : `You reached the final page of ${book.author.name}'s story.`}</p>
@@ -770,11 +853,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     </div>
                     <p className="reader-copyright">&copy; {new Date().getFullYear()} {book.author.name}. All rights reserved. Protected from unauthorized distribution and model training.</p>
                     <a href={discussLink(book.id, chapter.id, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
-                </section>
+                </section> : null}
             </main>
 
             {/* Discussion Section (Bottom) */}
-            <section className="reader-discussion max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
+            {chapterContent.access === 'FULL' ? <section className="reader-discussion max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
                 <div className="reader-discussion-head flex items-center justify-between mb-8">
                     <h2 className="font-sans text-2xl font-bold dark:text-dark-text-rich">
                         Chapter Discussion <span className="text-base font-normal text-gray-500">({comments.length})</span>
@@ -854,7 +937,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                         <button onClick={() => openCommentDrawer(null)} className="w-full py-3 text-center text-accent font-sans font-semibold hover:underline">View All Discussions</button>
                     )}
                 </div>
-            </section>
+            </section> : null}
 
             {/* Reader Settings Sheet */}
             <div className={`reader-settings-backdrop ${isSettingsPanelVisible ? 'reader-settings-backdrop-open' : ''}`} onClick={() => setIsSettingsPanelVisible(false)} />
@@ -901,11 +984,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 <button aria-label="Next chapter" onClick={() => goToChapter(currentChapterIndex + 1)} disabled={currentChapterIndex === book.chapters.length - 1} data-label="Next"><ChevronRightIcon className="w-5 h-5" /></button>
                 <span className="reader-dock-divider" />
                 <button aria-label="Open reading appearance settings" onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'active' : ''} data-label="Appearance"><span className="reader-aa">Aa</span></button>
-                <button aria-label="Open chapter discussion" onClick={() => openCommentDrawer(null)} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
+                <button aria-label="Open chapter discussion" onClick={() => openCommentDrawer(null)} disabled={chapterContent.access !== 'FULL'} data-label="Discuss"><ChatBubbleLeftIcon className="w-5 h-5" /></button>
                 <button aria-label="Enter focus mode" onClick={() => setIsFocusMode(true)} data-label="Focus"><EyeIcon className="w-5 h-5" /></button>
             </nav>
 
-            <CommentDrawer
+            {chapterContent.access === 'FULL' ? <CommentDrawer
                 isOpen={isCommentDrawerOpen}
                 onClose={() => setIsCommentDrawerOpen(false)}
                 comments={activeParagraphIndex !== null ? paragraphComments(activeParagraphIndex) : comments.filter(c => c.paragraphIndex === null)}
@@ -913,7 +996,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 paragraphText={activeParagraphIndex !== null && chapter.content ? 'Paragraph ' + (activeParagraphIndex + 1) : undefined}
                 onAddComment={handleAddComment}
                 onReportComment={(comment) => currentUser ? setReportTarget({ type: 'COMMENT', id: comment.id, title: `Comment by ${comment.user.name}` }) : window.location.hash = '/auth'}
-            />
+            /> : null}
 
             <CharacterPreview
                 character={viewingCharacter}

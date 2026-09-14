@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+    consumeReaderResumeIntent,
     createReaderAuthIntent,
     isReaderAuthIntentFresh,
+    markReaderAuthComplete,
     readerChapterPath,
+    saveReaderAuthIntent,
 } from '../utils/readerAuthIntent.ts';
 
 test('reader auth intent rejects external, unrelated, and mismatched return paths', () => {
@@ -43,4 +46,24 @@ test('reader auth intent normalizes unsafe scroll and index values', () => {
 
     assert.equal(intent?.chapterIndex, 0);
     assert.equal(intent?.scrollY, 0);
+});
+
+test('only a completed matching reader intent can be consumed', () => {
+    const values = new Map<string, string>();
+    const storage = {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem: (key: string, value: string) => { values.set(key, value); },
+        removeItem: (key: string) => { values.delete(key); },
+    };
+    saveReaderAuthIntent({
+        returnPath: '/book/b/chapter/c', bookId: 'b', chapterId: 'c', now: Date.now(),
+    }, storage);
+    assert.equal(consumeReaderResumeIntent('b', 'c', storage), null);
+
+    saveReaderAuthIntent({
+        returnPath: '/book/b/chapter/c', bookId: 'b', chapterId: 'c', now: Date.now(),
+    }, storage);
+    markReaderAuthComplete(storage);
+    assert.equal(consumeReaderResumeIntent('b', 'c', storage)?.completed, true);
+    assert.equal(values.size, 0);
 });

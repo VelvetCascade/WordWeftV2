@@ -11594,3 +11594,96 @@ body[data-active-mood] .ww-prose :where(h1, h2, h3, h4, h5, h6) {
     .ft-atmosphere-drift,
     .mood-atmosphere__particles { display: none !important; }
 }
+
+/* Reader authentication boundary */
+.reader-sign-in-gate {
+    width: min(100%, 680px);
+    margin: clamp(54px, 9vw, 96px) auto 0;
+    padding: clamp(28px, 6vw, 52px);
+    color: var(--reader-copy);
+    background: color-mix(in srgb, var(--reader-panel-solid) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--reader-accent) 32%, var(--reader-line));
+    border-radius: 28px;
+    box-shadow: var(--reader-shadow);
+    text-align: center;
+}
+
+.reader-sign-in-gate-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 18px;
+    place-items: center;
+    color: var(--reader-accent);
+    background: var(--reader-accent-soft);
+    border-radius: 16px;
+}
+
+.reader-sign-in-gate-kicker {
+    margin: 0 0 9px;
+    color: var(--reader-accent) !important;
+    font-family: 'Inter', sans-serif;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.reader-sign-in-gate h2 {
+    margin: 0;
+    color: var(--reader-ink) !important;
+    font-family: 'Newsreader', serif !important;
+    font-size: clamp(2rem, 6vw, 3.5rem) !important;
+    font-weight: 600 !important;
+    line-height: 1.05 !important;
+}
+
+.reader-sign-in-gate > p:not(.reader-sign-in-gate-kicker) {
+    max-width: 510px;
+    margin: 16px auto 0;
+    color: var(--reader-muted) !important;
+    font-family: 'Inter', sans-serif;
+    font-size: .83rem;
+    line-height: 1.7;
+}
+
+.reader-sign-in-gate-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.reader-sign-in-gate-actions button {
+    min-width: 140px;
+    min-height: 48px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: .8rem;
+    font-weight: 800;
+}
+
+.reader-sign-in-primary { color: #fff; background: var(--reader-accent); }
+.reader-sign-in-secondary { color: var(--reader-ink); background: transparent; border-color: var(--reader-line) !important; }
+.reader-sign-in-gate-actions button:hover { transform: translateY(-1px); }
+.reader-sign-in-gate button:focus-visible { outline: 3px solid color-mix(in srgb, var(--reader-accent) 58%, white); outline-offset: 3px; }
+
+.reader-sign-in-preview-link {
+    min-height: 44px;
+    margin-top: 12px;
+    padding: 0 12px;
+    color: var(--reader-accent);
+    font-family: 'Inter', sans-serif;
+    font-size: .75rem;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+@media (max-width: 420px) {
+    .reader-sign-in-gate { padding: 28px 18px; border-radius: 20px; }
+    .reader-sign-in-gate-actions { flex-direction: column; }
+    .reader-sign-in-gate-actions button { width: 100%; }
+}

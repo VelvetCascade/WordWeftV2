@@ -11,3 +11,24 @@ test('frontend chapter contract models server-enforced access states', () => {
     assert.match(client, /getChapterContent/);
     assert.match(client, /AUTH_REQUIRED/);
 });
+
+test('story, reader, and auth screens implement the approved contextual sign-in flow', () => {
+    const story = readFileSync(new URL('../pages/BookDetailsPage.tsx', import.meta.url), 'utf8');
+    const reader = readFileSync(new URL('../pages/ReaderPage.tsx', import.meta.url), 'utf8');
+    const gate = readFileSync(new URL('../components/ReaderSignInGate.tsx', import.meta.url), 'utf8');
+    const auth = readFileSync(new URL('../pages/AuthPage.tsx', import.meta.url), 'utf8');
+    const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+    const combined = `${story}\n${reader}\n${gate}\n${auth}\n${app}`;
+
+    assert.match(story, /Preview/);
+    assert.match(story, /Sign in to read/);
+    assert.match(reader, /getChapterContent/);
+    assert.match(reader, /consumeReaderResumeIntent/);
+    assert.match(gate, /Sign in to keep reading/);
+    assert.match(gate, /Sign in to read this chapter/);
+    assert.match(gate, />Sign in</);
+    assert.match(gate, />Create account</);
+    assert.match(auth, /initialView/);
+    assert.match(app, /markReaderAuthComplete/);
+    assert.doesNotMatch(combined, /Free account required/i);
+});
