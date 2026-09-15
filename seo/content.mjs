@@ -83,7 +83,7 @@ export const staticPages = {
   '/terms': { title: 'Terms of Service | WordWeft', description: 'Read the terms for using WordWeft as a reader, writer, or community member.' },
   '/privacy': { title: 'Privacy Policy | WordWeft', description: 'Learn how WordWeft collects, uses, and protects personal information.' },
   '/safety': { title: 'Community Safety & Content Rules | WordWeft', description: 'Read WordWeft’s content guidelines, age-rating rules, and community safety standards.' },
-  '/founding-writers': { title: 'Apply to Be a Founding Writer | WordWeft', description: 'Apply for one of WordWeft’s first 10 Founding Writer places, publish your fiction, help shape the platform, and receive permanent recognition.' },
+  '/founding-writers': { title: 'Apply to Be a Founding Writer | WordWeft', description: 'Become a WordWeft Founding Writer, publish your fiction, help shape the platform, and receive permanent recognition.' },
   ...landingPages,
 };
 

@@ -110,9 +110,9 @@ export const FoundingWritersPage: React.FC = () => {
       <section className="fw-hero" aria-labelledby="founding-writers-heading">
         <div className="fw-shell fw-hero-grid">
           <div className="fw-hero-copy">
-            <span className="fw-places"><Sparkles size={14} /> 10 founding places available</span>
+            <span className="fw-places"><Sparkles size={14} /> Founding Writer applications open</span>
             <p className="fw-eyebrow">An invitation to early storytellers</p>
-            <h1 id="founding-writers-heading">Become one of WordWeft’s first 10 Founding Writers</h1>
+            <h1 id="founding-writers-heading">Become a WordWeft Founding Writer</h1>
             <p className="fw-hero-description">Publish your story, help shape WordWeft from the beginning and receive permanent recognition as one of the platform’s earliest writers.</p>
             <button className="fw-primary-button" type="button" onClick={scrollToForm}>
               Apply as a Founding Writer <ArrowRight size={18} />
