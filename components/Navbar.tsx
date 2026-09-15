@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon, HeartIcon } from './icons/Icons';
 import { WordWeftLogo } from './icons/WordWeftLogo';
-import { MessageCircle, Trophy } from 'lucide-react';
+import { ClipboardList, Feather, MessageCircle, Trophy } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { SearchOverlay } from './SearchOverlay';
 import type { User } from '../types';
@@ -65,6 +65,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     if (hash.startsWith('community')) return 'community';
     if (hash.startsWith('hooks')) return 'hooks';
     if (hash.startsWith('events') || hash.startsWith('challenges')) return 'events';
+    if (hash.startsWith('founding-writers')) return 'founding-writers';
+    if (hash.startsWith('admin/founding-writers')) return 'founding-applications';
     return '';
   };
 
@@ -126,6 +128,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
+  const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') === true;
+
   const desktopNavLinks = isAuthenticated ? [
     { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; } },
     { label: 'Hook Feed', route: 'hooks', action: () => { window.location.hash = '/hooks'; } },
@@ -134,10 +138,12 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; } },
     { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; } },
     { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; } },
+    ...(isAdmin ? [{ label: 'Applications', route: 'founding-applications', action: () => { window.location.hash = '/admin/founding-writers'; } }] : []),
   ] : [
     { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; } },
     { label: 'Features', route: 'features', action: () => { window.location.hash = '/features'; } },
     { label: 'About', route: 'about', action: () => { window.location.hash = '/about'; } },
+    { label: 'Founding Writers', route: 'founding-writers', action: () => { window.location.hash = '/founding-writers'; } },
   ];
 
   const mobileNavLinks = isAuthenticated ? [
@@ -150,6 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
     { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
     { label: 'Features', route: 'features', action: () => { window.location.hash = '/features'; }, icon: Squares2X2Icon },
     { label: 'About', route: 'about', action: () => { window.location.hash = '/about'; }, icon: UserCircleIcon },
+    { label: 'Founding Writers', route: 'founding-writers', action: () => { window.location.hash = '/founding-writers'; }, icon: Feather },
   ];
 
   const closeMobileMenu = () => {
@@ -382,6 +389,16 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
                   <Trophy className="mobile-more-item-icon" />
                   <span className="mobile-more-item-label">Challenges & Events</span>
                 </button>
+
+                {isAdmin && (
+                  <button
+                    className="mobile-more-item"
+                    onClick={() => handleMobileNav(() => { window.location.hash = '/admin/founding-writers'; })}
+                  >
+                    <ClipboardList className="mobile-more-item-icon" />
+                    <span className="mobile-more-item-label">Founding Writer applications</span>
+                  </button>
+                )}
 
                 <div className="mobile-more-divider" />
 

@@ -184,6 +184,42 @@ export interface User {
   hasSeenWritingDemo?: boolean;
   dateOfBirth?: string;
   allowMatureContent?: boolean;
+  roles?: string[];
+}
+
+export type FoundingWriterApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+export type FoundingWriterCompletionPeriod = 'LESS_THAN_2_MONTHS' | 'TWO_TO_FOUR_MONTHS' | 'FOUR_TO_SIX_MONTHS' | 'MORE_THAN_6_MONTHS';
+
+export interface FoundingWriterApplicationSubmission {
+  fullName: string;
+  penName?: string;
+  email: string;
+  country: string;
+  instagramProfileUrl?: string;
+  genre: string;
+  storyTitle: string;
+  storyDescription: string;
+  writingSampleUrl?: string;
+  pastedWritingSample?: string;
+  existingPublishingPlatform?: string;
+  draftedChapterCount: number;
+  plannedChapterCount: number;
+  expectedCompletionPeriod: FoundingWriterCompletionPeriod;
+  ageConfirmed: boolean;
+  rightsConfirmed: boolean;
+  completionCommitted: boolean;
+  weeklyPublishingCommitted: boolean;
+  earningsDisclaimerConfirmed: boolean;
+  termsConfirmed: boolean;
+  organizationName?: string;
+}
+
+export interface FoundingWriterApplication extends Omit<FoundingWriterApplicationSubmission, 'organizationName'> {
+  id: string;
+  status: FoundingWriterApplicationStatus;
+  adminNotes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface WriterAnalyticsSummary {

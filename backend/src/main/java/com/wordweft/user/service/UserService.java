@@ -89,6 +89,9 @@ public class UserService {
 
         map.put("socials", user.getSocials());
         map.put("favoriteGenres", user.getFavoriteGenres());
+        if (user.getId().equals(currentViewerId)) {
+            map.put("roles", user.getRoles());
+        }
         map.put("communityInterests", user.getCommunityInterests() == null ? Set.of() : user.getCommunityInterests());
         map.put("communityBadges", user.getCommunityBadges() == null ? Set.of() : user.getCommunityBadges());
         map.put("hasSeenWritingDemo", user.isHasSeenWritingDemo());

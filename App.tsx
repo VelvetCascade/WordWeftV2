@@ -34,6 +34,8 @@ const FeaturesPage = lazy(() => import('./pages/FeaturesPage').then(module => ({
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(module => ({ default: module.AboutPage })));
 const FeatureDevelopmentPage = lazy(() => import('./pages/FeatureDevelopmentPage').then(module => ({ default: module.FeatureDevelopmentPage })));
+const FoundingWritersPage = lazy(() => import('./pages/FoundingWritersPage').then(module => ({ default: module.FoundingWritersPage })));
+const FoundingWriterAdminPage = lazy(() => import('./pages/FoundingWriterAdminPage').then(module => ({ default: module.FoundingWriterAdminPage })));
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -89,6 +91,8 @@ export type Page =
   | { name: 'search'; query: string }
   | { name: 'features' }
   | { name: 'about' }
+  | { name: 'founding-writers' }
+  | { name: 'admin-founding-writers' }
   | { name: 'genre-page'; genre: string }
   | { name: 'reset-password'; token: string };
 
@@ -146,6 +150,8 @@ const App: React.FC = () => {
       case 'feedback': window.location.hash = '/feedback'; break;
       case 'features': window.location.hash = '/features'; break;
       case 'about': window.location.hash = '/about'; break;
+      case 'founding-writers': window.location.hash = '/founding-writers'; break;
+      case 'admin-founding-writers': window.location.hash = '/admin/founding-writers'; break;
       case 'hook-feed': window.location.hash = '/hooks'; break;
       case 'reading-growth': window.location.hash = '/events'; break;
       default: window.location.hash = '/'; break;
@@ -284,7 +290,11 @@ const App: React.FC = () => {
       const cleanPath = window.location.pathname;
       let targetPage: Page;
 
-      if (landingPages[cleanPath]) {
+      if (hash.startsWith('admin/founding-writers')) {
+        targetPage = { name: 'admin-founding-writers' };
+      } else if (hash.startsWith('founding-writers')) {
+        targetPage = { name: 'founding-writers' };
+      } else if (landingPages[cleanPath]) {
         targetPage = { name: 'discovery-landing', path: cleanPath };
       } else if (publicRoute.kind === 'chapter') {
         targetPage = { name: 'reader', bookId: publicRoute.id, chapterId: publicRoute.chapterId, chapterIndex: -1 };
@@ -375,7 +385,7 @@ const App: React.FC = () => {
         targetPage = isAuthenticated ? { name: 'home' } : { name: 'features' };
       }
 
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications', 'admin-founding-writers'];
 
       if (protectedRoutes.includes(targetPage.name) && !sessionAuthenticated.current) {
         setIntendedPage(targetPage);
@@ -532,6 +542,10 @@ const App: React.FC = () => {
         return <FeaturesPage />;
       case 'about':
         return <AboutPage />;
+      case 'founding-writers':
+        return <FoundingWritersPage />;
+      case 'admin-founding-writers':
+        return <FoundingWriterAdminPage isAdmin={currentUser?.roles?.includes('ROLE_ADMIN') === true} />;
       case 'reset-password':
         return <ResetPasswordPage token={page.token} />;
       default:
