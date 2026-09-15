@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
 import { invalidateAuthSession, JWT_STORAGE_KEY } from '../utils/authSession';
 
 export { AUTH_SESSION_INVALID_EVENT } from '../utils/authSession';
@@ -373,6 +373,38 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
         })
     });
     await handleResponse(response);
+}
+
+export async function submitFoundingWriterApplication(data: FoundingWriterApplicationSubmission): Promise<{ success: true; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/public/founding-writer-applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok) {
+        throw new Error(result?.message || 'We couldn’t submit your application right now. Please try again shortly.');
+    }
+    return result;
+}
+
+export async function getFoundingWriterApplications(status?: FoundingWriterApplicationStatus): Promise<FoundingWriterApplication[]> {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const response = await fetch(`${API_BASE_URL}/admin/founding-writer-applications${query}`, { headers: getHeaders() });
+    return await handleResponse(response);
+}
+
+export async function updateFoundingWriterApplication(
+    id: string,
+    status: FoundingWriterApplicationStatus,
+    adminNotes: string
+): Promise<FoundingWriterApplication> {
+    const response = await fetch(`${API_BASE_URL}/admin/founding-writer-applications/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ status, adminNotes })
+    });
+    return await handleResponse(response);
 }
 
 export async function getChapterContent(bookId: string, chapterId: string): Promise<ChapterContentResult> {
@@ -912,7 +944,8 @@ function mapBackendUserToFrontend(backendData: any): User {
         writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend),
         hasSeenWritingDemo: backendData.hasSeenWritingDemo ?? false,
         dateOfBirth: backendData.dateOfBirth,
-        allowMatureContent: backendData.allowMatureContent ?? false
+        allowMatureContent: backendData.allowMatureContent ?? false,
+        roles: backendData.roles || []
     };
 }
 

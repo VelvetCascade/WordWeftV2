@@ -16,6 +16,7 @@ const footerGroups = [
     links: [
       ['Writing tools', '/writing-tools'],
       ['Publish stories', '/publish-stories'],
+      ['Founding Writers', '/founding-writers'],
       ['World-building tools', '/world-building-tools'],
       ['Writer studio', '/write'],
       ['Start a story', '/write/book/create'],

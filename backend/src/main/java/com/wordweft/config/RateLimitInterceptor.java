@@ -18,6 +18,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     private final Map<String, Bucket> globalBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> authBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> foundingWriterApplicationBuckets = new ConcurrentHashMap<>();
 
     private Bucket createNewGlobalBucket() {
         Bandwidth limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)));
@@ -29,13 +30,20 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return Bucket.builder().addLimit(limit).build();
     }
 
+    private Bucket createNewFoundingWriterApplicationBucket() {
+        Bandwidth limit = Bandwidth.classic(5, Refill.greedy(5, Duration.ofHours(1)));
+        return Bucket.builder().addLimit(limit).build();
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String ip = getClientIP(request);
         String path = request.getRequestURI();
 
         Bucket bucket;
-        if (path.startsWith("/api/auth/") || path.startsWith("/api/imagekit/")) {
+        if (path.equals("/api/public/founding-writer-applications")) {
+            bucket = foundingWriterApplicationBuckets.computeIfAbsent(ip, k -> createNewFoundingWriterApplicationBucket());
+        } else if (path.startsWith("/api/auth/") || path.startsWith("/api/imagekit/")) {
             bucket = authBuckets.computeIfAbsent(ip, k -> createNewAuthBucket());
         } else {
             bucket = globalBuckets.computeIfAbsent(ip, k -> createNewGlobalBucket());
