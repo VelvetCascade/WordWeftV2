@@ -21,15 +21,17 @@ class FoundingWriterApplicationServiceTest {
     private final FoundingWriterApplicationService service = new FoundingWriterApplicationService(repository);
 
     @Test
-    void storesANormalizedPendingApplication() {
+    void storesANormalizedPendingApplication() throws Exception {
         FoundingWriterApplicationRequest request = request();
         request.setEmail("  Writer@Example.COM ");
 
-        assertTrue(service.submit(request));
+        assertTrue(service.submit(request, file()));
 
         ArgumentCaptor<FoundingWriterApplication> saved = ArgumentCaptor.forClass(FoundingWriterApplication.class);
         verify(repository).insert(saved.capture());
         assertEquals("writer@example.com", saved.getValue().getEmail());
+        assertEquals("chapters.txt", saved.getValue().getChapterFileName());
+        assertArrayEquals(file().getBytes(), saved.getValue().getChapterFileData());
         assertEquals(FoundingWriterApplicationStatus.PENDING, saved.getValue().getStatus());
         assertNotNull(saved.getValue().getCreatedAt());
         assertEquals(saved.getValue().getCreatedAt(), saved.getValue().getUpdatedAt());
@@ -39,18 +41,18 @@ class FoundingWriterApplicationServiceTest {
     void rejectsDuplicatesIncludingInsertRaces() {
         FoundingWriterApplicationRequest request = request();
         when(repository.existsByEmail("writer@example.com")).thenReturn(true);
-        assertThrows(DuplicateFoundingWriterApplicationException.class, () -> service.submit(request));
+        assertThrows(DuplicateFoundingWriterApplicationException.class, () -> service.submit(request, file()));
 
         reset(repository);
         when(repository.insert(any(FoundingWriterApplication.class))).thenThrow(new DuplicateKeyException("unique email"));
-        assertThrows(DuplicateFoundingWriterApplicationException.class, () -> service.submit(request));
+        assertThrows(DuplicateFoundingWriterApplicationException.class, () -> service.submit(request, file()));
     }
 
     @Test
     void silentlyIgnoresHoneypotSubmissions() {
         FoundingWriterApplicationRequest request = request();
         request.setOrganizationName("Spam Incorporated");
-        assertFalse(service.submit(request));
+        assertFalse(service.submit(request, file()));
         verifyNoInteractions(repository);
     }
 
@@ -90,6 +92,52 @@ class FoundingWriterApplicationServiceTest {
         request.setWeeklyPublishingCommitted(true);
         request.setEarningsDisclaimerConfirmed(true);
         request.setTermsConfirmed(true);
+        request.setChaptersConfirmed(true);
         return request;
+    }
+
+    private org.springframework.mock.web.MockMultipartFile file() {
+        return new org.springframework.mock.web.MockMultipartFile("file", "chapters.txt", "text/plain",
+                "Chapter 1\nOpening\nChapter 2\nMiddle\nChapter 3\nEnding".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void rejectsMissingEmptyOversizedAndDisguisedFiles() {
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.submit(request(), null));
+        for (var invalid : java.util.List.of(
+                new org.springframework.mock.web.MockMultipartFile("file", "empty.txt", "text/plain", new byte[0]),
+                new org.springframework.mock.web.MockMultipartFile("file", "large.txt", "text/plain", new byte[5 * 1024 * 1024 + 1]),
+                new org.springframework.mock.web.MockMultipartFile("file", "fake.pdf", "application/pdf", "not a pdf".getBytes()),
+                new org.springframework.mock.web.MockMultipartFile("file", "fake.docx", "application/zip", "not a zip".getBytes()),
+                new org.springframework.mock.web.MockMultipartFile("file", "script.html", "text/html", "<script>".getBytes()))) {
+            assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.submit(request(), invalid));
+        }
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    void fileBytesAreNeverSerializedInApplicationJson() throws Exception {
+        var application = new FoundingWriterApplication();
+        application.setChapterFileData(file().getBytes());
+        application.setCreatedAt(null);
+        application.setUpdatedAt(null);
+        String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(application);
+        assertFalse(json.contains("chapterFileData"));
+    }
+
+    @Test
+    void acceptsPdfAndDocxContainersAndSanitizesNames() throws Exception {
+        var pdf = new org.springframework.mock.web.MockMultipartFile("file", "../../chapters.pdf", "application/pdf", "%PDF-1.7\nexample".getBytes());
+        assertEquals("chapters.pdf", ChapterFileValidator.validate(pdf).name());
+        var bytes = new java.io.ByteArrayOutputStream();
+        try (var zip = new java.util.zip.ZipOutputStream(bytes)) {
+            for (String name : java.util.List.of("[Content_Types].xml", "word/document.xml")) {
+                zip.putNextEntry(new java.util.zip.ZipEntry(name));
+                zip.write("<document/>".getBytes());
+                zip.closeEntry();
+            }
+        }
+        var docx = new org.springframework.mock.web.MockMultipartFile("file", "chapters.docx", "application/octet-stream", bytes.toByteArray());
+        assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", ChapterFileValidator.validate(docx).contentType());
     }
 }

@@ -60,12 +60,12 @@ public class FoundingWriterApplicationRequest {
     private String existingPublishingPlatform;
 
     @NotNull(message = "Drafted chapter count is required")
-    @Min(value = 0, message = "Drafted chapter count cannot be negative")
+    @Min(value = 3, message = "At least three drafted chapters are required")
     @Max(value = 10000, message = "Drafted chapter count is too large")
     private Integer draftedChapterCount;
 
     @NotNull(message = "Planned chapter count is required")
-    @Min(value = 1, message = "Planned chapter count must be at least 1")
+    @Min(value = 3, message = "Planned chapter count must be at least 3")
     @Max(value = 10000, message = "Planned chapter count is too large")
     private Integer plannedChapterCount;
 
@@ -94,10 +94,8 @@ public class FoundingWriterApplicationRequest {
     @Size(max = 200)
     private String organizationName;
 
-    @AssertTrue(message = "Provide a writing sample link, pasted sample, or public writing profile")
-    public boolean isWritingSampleProvided() {
-        return hasText(writingSampleUrl) || hasText(pastedWritingSample) || hasText(instagramProfileUrl);
-    }
+    @AssertTrue(message = "Confirm that your uploaded file contains at least three chapters")
+    private boolean chaptersConfirmed;
 
     public boolean isHoneypotFilled() {
         return hasText(organizationName);

@@ -19,6 +19,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import org.springframework.mock.web.MockMultipartFile;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest({FoundingWriterApplicationController.class, FoundingWriterAdminController.class})
@@ -32,20 +34,19 @@ class FoundingWriterApplicationControllerTest {
 
     @Test
     void guestsCanSubmitValidApplications() throws Exception {
-        when(service.submit(any())).thenReturn(true);
-        mvc.perform(post("/api/public/founding-writer-applications")
-                        .contentType("application/json")
-                        .content(validApplication()))
+        when(service.submit(any(), any())).thenReturn(true);
+        mvc.perform(multipart("/api/public/founding-writer-applications")
+                        .file(new MockMultipartFile("application", "", "application/json", validApplication().getBytes()))
+                        .file(new MockMultipartFile("file", "chapters.txt", "text/plain", "Chapter 1 Chapter 2 Chapter 3".getBytes())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Your application has been received."));
     }
 
     @Test
-    void rejectsApplicationsWithoutAnyWritingSample() throws Exception {
-        mvc.perform(post("/api/public/founding-writer-applications")
-                        .contentType("application/json")
-                        .content(validApplication().replace("Once upon a time", "")))
+    void rejectsApplicationsWithoutChapterFile() throws Exception {
+        mvc.perform(multipart("/api/public/founding-writer-applications")
+                        .file(new MockMultipartFile("application", "", "application/json", validApplication().getBytes())))
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(service);
     }
@@ -71,7 +72,7 @@ class FoundingWriterApplicationControllerTest {
                   "genre":"Fantasy",
                   "storyTitle":"A Story",
                   "storyDescription":"An original serial story.",
-                  "pastedWritingSample":"Once upon a time",
+                  "chaptersConfirmed":true,
                   "draftedChapterCount":3,
                   "plannedChapterCount":20,
                   "expectedCompletionPeriod":"TWO_TO_FOUR_MONTHS",
@@ -83,5 +84,35 @@ class FoundingWriterApplicationControllerTest {
                   "termsConfirmed":true
                 }
                 """;
+    }
+
+    @Test
+    void rejectsFewerThanThreeChaptersOrMissingConfirmation() throws Exception {
+        for (String json : List.of(validApplication().replace("\"draftedChapterCount\":3", "\"draftedChapterCount\":2"),
+                validApplication().replace("\"chaptersConfirmed\":true", "\"chaptersConfirmed\":false"))) {
+            mvc.perform(multipart("/api/public/founding-writer-applications")
+                            .file(new MockMultipartFile("application", "", "application/json", json.getBytes()))
+                            .file(new MockMultipartFile("file", "chapters.txt", "text/plain", "Chapters".getBytes())))
+                    .andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void chapterDownloadsAreAdminOnlyAttachments() throws Exception {
+        mvc.perform(get("/api/admin/founding-writer-applications/id/chapter-file").with(user("reader").roles("USER")))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(service);
+        var application = new com.wordweft.foundingwriter.model.FoundingWriterApplication();
+        application.setChapterFileName("chapters.txt");
+        application.setChapterFileData("chapters".getBytes());
+        application.setChapterFileSize(8);
+        when(service.chapterFile("id")).thenReturn(application);
+        mvc.perform(get("/api/admin/founding-writer-applications/id/chapter-file").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.startsWith("attachment;")))
+                .andExpect(content().bytes("chapters".getBytes()));
     }
 }

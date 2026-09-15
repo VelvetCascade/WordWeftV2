@@ -18,7 +18,7 @@ const requirements = [
   'You must be at least 18 years old.',
   'Your submitted story must be original, or you must have the legal right to publish it.',
   'Begin with one fiction story.',
-  'Have at least three chapters ready, or be able to prepare them within two weeks of acceptance.',
+  'Upload a file containing at least three chapters of your story with your application.',
   'After publishing begins, normally publish at least one chapter per week until the story is completed.',
   'Take reasonable breaks when needed, as long as you communicate with the WordWeft team.',
   'Genuinely intend to complete your submitted story rather than publish a few chapters and abandon it.',
@@ -60,7 +60,7 @@ const initialForm: FormState = {
   existingPublishingPlatform: '', draftedChapterCount: '', plannedChapterCount: '',
   expectedCompletionPeriod: '', ageConfirmed: false, rightsConfirmed: false,
   completionCommitted: false, weeklyPublishingCommitted: false,
-  earningsDisclaimerConfirmed: false, termsConfirmed: false, organizationName: '',
+  earningsDisclaimerConfirmed: false, termsConfirmed: false, organizationName: '', chaptersConfirmed: false,
 };
 
 export const FoundingWritersPage: React.FC = () => {
@@ -69,6 +69,7 @@ export const FoundingWritersPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [chapterFile, setChapterFile] = useState<File | null>(null);
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm(previous => ({ ...previous, [field]: value }));
@@ -79,11 +80,9 @@ export const FoundingWritersPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const hasWritingSample = [form.writingSampleUrl, form.pastedWritingSample, form.instagramProfileUrl]
-      .some(value => value?.trim());
-    if (!hasWritingSample) {
-      setError('Please provide a writing sample link, paste a sample, or add a public writing profile.');
-      document.getElementById('fw-sample-group')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!chapterFile || chapterFile.size === 0 || chapterFile.size > 5 * 1024 * 1024 || !/\.(pdf|docx|txt)$/i.test(chapterFile.name)) {
+      setError('Upload a non-empty PDF, DOCX, or TXT file, up to 5 MB, containing at least three chapters.');
+      document.getElementById('fw-chapter-file')?.focus();
       return;
     }
 
@@ -95,7 +94,7 @@ export const FoundingWritersPage: React.FC = () => {
         expectedCompletionPeriod: form.expectedCompletionPeriod as FoundingWriterCompletionPeriod,
         draftedChapterCount: Number(form.draftedChapterCount),
         plannedChapterCount: Number(form.plannedChapterCount),
-      });
+      }, chapterFile);
       setSubmitted(true);
       requestAnimationFrame(scrollToForm);
     } catch (failure) {
@@ -137,7 +136,7 @@ export const FoundingWritersPage: React.FC = () => {
           <article className="fw-benefit-card fw-benefit-card-featured">
             <span><BadgeCheck size={17} /></span>
             <div>
-              <p>Zero WordWeft platform commission on the first ₹25,000 of eligible net earnings or for 12 months after paid publishing launches, whichever comes first</p>
+              <p>For the first 10 Founding Writers: zero WordWeft platform commission on the first ₹25,000 of eligible net earnings or for 12 months after paid publishing launches, whichever comes first</p>
               <small>Paid publishing is not currently live. Payment-processing charges, applicable taxes, refunds and legally required deductions may still apply. WordWeft does not guarantee earnings or a particular number of readers.</small>
             </div>
           </article>
@@ -201,14 +200,15 @@ export const FoundingWritersPage: React.FC = () => {
                   <label className="fw-field">Primary genre <b>*</b><select required value={form.genre} onChange={event => setField('genre', event.target.value)}><option value="">Choose a genre</option>{genres.map(genre => <option key={genre}>{genre}</option>)}</select></label>
                   <label className="fw-field">Story title <b>*</b><input required maxLength={200} value={form.storyTitle} onChange={event => setField('storyTitle', event.target.value)} /></label>
                   <label className="fw-field fw-field-wide">Short story description <b>*</b><textarea required rows={5} maxLength={1000} value={form.storyDescription} onChange={event => setField('storyDescription', event.target.value)} /><em>{form.storyDescription.length}/1,000</em></label>
-                  <div className="fw-sample-group fw-field-wide" id="fw-sample-group">
-                    <div><strong>Share a sample of your writing <b>*</b></strong><p>Provide at least one link, pasted sample or public writing profile above.</p></div>
-                    <label className="fw-field">Writing sample link <small>Optional</small><input type="url" maxLength={500} placeholder="https://" value={form.writingSampleUrl} onChange={event => setField('writingSampleUrl', event.target.value)} /></label>
-                    <label className="fw-field">Paste a writing sample <small>Optional</small><textarea rows={7} maxLength={3000} value={form.pastedWritingSample} onChange={event => setField('pastedWritingSample', event.target.value)} /><em>{form.pastedWritingSample?.length || 0}/3,000</em></label>
+                  <div className="fw-sample-group fw-field-wide">
+                    <div><strong>Upload your chapters <b>*</b></strong><p>Include at least three chapters in one PDF, DOCX, or TXT file (up to 5 MB). Clearly label each chapter. Your file is private and available only to WordWeft administrators for review.</p></div>
+                    <label className="fw-field">Chapter file <b>*</b><input id="fw-chapter-file" required type="file" accept=".pdf,.docx,.txt" aria-describedby="fw-upload-help" onChange={event => { setChapterFile(event.target.files?.[0] || null); setError(''); }} /></label>
+                    <p id="fw-upload-help" role="status">{chapterFile ? `${chapterFile.name} · ${(chapterFile.size / 1024 / 1024).toFixed(2)} MB selected. Uploaded when you submit.` : 'Choose one file containing at least three chapters.'}</p>
+                    <div className="fw-confirmations"><label><input required type="checkbox" checked={form.chaptersConfirmed} onChange={event => setField('chaptersConfirmed', event.target.checked)} /><span>I confirm that this file contains at least three chapters of my story.</span></label></div>
                   </div>
                   <label className="fw-field fw-field-wide">Where do you currently publish? <small>Optional</small><input maxLength={300} placeholder="A platform name, publication or your own site" value={form.existingPublishingPlatform} onChange={event => setField('existingPublishingPlatform', event.target.value)} /></label>
-                  <label className="fw-field">Chapters already drafted <b>*</b><input required type="number" min={0} max={10000} inputMode="numeric" value={form.draftedChapterCount} onChange={event => setField('draftedChapterCount', event.target.value)} /></label>
-                  <label className="fw-field">Estimated total chapters <b>*</b><input required type="number" min={1} max={10000} inputMode="numeric" value={form.plannedChapterCount} onChange={event => setField('plannedChapterCount', event.target.value)} /></label>
+                  <label className="fw-field">Chapters already drafted <b>*</b><input required type="number" min={3} max={10000} inputMode="numeric" value={form.draftedChapterCount} onChange={event => setField('draftedChapterCount', event.target.value)} /></label>
+                  <label className="fw-field">Estimated total chapters <b>*</b><input required type="number" min={3} max={10000} inputMode="numeric" value={form.plannedChapterCount} onChange={event => setField('plannedChapterCount', event.target.value)} /></label>
                   <label className="fw-field fw-field-wide">How long do you expect to take to complete it? <b>*</b><select required value={form.expectedCompletionPeriod} onChange={event => setField('expectedCompletionPeriod', event.target.value as FoundingWriterCompletionPeriod)}><option value="">Choose a timeframe</option>{completionPeriods.map(period => <option value={period.value} key={period.value}>{period.label}</option>)}</select></label>
                 </div>
               </fieldset>

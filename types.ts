@@ -212,9 +212,12 @@ export interface FoundingWriterApplicationSubmission {
   earningsDisclaimerConfirmed: boolean;
   termsConfirmed: boolean;
   organizationName?: string;
+  chaptersConfirmed: boolean;
 }
 
 export interface FoundingWriterApplication extends Omit<FoundingWriterApplicationSubmission, 'organizationName'> {
+  chapterFileName?: string;
+  chapterFileSize?: number;
   id: string;
   status: FoundingWriterApplicationStatus;
   adminNotes?: string;

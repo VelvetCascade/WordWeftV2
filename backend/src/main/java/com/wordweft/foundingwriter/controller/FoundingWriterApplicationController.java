@@ -29,16 +29,20 @@ public class FoundingWriterApplicationController {
         this.service = service;
     }
 
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> submit(@Valid @RequestBody FoundingWriterApplicationRequest request) {
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<Map<String, Object>> submit(
+            @Valid @org.springframework.web.bind.annotation.RequestPart("application") FoundingWriterApplicationRequest request,
+            @org.springframework.web.bind.annotation.RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
         try {
-            service.submit(request);
+            service.submit(request, file);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("success", true, "message", SUCCESS_MESSAGE));
         } catch (DuplicateFoundingWriterApplicationException duplicate) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "success", false,
                     "errorCode", "DUPLICATE_APPLICATION",
                     "message", DUPLICATE_MESSAGE));
+        } catch (org.springframework.web.server.ResponseStatusException invalid) {
+            return ResponseEntity.status(invalid.getStatusCode()).body(Map.of("success", false, "message", invalid.getReason()));
         } catch (Exception failure) {
             log.error("Unable to store a founding writer application", failure);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
