@@ -22,8 +22,10 @@ public class FoundingWriterApplicationService {
         this.repository = repository;
     }
 
-    public boolean submit(FoundingWriterApplicationRequest request) {
+    public boolean submit(FoundingWriterApplicationRequest request, org.springframework.web.multipart.MultipartFile file) {
         if (request.isHoneypotFilled()) return false;
+
+        var chapterFile = ChapterFileValidator.validate(file);
 
         String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
         if (repository.existsByEmail(email)) throw new DuplicateFoundingWriterApplicationException();
@@ -39,6 +41,11 @@ public class FoundingWriterApplicationService {
         application.setStoryDescription(required(request.getStoryDescription()));
         application.setWritingSampleUrl(optional(request.getWritingSampleUrl()));
         application.setPastedWritingSample(optional(request.getPastedWritingSample()));
+        application.setChapterFileName(chapterFile.name());
+        application.setChapterFileContentType(chapterFile.contentType());
+        application.setChapterFileSize(chapterFile.data().length);
+        application.setChapterFileData(chapterFile.data());
+        application.setChaptersConfirmed(request.isChaptersConfirmed());
         application.setExistingPublishingPlatform(optional(request.getExistingPublishingPlatform()));
         application.setDraftedChapterCount(request.getDraftedChapterCount());
         application.setPlannedChapterCount(request.getPlannedChapterCount());
@@ -67,6 +74,15 @@ public class FoundingWriterApplicationService {
         return status == null
                 ? repository.findAllByOrderByCreatedAtDesc()
                 : repository.findByStatusOrderByCreatedAtDesc(status);
+    }
+
+    public FoundingWriterApplication chapterFile(String id) {
+        var application = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found."));
+        if (application.getChapterFileData() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No chapter file was uploaded with this application.");
+        }
+        return application;
     }
 
     public FoundingWriterApplication update(String id, FoundingWriterApplicationUpdateRequest request) {

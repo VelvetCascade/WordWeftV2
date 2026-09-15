@@ -28,6 +28,13 @@ public class FoundingWriterApplication {
     private String storyDescription;
     private String writingSampleUrl;
     private String pastedWritingSample;
+    private String chapterFileName;
+    private String chapterFileContentType;
+    private long chapterFileSize;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @lombok.ToString.Exclude
+    private byte[] chapterFileData;
+    private boolean chaptersConfirmed;
     private String existingPublishingPlatform;
     private int draftedChapterCount;
     private int plannedChapterCount;

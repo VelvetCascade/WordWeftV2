@@ -375,11 +375,13 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
     await handleResponse(response);
 }
 
-export async function submitFoundingWriterApplication(data: FoundingWriterApplicationSubmission): Promise<{ success: true; message: string }> {
+export async function submitFoundingWriterApplication(data: FoundingWriterApplicationSubmission, file: File): Promise<{ success: true; message: string }> {
+    const body = new FormData();
+    body.append('application', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    body.append('file', file);
     const response = await fetch(`${API_BASE_URL}/public/founding-writer-applications`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body
     });
     const result = await response.json().catch(() => null);
     if (!response.ok) {
@@ -392,6 +394,21 @@ export async function getFoundingWriterApplications(status?: FoundingWriterAppli
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
     const response = await fetch(`${API_BASE_URL}/admin/founding-writer-applications${query}`, { headers: getHeaders() });
     return await handleResponse(response);
+}
+
+export async function downloadFoundingWriterChapters(id: string, filename: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/admin/founding-writer-applications/${encodeURIComponent(id)}/chapter-file`, {
+        headers: getHeaders(), cache: 'no-store'
+    });
+    if (!response.ok) throw new Error('The chapter file could not be downloaded. Check your admin access and try again.');
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function updateFoundingWriterApplication(

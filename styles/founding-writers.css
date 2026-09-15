@@ -262,6 +262,9 @@
 .fw-field select,
 .fw-field textarea { display: block; width: 100%; min-height: 48px; margin-top: 8px; padding: 12px 13px; color: var(--ww-ink); border: 1px solid var(--ww-line); border-radius: 8px; outline: none; background: var(--ww-paper); font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 400; transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease; }
 .fw-field textarea { min-height: 126px; resize: vertical; line-height: 1.6; }
+.fw-field input[type="file"] { padding: 10px; font-size: 0.875rem; }
+.fw-field input[type="file"]::file-selector-button { margin-right: 12px; padding: 8px 12px; border: 0; border-radius: 6px; color: var(--ww-brand-strong); background: var(--ww-brand-soft); font: inherit; font-weight: 600; cursor: pointer; }
+#fw-upload-help { overflow-wrap: anywhere; }
 .fw-field input:focus,
 .fw-field select:focus,
 .fw-field textarea:focus { border-color: var(--ww-brand); background: var(--ww-paper-strong); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ww-brand) 13%, transparent); }

@@ -36,4 +36,17 @@ public class FoundingWriterAdminController {
             @Valid @RequestBody FoundingWriterApplicationUpdateRequest request) {
         return service.update(id, request);
     }
+
+    @GetMapping("/{id}/chapter-file")
+    public org.springframework.http.ResponseEntity<byte[]> download(@PathVariable String id) {
+        var application = service.chapterFile(id);
+        return org.springframework.http.ResponseEntity.ok()
+                .header("Cache-Control", "private, no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Disposition", org.springframework.http.ContentDisposition.attachment()
+                        .filename(application.getChapterFileName(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(application.getChapterFileSize())
+                .body(application.getChapterFileData());
+    }
 }
