@@ -1,25 +1,41 @@
 package com.wordweft.foundingwriter.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordweft.foundingwriter.dto.FoundingWriterApplicationRequest;
 import com.wordweft.foundingwriter.dto.FoundingWriterApplicationUpdateRequest;
 import com.wordweft.foundingwriter.model.FoundingWriterApplication;
 import com.wordweft.foundingwriter.model.FoundingWriterApplicationStatus;
 import com.wordweft.foundingwriter.repository.FoundingWriterApplicationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
 @Service
 public class FoundingWriterApplicationService {
-    private final FoundingWriterApplicationRepository repository;
+    private static final Logger log = LoggerFactory.getLogger(FoundingWriterApplicationService.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public FoundingWriterApplicationService(FoundingWriterApplicationRepository repository) {
+    private final FoundingWriterApplicationRepository repository;
+    private final UploadTokenService uploadTokenService;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    public FoundingWriterApplicationService(
+            FoundingWriterApplicationRepository repository,
+            UploadTokenService uploadTokenService) {
         this.repository = repository;
+        this.uploadTokenService = uploadTokenService;
     }
 
     public boolean submit(FoundingWriterApplicationRequest request, org.springframework.web.multipart.MultipartFile file) {
@@ -44,7 +60,6 @@ public class FoundingWriterApplicationService {
         application.setChapterFileName(chapterFile.name());
         application.setChapterFileContentType(chapterFile.contentType());
         application.setChapterFileSize(chapterFile.data().length);
-        application.setChapterFileData(chapterFile.data());
         application.setChaptersConfirmed(request.isChaptersConfirmed());
         application.setExistingPublishingPlatform(optional(request.getExistingPublishingPlatform()));
         application.setDraftedChapterCount(request.getDraftedChapterCount());
@@ -58,6 +73,7 @@ public class FoundingWriterApplicationService {
         application.setTermsConfirmed(request.isTermsConfirmed());
         application.setStatus(FoundingWriterApplicationStatus.PENDING);
         application.setAdminNotes(null);
+        application.setFileUploaded(false);
         Instant now = Instant.now();
         application.setCreatedAt(now);
         application.setUpdatedAt(now);
@@ -67,22 +83,63 @@ public class FoundingWriterApplicationService {
         } catch (DuplicateKeyException duplicate) {
             throw new DuplicateFoundingWriterApplicationException();
         }
+
+        // Upload file to R2 via Cloudflare Worker (server-to-server — token never reaches the browser)
+        try {
+            String r2Key = uploadToR2(application.getId(), chapterFile.name(), chapterFile.contentType(), chapterFile.data());
+            application.setR2FileKey(r2Key);
+            application.setFileUploaded(true);
+            application.setUpdatedAt(Instant.now());
+            repository.save(application);
+        } catch (Exception e) {
+            log.error("R2 upload failed for application {}. Admin will see fileUploaded=false.", application.getId(), e);
+        }
+
         return true;
+    }
+
+    /**
+     * Uploads a chapter file to R2 via the Cloudflare Worker.
+     * The HMAC token is generated and consumed entirely server-side — it never leaves this JVM.
+     */
+    private String uploadToR2(String applicationId, String fileName, String contentType, byte[] data) {
+        String token = uploadTokenService.generateUploadToken(applicationId, fileName, data.length);
+        String url = uploadTokenService.getWorkerBaseUrl() + "/upload/" + applicationId;
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .PUT(HttpRequest.BodyPublishers.ofByteArray(data))
+                    .header("Authorization", "Bearer " + token)
+                    .header("Content-Type", contentType)
+                    .header("X-File-Name", fileName)
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Worker returned HTTP " + response.statusCode() + ": " + response.body());
+            }
+
+            JsonNode result = objectMapper.readTree(response.body());
+            return result.get("r2Key").asText();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("R2 upload was interrupted", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload to R2: " + e.getMessage(), e);
+        }
+    }
+
+    public FoundingWriterApplication findById(String id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found."));
     }
 
     public List<FoundingWriterApplication> list(FoundingWriterApplicationStatus status) {
         return status == null
                 ? repository.findAllByOrderByCreatedAtDesc()
                 : repository.findByStatusOrderByCreatedAtDesc(status);
-    }
-
-    public FoundingWriterApplication chapterFile(String id) {
-        var application = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found."));
-        if (application.getChapterFileData() == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No chapter file was uploaded with this application.");
-        }
-        return application;
     }
 
     public FoundingWriterApplication update(String id, FoundingWriterApplicationUpdateRequest request) {

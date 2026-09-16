@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,8 +19,8 @@ import java.util.Map;
 public class FoundingWriterApplicationController {
     private static final Logger log = LoggerFactory.getLogger(FoundingWriterApplicationController.class);
     private static final String SUCCESS_MESSAGE = "Your application has been received.";
-    private static final String DUPLICATE_MESSAGE = "It looks like an application has already been submitted with this email address. We’ll review the application already on file.";
-    private static final String FAILURE_MESSAGE = "We couldn’t submit your application right now. Please try again shortly.";
+    private static final String DUPLICATE_MESSAGE = "It looks like an application has already been submitted with this email address. We'll review the application already on file.";
+    private static final String FAILURE_MESSAGE = "We couldn't submit your application right now. Please try again shortly.";
 
     private final FoundingWriterApplicationService service;
 

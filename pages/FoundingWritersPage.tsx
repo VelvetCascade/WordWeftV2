@@ -98,7 +98,7 @@ export const FoundingWritersPage: React.FC = () => {
       setSubmitted(true);
       requestAnimationFrame(scrollToForm);
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : 'We couldn’t submit your application right now. Please try again shortly.');
+      setError(failure instanceof Error ? failure.message : 'We couldn\'t submit your application right now. Please try again shortly.');
     } finally {
       setSubmitting(false);
     }
@@ -136,7 +136,7 @@ export const FoundingWritersPage: React.FC = () => {
           <article className="fw-benefit-card fw-benefit-card-featured">
             <span><BadgeCheck size={17} /></span>
             <div>
-              <p>For the first 10 Founding Writers: zero WordWeft platform commission on the first ₹25,000 of eligible net earnings or for 12 months after paid publishing launches, whichever comes first</p>
+              <p>For the first 10 Founding Writers: zero WordWeft platform commission on the first ₹50,000 (or $500) of eligible net earnings or for 12 months after paid publishing launches, whichever comes first</p>
               <small>Paid publishing is not currently live. Payment-processing charges, applicable taxes, refunds and legally required deductions may still apply. WordWeft does not guarantee earnings or a particular number of readers.</small>
             </div>
           </article>

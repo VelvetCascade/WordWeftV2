@@ -385,7 +385,7 @@ export async function submitFoundingWriterApplication(data: FoundingWriterApplic
     });
     const result = await response.json().catch(() => null);
     if (!response.ok) {
-        throw new Error(result?.message || 'We couldn’t submit your application right now. Please try again shortly.');
+        throw new Error(result?.message || 'We couldn\'t submit your application right now. Please try again shortly.');
     }
     return result;
 }
@@ -396,19 +396,15 @@ export async function getFoundingWriterApplications(status?: FoundingWriterAppli
     return await handleResponse(response);
 }
 
-export async function downloadFoundingWriterChapters(id: string, filename: string): Promise<void> {
+export async function downloadFoundingWriterChapters(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/admin/founding-writer-applications/${encodeURIComponent(id)}/chapter-file`, {
         headers: getHeaders(), cache: 'no-store'
     });
     if (!response.ok) throw new Error('The chapter file could not be downloaded. Check your admin access and try again.');
-    const url = URL.createObjectURL(await response.blob());
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const result = await response.json();
+    const downloadUrl = result.downloadUrl;
+    if (!downloadUrl) throw new Error('Download URL not available.');
+    window.open(downloadUrl, '_blank');
 }
 
 export async function updateFoundingWriterApplication(

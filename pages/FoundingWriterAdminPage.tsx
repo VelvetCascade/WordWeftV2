@@ -37,7 +37,7 @@ const ReviewCard: React.FC<{
     if (!application.chapterFileName) return;
     setDownloading(true);
     setMessage('');
-    try { await downloadFoundingWriterChapters(application.id, application.chapterFileName); }
+    try { await downloadFoundingWriterChapters(application.id); }
     catch (error) { setMessage(error instanceof Error ? error.message : 'Download failed. Please try again.'); }
     finally { setDownloading(false); }
   };
@@ -68,7 +68,7 @@ const ReviewCard: React.FC<{
       </summary>
       <div className="fw-admin-body">
         <dl className="fw-admin-details">
-          <div className="fw-admin-detail fw-admin-detail-wide"><dt>Uploaded chapters</dt><dd>{application.chapterFileName ? <><p>{application.chapterFileName} · {((application.chapterFileSize || 0) / 1024 / 1024).toFixed(2)} MB</p><button className="fw-secondary-button" type="button" disabled={downloading} onClick={download}>{downloading ? 'Downloading…' : 'Download chapter file'}</button><p>Open the downloaded file to review it and verify that it contains at least three chapters.</p></> : 'No chapter file — submitted using the previous application form.'}</dd></div>
+          <div className="fw-admin-detail fw-admin-detail-wide"><dt>Uploaded chapters</dt><dd>{application.chapterFileName && application.fileUploaded ? <><p>{application.chapterFileName} · {((application.chapterFileSize || 0) / 1024 / 1024).toFixed(2)} MB</p><button className="fw-secondary-button" type="button" disabled={downloading} onClick={download}>{downloading ? 'Downloading…' : 'Download chapter file'}</button><p>Open the downloaded file to review it and verify that it contains at least three chapters.</p></> : application.chapterFileName ? 'Chapter file upload is pending.' : 'No chapter file — submitted using the previous application form.'}</dd></div>
           <div className="fw-admin-detail"><dt>Applicant</dt><dd>{application.fullName}</dd></div>
           <div className="fw-admin-detail"><dt>Pen name</dt><dd>{application.penName || 'Not provided'}</dd></div>
           <div className="fw-admin-detail"><dt>Country</dt><dd>{application.country}</dd></div>

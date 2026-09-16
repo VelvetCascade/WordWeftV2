@@ -1,0 +1,13 @@
+name = "wordweft-fw-uploads"
+main = "src/index.ts"
+compatibility_date = "2024-05-12"
+
+[[r2_buckets]]
+binding = "CHAPTERS_BUCKET"
+bucket_name = "wordweft-writer-fw-submission"
+
+[vars]
+ALLOWED_ORIGINS = "https://word-weft-v2.vercel.app,https://wordweftstudio.com,http://localhost:5173"
+
+# UPLOAD_SIGNING_SECRET must be set via:
+# npx wrangler secret put UPLOAD_SIGNING_SECRET

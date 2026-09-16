@@ -218,11 +218,14 @@ export interface FoundingWriterApplicationSubmission {
 export interface FoundingWriterApplication extends Omit<FoundingWriterApplicationSubmission, 'organizationName'> {
   chapterFileName?: string;
   chapterFileSize?: number;
+  r2FileKey?: string;
+  fileUploaded?: boolean;
   id: string;
   status: FoundingWriterApplicationStatus;
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;
+}
 }
 
 export interface WriterAnalyticsSummary {
