@@ -104,15 +104,13 @@ class FoundingWriterApplicationControllerTest {
                 .andExpect(status().isForbidden());
         verifyNoInteractions(service);
         var application = new com.wordweft.foundingwriter.model.FoundingWriterApplication();
+        application.setId("id");
+        application.setR2FileKey("secret.pdf");
         application.setChapterFileName("chapters.txt");
-        application.setChapterFileData("chapters".getBytes());
-        application.setChapterFileSize(8);
-        when(service.chapterFile("id")).thenReturn(application);
+        application.setFileUploaded(true);
+        when(service.findById("id")).thenReturn(application);
         mvc.perform(get("/api/admin/founding-writer-applications/id/chapter-file").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.startsWith("attachment;")))
-                .andExpect(content().bytes("chapters".getBytes()));
+                .andExpect(jsonPath("$.downloadUrl").value("https://worker.dev/download/..."));
     }
 }
