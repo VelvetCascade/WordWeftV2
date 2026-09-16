@@ -70,6 +70,7 @@ export const FoundingWritersPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [chapterFile, setChapterFile] = useState<File | null>(null);
+  const [uploadPercent, setUploadPercent] = useState(0);
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm(previous => ({ ...previous, [field]: value }));
@@ -87,6 +88,7 @@ export const FoundingWritersPage: React.FC = () => {
     }
 
     setSubmitting(true);
+    setUploadPercent(0);
     setError('');
     try {
       await submitFoundingWriterApplication({
@@ -94,13 +96,16 @@ export const FoundingWritersPage: React.FC = () => {
         expectedCompletionPeriod: form.expectedCompletionPeriod as FoundingWriterCompletionPeriod,
         draftedChapterCount: Number(form.draftedChapterCount),
         plannedChapterCount: Number(form.plannedChapterCount),
-      }, chapterFile);
+      }, chapterFile, (percent) => {
+        setUploadPercent(percent);
+      });
       setSubmitted(true);
       requestAnimationFrame(scrollToForm);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'We couldn\'t submit your application right now. Please try again shortly.');
     } finally {
       setSubmitting(false);
+      setUploadPercent(0);
     }
   };
 
@@ -217,9 +222,9 @@ export const FoundingWritersPage: React.FC = () => {
                 <legend><span>03</span> Confirmations</legend>
                 <div className="fw-confirmations">
                   {confirmations.map(([field, label]) => (
-                    <label key={field}><input required type="checkbox" checked={form[field]} onChange={event => setField(field, event.target.checked)} /><span>{label}</span></label>
+                    <label key={field} className={form[field] ? 'is-checked' : ''}><input required type="checkbox" checked={form[field]} onChange={event => setField(field, event.target.checked)} /><span>{label}</span></label>
                   ))}
-                  <label><input required type="checkbox" checked={form.termsConfirmed} onChange={event => setField('termsConfirmed', event.target.checked)} /><span>I agree to the WordWeft <a href="/terms" target="_blank" rel="noreferrer">Terms</a> and <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>
+                  <label className={form.termsConfirmed ? 'is-checked' : ''}><input required type="checkbox" checked={form.termsConfirmed} onChange={event => setField('termsConfirmed', event.target.checked)} /><span>I agree to the WordWeft <a href="/terms" target="_blank" rel="noreferrer">Terms</a> and <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>
                 </div>
               </fieldset>
 
@@ -228,10 +233,39 @@ export const FoundingWritersPage: React.FC = () => {
               </div>
 
               {error && <p className="fw-form-error" role="alert">{error}</p>}
-              <div className="fw-submit-row">
-                <p>We’ll use your information only to review and respond to this application.</p>
-                <button className="fw-primary-button" type="submit" disabled={submitting}>{submitting ? 'Sending application…' : 'Submit application'} {!submitting && <ArrowRight size={18} />}</button>
-              </div>
+
+              {submitting ? (
+                <div className="fw-upload-progress-card" role="status" aria-live="polite">
+                  <div className="fw-upload-progress-header">
+                    <div className="fw-upload-progress-status">
+                      <span className="fw-upload-spinner" aria-hidden="true" />
+                      <span>{uploadPercent >= 100 ? 'Recording your application…' : 'Uploading manuscript…'}</span>
+                    </div>
+                    <span className="fw-upload-progress-percent">{uploadPercent}%</span>
+                  </div>
+
+                  <div className="fw-upload-track">
+                    <div
+                      className="fw-upload-fill"
+                      style={{ width: `${Math.max(6, uploadPercent)}%` }}
+                    />
+                  </div>
+
+                  <div className="fw-upload-progress-footer">
+                    <span className="fw-upload-filename">
+                      {chapterFile?.name} {chapterFile?.size ? `(${(chapterFile.size / (1024 * 1024)).toFixed(1)} MB)` : ''}
+                    </span>
+                    <span>Please keep this page open until complete.</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="fw-submit-row">
+                  <p>We’ll use your information only to review and respond to this application.</p>
+                  <button className="fw-primary-button" type="submit">
+                    Submit application <ArrowRight size={18} />
+                  </button>
+                </div>
+              )}
             </form>
           )}
         </div>

@@ -375,19 +375,47 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
     await handleResponse(response);
 }
 
-export async function submitFoundingWriterApplication(data: FoundingWriterApplicationSubmission, file: File): Promise<{ success: true; message: string }> {
-    const body = new FormData();
-    body.append('application', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-    body.append('file', file);
-    const response = await fetch(`${API_BASE_URL}/public/founding-writer-applications`, {
-        method: 'POST',
-        body
+export async function submitFoundingWriterApplication(
+    data: FoundingWriterApplicationSubmission,
+    file: File,
+    onProgress?: (percent: number) => void
+): Promise<{ success: true; message: string }> {
+    return new Promise((resolve, reject) => {
+        const body = new FormData();
+        body.append('application', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+        body.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_BASE_URL}/public/founding-writer-applications`);
+
+        if (xhr.upload && onProgress) {
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable && event.total > 0) {
+                    const percent = Math.min(100, Math.round((event.loaded / event.total) * 100));
+                    onProgress(percent);
+                }
+            });
+        }
+
+        xhr.onload = () => {
+            let result: any = null;
+            try {
+                result = JSON.parse(xhr.responseText);
+            } catch {}
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(result || { success: true, message: 'Your application has been received.' });
+            } else {
+                reject(new Error(result?.message || "We couldn't submit your application right now. Please try again shortly."));
+            }
+        };
+
+        xhr.onerror = () => {
+            reject(new Error("Network connection error. Please check your internet connection and try again."));
+        };
+
+        xhr.send(body);
     });
-    const result = await response.json().catch(() => null);
-    if (!response.ok) {
-        throw new Error(result?.message || 'We couldn\'t submit your application right now. Please try again shortly.');
-    }
-    return result;
 }
 
 export async function getFoundingWriterApplications(status?: FoundingWriterApplicationStatus): Promise<FoundingWriterApplication[]> {

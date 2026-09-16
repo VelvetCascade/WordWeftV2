@@ -209,286 +209,290 @@ async function drawStoryPoster(
     chapter: Book['chapters'][0] | undefined,
     themeName: PosterTheme
 ) {
+    // ── Fixed 9:16 Story dimensions (Instagram / TikTok standard) ──
     const W = 1080;
-    
-    // ── Pre-calculate dynamic height to avoid blank space ──
-    // Create a temporary context to measure text
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = W;
-    const tempCtx = tempCanvas.getContext('2d')!;
-    
-    let infoHeight = 32; // initial top padding for bottom panel
-    if (chapter) {
-        infoHeight += 50 + 46;
-    }
-    infoHeight += 54; // author name
-    
-    const genres = (book.genres || []).slice(0, 3);
-    if (genres.length > 0) {
-        infoHeight += 62;
-    }
-    
-    if (book.rating > 0) {
-        infoHeight += 58;
-    }
-    
-    if (!chapter && book.summary) {
-        tempCtx.font = 'italic 27px "Literata", Georgia, serif';
-        const summaryLines = wrapText(tempCtx, book.summary, W - 120);
-        infoHeight += Math.min(3, summaryLines.length) * 38;
-    }
-    
-    const fixedCoverH = 1190; // Fixed cover height (from 1920 * 0.62)
-    const footerH = 100;
-    const bottomPadding = 30; // padding before footer
-    const H = fixedCoverH + 10 + infoHeight + bottomPadding + footerH; // 10 is panelY offset
+    const H = 1920;
 
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d')!;
     const t = POSTER_THEMES[themeName];
 
-    // ── 1. Solid background (bottom portion color) ──
-    ctx.fillStyle = t.bg[0];
+    // ── 1. Smooth atmospheric background ──
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, t.bg[0]);
+    bgGrad.addColorStop(0.42, t.bg[1]);
+    bgGrad.addColorStop(1, t.bg[2]);
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // ── 2. Full-bleed cover image (top 62% of poster) ──
-    const coverAreaH = fixedCoverH;
-    const coverImg = await loadImage(book.coverUrl);
-
-    ctx.save();
-    // Rounded top corners only
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(W, 0);
-    ctx.lineTo(W, coverAreaH);
-    ctx.lineTo(0, coverAreaH);
-    ctx.closePath();
-    ctx.clip();
-
-    if (coverImg) {
-        // Cover-fit: scale to fill the entire width, cropping height if needed
-        const imgAspect = coverImg.naturalWidth / coverImg.naturalHeight;
-        const areaAspect = W / coverAreaH;
-        let sx = 0, sy = 0, sw = coverImg.naturalWidth, sh = coverImg.naturalHeight;
-        if (imgAspect > areaAspect) {
-            // Image is wider — crop sides
-            sw = coverImg.naturalHeight * areaAspect;
-            sx = (coverImg.naturalWidth - sw) / 2;
-        } else {
-            // Image is taller — crop bottom (keep top)
-            sh = coverImg.naturalWidth / areaAspect;
-            sy = 0;
-        }
-        ctx.drawImage(coverImg, sx, sy, sw, sh, 0, 0, W, coverAreaH);
-    } else {
-        // Fallback gradient
-        const [fc1, fc2] = getGenreFallbackColors(book.genres);
-        const fallGrad = ctx.createLinearGradient(0, 0, W, coverAreaH);
-        fallGrad.addColorStop(0, fc1);
-        fallGrad.addColorStop(1, fc2);
-        ctx.fillStyle = fallGrad;
-        ctx.fillRect(0, 0, W, coverAreaH);
-    }
-    ctx.restore();
-
-    // ── 3. Cinematic gradient overlay on cover (bottom 50% of cover area) ──
-    const overlayStart = coverAreaH * 0.35;
-    const coverFade = ctx.createLinearGradient(0, overlayStart, 0, coverAreaH + 2);
-    coverFade.addColorStop(0, 'rgba(0,0,0,0)');
-    coverFade.addColorStop(0.55, 'rgba(0,0,0,0.55)');
-    coverFade.addColorStop(1, t.bg[0] + 'ff');
-    ctx.fillStyle = coverFade;
-    ctx.fillRect(0, overlayStart, W, coverAreaH - overlayStart + 4);
-
-    // Subtle top dark scrim for readability of any top-overlay elements
-    const topScrim = ctx.createLinearGradient(0, 0, 0, 180);
-    topScrim.addColorStop(0, 'rgba(0,0,0,0.35)');
-    topScrim.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = topScrim;
-    ctx.fillRect(0, 0, W, 180);
-
-    // ── 4. Accent glow on background section ──
-    const glowY = coverAreaH + (H - coverAreaH) * 0.3;
-    const glow = ctx.createRadialGradient(W * 0.5, glowY, 0, W * 0.5, glowY, 520);
-    glow.addColorStop(0, t.accent + '22');
+    // Ambient spotlight glow behind the book
+    const glow = ctx.createRadialGradient(W / 2, 600, 40, W / 2, 600, 600);
+    glow.addColorStop(0, t.accent + '26');
     glow.addColorStop(1, 'transparent');
     ctx.fillStyle = glow;
-    ctx.fillRect(0, coverAreaH, W, H - coverAreaH);
+    ctx.fillRect(0, 0, W, H);
 
-    // ── 5. Badge (CURRENTLY READING / FEATURED READ) — top-left ──
-    const badgeLabel = chapter ? 'CURRENTLY READING' : 'FEATURED READ';
-    ctx.font = 'bold 26px "Inter", sans-serif';
-    const badgeMetrics = ctx.measureText(badgeLabel);
-    const bPX = 28, bPY = 14;
-    const bW = badgeMetrics.width + bPX * 2, bH = 52;
-    const bX = 60, bY = 64;
-    roundRect(ctx, bX, bY, bW, bH, bH / 2);
-    ctx.fillStyle = t.badgeBg;
+    // Subtle edge vignette
+    const vignette = ctx.createRadialGradient(W / 2, H / 2, W * 0.42, W / 2, H / 2, W * 0.85);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.38)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── 2. Refined top badge (no emojis) ──
+    const topTag = chapter ? 'CURRENTLY READING' : 'FEATURED STORY';
+    ctx.font = '700 20px "Inter", sans-serif';
+    const tagTextW = ctx.measureText(topTag).width;
+    const tagPadX = 24;
+    const tagH = 38;
+    const tagW = tagTextW + tagPadX * 2;
+    const tagX = Math.round((W - tagW) / 2);
+    const tagY = 120;
+
+    roundRect(ctx, tagX, tagY, tagW, tagH, tagH / 2);
+    ctx.fillStyle = t.card;
     ctx.fill();
-    ctx.strokeStyle = t.accent + '60';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.fillStyle = t.badgeText;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(badgeLabel, bX + bPX, bY + bH / 2);
-
-    // ── 6. Large title — overlaid at bottom of cover area ──
-    const displayTitle = chapter ? chapter.title : book.title;
-    const titleMaxW = W - 120;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'bottom';
-
-    // Title font sizing: start big, shrink if needed
-    let titleFontSize = 96;
-    ctx.font = `900 ${titleFontSize}px "Inter", sans-serif`;
-    let titleLines = wrapText(ctx, displayTitle, titleMaxW);
-    while (titleLines.length > 3 && titleFontSize > 60) {
-        titleFontSize -= 6;
-        ctx.font = `900 ${titleFontSize}px "Inter", sans-serif`;
-        titleLines = wrapText(ctx, displayTitle, titleMaxW);
-    }
-    titleLines = titleLines.slice(0, 3);
-
-    const titleLineH = titleFontSize * 1.15;
-    const totalTitleH = titleLines.length * titleLineH;
-    let titleBaseY = coverAreaH - 56;
-
-    // Draw title text with a soft text shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetY = 4;
-    titleLines.slice().reverse().forEach((line, i) => {
-        const lineY = titleBaseY - i * titleLineH;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(line, 60, lineY);
-    });
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-
-    // ── 7. Bottom content panel ──
-    const panelY = coverAreaH + 10;
-    const panelH = H - panelY - 130; // leave room for footer
-    const panelX = 60;
-    const panelW = W - 120;
-
-    // Author name
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.font = '500 34px "Inter", sans-serif';
-    ctx.fillStyle = t.subtext;
-    let infoY = panelY + 32;
-
-    if (chapter) {
-        ctx.fillStyle = t.text;
-        ctx.font = 'bold 38px "Inter", sans-serif';
-        ctx.fillText(`Chapter: ${chapter.title}`, panelX, infoY);
-        infoY += 50;
-        ctx.font = '400 32px "Inter", sans-serif';
-        ctx.fillStyle = t.subtext;
-        ctx.fillText(`from ${book.title}`, panelX, infoY);
-        infoY += 46;
-    }
-
-    ctx.font = '400 34px "Inter", sans-serif';
-    ctx.fillStyle = t.subtext;
-    ctx.fillText(`by ${book.author?.name || 'Unknown Author'}`, panelX, infoY);
-    infoY += 54;
-
-    // Genre pills
-    // (genres is already declared above)
-    if (genres.length > 0) {
-        ctx.font = 'bold 22px "Inter", sans-serif';
-        let pillX = panelX;
-        for (const genre of genres) {
-            const tw = ctx.measureText(genre).width;
-            const pW = tw + 36, pH = 44;
-            roundRect(ctx, pillX, infoY, pW, pH, pH / 2);
-            ctx.fillStyle = t.card;
-            ctx.fill();
-            ctx.strokeStyle = t.cardBorder;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.fillStyle = t.accent;
-            ctx.textBaseline = 'middle';
-            ctx.fillText(genre, pillX + 18, infoY + pH / 2);
-            ctx.textBaseline = 'top';
-            pillX += pW + 16;
-            if (pillX > W - 200) break;
-        }
-        infoY += 62;
-    }
-
-    // Rating stars (if > 0)
-    if (book.rating > 0) {
-        const starSize = 42;
-        const starCount = 5;
-        const starSpacing = 50;
-        const starsStartX = panelX;
-        const filledStars = Math.round(book.rating);
-
-        for (let s = 0; s < starCount; s++) {
-            const sx = starsStartX + s * starSpacing;
-            const sy2 = infoY + 6;
-            const r2 = starSize / 2;
-            ctx.beginPath();
-            for (let pt = 0; pt < 10; pt++) {
-                const angle = (pt * Math.PI) / 5 - Math.PI / 2;
-                const radius = pt % 2 === 0 ? r2 : r2 * 0.4;
-                const px = sx + radius * Math.cos(angle);
-                const py = sy2 + radius * Math.sin(angle);
-                if (pt === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            ctx.fillStyle = s < filledStars ? t.accent : t.accent + '30';
-            ctx.fill();
-        }
-
-        ctx.font = '500 28px "Inter", sans-serif';
-        ctx.fillStyle = t.subtext;
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${book.rating.toFixed(1)}`, panelX + starCount * starSpacing + 12, infoY + starSize / 2);
-        ctx.textBaseline = 'top';
-        infoY += 58;
-    }
-
-    // Summary excerpt (3 lines max)
-    if (!chapter && book.summary) {
-        const maxSummaryLines = 3;
-        ctx.font = 'italic 27px "Literata", Georgia, serif';
-        ctx.fillStyle = t.subtext + 'cc';
-        const summaryLines = wrapText(ctx, book.summary, panelW);
-        summaryLines.slice(0, maxSummaryLines).forEach((line, i) => {
-            ctx.fillText(line, panelX, infoY + i * 38);
-        });
-    }
-
-    // ── 8. Footer branding bar ──
-    // (footerH is already declared above)
-    const footerY = H - footerH;
-
-    // Thin separator line
-    ctx.beginPath();
-    ctx.moveTo(60, footerY);
-    ctx.lineTo(W - 60, footerY);
     ctx.strokeStyle = t.cardBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Brand name left
-    ctx.font = 'bold 28px "Inter", sans-serif';
+    ctx.fillStyle = t.badgeText || t.accent;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(topTag, W / 2, tagY + tagH / 2);
+
+    // ── 3. Uncropped 3D Floating Book (Hero) ──
+    const coverImg = await loadImage(book.coverUrl);
+    const maxBookH = 820;
+    const maxBookW = 580;
+    let bookH = maxBookH;
+    let bookW = 546; // standard 2:3 ratio fallback
+
+    if (coverImg && coverImg.naturalWidth && coverImg.naturalHeight) {
+        const naturalAspect = coverImg.naturalWidth / coverImg.naturalHeight;
+        // Clamp aspect ratio between 0.58 and 0.82 to retain realistic book proportions
+        const clampedAspect = Math.min(Math.max(naturalAspect, 0.58), 0.82);
+        bookW = Math.round(bookH * clampedAspect);
+        if (bookW > maxBookW) {
+            bookW = maxBookW;
+            bookH = Math.round(bookW / clampedAspect);
+        }
+    }
+
+    const bookX = Math.round((W - bookW) / 2);
+    const bookY = 200;
+
+    // Realistic drop shadow behind book
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+    ctx.shadowBlur = 50;
+    ctx.shadowOffsetY = 28;
+    ctx.shadowOffsetX = 0;
+    roundRect(ctx, bookX, bookY, bookW, bookH, 18);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+    ctx.restore();
+
+    // Draw cover artwork
+    ctx.save();
+    roundRect(ctx, bookX, bookY, bookW, bookH, 18);
+    ctx.clip();
+
+    if (coverImg) {
+        ctx.drawImage(coverImg, bookX, bookY, bookW, bookH);
+    } else {
+        const [fc1, fc2] = getGenreFallbackColors(book.genres);
+        const fgrad = ctx.createLinearGradient(bookX, bookY, bookX + bookW, bookY + bookH);
+        fgrad.addColorStop(0, fc1);
+        fgrad.addColorStop(1, fc2);
+        ctx.fillStyle = fgrad;
+        ctx.fillRect(bookX, bookY, bookW, bookH);
+
+        // Fallback title on cover
+        ctx.font = 'bold 44px "Literata", Georgia, serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const fallbackLines = wrapText(ctx, book.title, bookW - 60);
+        fallbackLines.slice(0, 3).forEach((line, idx) => {
+            ctx.fillText(line, bookX + bookW / 2, bookY + bookH * 0.42 + idx * 54);
+        });
+    }
+
+    // Book spine crease effect on left edge
+    const spineW = 30;
+    const spineGrad = ctx.createLinearGradient(bookX, 0, bookX + spineW, 0);
+    spineGrad.addColorStop(0, 'rgba(0, 0, 0, 0.45)');
+    spineGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.12)');
+    spineGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.22)');
+    spineGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = spineGrad;
+    ctx.fillRect(bookX, bookY, spineW, bookH);
+
+    // Subtle lighting sheen across the cover
+    const sheenGrad = ctx.createLinearGradient(bookX, bookY, bookX + bookW, bookY + bookH);
+    sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+    sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+    sheenGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+    ctx.fillStyle = sheenGrad;
+    ctx.fillRect(bookX, bookY, bookW, bookH);
+
+    ctx.restore();
+
+    // Crisp book edge border
+    roundRect(ctx, bookX, bookY, bookW, bookH, 18);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // ── 4. Story information section (below book) ──
+    let currentY = bookY + bookH + 46;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    // Title
+    const displayTitle = chapter ? chapter.title : book.title;
+    let titleFontSize = 54;
+    ctx.font = `bold ${titleFontSize}px "Literata", Georgia, serif`;
+    let titleLines = wrapText(ctx, displayTitle, W - 160);
+    if (titleLines.length > 2) {
+        titleFontSize = 46;
+        ctx.font = `bold ${titleFontSize}px "Literata", Georgia, serif`;
+        titleLines = wrapText(ctx, displayTitle, W - 160);
+    }
+    titleLines = titleLines.slice(0, 2);
+
+    ctx.fillStyle = t.text;
+    const titleLineH = titleFontSize * 1.22;
+    titleLines.forEach((line) => {
+        ctx.fillText(line, W / 2, currentY);
+        currentY += titleLineH;
+    });
+    currentY += 6;
+
+    // Chapter or Book context
+    if (chapter) {
+        ctx.font = '500 26px "Inter", sans-serif';
+        ctx.fillStyle = t.subtext;
+        ctx.fillText(`from "${book.title}"`, W / 2, currentY);
+        currentY += 36;
+    }
+
+    // Author
+    ctx.font = '500 30px "Inter", sans-serif';
+    ctx.fillStyle = t.subtext;
+    ctx.fillText(`by ${book.author?.name || 'Unknown Author'}`, W / 2, currentY);
+    currentY += 46;
+
+    // Rating stars (vector geometry - no emojis)
+    if (book.rating > 0) {
+        const starCount = 5;
+        const starSize = 28;
+        const starSpacing = 36;
+        const filledStars = Math.round(book.rating);
+        const totalStarsWidth = starCount * starSpacing;
+        const starsStartX = (W - totalStarsWidth) / 2;
+        const starCenterY = currentY + starSize / 2;
+
+        for (let s = 0; s < starCount; s++) {
+            const sx = starsStartX + s * starSpacing + starSize / 2;
+            const rOuter = starSize / 2;
+            const rInner = rOuter * 0.42;
+            ctx.beginPath();
+            for (let pt = 0; pt < 10; pt++) {
+                const angle = (pt * Math.PI) / 5 - Math.PI / 2;
+                const r = pt % 2 === 0 ? rOuter : rInner;
+                const px = sx + r * Math.cos(angle);
+                const py = starCenterY + r * Math.sin(angle);
+                if (pt === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fillStyle = s < filledStars ? (themeName === 'frost' ? '#f59e0b' : t.accent) : (t.accent + '25');
+            ctx.fill();
+        }
+
+        ctx.font = '600 24px "Inter", sans-serif';
+        ctx.fillStyle = t.text;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(book.rating.toFixed(1), starsStartX + totalStarsWidth + 8, starCenterY);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        currentY += 46;
+    }
+
+    // Genre pills (clean minimal chips - no emojis)
+    const genres = (book.genres || []).slice(0, 3);
+    if (genres.length > 0) {
+        ctx.font = '600 20px "Inter", sans-serif';
+        const pillH = 38;
+        const pillGap = 12;
+        const pillPadX = 22;
+
+        const pillWidths = genres.map(g => ctx.measureText(g).width + pillPadX * 2);
+        const totalPillsWidth = pillWidths.reduce((sum, w) => sum + w, 0) + (genres.length - 1) * pillGap;
+        let pillX = Math.round((W - totalPillsWidth) / 2);
+
+        genres.forEach((genre, idx) => {
+            const pW = pillWidths[idx];
+            roundRect(ctx, pillX, currentY, pW, pillH, pillH / 2);
+            ctx.fillStyle = t.card;
+            ctx.fill();
+            ctx.strokeStyle = t.cardBorder;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = t.accent;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(genre, pillX + pW / 2, currentY + pillH / 2);
+
+            pillX += pW + pillGap;
+        });
+
+        currentY += pillH + 26;
+    }
+
+    // Summary excerpt (if space permits)
+    if (!chapter && book.summary && currentY < 1720) {
+        ctx.font = 'italic 24px "Literata", Georgia, serif';
+        ctx.fillStyle = t.subtext + 'dd';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const summaryLines = wrapText(ctx, book.summary, W - 240);
+        const linesToDraw = summaryLines.slice(0, 2);
+        linesToDraw.forEach((line, idx) => {
+            const lineText = idx === 0 && linesToDraw.length === 1 ? `"${line}"` : (idx === 0 ? `"${line}` : (idx === linesToDraw.length - 1 ? `${line}"` : line));
+            ctx.fillText(lineText, W / 2, currentY + idx * 34);
+        });
+    }
+
+    // ── 5. Clean footer branding ──
+    const footerY = 1800;
+
+    // Subtle divider
+    ctx.beginPath();
+    ctx.moveTo(100, footerY);
+    ctx.lineTo(W - 100, footerY);
+    ctx.strokeStyle = t.cardBorder;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Brand name
+    ctx.font = '700 24px "Inter", sans-serif';
     ctx.fillStyle = t.text;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText('WORDWEFT', 60, footerY + footerH / 2);
+    ctx.fillText('WORDWEFT', 100, footerY + 44);
 
-    // Tagline right
-    ctx.font = '300 22px "Inter", sans-serif';
+    // Domain
+    ctx.font = '400 20px "Inter", sans-serif';
     ctx.fillStyle = t.subtext;
     ctx.textAlign = 'right';
-    ctx.fillText('wordweftstudio.com', W - 60, footerY + footerH / 2);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('wordweftstudio.com', W - 100, footerY + 44);
 }
 
 async function drawQuoteCard(
@@ -865,7 +869,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                             >
                                 <canvas
                                     ref={canvasRef}
-                                    className="w-full h-full"
+                                    className="w-full h-full object-contain"
                                     style={{ display: 'block' }}
                                 />
                             </div>

@@ -280,7 +280,7 @@
 .fw-confirmations input { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--ww-brand); cursor: pointer; }
 .fw-confirmations label > span { display: block; color: var(--ww-copy); font-size: 0.875rem; line-height: 1.6; }
 .fw-confirmations i { display: grid; flex: 0 0 21px; width: 21px; height: 21px; place-items: center; color: transparent; border: 1px solid color-mix(in srgb, var(--ww-brand) 50%, var(--ww-line)); border-radius: 7px; background: var(--ww-paper-strong); }
-.fw-confirmations label:has(input:checked) { border-color: var(--ww-brand); background: color-mix(in srgb, var(--ww-brand-soft) 30%, var(--ww-paper)); }
+.fw-confirmations label.is-checked { border-color: var(--ww-brand); background: color-mix(in srgb, var(--ww-brand-soft) 30%, var(--ww-paper)); }
 .fw-confirmations input:checked + span i { color: white; border-color: var(--ww-brand); background: var(--ww-brand); }
 .fw-confirmations input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--ww-brand) 22%, transparent); outline-offset: 2px; }
 .fw-confirmations a { color: var(--ww-brand-strong); font-weight: 750; text-decoration: underline; text-underline-offset: 2px; }
@@ -289,6 +289,99 @@
 .fw-submit-row { display: flex; gap: 25px; align-items: center; justify-content: space-between; padding: 8px 2px 0; }
 .fw-submit-row p { max-width: 360px; margin: 0; color: var(--ww-muted); font-size: 0.8125rem; line-height: 1.65; }
 .fw-submit-row .fw-primary-button { flex: 0 0 auto; }
+
+.fw-upload-progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  padding: 22px 26px;
+  border: 1px solid var(--ww-line);
+  border-radius: 16px;
+  background: var(--ww-paper-strong);
+  box-shadow: var(--ww-shadow-sm);
+  animation: fwFadeIn 220ms ease-out;
+}
+
+.fw-upload-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fw-upload-progress-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ww-ink);
+  font-family: 'Newsreader', 'Literata', serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.fw-upload-spinner {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--ww-brand) 28%, transparent);
+  border-top-color: var(--ww-brand);
+  border-radius: 50%;
+  animation: fwSpin 800ms linear infinite;
+}
+
+.fw-upload-progress-percent {
+  color: var(--ww-brand-strong);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.fw-upload-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ww-line) 75%, transparent);
+  overflow: hidden;
+}
+
+.fw-upload-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ww-brand);
+  transition: width 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fw-upload-progress-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  color: var(--ww-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.fw-upload-filename {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ww-copy);
+}
+
+@keyframes fwSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fwFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .fw-success { width: min(720px, 100%); margin-inline: auto; padding: clamp(34px, 7vw, 64px); border: 1px solid var(--ww-line); border-radius: 28px; background: var(--ww-paper-strong); box-shadow: var(--ww-shadow-lg); text-align: center; }
 .fw-success-icon { display: grid; width: 62px; height: 62px; place-items: center; margin: 0 auto 23px; color: white; border-radius: 50%; background: #567b44; box-shadow: 0 10px 24px rgba(86, 123, 68, 0.2); }
@@ -343,7 +436,7 @@
 }
 
 @media (max-width: 620px) {
-  .fw-shell { width: min(100% - 28px, 1160px); }
+  .fw-shell { width: min(calc(100% - 28px), 1160px); }
   .fw-hero h1 { font-size: clamp(2rem, 8.5vw, 2.75rem); }
   .fw-hero-grid { gap: 24px; padding-block: 40px; }
   .fw-section, .fw-commitment-section, .fw-application-section { padding-block: 44px; }
