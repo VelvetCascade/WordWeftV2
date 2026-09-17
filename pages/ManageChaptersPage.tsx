@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Chapter, Book, AgeRating, ContentWarning, StoryStatus } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -16,6 +16,13 @@ interface ManageChaptersPageProps {
 }
 
 type Tab = 'chapters' | 'characters' | 'scenes' | 'notes';
+
+const RATING_SEVERITY: Record<AgeRating, number> = {
+    'ALL_AGES': 0,
+    'TEEN_13': 1,
+    'MATURE_18': 2,
+    'ADULT_21': 3,
+};
 
 const BOOK_CATEGORIES = [
     'Novel', 'Novella', 'Short Story', 'Poetry', 'Essay',
@@ -56,8 +63,32 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
         }
     }, [isOpen, book]);
 
+    const minRequiredRating: AgeRating = useMemo(() => {
+        let min = 0;
+        if (book.chapters) {
+            for (const ch of book.chapters) {
+                if (ch.contentWarnings && ch.contentWarnings.length > 0) {
+                    for (const w of ch.contentWarnings) {
+                        if (['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'].includes(w)) {
+                            min = Math.max(min, 2);
+                        } else {
+                            min = Math.max(min, 1);
+                        }
+                    }
+                }
+            }
+        }
+        if (min >= 2) return 'MATURE_18';
+        if (min >= 1) return 'TEEN_13';
+        return 'ALL_AGES';
+    }, [book.chapters]);
+
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
+        if (RATING_SEVERITY[ageRating] < RATING_SEVERITY[minRequiredRating]) {
+            alert(`This story contains chapters requiring at least ${minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}. You cannot set a lower age rating.`);
+            return;
+        }
         onUpdate({
             title,
             description,
@@ -163,8 +194,16 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                         <div className="pt-2 border-t dark:border-dark-border mt-4">
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Age rating</label>
                             <select value={ageRating} onChange={e => setAgeRating(e.target.value as AgeRating)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
-                                <option value="ALL_AGES">Everyone</option><option value="TEEN_13">Teen 13+</option><option value="MATURE_18">Mature 18+</option><option value="ADULT_21">Adult 21+</option>
+                                <option value="ALL_AGES" disabled={RATING_SEVERITY[minRequiredRating] > RATING_SEVERITY['ALL_AGES']}>Everyone</option>
+                                <option value="TEEN_13" disabled={RATING_SEVERITY[minRequiredRating] > RATING_SEVERITY['TEEN_13']}>Teen 13+</option>
+                                <option value="MATURE_18">Mature 18+</option>
+                                <option value="ADULT_21">Adult 21+</option>
                             </select>
+                            {RATING_SEVERITY[minRequiredRating] > RATING_SEVERITY['ALL_AGES'] && (
+                                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                                    ⚠️ Chapters in this story contain content warnings requiring at least {minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}.
+                                </p>
+                            )}
                             <label className="block text-sm font-bold mt-4 mb-2 dark:text-dark-text-body">Content warnings</label>
                             <div className="flex flex-wrap gap-2">
                                 {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button key={w} type="button" onClick={() => setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])} className={`px-3 py-1 rounded-full text-xs ${contentWarnings.includes(w) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt'}`}>{w.replaceAll('_',' ')}</button>)}

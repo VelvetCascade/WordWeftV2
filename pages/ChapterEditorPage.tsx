@@ -412,6 +412,11 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 <div className="chapter-warning-options">
                                     {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button type="button" key={w} className={contentWarnings.includes(w) ? 'selected' : ''} onClick={() => { setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w]); setSaveState('unsaved'); }}>{w.replaceAll('_', ' ').toLowerCase()}</button>)}
                                 </div>
+                                {contentWarnings.some(w => ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'].includes(w)) && (
+                                    <p style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: '#e53e3e', fontWeight: 500 }}>
+                                        ⚠️ Selecting mature warnings automatically elevates this story to Mature (18+) and restricts it from readers under 18.
+                                    </p>
+                                )}
                                 <label>Author’s note <small>Optional, avoid spoilers</small><textarea rows={2} maxLength={1000} value={disclaimerNote} onChange={e => { setDisclaimerNote(e.target.value); setSaveState('unsaved'); }} placeholder="Add context that helps readers decide whether to continue." /></label>
                             </div>
                         </details>

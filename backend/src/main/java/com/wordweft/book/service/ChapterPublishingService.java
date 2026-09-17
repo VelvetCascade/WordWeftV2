@@ -1,5 +1,6 @@
 package com.wordweft.book.service;
 
+import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
@@ -80,6 +81,7 @@ public class ChapterPublishingService {
         }
 
         requireCompleteChapter(chapter);
+        ensureBookAgeRating(book, chapter);
         Instant publishedAt = clock.instant();
         publishChapter(chapter, publishedAt);
         markStoryUpdated(book, publishedAt);
@@ -97,6 +99,7 @@ public class ChapterPublishingService {
                     && chapter.getScheduledAt() != null
                     && !chapter.getScheduledAt().isAfter(now)) {
                 requireCompleteChapter(chapter);
+                ensureBookAgeRating(book, chapter);
                 publishChapter(chapter, now);
                 changed = true;
             }
@@ -181,5 +184,17 @@ public class ChapterPublishingService {
                 chapter.getId(),
                 "published a new chapter: " + chapter.getTitle(),
                 metadata);
+    }
+
+    private void ensureBookAgeRating(Book book, Chapter chapter) {
+        if (chapter.getContentWarnings() != null && !chapter.getContentWarnings().isEmpty()) {
+            AgeRating required = ContentAccessService.requiredRatingForWarnings(chapter.getContentWarnings());
+            if (required.getMinimumAge() > (book.getAgeRating() != null ? book.getAgeRating().getMinimumAge() : 0)) {
+                book.setAgeRating(required);
+            }
+            if (required.getMinimumAge() >= 18) {
+                book.setMature(true);
+            }
+        }
     }
 }

@@ -35,6 +35,7 @@ class ChapterContentServiceTest {
         service = new ChapterContentService(repository, contentAccess, previewService);
         when(contentAccess.canAccess(any(Book.class))).thenReturn(true);
         when(contentAccess.effectiveRating(any(Book.class))).thenReturn(AgeRating.ALL_AGES);
+        when(contentAccess.allowedRatings()).thenReturn(java.util.Set.of(AgeRating.ALL_AGES, AgeRating.TEEN_13, AgeRating.MATURE_18, AgeRating.ADULT_21));
     }
 
     @Test

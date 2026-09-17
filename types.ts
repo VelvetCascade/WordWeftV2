@@ -226,7 +226,6 @@ export interface FoundingWriterApplication extends Omit<FoundingWriterApplicatio
   createdAt: string;
   updatedAt: string;
 }
-}
 
 export interface WriterAnalyticsSummary {
   uniqueReaders: number;

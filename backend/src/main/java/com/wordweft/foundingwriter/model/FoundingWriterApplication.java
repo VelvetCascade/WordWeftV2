@@ -31,6 +31,7 @@ public class FoundingWriterApplication {
     private String chapterFileName;
     private String chapterFileContentType;
     private long chapterFileSize;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String r2FileKey;
     private boolean fileUploaded;
     private boolean chaptersConfirmed;

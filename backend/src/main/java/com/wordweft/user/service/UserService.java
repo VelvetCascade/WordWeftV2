@@ -73,6 +73,8 @@ public class UserService {
     ShelfRepository shelfRepository;
     @Autowired
     com.wordweft.book.repository.ReadingProgressRepository readingProgressRepository;
+    @Autowired
+    com.wordweft.book.service.ContentAccessService contentAccessService;
 
     public Map<String, Object> enrichUser(User user, String currentViewerId) {
         Map<String, Object> map = new HashMap<>();
@@ -131,10 +133,12 @@ public class UserService {
         // Populate Written Books — use BookService to enrich each book so the
         // nested `author` object (id, name, avatarUrl, bio) is included.
         // Raw Book entities only store authorId, not the resolved author object.
+        boolean isSelf = user.getId().equals(currentViewerId);
         List<Book> written = bookRepository.findByAuthorId(user.getId());
         List<Map<String, Object>> writtenEnriched = written.stream()
-                .map(b -> bookService.getBookById(b.getId(), false))
-                .filter(b -> b != null)
+                .filter(b -> isSelf || ("published".equals(b.getPublicationStatus()) && (contentAccessService == null || contentAccessService.canDiscover(b))))
+                .map(b -> bookService.enrichBookForProfile(b, currentViewerId))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         map.put("writtenBooks", writtenEnriched);
 
@@ -167,7 +171,7 @@ public class UserService {
         Map<String, Map<String, Object>> bookMap = new HashMap<>();
 
         for (LibraryEntry e : entries) {
-            Map<String, Object> b = bookService.getBookById(e.getBookId(), false);
+            Map<String, Object> b = bookService.enrichBookForProfileById(e.getBookId(), currentViewerId);
             if (b != null) {
                 b.put("addedDate", e.getAddedDate());
                 b.put("libraryEntryId", e.getId());
