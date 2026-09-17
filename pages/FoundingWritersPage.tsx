@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BadgeCheck, Check, HeartHandshake, Sparkles } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { submitFoundingWriterApplication } from '../api/client';
+import { analytics } from '../utils/analyticsService';
 import type { FoundingWriterApplicationSubmission, FoundingWriterCompletionPeriod } from '../types';
 import '../styles/founding-writers.css';
 
@@ -79,6 +80,10 @@ export const FoundingWritersPage: React.FC = () => {
 
   const scrollToForm = () => formSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+  useEffect(() => {
+    analytics.trackEvent('founding_writers', 'page_view', 'Founding Writers Application Page');
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!chapterFile || chapterFile.size === 0 || chapterFile.size > 5 * 1024 * 1024 || !/\.(pdf|docx|txt)$/i.test(chapterFile.name)) {
@@ -90,6 +95,14 @@ export const FoundingWritersPage: React.FC = () => {
     setSubmitting(true);
     setUploadPercent(0);
     setError('');
+
+    analytics.trackEvent('founding_writers', 'submit_attempt', form.storyTitle || 'Untitled', undefined, {
+      email: form.email,
+      genre: form.genre,
+      fileName: chapterFile.name,
+      fileSize: chapterFile.size,
+    });
+
     try {
       await submitFoundingWriterApplication({
         ...form,
@@ -99,10 +112,16 @@ export const FoundingWritersPage: React.FC = () => {
       }, chapterFile, (percent) => {
         setUploadPercent(percent);
       });
+      analytics.trackEvent('founding_writers', 'submit_success', form.storyTitle || 'Untitled');
       setSubmitted(true);
       requestAnimationFrame(scrollToForm);
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : 'We couldn\'t submit your application right now. Please try again shortly.');
+      const errMsg = failure instanceof Error ? failure.message : 'We couldn\'t submit your application right now. Please try again shortly.';
+      setError(errMsg);
+      analytics.trackEvent('founding_writers', 'submit_error', errMsg, undefined, {
+        email: form.email,
+        genre: form.genre,
+      });
     } finally {
       setSubmitting(false);
       setUploadPercent(0);

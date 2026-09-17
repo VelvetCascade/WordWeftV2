@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FoundingWriterApplicationControllerTest {
     @Autowired MockMvc mvc;
     @MockBean FoundingWriterApplicationService service;
+    @MockBean com.wordweft.foundingwriter.service.FoundingWriterSheetService sheetService;
     @MockBean UserDetailsServiceImpl userDetails;
     @MockBean JwtUtils jwt;
     @MockBean AuthEntryPointJwt entryPoint;
