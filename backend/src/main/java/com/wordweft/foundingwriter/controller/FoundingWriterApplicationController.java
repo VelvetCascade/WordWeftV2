@@ -23,30 +23,54 @@ public class FoundingWriterApplicationController {
     private static final String FAILURE_MESSAGE = "We couldn't submit your application right now. Please try again shortly.";
 
     private final FoundingWriterApplicationService service;
+    private final com.wordweft.foundingwriter.service.FoundingWriterSheetService sheetService;
 
-    public FoundingWriterApplicationController(FoundingWriterApplicationService service) {
+    public FoundingWriterApplicationController(
+            FoundingWriterApplicationService service,
+            com.wordweft.foundingwriter.service.FoundingWriterSheetService sheetService) {
         this.service = service;
+        this.sheetService = sheetService;
     }
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<Map<String, Object>> submit(
             @Valid @org.springframework.web.bind.annotation.RequestPart("application") FoundingWriterApplicationRequest request,
-            @org.springframework.web.bind.annotation.RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
+            @org.springframework.web.bind.annotation.RequestPart("file") org.springframework.web.multipart.MultipartFile file,
+            jakarta.servlet.http.HttpServletRequest servletRequest) {
+
+        String clientIp = getClientIp(servletRequest);
+        String fileName = file != null ? file.getOriginalFilename() : "";
+        Long fileSize = file != null ? file.getSize() : 0L;
+
         try {
             service.submit(request, file);
+            sheetService.logAttempt(request, fileName, fileSize, clientIp, "SUCCESS", null);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("success", true, "message", SUCCESS_MESSAGE));
         } catch (DuplicateFoundingWriterApplicationException duplicate) {
+            sheetService.logAttempt(request, fileName, fileSize, clientIp, "DUPLICATE", DUPLICATE_MESSAGE);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "success", false,
                     "errorCode", "DUPLICATE_APPLICATION",
                     "message", DUPLICATE_MESSAGE));
         } catch (org.springframework.web.server.ResponseStatusException invalid) {
-            return ResponseEntity.status(invalid.getStatusCode()).body(Map.of("success", false, "message", invalid.getReason()));
+            String errorMsg = invalid.getReason() != null ? invalid.getReason() : invalid.getMessage();
+            sheetService.logAttempt(request, fileName, fileSize, clientIp, "FAILED", errorMsg);
+            return ResponseEntity.status(invalid.getStatusCode()).body(Map.of("success", false, "message", errorMsg));
         } catch (Exception failure) {
             log.error("Unable to store a founding writer application", failure);
+            sheetService.logAttempt(request, fileName, fileSize, clientIp, "FAILED", failure.getMessage() != null ? failure.getMessage() : FAILURE_MESSAGE);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", FAILURE_MESSAGE));
         }
+    }
+
+    private String getClientIp(jakarta.servlet.http.HttpServletRequest request) {
+        if (request == null) return "";
+        String xf = request.getHeader("X-Forwarded-For");
+        if (xf != null && !xf.isBlank()) {
+            return xf.split(",")[0].trim();
+        }
+        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "";
     }
 }

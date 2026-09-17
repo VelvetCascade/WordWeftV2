@@ -406,7 +406,17 @@ export async function submitFoundingWriterApplication(
             if (xhr.status >= 200 && xhr.status < 300) {
                 resolve(result || { success: true, message: 'Your application has been received.' });
             } else {
-                reject(new Error(result?.message || "We couldn't submit your application right now. Please try again shortly."));
+                let errMsg = result?.message || result?.error;
+                if (!errMsg && result && typeof result === 'object') {
+                    const entries = Object.entries(result);
+                    if (entries.length > 0 && typeof entries[0][1] === 'string') {
+                        errMsg = `${entries[0][1]}`;
+                    }
+                }
+                if (!errMsg && xhr.status === 429) {
+                    errMsg = 'You have submitted too many requests recently. Please wait a bit before trying again.';
+                }
+                reject(new Error(errMsg || "We couldn't submit your application right now. Please try again shortly."));
             }
         };
 
