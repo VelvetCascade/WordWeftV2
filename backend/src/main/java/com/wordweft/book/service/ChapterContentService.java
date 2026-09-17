@@ -62,6 +62,14 @@ public class ChapterContentService {
         }
 
         Chapter chapter = visibleChapters.get(chapterIndex);
+        if (!owner) {
+            AgeRating chapterRating = ContentAccessService.requiredRatingForWarnings(chapter.getContentWarnings());
+            if (!contentAccessService.allowedRatings().contains(chapterRating)) {
+                throw new ContentRestrictedException(
+                        "This chapter contains mature content (" + chapterRating.getMinimumAge()
+                                + "+). Sign in and enable mature content in your profile if you are eligible.");
+            }
+        }
         String fullContent = Objects.requireNonNullElse(chapter.getContent(), "");
         ChapterPreviewService.Preview preview = chapterPreviewService.preview(fullContent);
 

@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FoundingWriterApplicationControllerTest {
     @Autowired MockMvc mvc;
     @MockBean FoundingWriterApplicationService service;
+    @MockBean com.wordweft.foundingwriter.service.UploadTokenService uploadTokenService;
     @MockBean com.wordweft.foundingwriter.service.FoundingWriterSheetService sheetService;
     @MockBean UserDetailsServiceImpl userDetails;
     @MockBean JwtUtils jwt;
@@ -106,12 +107,15 @@ class FoundingWriterApplicationControllerTest {
         verifyNoInteractions(service);
         var application = new com.wordweft.foundingwriter.model.FoundingWriterApplication();
         application.setId("id");
-        application.setR2FileKey("secret.pdf");
+        application.setR2FileKey("founding-writers/id/chapters.txt");
         application.setChapterFileName("chapters.txt");
         application.setFileUploaded(true);
         when(service.findById("id")).thenReturn(application);
+        when(uploadTokenService.getWorkerBaseUrl()).thenReturn("https://worker.dev");
+        when(uploadTokenService.generateDownloadToken(eq("id"), eq("founding-writers/id/chapters.txt"))).thenReturn("token123");
+
         mvc.perform(get("/api/admin/founding-writer-applications/id/chapter-file").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.downloadUrl").value("https://worker.dev/download/..."));
+                .andExpect(jsonPath("$.downloadUrl").value("https://worker.dev/download/id/chapters.txt?token=token123"));
     }
 }

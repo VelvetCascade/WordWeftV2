@@ -25,8 +25,29 @@ const handleResponse = async (response: Response) => {
         // Any authenticated request rejected as unauthorized makes the locally
         // cached account stale. Keep the app shell and token in sync.
         if (response.status === 401) invalidateAuthSession();
-        const errorData = await response.text();
-        throw new Error(errorData || response.statusText);
+        const errorText = await response.text();
+        let message = errorText || response.statusText;
+        let errorCode: string | undefined;
+        try {
+            const parsed = JSON.parse(errorText);
+            if (parsed && typeof parsed === 'object') {
+                if (typeof parsed.message === 'string' && parsed.message.trim()) {
+                    message = parsed.message;
+                } else if (typeof parsed.error === 'string' && parsed.error.trim()) {
+                    message = parsed.error;
+                }
+                if (typeof parsed.errorCode === 'string') {
+                    errorCode = parsed.errorCode;
+                }
+            }
+        } catch {
+            // Non-JSON response, keep errorText
+        }
+        const err = new Error(message);
+        if (errorCode) {
+            (err as any).code = errorCode;
+        }
+        throw err;
     }
     try {        return await response.json();
     } catch (e) {
@@ -151,10 +172,10 @@ export async function getMe(): Promise<User | null> {
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
 
-        // A rejected profile request is authoritative: clear both the token and
-        // the React account state through the shared invalidation event.
-        if (response.status === 401 || response.status === 403) {
-            console.error("Session invalid: 401/403");
+        // Only 401 Unauthorized means the token/session itself is definitely expired or invalid.
+        // 403 Forbidden is a permissions/content issue and must NOT blow away the user's session.
+        if (response.status === 401) {
+            console.error("Session invalid: 401 Unauthorized");
             invalidateAuthSession();
             return null;
         }

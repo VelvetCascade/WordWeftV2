@@ -191,7 +191,19 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    Map<String, Object> enrichBook(Book book, String currentUserId) {
+    public Map<String, Object> enrichBookForProfile(Book book, String currentUserId) {
+        if (book == null) return null;
+        return enrichBook(book, currentUserId);
+    }
+
+    public Map<String, Object> enrichBookForProfileById(String bookId, String currentUserId) {
+        if (bookId == null) return null;
+        return bookRepository.findById(bookId)
+                .map(b -> enrichBook(b, currentUserId))
+                .orElse(null);
+    }
+
+    public Map<String, Object> enrichBook(Book book, String currentUserId) {
         boolean isOwner = currentUserId != null && currentUserId.equals(book.getAuthorId());
         List<Chapter> allChapters = book.getChapters() != null ? book.getChapters() : List.of();
         List<Chapter> visibleChapters = isOwner
@@ -283,9 +295,15 @@ public class BookService {
         map.put("createdAt", book.getCreatedAt());
         map.put("readCount", book.getReadCount() != null ? book.getReadCount() : 0);
         map.put("readCountLast7Days", book.getReadCountLast7Days() != null ? book.getReadCountLast7Days() : 0);
-        map.put("viewCountLast7Days", book.getViewCountLast7Days() != null ? book.getViewCountLast7Days() : 0);
-        map.put("isMature", book.isMature());
-        map.put("ageRating", contentAccessService.effectiveRating(book));
+        AgeRating effective = contentAccessService != null ? contentAccessService.effectiveRating(book) : null;
+        if (effective == null) {
+            effective = book.getAgeRating() != null ? book.getAgeRating() : AgeRating.ALL_AGES;
+        }
+        boolean canDiscover = contentAccessService == null || contentAccessService.canDiscover(book);
+        map.put("isMature", book.isMature() || (effective != null && effective.getMinimumAge() >= 18));
+        map.put("ageRating", effective);
+        map.put("isDiscoverable", canDiscover);
+        map.put("isRestricted", !canDiscover && !(currentUserId != null && currentUserId.equals(book.getAuthorId())));
         map.put("contentWarnings", book.getContentWarnings() != null ? book.getContentWarnings() : List.of());
         map.put("customDisclaimer", book.getCustomDisclaimer());
         map.put("isAIGenerated", book.isAIGenerated());

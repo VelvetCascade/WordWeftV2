@@ -10,6 +10,7 @@ import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.book.service.ChapterContentService;
 import com.wordweft.book.service.ChapterPublishingService;
+import com.wordweft.book.service.ContentAccessService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.manuscript.service.ManuscriptImportService;
 import com.wordweft.manuscript.model.ChapterRevision;
@@ -26,6 +27,7 @@ import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -268,6 +270,11 @@ public class BookController {
             book.setReadingStatus(updates.getReadingStatus());
         }
         if (updates.getAgeRating() != null) {
+            AgeRating minRequired = ContentAccessService.computeMinimumRatingFromChapters(book);
+            if (updates.getAgeRating().getMinimumAge() < minRequired.getMinimumAge()) {
+                return ResponseEntity.badRequest().body("Cannot lower age rating to " + updates.getAgeRating()
+                        + " because existing chapters contain content warnings that require at least " + minRequired + ".");
+            }
             book.setAgeRating(updates.getAgeRating());
             book.setMature(updates.getAgeRating().getMinimumAge() >= 18);
         }
@@ -318,7 +325,25 @@ public class BookController {
         chapter.setContent(data.get("content"));
         Object warningValue = payload.get("contentWarnings");
         if (warningValue instanceof List<?>) {
-            chapter.setContentWarnings(((List<?>) warningValue).stream().map(String::valueOf).toList());
+            List<String> warnings = ((List<?>) warningValue).stream().map(String::valueOf).toList();
+            chapter.setContentWarnings(warnings);
+
+            AgeRating requiredRating = ContentAccessService.requiredRatingForWarnings(warnings);
+            if (requiredRating.getMinimumAge() > (book.getAgeRating() != null ? book.getAgeRating().getMinimumAge() : 0)) {
+                book.setAgeRating(requiredRating);
+            }
+            if (requiredRating.getMinimumAge() >= 18) {
+                book.setMature(true);
+            }
+
+            if (book.getContentWarnings() == null) {
+                book.setContentWarnings(new ArrayList<>());
+            }
+            for (String w : warnings) {
+                if (!book.getContentWarnings().contains(w)) {
+                    book.getContentWarnings().add(w);
+                }
+            }
         }
         Object disclaimerValue = payload.get("disclaimerNote");
         if (disclaimerValue != null) chapter.setDisclaimerNote(String.valueOf(disclaimerValue));
