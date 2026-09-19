@@ -23,10 +23,11 @@ public class ManuscriptImportService {
     private final ChapterImageStorageService chapterImageStorageService;
     private final ConcurrentHashMap<String, Long> importDebounce = new ConcurrentHashMap<>();
 
+    @Autowired
     public ManuscriptImportService(
             BookRepository books,
             ManuscriptParser parser,
-            @Autowired(required = false) ChapterImageStorageService chapterImageStorageService) {
+            @org.springframework.lang.Nullable ChapterImageStorageService chapterImageStorageService) {
         this.books = books;
         this.parser = parser;
         this.chapterImageStorageService = chapterImageStorageService;
