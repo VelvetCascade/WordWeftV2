@@ -6568,6 +6568,26 @@ body[data-active-mood="serene"] .ww-prose {
     pointer-events: auto;
 }
 
+.reader-coach-top-right { top: 80px; right: 24px; }
+.reader-coach-bottom-center { bottom: 100px; left: 50%; transform: translateX(-50%); }
+.reader-coach-right-center { top: 50%; right: 80px; transform: translateY(-50%); }
+.reader-coach-bottom-right { bottom: 100px; right: 24px; }
+
+.reader-comment-button {
+    right: -3rem;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .reader-comment-block:hover .reader-comment-button,
+    .reader-comment-block:focus-within .reader-comment-button,
+    .reader-comment-button.has-comments {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
 .reader-coach-nudge-inner {
     display: flex;
     align-items: flex-start;
@@ -6634,6 +6654,58 @@ body[data-active-mood="serene"] .ww-prose {
     width: 20px;
     border-radius: 3px;
     background: #8D6E63;
+}
+
+.hook-feed-page {
+    background: radial-gradient(circle at top, rgba(141, 110, 99, .1), transparent 38%);
+}
+
+.hook-feed-excerpt {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+}
+
+/* Search uses the same editorial brown palette as the rest of WordWeft. */
+.search-overlay-item:hover,
+.search-overlay-item-active,
+.dark .search-overlay-item:hover,
+.dark .search-overlay-item-active,
+.search-overlay-footer:hover { background: rgba(141, 110, 99, .11); }
+.search-overlay-genre-pill,
+.dark .search-overlay-genre-pill { color: var(--ww-brand, #7a4f3b); background: rgba(141, 110, 99, .12); }
+.search-overlay-spinner { border-color: rgba(141, 110, 99, .18); border-top-color: var(--ww-brand, #7a4f3b); }
+.search-navbar-btn:hover { border-color: rgba(141, 110, 99, .35); background: rgba(141, 110, 99, .06); box-shadow: 0 0 0 3px rgba(141, 110, 99, .08); }
+.search-mobile-fab,
+.search-results-bar-btn { background: linear-gradient(135deg, var(--ww-brand, #7a4f3b), var(--ww-brand-strong, #573528)); box-shadow: 0 6px 20px rgba(73, 44, 34, .28); }
+.search-results-bar:focus-within { border-color: rgba(141, 110, 99, .45); box-shadow: 0 0 0 4px rgba(141, 110, 99, .1); }
+.search-results-tab:hover,
+.search-results-tab-active,
+.search-results-see-all,
+.search-book-card-author,
+.search-author-card-genres,
+.search-author-card-btn,
+.search-results-load-more-btn { color: var(--ww-brand, #7a4f3b) !important; }
+.search-results-tab-active::after { background: var(--ww-brand, #7a4f3b); }
+.search-results-tab-count,
+.search-status-ongoing,
+.search-genre-pill,
+.dark .search-genre-pill { color: var(--ww-brand, #7a4f3b); background: rgba(141, 110, 99, .11); }
+.search-book-card:hover,
+.search-author-card:hover,
+.search-author-card-avatar,
+.search-author-card-btn,
+.search-results-load-more-btn { border-color: rgba(141, 110, 99, .28); }
+.search-book-card-cover-overlay { background: rgba(91, 56, 43, .86); }
+.search-book-card,
+.search-author-card { width: 100%; text-align: left; font: inherit; }
+.search-overlay-error { display: grid; gap: 4px; padding: 18px 20px; color: #9f2d24; background: #fff4f2; border-top: 1px solid #f2d0cb; font-size: .82rem; }
+.search-overlay-error span { color: #7b443d; }
+.search-overlay-error button { justify-self: start; margin-top: 5px; color: var(--ww-brand, #7a4f3b); font-weight: 750; }
+
+@media (min-width: 640px) {
+    .hook-feed-excerpt { -webkit-line-clamp: 4; }
 }
 
 
@@ -11003,7 +11075,7 @@ body {
     .ww-editor-paper .rte-toolbar { padding: 8px 12px; }
     .ww-editor-paper .rte-content { min-height: max(360px, calc(100dvh - 310px)) !important; padding: 28px 20px 70px !important; font-size: 1.05rem; }
 
-    .ww-home-feature { display: grid !important; grid-template-columns: 92px minmax(0, 1fr) !important; align-items: start; gap: 15px !important; margin: 28px 14px 72px !important; padding: 17px !important; border-radius: 18px !important; }
+    .ww-home-feature { display: grid !important; grid-template-columns: 92px minmax(0, 1fr) !important; align-items: start; gap: 15px !important; width: calc(100% - 24px) !important; max-width: none !important; margin: 28px 12px 72px !important; padding: 17px !important; border-radius: 18px !important; box-sizing: border-box; }
     .ww-home-feature-cover { width: 92px !important; margin: 0 !important; }
     .ww-home-feature-cover > span { top: 7px; left: -7px; padding: 5px 7px; font-size: .46rem; }
     .ww-home-feature-copy h2 { margin-top: 5px; font-size: clamp(1.8rem, 9vw, 2.4rem) !important; line-height: .96 !important; }
@@ -11559,13 +11631,38 @@ body[data-active-mood] .ww-prose h6 {
     .reader-discussion-head h2 { font-size: 1.45rem !important; }
     .reader-discussion-head > button { width: 100%; min-height: 44px; }
 
-    .reader-experience .group > button[title="Add comment"] {
-        right: -8px !important;
+    .reader-comment-button {
+        right: 4px !important;
+        top: 4px !important;
         width: 42px;
         height: 42px;
         display: grid;
         place-items: center;
-        opacity: .78 !important;
+        opacity: 0 !important;
+        pointer-events: none;
+        background: color-mix(in srgb, currentColor 8%, var(--reader-bg, #fff));
+    }
+
+    .reader-comment-block.is-comment-revealed .reader-comment-button {
+        opacity: 1 !important;
+        pointer-events: auto;
+    }
+
+    .reader-comment-block.is-comment-revealed {
+        padding-right: 48px;
+        background: rgba(141, 110, 99, .06);
+    }
+
+    .reader-coach-nudge {
+        inset: auto max(12px, env(safe-area-inset-right)) max(76px, calc(env(safe-area-inset-bottom) + 64px)) max(12px, env(safe-area-inset-left)) !important;
+        width: auto;
+        max-width: none;
+        transform: none !important;
+    }
+
+    .reader-coach-nudge-inner {
+        padding: 12px 14px;
+        border-radius: 14px;
     }
 
     .ft-atmosphere-frame { min-height: 420px; padding: 16px; border-radius: 19px; }

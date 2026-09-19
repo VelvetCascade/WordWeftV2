@@ -15,11 +15,13 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     const [books, setBooks] = useState<SearchBookResult[]>([]);
     const [authors, setAuthors] = useState<SearchAuthorResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [searchError, setSearchError] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
     const requestGateRef = useRef<ReturnType<typeof createLatestRequestGate> | null>(null);
     if (!requestGateRef.current) requestGateRef.current = createLatestRequestGate();
 
@@ -28,13 +30,16 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     // Focus input when overlay opens
     useEffect(() => {
         if (isOpen) {
+            previousFocusRef.current = document.activeElement as HTMLElement | null;
             focusTimer.current = setTimeout(() => inputRef.current?.focus(), 100);
             setQuery('');
             setBooks([]);
             setAuthors([]);
             setSelectedIndex(-1);
+            setSearchError('');
         } else {
             requestGateRef.current?.invalidate();
+            previousFocusRef.current?.focus();
         }
         return () => {
             if (focusTimer.current) clearTimeout(focusTimer.current);
@@ -74,6 +79,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         }
         const requestId = requestGateRef.current!.begin();
         setIsLoading(true);
+        setSearchError('');
         try {
             const result = await api.searchAutocomplete(q);
             if (!requestGateRef.current?.isLatest(requestId)) return;
@@ -82,6 +88,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         } catch (e) {
             if (requestGateRef.current?.isLatest(requestId)) {
                 console.error('Autocomplete error:', e);
+                setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
             }
         } finally {
             if (requestGateRef.current?.isLatest(requestId)) setIsLoading(false);
@@ -132,14 +139,22 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
             } else {
                 navigateToFullSearch();
             }
+        } else if (e.key === 'Tab' && overlayRef.current) {
+            const focusable = Array.from(overlayRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href]'));
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         }
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="search-overlay-backdrop" onClick={onClose} ref={overlayRef}>
+        <div className="search-overlay-backdrop" onClick={onClose} ref={overlayRef} role="dialog" aria-modal="true" aria-labelledby="search-overlay-title">
             <div className="search-overlay-container" onClick={(e) => e.stopPropagation()}>
+                <h2 id="search-overlay-title" className="sr-only">Search WordWeft</h2>
                 {/* Search Input */}
                 <div className="search-overlay-input-wrapper">
                     <svg className="search-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -156,15 +171,18 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                         className="search-overlay-input"
                         autoComplete="off"
                         spellCheck={false}
+                        role="combobox"
+                        aria-expanded={totalResults > 0}
+                        aria-controls="search-overlay-results"
                     />
-                    <button onClick={onClose} className="search-overlay-close-btn">
+                    <button onClick={onClose} className="search-overlay-close-btn" aria-label="Close search">
                         <span>ESC</span>
                     </button>
                 </div>
 
                 {/* Results */}
                 {(books.length > 0 || authors.length > 0 || isLoading) && (
-                    <div className="search-overlay-results">
+                    <div className="search-overlay-results" id="search-overlay-results" role="listbox">
                         {isLoading && (
                             <div className="search-overlay-loading">
                                 <div className="search-overlay-spinner" />
@@ -277,8 +295,16 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                     </div>
                 )}
 
+                {searchError && (
+                    <div className="search-overlay-error" role="alert">
+                        <strong>Search could not be loaded.</strong>
+                        <span>{searchError}</span>
+                        <button type="button" onClick={() => void fetchAutocomplete(query)}>Try again</button>
+                    </div>
+                )}
+
                 {/* No results */}
-                {query.trim().length >= 2 && !isLoading && totalResults === 0 && (
+                {query.trim().length >= 2 && !isLoading && !searchError && totalResults === 0 && (
                     <div className="search-overlay-empty">
                         <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <circle cx="11" cy="11" r="8" />

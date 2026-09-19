@@ -120,20 +120,96 @@ class ChapterPublishingServiceTest {
         assertEquals("published", chapter.getStatus());
         assertNull(chapter.getScheduledAt());
         assertEquals(NOW, chapter.getPublishedAt());
+        assertEquals("The Return", chapter.getPublishedTitle());
+        assertEquals("A complete chapter ready for readers.", chapter.getPublishedContent());
         verify(notifications, times(1)).notifyFollowers(
                 eq("author-1"), eq("AUTHOR_NEW_CHAPTER"), eq("CHAPTER"), eq("chapter-1"),
                 contains("The Return"), argThat(metadata -> "North Star".equals(metadata.get("bookTitle"))));
     }
 
     @Test
-    void publishNowAllowsDraftStoryPreparationWithoutNotifyingFollowers() {
+    void publishingAChapterPublishesItsDraftStoryAtTheSameTime() {
         book.setPublicationStatus("draft");
 
         service.publishNow("author-1", "book-1", "chapter-1");
 
+        assertEquals("published", book.getPublicationStatus());
         assertEquals("published", chapter.getStatus());
         assertEquals(NOW, chapter.getPublishedAt());
+        assertNotNull(book.getPublishedDate());
+    }
+
+    @Test
+    void scheduleOnlyAllowsTheNextUnpublishedChapter() {
+        Chapter first = new Chapter();
+        first.setId("chapter-0");
+        first.setTitle("First");
+        first.setContent("First text");
+        Chapter third = new Chapter();
+        third.setId("chapter-3");
+        third.setTitle("Third");
+        third.setContent("Third text");
+        book.setChapters(List.of(first, chapter, third));
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.schedule("author-1", "book-1", "chapter-1", NOW.plusSeconds(600)));
+
+        assertEquals("Publish or schedule the preceding chapter first.", error.getReason());
+        assertEquals("draft", chapter.getStatus());
+    }
+
+    @Test
+    void publishingARevisionRefreshesSnapshotWithoutSecondFollowerNotification() {
+        chapter.setStatus("published");
+        chapter.setPublishedAt(NOW.minusSeconds(300));
+        chapter.setPublishedTitle("Old title");
+        chapter.setPublishedContent("Old public copy");
+        chapter.setTitle("Revised title");
+        chapter.setContent("Revised public copy");
+        chapter.updateWordCount();
+
+        service.publishNow("author-1", "book-1", "chapter-1");
+
+        assertEquals("Revised title", chapter.getPublishedTitle());
+        assertEquals("Revised public copy", chapter.getPublishedContent());
         verifyNoInteractions(notifications);
+    }
+
+    @Test
+    void publishingLaterChapterAlsoPublishesCompletePrecedingDrafts() {
+        Chapter first = new Chapter();
+        first.setId("chapter-0");
+        first.setTitle("Before");
+        first.setContent("The first chapter.");
+        first.updateWordCount();
+        book.setPublicationStatus("draft");
+        book.setChapters(List.of(first, chapter));
+
+        service.publishNow("author-1", "book-1", "chapter-1");
+
+        assertEquals("published", first.getStatus());
+        assertEquals("published", chapter.getStatus());
+        assertEquals("published", book.getPublicationStatus());
+    }
+
+    @Test
+    void unpublishingAChapterAlsoUnpublishesEveryLaterChapter() {
+        Chapter later = new Chapter();
+        later.setId("chapter-2");
+        later.setTitle("Later");
+        later.setContent("Later text");
+        later.setStatus("published");
+        later.setPublishedAt(NOW.minusSeconds(30));
+        chapter.setStatus("published");
+        chapter.setPublishedAt(NOW.minusSeconds(60));
+        book.setChapters(List.of(chapter, later));
+
+        service.unpublishChapter("author-1", "book-1", "chapter-1");
+
+        assertEquals("draft", chapter.getStatus());
+        assertEquals("draft", later.getStatus());
+        assertNull(chapter.getPublishedAt());
+        assertNull(later.getPublishedAt());
     }
 
     @Test
@@ -154,5 +230,16 @@ class ChapterPublishingServiceTest {
         assertEquals("published", chapter.getStatus());
         assertEquals("scheduled", later.getStatus());
         verify(notifications, times(1)).notifyFollowers(anyString(), anyString(), anyString(), anyString(), anyString(), anyMap());
+    }
+
+    @Test
+    void schedulerDoesNothingAfterStoryReturnsToDraft() {
+        chapter.setStatus("scheduled");
+        chapter.setScheduledAt(NOW.minusSeconds(1));
+        book.setPublicationStatus("draft");
+
+        assertFalse(service.publishDue(book, NOW));
+        assertEquals("scheduled", chapter.getStatus());
+        verifyNoInteractions(notifications);
     }
 }

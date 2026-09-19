@@ -72,6 +72,7 @@ export interface Chapter {
   status: 'draft' | 'scheduled' | 'published';
   scheduledAt?: string | null;
   publishedAt?: string | null;
+  hasUnpublishedChanges?: boolean;
   // Stats
   viewCount: number;
   likesCount: number;
@@ -307,6 +308,7 @@ export interface HookCard {
   wordCount: number;
   readingMinutes: number;
   likesCount: number;
+  liked: boolean;
 }
 
 export interface HookFeedResponse {

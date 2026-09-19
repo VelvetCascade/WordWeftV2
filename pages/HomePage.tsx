@@ -75,6 +75,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [searchError, setSearchError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -115,12 +116,14 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
       return;
     }
     setIsLoading(true);
+    setSearchError('');
     try {
       const result = await api.searchAutocomplete(q);
       setBooks(result.books || []);
       setAuthors(result.authors || []);
     } catch (e) {
       console.error('Autocomplete error:', e);
+      setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -306,7 +309,8 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
               )}
 
               {/* No results */}
-              {!isLoading && query.trim().length >= 2 && totalResults === 0 && (
+              {searchError && <div className="search-overlay-error" role="alert"><strong>Search could not be loaded.</strong><span>{searchError}</span><button type="button" onClick={() => void fetchAutocomplete(query)}>Try again</button></div>}
+              {!isLoading && !searchError && query.trim().length >= 2 && totalResults === 0 && (
                 <div className="hero-search-empty">
                   <p>No results for "{query}"</p>
                   <p className="hero-search-empty-hint">Try different keywords or check your spelling</p>
@@ -397,12 +401,12 @@ export const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-primary/30"></div>
         <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 lg:gap-8 items-center h-full">
           <div className="ww-home-hero-copy text-center lg:text-left z-20 flex flex-col items-center lg:items-start">
-            <span className="ww-home-eyebrow">Your next chapter starts here</span>
+            <span className="ww-home-eyebrow">Your library</span>
             <h1 className="font-sans text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tighter mb-4 drop-shadow-md">
-              Find a story.<br />Leave with a world.
+              Find something<br />worth reading.
             </h1>
             <p className="text-lg md:text-xl max-w-lg text-gray-100 mb-8 drop-shadow">
-              Discover immersive fiction, follow the voices you love, or shape a story of your own.
+              Browse original fiction, continue a saved story, or return to your own draft.
             </p>
             <div className="ww-home-actions flex justify-center lg:justify-start space-x-4">
               <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Reading'); window.location.hash = '/category'; }} className="ww-home-primary">Explore the library</button>

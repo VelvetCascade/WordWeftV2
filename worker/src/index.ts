@@ -371,13 +371,13 @@ export default {
     }
 
     // PUT /upload/:applicationId
-    const uploadMatch = pathname.match(/^\/upload\/([a-zA-Z0-9]+)$/);
+    const uploadMatch = pathname.match(/^\/upload\/([a-zA-Z0-9_-]+)$/);
     if (uploadMatch && request.method === 'PUT') {
       return handleUpload(request, uploadMatch[1], env, origin);
     }
 
     // GET /download/:applicationId/:filename
-    const downloadMatch = pathname.match(/^\/download\/([a-zA-Z0-9]+)\/(.+)$/);
+    const downloadMatch = pathname.match(/^\/download\/([a-zA-Z0-9_-]+)\/(.+)$/);
     if (downloadMatch && request.method === 'GET') {
       return handleDownload(request, downloadMatch[1], decodeURIComponent(downloadMatch[2]), env, origin);
     }

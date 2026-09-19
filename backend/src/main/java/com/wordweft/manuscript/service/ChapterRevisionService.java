@@ -3,6 +3,7 @@ package com.wordweft.manuscript.service;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.manuscript.model.ChapterRevision;
 import com.wordweft.manuscript.repository.ChapterRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,12 +94,17 @@ public class ChapterRevisionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revision not found."));
 
         capture(authorId, owned.book(), owned.chapter(), "PRE_RESTORE", true);
+        PublishedChapterView.preserveLegacySnapshot(owned.chapter());
         owned.chapter().setTitle(revision.getTitle());
         owned.chapter().setContent(revision.getContent());
         owned.chapter().updateWordCount();
-        owned.chapter().setStatus("draft");
-        owned.chapter().setScheduledAt(null);
-        owned.chapter().setPublishedAt(null);
+        int restoredIndex = owned.book().getChapters().indexOf(owned.chapter());
+        for (int index = restoredIndex; index < owned.book().getChapters().size(); index++) {
+            Chapter affected = owned.book().getChapters().get(index);
+            affected.setStatus("draft");
+            affected.setScheduledAt(null);
+            affected.setPublishedAt(null);
+        }
         return books.save(owned.book());
     }
 

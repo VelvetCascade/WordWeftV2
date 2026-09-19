@@ -6,6 +6,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.Comment;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.CommentRepository;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
@@ -93,7 +94,7 @@ public class CommentController {
             meta.put("chapterId", chapterId);
             notificationService.createNotification(
                     book.getAuthorId(), userDetails.getId(), "NEW_COMMENT", "CHAPTER",
-                    chapterId, commenterName + " commented on \"" + chapter.getTitle() + "\"", meta);
+                    chapterId, commenterName + " commented on \"" + PublishedChapterView.of(chapter).title() + "\"", meta);
         }
 
         return ResponseEntity.ok(enrichComment(comment));

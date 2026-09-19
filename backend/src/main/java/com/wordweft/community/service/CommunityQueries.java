@@ -1,6 +1,7 @@
 package com.wordweft.community.service;
 
 import com.wordweft.book.model.*;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.community.dto.CommunityDtos.*;
 import com.wordweft.community.model.*;
 import com.wordweft.community.model.CommunityEnums.*;
@@ -123,7 +124,7 @@ public class CommunityQueries {
             List<ChapterChoice> chapters = new ArrayList<>();
             if (book.getChapters() != null) for (int i = 0; i < book.getChapters().size(); i++) {
                 Chapter c = book.getChapters().get(i);
-                if ("published".equalsIgnoreCase(c.getStatus())) chapters.add(new ChapterChoice(c.getId(), c.getTitle(), i));
+                if ("published".equalsIgnoreCase(c.getStatus())) chapters.add(new ChapterChoice(c.getId(), PublishedChapterView.of(c).title(), i));
             }
             User author = authors.get(book.getAuthorId());
             return new AttachmentChoice(book.getId(), book.getTitle(), book.getCoverUrl(), author == null ? "Former member" : author.getUsername(),

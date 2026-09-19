@@ -256,6 +256,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
     const [comments, setComments] = useState<Comment[]>([]);
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
+    const [revealedCommentIndex, setRevealedCommentIndex] = useState<number | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
 
     // Quote sharing state
@@ -760,7 +761,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 const count = paragraphCommentCount(index);
 
                 return (
-                    <div key={index} id={`paragraph-${index}`} className="group relative mb-6 rounded-lg transition-colors">
+                    <div
+                        key={index}
+                        id={`paragraph-${index}`}
+                        className={`reader-comment-block group relative mb-6 rounded-lg transition-colors ${revealedCommentIndex === index ? 'is-comment-revealed' : ''}`}
+                        onClick={() => setRevealedCommentIndex(current => current === index ? null : index)}
+                    >
                         {React.createElement(
                             domNode.name,
                             { ...domNode.attribs, className: `${domNode.attribs.className || ''} relative z-10` },
@@ -768,9 +774,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                         )}
                         {chapterContent.access === 'FULL' ? (
                             <button
-                                onClick={() => openCommentDrawer(index)}
-                                className={`absolute -right-4 md:-right-12 top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'opacity-100 text-accent bg-accent/10' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
+                                onClick={(event) => { event.stopPropagation(); setRevealedCommentIndex(null); openCommentDrawer(index); }}
+                                className={`reader-comment-button absolute top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'has-comments text-accent bg-accent/10' : 'text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
                                 title="Add comment"
+                                aria-label={count > 0 ? `Open ${count} paragraph comments` : 'Comment on this paragraph'}
                             >
                                 <div className="relative">
                                     <PlusIcon className="w-5 h-5" />

@@ -4,6 +4,7 @@ import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.ContentAccessService;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.discovery.dto.HookFeedResponse;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
@@ -68,31 +69,33 @@ public class HookFeedService {
 
         Map<String, String> authorNames = new java.util.HashMap<>();
         List<HookFeedResponse.Hook> items = candidates.stream().limit(safeLimit)
-                .map(candidate -> toHook(candidate, authorNames))
+                .map(candidate -> toHook(candidate, userId, authorNames))
                 .toList();
         return new HookFeedResponse(items, taste, !taste.isEmpty());
     }
 
-    private HookFeedResponse.Hook toHook(Candidate candidate, Map<String, String> authorNames) {
+    private HookFeedResponse.Hook toHook(Candidate candidate, String userId, Map<String, String> authorNames) {
         Book book = candidate.book();
         Chapter chapter = candidate.chapter();
+        PublishedChapterView.Snapshot publicChapter = PublishedChapterView.of(chapter);
         String authorId = book.getAuthorId();
         String authorName = authorNames.computeIfAbsent(authorId == null ? "" : authorId,
                 id -> users.findById(id).map(User::getUsername).orElse("WordWeft Writer"));
-        int words = chapter.getWordCount();
-        if (words <= 0) words = plainText(chapter.getContent()).split("\\s+").length;
+        int words = publicChapter.wordCount();
+        if (words <= 0) words = plainText(publicChapter.content()).split("\\s+").length;
         return new HookFeedResponse.Hook(
-                book.getId(), chapter.getId(), book.getTitle(), chapter.getTitle(), authorId, authorName,
-                book.getCoverUrl(), excerpt(chapter.getContent()), safeGenres(book), candidate.matchedGenres(),
+                book.getId(), chapter.getId(), book.getTitle(), publicChapter.title(), authorId, authorName,
+                book.getCoverUrl(), excerpt(publicChapter.content()), safeGenres(book), candidate.matchedGenres(),
                 words, Math.max(1, (int) Math.ceil(words / 250.0)),
-                chapter.getLikes() == null ? 0 : chapter.getLikes().size());
+                chapter.getLikes() == null ? 0 : chapter.getLikes().size(),
+                userId != null && chapter.getLikes() != null && chapter.getLikes().contains(userId));
     }
 
     private Chapter firstPublishedChapter(Book book) {
         if (book.getChapters() == null) return null;
         return book.getChapters().stream()
                 .filter(chapter -> chapter != null && "published".equalsIgnoreCase(chapter.getStatus()))
-                .filter(chapter -> chapter.getContent() != null && !plainText(chapter.getContent()).isBlank())
+                .filter(chapter -> !plainText(PublishedChapterView.of(chapter).content()).isBlank())
                 .findFirst().orElse(null);
     }
 

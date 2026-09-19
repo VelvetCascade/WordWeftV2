@@ -63,6 +63,19 @@ test('chapter image storage never reports success without a configured worker', 
     assert.doesNotMatch(storage, /return "\/api\/chapter-images\//);
     assert.match(storage, /\.timeout\(UPLOAD_TIMEOUT\)/);
     assert.match(worker, /Filename does not match token/);
+    assert.match(worker, /\[a-zA-Z0-9_\-\]\+/, 'Founding Writer UUIDs must be routable');
+});
+
+test('local development uses the Vite API proxy so phones do not call their own localhost', () => {
+    const api = readFileSync(new URL('../api/client.ts', import.meta.url), 'utf8');
+    const vite = readFileSync(new URL('../vite.config.ts', import.meta.url), 'utf8');
+    const env = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
+
+    assert.match(api, /VITE_API_BASE_URL \|\| '\/api'/);
+    assert.match(vite, /'\/api'[\s\S]*127\.0\.0\.1:8080/);
+    assert.match(vite, /bypass\(req\)/);
+    assert.match(vite, /Let Vite serve source modules instead of forwarding them to Spring/);
+    assert.match(env, /^VITE_API_BASE_URL=\/api$/m);
 });
 
 test('reader sign-in gate ships enabled with the approved reader language', () => {
@@ -76,4 +89,24 @@ test('reader sign-in gate ships enabled with the approved reader language', () =
     assert.match(properties, /\$\{READER_SIGN_IN_GATE_ENABLED:true\}/);
     assert.match(`${story}\n${gate}\n${seo}`, /Sign in to read/);
     assert.doesNotMatch(`${story}\n${gate}\n${seo}`, /Free account required/i);
+});
+
+test('default age rating is implicit while restricted ratings remain visible', () => {
+    const badge = readFileSync(new URL('../components/AgeRatingBadge.tsx', import.meta.url), 'utf8');
+    assert.match(badge, /rating === 'ALL_AGES'\) return null/);
+    assert.match(badge, /MATURE_18: '18\+'/);
+    assert.match(badge, /ADULT_21: '21\+'/);
+});
+
+test('reader comments and coaching use responsive contextual controls', () => {
+    const reader = readFileSync(new URL('../pages/ReaderPage.tsx', import.meta.url), 'utf8');
+    const coach = readFileSync(new URL('../components/ReaderDiscoveryCoach.tsx', import.meta.url), 'utf8');
+    const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
+
+    assert.match(reader, /revealedCommentIndex/);
+    assert.match(reader, /reader-comment-button/);
+    assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
+    assert.match(css, /env\(safe-area-inset-bottom\)/);
+    assert.doesNotMatch(css, /opacity: \.78 !important/);
+    assert.doesNotMatch(coach, /positionStyles/);
 });

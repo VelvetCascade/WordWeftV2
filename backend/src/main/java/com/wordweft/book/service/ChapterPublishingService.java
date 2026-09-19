@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -49,6 +50,13 @@ public class ChapterPublishingService {
         Chapter chapter = requireChapter(book, chapterId);
         requirePublishedStory(book);
         requireCompleteChapter(chapter);
+        int targetIndex = chapterIndex(book, chapterId);
+        int nextIndex = firstUnpublishedIndex(book);
+        if (targetIndex != nextIndex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Publish or schedule the preceding chapter first.");
+        }
 
         Instant now = clock.instant();
         if (releaseAt == null || releaseAt.isBefore(now.plusSeconds(MINIMUM_SCHEDULE_LEAD_SECONDS))) {
@@ -81,34 +89,91 @@ public class ChapterPublishingService {
 
     public Book publishNow(String authorId, String bookId, String chapterId) {
         Book book = requireOwnedBook(authorId, bookId);
-        Chapter chapter = requireChapter(book, chapterId);
-        if ("published".equals(chapter.getStatus())) {
-            return book;
+        int targetIndex = chapterIndex(book, chapterId);
+        Chapter chapter = book.getChapters().get(targetIndex);
+        boolean storyWasPublished = "published".equals(book.getPublicationStatus());
+        boolean chapterWasPublished = "published".equals(chapter.getStatus());
+
+        for (int index = 0; index <= targetIndex; index++) {
+            Chapter required = book.getChapters().get(index);
+            if (!"published".equals(required.getStatus()) || required == chapter) {
+                requireCompleteChapter(required);
+                ensureBookAgeRating(book, required);
+            }
         }
 
-        requireCompleteChapter(chapter);
-        ensureBookAgeRating(book, chapter);
         Instant publishedAt = clock.instant();
-        publishChapter(chapter, publishedAt);
+        for (int index = 0; index <= targetIndex; index++) {
+            Chapter required = book.getChapters().get(index);
+            if (!"published".equals(required.getStatus()) || required == chapter) {
+                publishChapter(required, publishedAt);
+            }
+        }
+        if (!storyWasPublished) {
+            book.setPublicationStatus("published");
+            if (book.getPublishedDate() == null) {
+                book.setPublishedDate(LocalDate.ofInstant(publishedAt, ZoneOffset.UTC));
+            }
+        }
         markStoryUpdated(book, publishedAt);
         Book saved = books.save(book);
-        if ("published".equals(saved.getPublicationStatus())) {
+        if (storyWasPublished && !chapterWasPublished) {
             notifyFollowers(saved, chapter);
+        } else if (!storyWasPublished) {
+            notifyStoryFollowers(saved);
         }
         return saved;
     }
 
-    public boolean publishDue(Book book, Instant now) {
-        boolean changed = false;
+    public Book publishStory(String authorId, String bookId, List<String> selectedChapterIds) {
+        Book book = requireOwnedBook(authorId, bookId);
+        if (selectedChapterIds == null || selectedChapterIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose at least one chapter to publish.");
+        }
+        int targetIndex = -1;
+        for (String chapterId : selectedChapterIds) {
+            targetIndex = Math.max(targetIndex, chapterIndex(book, chapterId));
+        }
+        return publishNow(authorId, bookId, book.getChapters().get(targetIndex).getId());
+    }
+
+    public Book unpublishChapter(String authorId, String bookId, String chapterId) {
+        Book book = requireOwnedBook(authorId, bookId);
+        int targetIndex = chapterIndex(book, chapterId);
+        for (int index = targetIndex; index < book.getChapters().size(); index++) {
+            Chapter chapter = book.getChapters().get(index);
+            chapter.setStatus("draft");
+            chapter.setScheduledAt(null);
+            chapter.setPublishedAt(null);
+        }
+        return books.save(book);
+    }
+
+    public Book unpublishStory(String authorId, String bookId) {
+        Book book = requireOwnedBook(authorId, bookId);
+        book.setPublicationStatus("draft");
         for (Chapter chapter : book.getChapters()) {
-            if ("scheduled".equals(chapter.getStatus())
-                    && chapter.getScheduledAt() != null
-                    && !chapter.getScheduledAt().isAfter(now)) {
-                requireCompleteChapter(chapter);
-                ensureBookAgeRating(book, chapter);
-                publishChapter(chapter, now);
-                changed = true;
-            }
+            chapter.setStatus("draft");
+            chapter.setScheduledAt(null);
+            chapter.setPublishedAt(null);
+        }
+        return books.save(book);
+    }
+
+    public boolean publishDue(Book book, Instant now) {
+        if (!"published".equals(book.getPublicationStatus())) return false;
+        boolean changed = false;
+        while (true) {
+            int nextIndex = firstUnpublishedIndex(book);
+            if (nextIndex < 0) break;
+            Chapter chapter = book.getChapters().get(nextIndex);
+            if (!"scheduled".equals(chapter.getStatus())
+                    || chapter.getScheduledAt() == null
+                    || chapter.getScheduledAt().isAfter(now)) break;
+            requireCompleteChapter(chapter);
+            ensureBookAgeRating(book, chapter);
+            publishChapter(chapter, now);
+            changed = true;
         }
 
         if (!changed) {
@@ -141,6 +206,20 @@ public class ChapterPublishingService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chapter not found."));
     }
 
+    private int firstUnpublishedIndex(Book book) {
+        for (int index = 0; index < book.getChapters().size(); index++) {
+            if (!"published".equals(book.getChapters().get(index).getStatus())) return index;
+        }
+        return -1;
+    }
+
+    private int chapterIndex(Book book, String chapterId) {
+        for (int index = 0; index < book.getChapters().size(); index++) {
+            if (chapterId.equals(book.getChapters().get(index).getId())) return index;
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chapter not found.");
+    }
+
     private void requirePublishedStory(Book book) {
         if (!"published".equals(book.getPublicationStatus())) {
             throw new ResponseStatusException(
@@ -166,6 +245,7 @@ public class ChapterPublishingService {
     }
 
     private void publishChapter(Chapter chapter, Instant publishedAt) {
+        PublishedChapterView.capture(chapter);
         chapter.setStatus("published");
         chapter.setScheduledAt(null);
         chapter.setPublishedAt(publishedAt);
@@ -192,6 +272,16 @@ public class ChapterPublishingService {
                 metadata);
     }
 
+    private void notifyStoryFollowers(Book book) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("bookId", book.getId());
+        metadata.put("bookTitle", book.getTitle());
+        if (book.getCoverUrl() != null) metadata.put("coverUrl", book.getCoverUrl());
+        notifications.notifyFollowers(
+                book.getAuthorId(), "AUTHOR_NEW_STORY", "BOOK", book.getId(),
+                "published a new story \"" + book.getTitle() + "\"", metadata);
+    }
+
     private void ensureBookAgeRating(Book book, Chapter chapter) {
         if (chapter.getContentWarnings() != null && !chapter.getContentWarnings().isEmpty()) {
             AgeRating required = ContentAccessService.requiredRatingForWarnings(chapter.getContentWarnings());
@@ -200,6 +290,14 @@ public class ChapterPublishingService {
             }
             if (required.getMinimumAge() >= 18) {
                 book.setMature(true);
+            }
+            if (book.getContentWarnings() == null) {
+                book.setContentWarnings(new java.util.ArrayList<>());
+            }
+            for (String warning : chapter.getContentWarnings()) {
+                if (!book.getContentWarnings().contains(warning)) {
+                    book.getContentWarnings().add(warning);
+                }
             }
         }
         if (contentAccessService != null && userRepository != null && (book.isMature() || (book.getAgeRating() != null && book.getAgeRating().getMinimumAge() >= 18))) {

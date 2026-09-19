@@ -1,27 +1,33 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# WordWeft
 
-# Run and deploy your AI Studio app
+WordWeft is a React/Vite reading and writing application backed by Spring Boot and MongoDB.
 
-This contains everything you need to run your app locally.
+## Local development
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+Requirements: Node 22.18+ (or Node 24), Java 17+, Maven, and the environment values listed in [`.env.example`](./.env.example).
 
-## Run Locally
+1. Start the backend from `backend` with `mvn spring-boot:run` after loading the backend variables into the process environment.
+2. Start the frontend from the repository root with `npm run dev`.
+3. Open `http://localhost:3000`. Vite proxies `/api` to the backend at `http://127.0.0.1:8080`, so the same frontend URL also works from a phone on the local network.
 
-**Prerequisites:**  Node.js
+Run verification with:
 
+```text
+npm test
+npm run typecheck
+npm run build
+npm run test:seo
+npm run check:bundle
+cd backend && mvn test
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Storage boundaries
 
+- ImageKit: story covers, user avatars, and character portraits.
+- Cloudflare R2: inline chapter images and Founding Writer manuscript files only.
 
-## Production SEO
+Do not move cover, avatar, or character uploads to R2. Do not use the Render filesystem as durable upload storage.
 
-Use Node 22.18+ or Node 24. `npm run build` generates the Vercel Build Output API deployment, including public HTML and live sitemaps. Deploy the backend SEO endpoints first and configure both API URLs before deploying the frontend. See [the SEO launch guide](docs/SEO-LAUNCH.md) for indexing rules, search intent, environment settings, verification commands and Search Console setup.
+## Deployment
 
-Use `npm run preview:seo` to check crawler-visible HTML locally; Vite's static preview does not run the SEO renderer.
+The exact Vercel, Render, and Cloudflare configuration is documented in [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md). Public SEO setup is documented separately in [`docs/SEO-LAUNCH.md`](./docs/SEO-LAUNCH.md).

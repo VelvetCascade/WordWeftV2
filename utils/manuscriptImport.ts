@@ -1,4 +1,4 @@
-const MAX_MANUSCRIPT_BYTES = 5 * 1024 * 1024;
+const MAX_MANUSCRIPT_BYTES = 25 * 1024 * 1024;
 const SUPPORTED_EXTENSIONS = new Set(['txt', 'md', 'markdown', 'docx']);
 
 export function validateManuscriptFile(filename: string, size: number): void {
@@ -10,6 +10,6 @@ export function validateManuscriptFile(filename: string, size: number): void {
         throw new Error('Choose a manuscript that contains text.');
     }
     if (size > MAX_MANUSCRIPT_BYTES) {
-        throw new Error('Manuscripts must be 5 MB or smaller.');
+        throw new Error('Manuscripts must be 25 MB or smaller.');
     }
 }

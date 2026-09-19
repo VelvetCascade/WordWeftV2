@@ -10,6 +10,7 @@ import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.book.service.ChapterContentService;
 import com.wordweft.book.service.ChapterPublishingService;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.book.service.ContentAccessService;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.manuscript.service.ManuscriptImportService;
@@ -377,6 +378,7 @@ public class BookController {
                     : "draft".equals(status) ? "MANUAL_SAVE" : "AUTOSAVE";
             chapterRevisionService.capture(
                     userDetails.getId(), book, chapter, reason, !"preserve".equals(status));
+            PublishedChapterView.preserveLegacySnapshot(chapter);
         }
 
         chapter.setTitle(data.get("title"));
@@ -385,35 +387,14 @@ public class BookController {
         if (warningValue instanceof List<?>) {
             List<String> warnings = ((List<?>) warningValue).stream().map(String::valueOf).toList();
             chapter.setContentWarnings(warnings);
-
-            AgeRating requiredRating = ContentAccessService.requiredRatingForWarnings(warnings);
-            if (requiredRating.getMinimumAge() > (book.getAgeRating() != null ? book.getAgeRating().getMinimumAge() : 0)) {
-                book.setAgeRating(requiredRating);
-            }
-            if (requiredRating.getMinimumAge() >= 18) {
-                book.setMature(true);
-            }
-
-            if ((book.isMature() || (book.getAgeRating() != null && book.getAgeRating().getMinimumAge() >= 18)) && contentAccessService != null && userRepository != null) {
-                User author = userRepository.findById(userDetails.getId()).orElse(null);
-                contentAccessService.validateAuthorCanPostRating(author, book.getAgeRating());
-            }
-
-            if (book.getContentWarnings() == null) {
-                book.setContentWarnings(new ArrayList<>());
-            }
-            for (String w : warnings) {
-                if (!book.getContentWarnings().contains(w)) {
-                    book.getContentWarnings().add(w);
-                }
-            }
         }
         Object disclaimerValue = payload.get("disclaimerNote");
         if (disclaimerValue != null) chapter.setDisclaimerNote(String.valueOf(disclaimerValue));
         chapter.updateWordCount();
 
-        boolean publishAfterSave = "published".equals(status) && !"published".equals(chapter.getStatus());
-        if (publishAfterSave || "draft".equals(status)) {
+        boolean publishAfterSave = "published".equals(status);
+        if ((publishAfterSave && !"published".equals(chapter.getStatus()))
+                || ("draft".equals(status) && !"published".equals(chapter.getStatus()))) {
             chapter.setStatus("draft");
             chapter.setScheduledAt(null);
         }
@@ -426,7 +407,7 @@ public class BookController {
     }
 
     @PatchMapping("/{bookId}/status")
-    public ResponseEntity<?> updateBookStatus(@PathVariable String bookId, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> updateBookStatus(@PathVariable String bookId, @RequestBody Map<String, Object> payload) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
         Book book = bookRepository.findById(bookId).orElseThrow();
@@ -435,38 +416,22 @@ public class BookController {
             return ResponseEntity.status(403).body("Not authorized");
         }
 
-        String status = payload.get("status");
+        String status = String.valueOf(payload.get("status"));
 
         if ("published".equals(status)) {
-            // VALIDATION: Cannot publish book with 0 published chapters
-            boolean hasPublishedChapters = book.getChapters().stream().anyMatch(c -> "published".equals(c.getStatus()));
-            if (!hasPublishedChapters) {
-                return ResponseEntity.badRequest().body("Cannot publish a book with no published chapters.");
+            Object selected = payload.get("chapterIds");
+            List<String> selectedChapterIds = selected instanceof List<?>
+                    ? ((List<?>) selected).stream().map(String::valueOf).toList()
+                    : book.getChapters().stream()
+                            .filter(chapter -> "published".equals(chapter.getStatus()))
+                            .map(Chapter::getId).toList();
+            if (selectedChapterIds.isEmpty() && !book.getChapters().isEmpty()) {
+                selectedChapterIds = List.of(book.getChapters().get(0).getId());
             }
-            AgeRating effective = contentAccessService != null ? contentAccessService.effectiveRating(book) : (book.getAgeRating() != null ? book.getAgeRating() : AgeRating.ALL_AGES);
-            if ((effective.getMinimumAge() >= 18 || book.isMature()) && contentAccessService != null && userRepository != null) {
-                User author = userRepository.findById(userDetails.getId()).orElse(null);
-                contentAccessService.validateAuthorCanPostRating(author, effective);
-            }
-            book.setPublicationStatus("published");
-            // Set date only if it wasn't set before or if we want to bump it
-            if (book.getPublishedDate() == null) {
-                book.setPublishedDate(LocalDate.now());
-            }
-
-            // Notify followers about new story
-            java.util.Map<String, String> meta = new java.util.HashMap<>();
-            meta.put("bookTitle", book.getTitle());
-            meta.put("bookId", bookId);
-            meta.put("coverUrl", book.getCoverUrl() != null ? book.getCoverUrl() : "");
-            notificationService.notifyFollowers(
-                    userDetails.getId(), "AUTHOR_NEW_STORY", "BOOK", bookId,
-                    "published a new story \"" + book.getTitle() + "\"", meta);
+            chapterPublishingService.publishStory(userDetails.getId(), bookId, selectedChapterIds);
         } else {
-            book.setPublicationStatus("draft");
+            chapterPublishingService.unpublishStory(userDetails.getId(), bookId);
         }
-
-        bookRepository.save(book);
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
 
@@ -484,9 +449,7 @@ public class BookController {
                 .orElseThrow();
         chapterRevisionService.capture(userDetails.getId(), book, chapter, "STATUS_CHANGE", true);
         if ("published".equals(chapter.getStatus())) {
-            chapter.setStatus("draft");
-            chapter.setScheduledAt(null);
-            bookRepository.save(book);
+            chapterPublishingService.unpublishChapter(userDetails.getId(), bookId, chapterId);
         } else {
             chapterPublishingService.publishNow(userDetails.getId(), bookId, chapterId);
         }

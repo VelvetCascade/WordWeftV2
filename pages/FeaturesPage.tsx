@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WritingDemoModal } from '../components/WritingDemoModal';
-import { SparklesIcon } from '../components/icons/Icons';
 
 /* ═══════════════════════════════════════════════════════════════
    FEATURES PAGE — Warm earth-tone themed, immersive showcase
@@ -473,46 +472,34 @@ export const FeaturesPage: React.FC = () => {
 
     return (
         <div className="ft-page">
-            <WritingDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
+            <WritingDemoModal
+                isOpen={isDemoModalOpen}
+                onClose={() => setIsDemoModalOpen(false)}
+                onStartWriting={() => { setIsDemoModalOpen(false); window.location.hash = '/auth'; }}
+            />
 
             {/* ── HERO ────────────────────────────────────────────── */}
             <section ref={heroRef} className={`ft-hero ${heroVisible ? 'ft-hero-visible' : ''}`}>
-                {/* Floating ink blots / particles */}
-                <div className="ft-hero-particles">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                        <div key={i} className="ft-particle" style={{ '--i': i } as React.CSSProperties} />
-                    ))}
-                </div>
-
                 <div className="ft-hero-layout">
                 <div className="ft-hero-content">
-                    <span className="ft-hero-eyebrow"><span className="ft-eyebrow-dot" /> A home for story people</span>
+                    <span className="ft-hero-eyebrow"><span className="ft-eyebrow-dot" /> WordWeft</span>
                     <h1 className="ft-hero-headline">
-                        Stories deserve<br />
-                        <span className="ft-hero-gradient-text">room to breathe.</span>
+                        Read stories.<br />
+                        <span className="ft-hero-gradient-text">Write your own.</span>
                     </h1>
                     <p className="ft-hero-sub">
-                        A thoughtful reading and writing studio where atmosphere, characters, and craft live together
-                        &mdash; without getting between you and the page.
+                        Discover original fiction, follow writers, and draft your own work with chapters, characters, and notes in one place.
                     </p>
                     <div className="ft-hero-ctas">
                         <button onClick={() => setIsDemoModalOpen(true)} className="ft-btn ft-btn-primary relative overflow-hidden group">
                             <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                            <SparklesIcon className="w-5 h-5 text-current relative z-10" />
-                            <span className="relative z-10 font-bold">Try the writing tools</span>
+                            <span className="relative z-10 font-bold">See the writing workspace</span>
                         </button>
                         <a href="/category" className="ft-btn ft-btn-secondary">
                             <BookOpenIcon /> Browse stories
                         </a>
                     </div>
-                    <p className="ft-hero-note">Free to begin · Keep ownership of your work · Read on any device</p>
-                    <div className="ft-hero-stats">
-                        <div className="ft-hero-stat"><strong>8+</strong><span>Craft tools</span></div>
-                        <div className="ft-hero-stat-divider" />
-                        <div className="ft-hero-stat"><strong>6</strong><span>Reading moods</span></div>
-                        <div className="ft-hero-stat-divider" />
-                        <div className="ft-hero-stat"><strong>&infin;</strong><span>Stories to tell</span></div>
-                    </div>
+                    <p className="ft-hero-note">Free to begin · You keep ownership of your work · Read on any device</p>
                 </div>
                 <div className="ft-hero-stage" aria-label="A preview of WordWeft's immersive reader">
                     <div className="ft-stage-shadow-card ft-stage-shadow-card-one" />

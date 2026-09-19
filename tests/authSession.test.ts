@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import {
     AUTH_SESSION_INVALID_EVENT,
     invalidateAuthSession,
+    shouldInvalidateAuthSession,
     JWT_STORAGE_KEY,
 } from '../utils/authSession.ts';
 
@@ -31,6 +32,13 @@ test('concurrent unauthorized responses do not repeatedly reset an absent sessio
 
     assert.equal(invalidateAuthSession(storage, () => { notifications += 1; }), false);
     assert.equal(notifications, 0);
+});
+
+test('only an explicitly invalid session clears authentication', () => {
+    assert.equal(shouldInvalidateAuthSession(401, 'SESSION_INVALID'), true);
+    assert.equal(shouldInvalidateAuthSession(401, 'AUTH_REQUIRED'), false);
+    assert.equal(shouldInvalidateAuthSession(401, undefined), false);
+    assert.equal(shouldInvalidateAuthSession(403, 'SESSION_INVALID'), false);
 });
 
 test('password requirement enforces 8-64 characters and rejects <= 10 limit across all forms', () => {

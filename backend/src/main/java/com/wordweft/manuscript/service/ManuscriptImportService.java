@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ManuscriptImportService {
-    private static final int MAX_FILE_BYTES = 5 * 1024 * 1024;
+    private static final int MAX_FILE_BYTES = 25 * 1024 * 1024;
 
     private final BookRepository books;
     private final ManuscriptParser parser;
@@ -37,7 +37,12 @@ public class ManuscriptImportService {
         this(books, parser, null);
     }
 
-    public record ImportResult(int importedChapters, int totalChapters) {}
+    public record ImportResult(
+            int importedChapters,
+            int totalChapters,
+            int embeddedImages,
+            int uploadedImages,
+            List<String> characterCandidates) {}
 
     public ImportResult importManuscript(
             String authorId, String bookId, String filename, byte[] bytes) {
@@ -49,46 +54,50 @@ public class ManuscriptImportService {
         }
         if (bytes == null || bytes.length > MAX_FILE_BYTES) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Manuscripts must be 5 MB or smaller.");
+                    HttpStatus.BAD_REQUEST, "Manuscripts must be 25 MB or smaller.");
         }
 
         String debounceKey = authorId + ":" + bookId;
-        Long lastImport = importDebounce.get(debounceKey);
-        long now = System.currentTimeMillis();
-        if (lastImport != null && (now - lastImport) < 5000) {
+        Long activeImport = importDebounce.putIfAbsent(debounceKey, System.currentTimeMillis());
+        if (activeImport != null) {
             throw new ResponseStatusException(
                     HttpStatus.TOO_MANY_REQUESTS, "A manuscript import is already in progress. Please wait a few moments.");
         }
-        importDebounce.put(debounceKey, now);
-
-        ManuscriptParser.ImageUploader uploader = (imageBytes, originalName) -> {
-            if (chapterImageStorageService != null) {
-                return chapterImageStorageService.uploadChapterImageBytes(bookId, originalName, imageBytes);
-            }
-            return null;
-        };
-
-        final List<ManuscriptParser.ImportedChapter> imported;
         try {
-            imported = parser.parse(filename, bytes, uploader);
-        } catch (IllegalArgumentException invalidFile) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, invalidFile.getMessage());
-        }
+            ManuscriptParser.ImageUploader uploader = (imageBytes, originalName) -> {
+                if (chapterImageStorageService == null) {
+                    throw new ManuscriptParser.ImageUploadException(
+                            "Image storage is temporarily unavailable. No chapters were imported.");
+                }
+                return chapterImageStorageService.uploadChapterImageBytes(bookId, originalName, imageBytes);
+            };
 
-        if (book.getChapters() == null) {
-            book.setChapters(new ArrayList<>());
-        }
+            final ManuscriptParser.ParseResult parsed;
+            try {
+                parsed = parser.parseDetailed(filename, bytes, uploader);
+            } catch (IllegalArgumentException invalidFile) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, invalidFile.getMessage());
+            }
 
-        for (ManuscriptParser.ImportedChapter source : imported) {
-            Chapter chapter = new Chapter();
-            chapter.setTitle(source.title());
-            chapter.setContent(source.content());
-            chapter.setStatus("draft");
-            chapter.updateWordCount();
-            book.getChapters().add(chapter);
+            if (book.getChapters() == null) {
+                book.setChapters(new ArrayList<>());
+            }
+
+            for (ManuscriptParser.ImportedChapter source : parsed.chapters()) {
+                Chapter chapter = new Chapter();
+                chapter.setTitle(source.title());
+                chapter.setContent(source.content());
+                chapter.setStatus("draft");
+                chapter.updateWordCount();
+                book.getChapters().add(chapter);
+            }
+            book.setLastUpdatedAt(LocalDate.now());
+            books.save(book);
+            return new ImportResult(
+                    parsed.chapters().size(), book.getChapters().size(),
+                    parsed.embeddedImages(), parsed.uploadedImages(), parsed.characterCandidates());
+        } finally {
+            importDebounce.remove(debounceKey);
         }
-        book.setLastUpdatedAt(LocalDate.now());
-        books.save(book);
-        return new ImportResult(imported.size(), book.getChapters().size());
     }
 }

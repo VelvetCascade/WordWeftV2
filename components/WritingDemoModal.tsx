@@ -11,6 +11,7 @@ import {
 export interface WritingDemoModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onStartWriting?: () => void;
 }
 
 // Sub-components for Interactive Mocks
@@ -229,7 +230,7 @@ const SlideContent = [
     }
 ];
 
-export const WritingDemoModal: React.FC<WritingDemoModalProps> = ({ isOpen, onClose }) => {
+export const WritingDemoModal: React.FC<WritingDemoModalProps> = ({ isOpen, onClose, onStartWriting }) => {
     const [step, setStep] = useState(0);
 
     // Reset step when reopened
@@ -317,7 +318,7 @@ export const WritingDemoModal: React.FC<WritingDemoModalProps> = ({ isOpen, onCl
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        onClick={() => step < SlideContent.length - 1 ? setStep(step + 1) : onClose()}
+                                        onClick={() => step < SlideContent.length - 1 ? setStep(step + 1) : (onStartWriting ? onStartWriting() : onClose())}
                                         className="px-6 py-3 bg-accent text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-primary transition-all"
                                     >
                                         {step === SlideContent.length - 1 ? "Start Writing" : "Next"}

@@ -42,6 +42,9 @@ public class SearchController {
                     .ok(java.util.Map.of("books", java.util.Map.of("items", java.util.List.of(), "total", 0),
                             "authors", java.util.Map.of("items", java.util.List.of(), "total", 0)));
         }
-        return ResponseEntity.ok(searchService.fullSearch(query.trim(), type, page, size));
+        String safeType = java.util.Set.of("all", "books", "authors").contains(type) ? type : "all";
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 50));
+        return ResponseEntity.ok(searchService.fullSearch(query.trim(), safeType, safePage, safeSize));
     }
 }

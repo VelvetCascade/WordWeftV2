@@ -305,10 +305,11 @@ public class BookService {
 
         // Enrich Chapters
         List<Map<String, Object>> enrichedChapters = visibleChapters.stream().map(ch -> {
+            PublishedChapterView.Snapshot publicChapter = isOwner ? null : PublishedChapterView.of(ch);
             Map<String, Object> cMap = new HashMap<>();
             cMap.put("id", ch.getId());
-            cMap.put("title", ch.getTitle());
-            cMap.put("wordCount", ch.getWordCount());
+            cMap.put("title", isOwner ? ch.getTitle() : publicChapter.title());
+            cMap.put("wordCount", isOwner ? ch.getWordCount() : publicChapter.wordCount());
             cMap.put("status", ch.getStatus());
             cMap.put("accessLabel", currentUserId != null || !readerSignInGateEnabled
                     ? "FULL"
@@ -320,11 +321,16 @@ public class BookService {
             cMap.put("likesCount", ch.getLikes() != null ? ch.getLikes().size() : 0);
             cMap.put("isLiked",
                     currentUserId != null && ch.getLikes() != null && ch.getLikes().contains(currentUserId));
-            cMap.put("contentWarnings", ch.getContentWarnings() != null ? ch.getContentWarnings() : List.of());
-            cMap.put("disclaimerNote", ch.getDisclaimerNote());
+            cMap.put("contentWarnings", isOwner
+                    ? (ch.getContentWarnings() != null ? ch.getContentWarnings() : List.of())
+                    : publicChapter.contentWarnings());
+            cMap.put("disclaimerNote", isOwner ? ch.getDisclaimerNote() : publicChapter.disclaimerNote());
             if (isOwner) {
                 cMap.put("scheduledAt", ch.getScheduledAt());
                 cMap.put("publishedAt", ch.getPublishedAt());
+                cMap.put("hasUnpublishedChanges", "published".equals(ch.getStatus())
+                        && (!Objects.equals(ch.getTitle(), PublishedChapterView.of(ch).title())
+                        || !Objects.equals(ch.getContent(), PublishedChapterView.of(ch).content())));
             }
 
             return cMap;

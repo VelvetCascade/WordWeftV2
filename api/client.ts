@@ -1,11 +1,11 @@
 
 
 import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
-import { invalidateAuthSession, JWT_STORAGE_KEY } from '../utils/authSession';
+import { invalidateAuthSession, JWT_STORAGE_KEY, shouldInvalidateAuthSession } from '../utils/authSession';
 
 export { AUTH_SESSION_INVALID_EVENT } from '../utils/authSession';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 
 const JWT_KEY = JWT_STORAGE_KEY;
@@ -50,9 +50,6 @@ const fetch = fetchWithTimeout;
 
 const handleResponse = async (response: Response) => {
     if (!response.ok) {
-        // Any authenticated request rejected as unauthorized makes the locally
-        // cached account stale. Keep the app shell and token in sync.
-        if (response.status === 401) invalidateAuthSession();
         const errorText = await response.text();
         let message = errorText || response.statusText;
         let errorCode: string | undefined;
@@ -71,6 +68,7 @@ const handleResponse = async (response: Response) => {
         } catch {
             // Non-JSON response, keep errorText
         }
+        if (shouldInvalidateAuthSession(response.status, errorCode)) invalidateAuthSession();
         throw new ApiError(message, response.status, errorCode);
     }
     try {        return await response.json();
@@ -89,17 +87,18 @@ const createUploadError = (message: string, status?: number, diagnostic?: string
     return error;
 };
 
-const parseErrorMessage = (responseText: string, fallback: string) => {
-    if (!responseText) return fallback;
+const parseErrorPayload = (responseText: string, fallback: string): { message: string; errorCode?: string } => {
+    if (!responseText) return { message: fallback };
     try {
         const parsed = JSON.parse(responseText);
-        if (typeof parsed?.message === 'string' && parsed.message.trim()) return parsed.message;
-        if (typeof parsed?.error === 'string' && parsed.error.trim()) return parsed.error;
-        if (typeof parsed?.error?.message === 'string' && parsed.error.message.trim()) return parsed.error.message;
+        const errorCode = typeof parsed?.errorCode === 'string' ? parsed.errorCode : undefined;
+        if (typeof parsed?.message === 'string' && parsed.message.trim()) return { message: parsed.message, errorCode };
+        if (typeof parsed?.error === 'string' && parsed.error.trim()) return { message: parsed.error, errorCode };
+        if (typeof parsed?.error?.message === 'string' && parsed.error.message.trim()) return { message: parsed.error.message, errorCode };
     } catch {
         // Some upload providers return plain text errors.
     }
-    return responseText.trim() || fallback;
+    return { message: responseText.trim() || fallback };
 };
 
 const uploadFormData = <T>(
@@ -122,9 +121,10 @@ const uploadFormData = <T>(
     });
 
     xhr.addEventListener('load', () => {
-        const message = parseErrorMessage(xhr.responseText, 'The upload could not be completed.');
+        const { message, errorCode } = parseErrorPayload(xhr.responseText, 'The upload could not be completed.');
         if (xhr.status < 200 || xhr.status >= 300) {
-            reject(createUploadError(message, xhr.status, message));
+            if (shouldInvalidateAuthSession(xhr.status, errorCode)) invalidateAuthSession();
+            reject(createUploadError(message, xhr.status, errorCode || message));
             return;
         }
         try {
@@ -263,17 +263,10 @@ export async function getMe(): Promise<User | null> {
     try {
         const response = await fetchWithTimeout(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
 
-        // Only 401 Unauthorized means the token/session itself is definitely expired or invalid.
-        // 403 Forbidden is a permissions/content issue and must NOT blow away the user's session.
-        if (response.status === 401) {
-            console.error("Session invalid: 401 Unauthorized");
-            invalidateAuthSession();
-            return null;
-        }
-
         const backendUser = await handleResponse(response);
         return mapBackendUserToFrontend(backendUser);
     } catch (e) {
+        if (e instanceof ApiError && e.code === 'SESSION_INVALID') return null;
         // Network and server failures are not proof that the session is invalid.
         // Preserve the token and let callers display/retry the actual failure.
         console.error("Error fetching user profile (kept session):", e);
@@ -499,6 +492,7 @@ export async function submitFoundingWriterApplication(
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${API_BASE_URL}/public/founding-writer-applications`);
+        xhr.timeout = 120_000;
 
         if (xhr.upload && onProgress) {
             xhr.upload.addEventListener('progress', (event) => {
@@ -534,6 +528,9 @@ export async function submitFoundingWriterApplication(
 
         xhr.onerror = () => {
             reject(new Error("Network connection error. Please check your internet connection and try again."));
+        };
+        xhr.ontimeout = () => {
+            reject(new Error('The manuscript upload took too long. Check your connection and try again.'));
         };
 
         xhr.send(body);
@@ -581,17 +578,16 @@ export async function getChapterContent(bookId: string, chapterId: string): Prom
         },
     );
     if (response.status === 401) {
-        // An anonymous visitor is expected to receive AUTH_REQUIRED. If a token
-        // was sent, however, this response also means the visible account state
-        // must be invalidated before rendering the gate.
-        invalidateAuthSession();
         let errorCode = '';
+        let message = 'Sign in is required to read this chapter.';
         try {
-            errorCode = (await response.json())?.errorCode || '';
+            const payload = await response.json();
+            errorCode = payload?.errorCode || '';
+            message = payload?.message || message;
         } catch {
-            // A malformed error body still remains an authentication failure.
+            // Keep the response as a non-destructive sign-in requirement.
         }
-        if (errorCode === 'AUTH_REQUIRED' || !errorCode) {
+        if (errorCode === 'AUTH_REQUIRED') {
             return {
                 bookId,
                 bookTitle: '',
@@ -604,7 +600,8 @@ export async function getChapterContent(bookId: string, chapterId: string): Prom
                 fullWordCount: 0,
             };
         }
-        throw new Error('Sign in is required to read this chapter.');
+        if (shouldInvalidateAuthSession(response.status, errorCode)) invalidateAuthSession();
+        throw new ApiError(message, response.status, errorCode || undefined);
     }
     return await handleResponse(response) as ChapterContentResult;
 }
@@ -775,11 +772,11 @@ export async function saveChapter(userId: string, bookId: string, chapterId: any
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function setBookStatus(userId: string, bookId: string, status: 'draft' | 'published'): Promise<User> {
+export async function setBookStatus(userId: string, bookId: string, status: 'draft' | 'published', chapterIds?: string[]): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/status`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, ...(chapterIds ? { chapterIds } : {}) })
     });
     return mapBackendUserToFrontend(await handleResponse(response));
 }
@@ -796,19 +793,22 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function importManuscript(bookId: string, file: File): Promise<{ user: User; importedChapters: number; totalChapters: number }> {
+export async function importManuscript(bookId: string, file: File): Promise<{ user: User; importedChapters: number; totalChapters: number; embeddedImages: number; uploadedImages: number; characterCandidates: string[] }> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/import`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/books/${bookId}/import`, {
         method: 'POST',
         headers: { 'Authorization': getHeaders().Authorization },
         body: formData,
-    });
+    }, 180_000);
     const data = await handleResponse(response);
     return {
         user: mapBackendUserToFrontend(data.user),
         importedChapters: data.result.importedChapters,
         totalChapters: data.result.totalChapters,
+        embeddedImages: data.result.embeddedImages || 0,
+        uploadedImages: data.result.uploadedImages || 0,
+        characterCandidates: data.result.characterCandidates || [],
     };
 }
 

@@ -100,6 +100,33 @@ class ChapterRevisionServiceTest {
     }
 
     @Test
+    void restoringAPublishedChapterAlsoReturnsLaterChaptersToDraft() {
+        Chapter later = new Chapter();
+        later.setId("later");
+        later.setTitle("Later title");
+        later.setContent("<p>Later content</p>");
+        later.setStatus("published");
+        later.setPublishedAt(NOW.minusSeconds(60));
+        book.setChapters(List.of(chapter, later));
+
+        ChapterRevision old = new ChapterRevision();
+        old.setId("revision");
+        old.setAuthorId("author");
+        old.setBookId("book");
+        old.setChapterId("chapter");
+        old.setTitle("Earlier title");
+        old.setContent("<p>Earlier content</p>");
+        when(books.findById("book")).thenReturn(Optional.of(book));
+        when(revisions.findById("revision")).thenReturn(Optional.of(old));
+        when(revisions.findFirstByChapterIdOrderByCreatedAtDesc("chapter")).thenReturn(Optional.empty());
+
+        service.restore("author", "book", "chapter", "revision");
+
+        assertEquals("draft", later.getStatus());
+        assertEquals(null, later.getPublishedAt());
+    }
+
+    @Test
     void anotherWriterCannotListOrRestoreRevisions() {
         when(books.findById("book")).thenReturn(Optional.of(book));
 

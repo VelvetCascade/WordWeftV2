@@ -1,7 +1,5 @@
 package com.wordweft.foundingwriter.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordweft.foundingwriter.dto.FoundingWriterApplicationRequest;
 import com.wordweft.foundingwriter.dto.FoundingWriterApplicationUpdateRequest;
 import com.wordweft.foundingwriter.model.FoundingWriterApplication;
@@ -14,10 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
@@ -25,17 +19,15 @@ import java.util.Locale;
 @Service
 public class FoundingWriterApplicationService {
     private static final Logger log = LoggerFactory.getLogger(FoundingWriterApplicationService.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final FoundingWriterApplicationRepository repository;
-    private final UploadTokenService uploadTokenService;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final FoundingWriterStorageService storage;
 
     public FoundingWriterApplicationService(
             FoundingWriterApplicationRepository repository,
-            UploadTokenService uploadTokenService) {
+            FoundingWriterStorageService storage) {
         this.repository = repository;
-        this.uploadTokenService = uploadTokenService;
+        this.storage = storage;
     }
 
     public boolean submit(FoundingWriterApplicationRequest request, org.springframework.web.multipart.MultipartFile file) {
@@ -69,6 +61,9 @@ public class FoundingWriterApplicationService {
         application.setWeeklyPublishingCommitted(request.isWeeklyPublishingCommitted());
         application.setEarningsDisclaimerConfirmed(request.isEarningsDisclaimerConfirmed());
         application.setTermsConfirmed(request.isTermsConfirmed());
+        // Keep the identifier compatible with the currently deployed Worker route,
+        // while still generating it before the R2 upload.
+        application.setId(java.util.UUID.randomUUID().toString().replace("-", ""));
         application.setStatus(FoundingWriterApplicationStatus.PENDING);
         application.setAdminNotes(null);
         application.setFileUploaded(false);
@@ -83,53 +78,22 @@ public class FoundingWriterApplicationService {
             throw new DuplicateFoundingWriterApplicationException();
         }
 
-        // Upload file to R2 via Cloudflare Worker (server-to-server — token never reaches the browser)
         try {
-            String r2Key = uploadToR2(application.getId(), chapterFile.name(), chapterFile.contentType(), chapterFile.data());
+            String r2Key = storage.upload(application.getId(), chapterFile.name(), chapterFile.contentType(), chapterFile.data());
             application.setR2FileKey(r2Key);
             application.setFileUploaded(true);
             application.setUpdatedAt(Instant.now());
             repository.save(application);
-        } catch (Exception e) {
-            log.error("R2 upload failed for application {}. Admin will see fileUploaded=false.", application.getId(), e);
+        } catch (RuntimeException error) {
+            try {
+                repository.delete(application);
+            } catch (RuntimeException cleanupError) {
+                log.error("Could not remove failed Founding Writer application {}", application.getId(), cleanupError);
+            }
+            throw error;
         }
 
         return true;
-    }
-
-    private String uploadToR2(String applicationId, String fileName, String contentType, byte[] data) {
-        String workerBaseUrl = uploadTokenService.getWorkerBaseUrl();
-        if (workerBaseUrl == null || workerBaseUrl.isBlank()) {
-            log.warn("Worker base URL not configured, skipping R2 upload for application {}", applicationId);
-            return "founding-writers/" + applicationId + "/" + fileName;
-        }
-
-        String token = uploadTokenService.generateUploadToken(applicationId, fileName, data.length);
-        String url = workerBaseUrl.replaceAll("/+$", "") + "/upload/" + applicationId;
-
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .PUT(HttpRequest.BodyPublishers.ofByteArray(data))
-                    .header("Authorization", "Bearer " + token)
-                    .header("Content-Type", contentType)
-                    .header("X-File-Name", fileName)
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Worker returned HTTP " + response.statusCode() + ": " + response.body());
-            }
-
-            JsonNode result = objectMapper.readTree(response.body());
-            return result.get("r2Key").asText();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("R2 upload was interrupted", e);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to upload to R2: " + e.getMessage(), e);
-        }
     }
 
     public FoundingWriterApplication findById(String id) {

@@ -1,6 +1,7 @@
 package com.wordweft.exception;
 
 import com.wordweft.book.service.ChapterContentService;
+import com.wordweft.manuscript.service.ManuscriptParser;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,12 +9,27 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of(
+                "errorCode", "UPLOAD_TOO_LARGE",
+                "message", "Manuscripts must be 25 MB or smaller."));
+    }
+
+    @ExceptionHandler(ManuscriptParser.ImageUploadException.class)
+    public ResponseEntity<Map<String, Object>> handleManuscriptImageUpload(ManuscriptParser.ImageUploadException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "errorCode", "MANUSCRIPT_IMAGE_UPLOAD_FAILED",
+                "message", ex.getMessage()));
+    }
 
     @ExceptionHandler(AuthRequiredException.class)
     public ResponseEntity<Map<String, Object>> handleAuthRequired(AuthRequiredException ex) {

@@ -8,6 +8,20 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          '/api': {
+            target: 'http://127.0.0.1:8080',
+            changeOrigin: true,
+            bypass(req) {
+              // The frontend API client lives at /api/client.ts in development.
+              // Let Vite serve source modules instead of forwarding them to Spring.
+              if (/^\/api\/.*\.[cm]?[jt]sx?(?:\?|$)/i.test(req.url || '')) {
+                return req.url;
+              }
+              return undefined;
+            },
+          },
+        },
       },
       plugins: [react()],
       resolve: {

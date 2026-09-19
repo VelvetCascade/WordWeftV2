@@ -18,8 +18,8 @@ const NUDGES: CoachNudge[] = [
     {
         id: 'theme-switcher',
         session: 1,
-        icon: '🎨',
-        message: 'Switch between Light, Sepia, and Dark themes for comfortable reading',
+        icon: 'Aa',
+        message: 'Choose light, sepia, or dark in reading settings.',
         position: 'right-center',
         delayMs: 3000,
         durationMs: 8000,
@@ -27,8 +27,8 @@ const NUDGES: CoachNudge[] = [
     {
         id: 'font-size',
         session: 1,
-        icon: '🔤',
-        message: 'Adjust text size with the A+/A- buttons for your perfect reading experience',
+        icon: 'A+',
+        message: 'Adjust text size and spacing in reading settings.',
         position: 'right-center',
         delayMs: 12000,
         durationMs: 7000,
@@ -37,8 +37,8 @@ const NUDGES: CoachNudge[] = [
     {
         id: 'paragraph-comment',
         session: 2,
-        icon: '💬',
-        message: 'You can comment on any paragraph! Hover over text and click the + icon',
+        icon: '+',
+        message: 'Select a paragraph to leave a comment.',
         position: 'bottom-center',
         delayMs: 5000,
         durationMs: 8000,
@@ -46,8 +46,8 @@ const NUDGES: CoachNudge[] = [
     {
         id: 'chapter-like',
         session: 2,
-        icon: '❤️',
-        message: 'Liked this chapter? Show the author some love with the heart button',
+        icon: '♥',
+        message: 'Use the heart at the end to like this chapter.',
         position: 'top-right',
         delayMs: 15000,
         durationMs: 7000,
@@ -56,8 +56,8 @@ const NUDGES: CoachNudge[] = [
     {
         id: 'character-mention',
         session: 3,
-        icon: '✨',
-        message: 'Tap highlighted character names to see their bio and portrait',
+        icon: '@',
+        message: 'Select a highlighted character name to open their profile.',
         position: 'bottom-center',
         delayMs: 4000,
         durationMs: 8000,
@@ -66,8 +66,8 @@ const NUDGES: CoachNudge[] = [
     {
         id: 'spoiler-reveal',
         session: 3,
-        icon: '🔮',
-        message: 'See blurred text? That\'s a spoiler — tap to reveal the hidden content!',
+        icon: '…',
+        message: 'Select blurred text when you are ready to reveal it.',
         position: 'bottom-center',
         delayMs: 10000,
         durationMs: 8000,
@@ -142,13 +142,6 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
         localStorage.setItem(DISMISSED_KEY, JSON.stringify(Array.from(newDismissed)));
     };
 
-    const positionStyles: Record<string, React.CSSProperties> = {
-        'top-right': { top: '80px', right: '24px' },
-        'bottom-center': { bottom: '100px', left: '50%', transform: 'translateX(-50%)' },
-        'right-center': { top: '50%', right: '80px', transform: 'translateY(-50%)' },
-        'bottom-right': { bottom: '100px', right: '24px' },
-    };
-
     return (
         <AnimatePresence>
             {activeNudge && (
@@ -158,11 +151,10 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="reader-coach-nudge"
+                    className={`reader-coach-nudge reader-coach-${activeNudge.position}`}
                     style={{
                         position: 'fixed',
                         zIndex: 45,
-                        ...positionStyles[activeNudge.position],
                     }}
                 >
                     <div className="reader-coach-nudge-inner">
