@@ -7,7 +7,7 @@ binding = "CHAPTERS_BUCKET"
 bucket_name = "wordweft-writer-fw-submission"
 
 [vars]
-ALLOWED_ORIGINS = "https://word-weft-v2.vercel.app,https://wordweftstudio.com,http://localhost:5173"
+ALLOWED_ORIGINS = "https://word-weft-v2.vercel.app,https://wordweftstudio.com,https://www.wordweftstudio.com,http://localhost:3000,http://localhost:5173"
 
 # UPLOAD_SIGNING_SECRET must be set via:
 # npx wrangler secret put UPLOAD_SIGNING_SECRET

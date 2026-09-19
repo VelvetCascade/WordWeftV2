@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Scene, Character, Chapter } from '../types';
 import * as api from '../api/client';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface SceneListProps {
     bookId: string;
@@ -13,6 +14,9 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
     const [isCreating, setIsCreating] = useState(false);
     const [newScene, setNewScene] = useState<Partial<Scene>>({ title: '', description: '', setting: '', time: '', characterIds: [] });
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Scene | null>(null);
+    const [busyAction, setBusyAction] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadScenes();
@@ -20,27 +24,53 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
     }, [bookId]);
 
     const loadScenes = async () => {
-        const data = await api.getScenesByBookId(bookId);
-        setScenes(data);
+        try {
+            const data = await api.getScenesByBookId(bookId);
+            setScenes(data);
+            setError(null);
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : 'Scenes could not be loaded.');
+        }
     };
 
     const loadCharacters = async () => {
-        const data = await api.getCharactersByBookId(bookId);
-        setCharacters(data);
+        try {
+            setCharacters(await api.getCharactersByBookId(bookId));
+        } catch {
+            // Scene editing remains usable when optional character metadata is unavailable.
+            setCharacters([]);
+        }
     };
 
     const handleCreate = async () => {
-        if (!newScene.title) return;
-        await api.createScene({ ...newScene, bookId });
-        setIsCreating(false);
-        setNewScene({ title: '', description: '', setting: '', time: '', characterIds: [] });
-        loadScenes();
+        if (!newScene.title?.trim() || busyAction) return;
+        setBusyAction('create');
+        setError(null);
+        try {
+            const created = await api.createScene({ ...newScene, title: newScene.title.trim(), bookId });
+            setScenes(current => [...current, created]);
+            setIsCreating(false);
+            setNewScene({ title: '', description: '', setting: '', time: '', characterIds: [] });
+        } catch (saveError) {
+            setError(saveError instanceof Error ? saveError.message : 'The scene could not be saved.');
+        } finally {
+            setBusyAction(null);
+        }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Are you sure you want to delete this scene?')) {
-            await api.deleteScene(id);
-            loadScenes();
+    const handleDelete = async () => {
+        if (!deleteTarget || busyAction) return;
+        const target = deleteTarget;
+        setBusyAction(`delete:${target.id}`);
+        setError(null);
+        try {
+            await api.deleteScene(target.id);
+            setScenes(current => current.filter(scene => scene.id !== target.id));
+            setDeleteTarget(null);
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : 'The scene could not be deleted.');
+        } finally {
+            setBusyAction(null);
         }
     };
 
@@ -66,6 +96,8 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
                     <span>+</span> Add scene
                 </button>
             </div>
+
+            {error && <div role="alert" className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>}
 
             {isCreating && (
                 <div className="ww-story-tool-form p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border space-y-4">
@@ -140,9 +172,10 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
                         </button>
                         <button
                             onClick={handleCreate}
+                            disabled={!newScene.title?.trim() || busyAction !== null}
                             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
                         >
-                            Save
+                            {busyAction === 'create' ? 'Saving…' : 'Save'}
                         </button>
                     </div>
                 </div>
@@ -174,7 +207,7 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
                                 </div>
                             </div>
                             <button
-                                onClick={() => handleDelete(scene.id)}
+                                onClick={() => setDeleteTarget(scene)}
                                 className="text-text-muted hover:text-red-500"
                             >
                                 Delete
@@ -196,6 +229,16 @@ export const SceneList: React.FC<SceneListProps> = ({ bookId, chapters = [] }) =
                     </div>
                 ))}
             </div>
+            <ConfirmDialog
+                isOpen={!!deleteTarget}
+                title="Delete scene?"
+                message={`“${deleteTarget?.title || 'This scene'}” will be permanently removed from your story plan.`}
+                confirmLabel="Delete scene"
+                processingLabel="Deleting…"
+                isProcessing={!!deleteTarget && busyAction === `delete:${deleteTarget.id}`}
+                onCancel={() => setDeleteTarget(null)}
+                onConfirm={handleDelete}
+            />
         </div>
     );
 };

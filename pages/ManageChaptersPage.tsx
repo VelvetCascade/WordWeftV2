@@ -31,7 +31,7 @@ const BOOK_CATEGORIES = [
     'Journal', 'Guide', 'Other'
 ];
 
-const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; currentUserDateOfBirth?: string; onUpdate: (updates: Partial<Book>) => void }> = ({ isOpen, onClose, book, currentUserDateOfBirth, onUpdate }) => {
+const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; currentUserDateOfBirth?: string; onUpdate: (updates: Partial<Book>) => Promise<void> }> = ({ isOpen, onClose, book, currentUserDateOfBirth, onUpdate }) => {
     const [title, setTitle] = useState(book.title);
     const [description, setDescription] = useState(book.description || '');
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
@@ -45,6 +45,9 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [ageRating, setAgeRating] = useState<AgeRating>(book.ageRating || 'ALL_AGES');
     const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>(book.contentWarnings || []);
     const [customDisclaimer, setCustomDisclaimer] = useState(book.customDisclaimer || '');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isCoverUploading, setIsCoverUploading] = useState(false);
+    const [saveError, setSaveError] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -60,6 +63,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             setContentWarnings(book.contentWarnings || []);
             setCustomDisclaimer(book.customDisclaimer || '');
             setIsAIGenerated(book.isAIGenerated || false);
+            setSaveError('');
+            setIsSaving(false);
         }
     }, [isOpen, book]);
 
@@ -83,32 +88,40 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
         return 'ALL_AGES';
     }, [book.chapters]);
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSaving || isCoverUploading) return;
+        setSaveError('');
         if (RATING_SEVERITY[ageRating] < RATING_SEVERITY[minRequiredRating]) {
-            alert(`This story contains chapters requiring at least ${minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}. You cannot set a lower age rating.`);
+            setSaveError(`This story contains chapters requiring at least ${minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}. Choose that rating or higher.`);
             return;
         }
         if ((ageRating === 'MATURE_18' || ageRating === 'ADULT_21') && !currentUserDateOfBirth) {
-            alert("Date of birth is required in your profile before setting a story to Mature (18+) or Adult (21+). Please add your date of birth in Profile Settings.");
-            window.location.hash = '/profile/edit';
+            setSaveError('Add your date of birth in Profile Settings before choosing an 18+ or 21+ rating.');
             return;
         }
-        onUpdate({
-            title,
-            description,
-            summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
-            coverUrl,
-            coverFileId,
-            category,
-            readingStatus,
-            genres,
-            ageRating,
-            contentWarnings,
-            customDisclaimer,
-            isAIGenerated
-        });
-        onClose();
+        try {
+            setIsSaving(true);
+            await onUpdate({
+                title,
+                description,
+                summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
+                coverUrl,
+                coverFileId,
+                category,
+                readingStatus,
+                genres,
+                ageRating,
+                contentWarnings,
+                customDisclaimer,
+                isAIGenerated
+            });
+            onClose();
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : 'Story details could not be saved. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const toggleGenre = (g: string) => {
@@ -124,7 +137,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             <div className="bg-white dark:bg-dark-surface w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-6 border-b dark:border-dark-border flex justify-between items-center">
                     <h3 className="text-xl font-bold dark:text-dark-text-rich">Edit Book Details</h3>
-                    <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-gray-500" /></button>
+                    <button onClick={onClose} disabled={isSaving || isCoverUploading} aria-label="Close story details"><XMarkIcon className="w-6 h-6 text-gray-500" /></button>
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <form id="edit-book-form" onSubmit={handleSave} className="space-y-4">
@@ -142,6 +155,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             fallbackUrl="https://picsum.photos/seed/newbook/400/600"
                             aspectRatio={2/3}
                             cropShape="rect"
+                            onBusyChange={setIsCoverUploading}
+                            disabled={isSaving}
                         />
                         <div>
                             <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
@@ -211,7 +226,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             )}
                             {(ageRating === 'MATURE_18' || ageRating === 'ADULT_21') && !currentUserDateOfBirth && (
                                 <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-semibold">
-                                    🛑 Date of birth is required in your profile before setting a story to Mature (18+) or Adult (21+). Please add your date of birth in <a href="#/profile/edit" className="underline">Profile Settings</a>.
+                                    Date of birth is required before setting this rating. Add it in <a href="#/edit-profile" className="underline">Profile Settings</a>.
                                 </p>
                             )}
                             <label className="block text-sm font-bold mt-4 mb-2 dark:text-dark-text-body">Content warnings</label>
@@ -237,8 +252,11 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                     </form>
                 </div>
                 <div className="p-6 border-t dark:border-dark-border flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                    <button form="edit-book-form" type="submit" className="px-4 py-2 text-sm font-bold text-white bg-accent hover:bg-primary rounded-lg">Save Changes</button>
+                    {saveError && <p className="mr-auto max-w-sm text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{saveError}</p>}
+                    <button onClick={onClose} disabled={isSaving || isCoverUploading} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50">Cancel</button>
+                    <button form="edit-book-form" type="submit" disabled={isSaving || isCoverUploading} className="px-4 py-2 text-sm font-bold text-white bg-accent hover:bg-primary rounded-lg disabled:opacity-50">
+                        {isCoverUploading ? 'Uploading cover…' : isSaving ? 'Saving…' : 'Save Changes'}
+                    </button>
                 </div>
             </div>
         </div>
@@ -251,25 +269,27 @@ const ConfirmDialog: React.FC<{
     title: string;
     message: string;
     confirmLabel?: string;
+    processingLabel?: string;
+    isProcessing?: boolean;
     onConfirm: () => void;
     onCancel: () => void;
-}> = ({ isOpen, title, message, confirmLabel = 'Delete', onConfirm, onCancel }) => {
+}> = ({ isOpen, title, message, confirmLabel = 'Delete', processingLabel = 'Deleting…', isProcessing = false, onConfirm, onCancel }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6">
+            <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6" role="alertdialog" aria-modal="true" aria-busy={isProcessing}>
                 <h3 className="text-lg font-bold text-text-rich dark:text-dark-text-rich mb-2">{title}</h3>
                 <p className="text-sm text-text-body dark:text-dark-text-body mb-6">{message}</p>
                 <div className="flex justify-end gap-3">
-                    <button onClick={onCancel} className="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg transition-colors">Cancel</button>
-                    <button onClick={onConfirm} className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">{confirmLabel}</button>
+                    <button onClick={onCancel} disabled={isProcessing} className="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg transition-colors disabled:opacity-50">Cancel</button>
+                    <button onClick={onConfirm} disabled={isProcessing} className="min-w-28 px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-wait">{isProcessing ? processingLabel : confirmLabel}</button>
                 </div>
             </div>
         </div>
     );
 };
 
-const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, onPublishToggle: () => void, onCancelSchedule: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, onPublishToggle, onCancelSchedule, onDelete, onShare }) => (
+const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, isBusy?: boolean, onPublishToggle: () => void, onCancelSchedule: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, isBusy = false, onPublishToggle, onCancelSchedule, onDelete, onShare }) => (
     <div className="ww-manage-chapter-card flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
         <div className="ww-manage-chapter-main flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
@@ -295,9 +315,10 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             </button>
             <button
                 onClick={chapter.status === 'scheduled' ? onCancelSchedule : onPublishToggle}
-                className={`flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${chapter.status === 'published' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
+                disabled={isBusy}
+                className={`flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-wait ${chapter.status === 'published' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
             >
-                {chapter.status === 'published' ? 'Unpublish' : chapter.status === 'scheduled' ? 'Cancel schedule' : 'Publish'}
+                {isBusy ? 'Working…' : chapter.status === 'published' ? 'Unpublish' : chapter.status === 'scheduled' ? 'Cancel schedule' : 'Publish'}
             </button>
             {chapter.status === 'published' && (
                 <button
@@ -310,7 +331,8 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             )}
             <button
                 onClick={onDelete}
-                className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                disabled={isBusy}
+                className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
                 title="Delete chapter"
             >
                 <TrashIcon className="w-4 h-4" />
@@ -337,6 +359,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [importNotice, setImportNotice] = useState('');
     const importInputRef = useRef<HTMLInputElement>(null);
     const [isNavigatingNewChapter, setIsNavigatingNewChapter] = useState(false);
+    const [pendingAction, setPendingAction] = useState<string | null>(null);
 
     const handleNewChapterClick = () => {
         if (isNavigatingNewChapter) return;
@@ -352,47 +375,69 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const totalWords = book?.chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0) || 0;
 
     const handlePublishChapterToggle = async (chapterId: string) => {
-        const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
-        onUserUpdate(updatedUser);
-        setErrorMsg(null);
+        const action = `chapter-status:${chapterId}`;
+        if (pendingAction) return;
+        setPendingAction(action);
+        try {
+            const updatedUser = await api.toggleChapterPublication(currentUser.id, bookId, chapterId);
+            onUserUpdate(updatedUser);
+            setErrorMsg(null);
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'The chapter status could not be changed.');
+        } finally {
+            setPendingAction(null);
+        }
     };
 
     const handleCancelSchedule = async (chapterId: string) => {
+        const action = `chapter-status:${chapterId}`;
+        if (pendingAction) return;
+        setPendingAction(action);
         try {
             const updatedUser = await api.cancelChapterSchedule(bookId, chapterId);
             onUserUpdate(updatedUser);
             setErrorMsg(null);
         } catch (error) {
             setErrorMsg(error instanceof Error ? error.message : 'Could not cancel this schedule.');
+        } finally {
+            setPendingAction(null);
         }
     };
 
     const handleDeleteChapter = async (chapterId: string) => {
+        const action = `delete-chapter:${chapterId}`;
+        if (pendingAction) return;
+        setPendingAction(action);
         try {
             const updatedUser = await api.deleteChapter(bookId, chapterId);
             onUserUpdate(updatedUser);
             setDeleteChapterTarget(null);
             setErrorMsg(null);
         } catch (e: any) {
-            setErrorMsg(e.message);
+            setErrorMsg(e.message || 'The chapter could not be deleted. Please try again.');
             setTimeout(() => setErrorMsg(null), 5000);
+        } finally {
+            setPendingAction(null);
         }
     };
 
     const handleDeleteBook = async () => {
+        if (pendingAction) return;
+        setPendingAction('delete-book');
         try {
             const updatedUser = await api.deleteBook(bookId);
             onUserUpdate(updatedUser);
             window.location.hash = '/write';
         } catch (e: any) {
-            setErrorMsg(e.message);
-            setShowDeleteBookConfirm(false);
+            setErrorMsg(e.message || 'The story could not be deleted. Please try again.');
             setTimeout(() => setErrorMsg(null), 5000);
+        } finally {
+            setPendingAction(null);
         }
     };
 
     const handleBookPublishToggle = async () => {
-        if (!book) return;
+        if (!book || pendingAction) return;
         const newStatus = isBookPublished ? 'draft' : 'published';
         if (newStatus === 'published' && (book.isMature || book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21')) {
             if (!currentUser.dateOfBirth) {
@@ -402,6 +447,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             }
         }
         try {
+            setPendingAction('book-status');
             const updatedUser = await api.setBookStatus(currentUser.id, bookId, newStatus);
             onUserUpdate(updatedUser);
             setErrorMsg(null);
@@ -412,6 +458,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         } catch (e: any) {
             setErrorMsg(e.message);
             setTimeout(() => setErrorMsg(null), 5000);
+        } finally {
+            setPendingAction(null);
         }
     };
 
@@ -490,11 +538,11 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                             disabled={isImporting}
                             onChange={event => handleManuscriptImport(event.target.files?.[0])}
                         />
-                        <button className="ww-manage-publish" onClick={handleBookPublishToggle}>
-                            {isBookPublished ? 'Return to draft' : 'Publish story'}
+                        <button className="ww-manage-publish" onClick={handleBookPublishToggle} disabled={pendingAction !== null}>
+                            {pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}
                         </button>
                         <button onClick={() => setIsEditModalOpen(true)}><Cog6ToothIcon className="w-4 h-4" /> Story details</button>
-                        <button className="danger" onClick={() => setShowDeleteBookConfirm(true)}><TrashIcon className="w-4 h-4" /> Delete story</button>
+                        <button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}><TrashIcon className="w-4 h-4" /> Delete story</button>
                     </div>
                 </div>
                 {errorMsg && <div className="ww-manage-error">{errorMsg}</div>}
@@ -524,6 +572,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                     chapter={chapter}
                                     bookId={book.id}
                                     index={i}
+                                    isBusy={pendingAction === `chapter-status:${chapter.id}` || pendingAction === `delete-chapter:${chapter.id}`}
                                     onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
                                     onCancelSchedule={() => handleCancelSchedule(chapter.id)}
                                     onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
@@ -563,6 +612,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 message={`Are you sure you want to delete "${deleteChapterTarget?.title}"? This action cannot be undone.`}
                 onConfirm={() => deleteChapterTarget && handleDeleteChapter(deleteChapterTarget.id)}
                 onCancel={() => setDeleteChapterTarget(null)}
+                isProcessing={!!deleteChapterTarget && pendingAction === `delete-chapter:${deleteChapterTarget.id}`}
+                processingLabel="Deleting chapter…"
             />
 
             {/* Delete Book Confirmation */}
@@ -571,6 +622,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 title="Delete Book"
                 message={`Are you sure you want to delete "${book.title}"? This will permanently remove the book, all its chapters, and all associated data (reviews, comments, reading progress). This action cannot be undone.`}
                 confirmLabel="Delete Book"
+                processingLabel="Deleting story…"
+                isProcessing={pendingAction === 'delete-book'}
                 onConfirm={handleDeleteBook}
                 onCancel={() => setShowDeleteBookConfirm(false)}
             />

@@ -45,6 +45,9 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [books, setBooks] = useState<Book[]>([]);
   const [allGenres, setAllGenres] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [genresError, setGenresError] = useState(false);
   const [genreSearch, setGenreSearch] = useState('');
   const [libraryQuery, setLibraryQuery] = useState('');
 
@@ -71,20 +74,22 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   }, []);
 
   useEffect(() => {
-    api.getGenres().then(setAllGenres);
-  }, []);
+    setGenresError(false);
+    api.getGenres().then(setAllGenres).catch(() => setGenresError(true));
+  }, [loadAttempt]);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
+    setLoadError(null);
     api.getBooks({ genre: selectedGenres.length > 0 ? selectedGenres[0] : undefined, sort: sortOption }).then(res => {
       if (!active) return;
       setBooks(res.content);
       setIsLoading(false);
       if (window.location.pathname === '/category') applyMetadata(metadataFor(parseRoute('/category'), { books: res.content.filter(isPublicBook) }));
-    }).catch(() => { if (active) setIsLoading(false); });
+    }).catch((error) => { if (active) { setLoadError(error instanceof Error ? error.message : 'The library could not be loaded.'); setIsLoading(false); } });
     return () => { active = false; };
-  }, [selectedGenres, sortOption]);
+  }, [selectedGenres, sortOption, loadAttempt]);
 
   const handleGenreToggle = () => {
     setIsGenreOpen(prev => !prev);
@@ -229,7 +234,19 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
         {/* Books Display */}
         {isLoading ? (
-          <div className="text-center p-8">Loading books...</div>
+          <div className="text-center p-8" role="status">Loading stories…</div>
+        ) : loadError ? (
+          <div className="mx-auto max-w-xl rounded-2xl border border-danger/20 bg-white p-8 text-center shadow-soft dark:bg-dark-surface" role="alert">
+            <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">The library couldn’t be loaded.</h2>
+            <p className="mt-2 text-sm text-text-body dark:text-dark-text-body">{loadError}</p>
+            <button onClick={() => setLoadAttempt(value => value + 1)} className="mt-5 rounded-xl bg-accent px-6 py-2.5 font-semibold text-white">Try again</button>
+          </div>
+        ) : books.length === 0 ? (
+          <div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-soft dark:border-dark-border dark:bg-dark-surface">
+            <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">No stories match these filters yet.</h2>
+            <p className="mt-2 text-sm text-text-body dark:text-dark-text-body">Try another genre or clear the current filter.</p>
+            {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="mt-5 rounded-xl bg-accent px-6 py-2.5 font-semibold text-white">Show all stories</button>}
+          </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
             {books.map(book => (
@@ -245,6 +262,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
         )}
 
       </div>
+      {genresError && !loadError && <div className="sr-only" role="status">Genre filters are temporarily unavailable.</div>}
       <FilterDrawer />
       <Footer />
     </div>

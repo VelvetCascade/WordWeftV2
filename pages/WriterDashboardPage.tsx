@@ -6,6 +6,7 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WriterQuickStart } from '../components/WriterQuickStart';
 import { ShareModal } from '../components/ShareModal';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 interface WriterDashboardProps {
   currentUser: User;
@@ -43,7 +44,7 @@ const DraftBookListItem: React.FC<{ book: Book }> = ({ book }) => {
     );
 };
 
-const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) => void; }> = ({ book, onUnpublish }) => {
+const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (book: Book) => void; isUpdating: boolean; }> = ({ book, onUnpublish, isUpdating }) => {
     const publishedChapters = book.chapters.filter(c => c.status === 'published').length;
     const totalChapters = book.chapters.length;
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -80,7 +81,7 @@ const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (bookId: string) =>
                 <button onClick={(e) => { e.stopPropagation(); setIsShareOpen(true); }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Share Book">
                     <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                 </button>
-                <button onClick={() => onUnpublish(book.id)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Unpublish Book">
+                <button onClick={() => onUnpublish(book)} disabled={isUpdating} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors disabled:cursor-wait disabled:opacity-50" title="Unpublish Book" aria-label={`Unpublish ${book.title}`}>
                     <CloudArrowDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
                 </button>
                 <button onClick={handlePublishNewChapter} className="flex-1 sm:flex-none justify-center text-sm font-sans font-semibold text-accent border border-accent px-3 py-1.5 rounded-lg hover:bg-accent hover:text-white transition-colors flex items-center gap-1.5">
@@ -132,13 +133,25 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
     const totalViews = allWrittenBooks.reduce((total, book) => total + (book.viewCount || 0), 0);
     const totalLikes = allWrittenBooks.reduce((total, book) => total + (book.likesCount || 0), 0);
     const { trackEvent } = useAnalytics();
+    const [unpublishTarget, setUnpublishTarget] = useState<Book | null>(null);
+    const [pendingBookId, setPendingBookId] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     useEffect(() => { trackEvent('writing', 'writer_dashboard_view'); }, []);
 
-    const handleUnpublishBook = async (bookId: string) => {
-        if (!window.confirm("Are you sure you want to unpublish this book? It will be moved to your drafts.")) return;
-        
-        const updatedUser = await api.unpublishBook(currentUser.id, bookId);
-        onUserUpdate(updatedUser);
+    const handleUnpublishBook = async () => {
+        if (!unpublishTarget || pendingBookId) return;
+        const target = unpublishTarget;
+        setPendingBookId(target.id);
+        setActionError(null);
+        try {
+            const updatedUser = await api.unpublishBook(currentUser.id, target.id);
+            onUserUpdate(updatedUser);
+            setUnpublishTarget(null);
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'The story could not be unpublished.');
+        } finally {
+            setPendingBookId(null);
+        }
     };
 
     return (
@@ -151,6 +164,8 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
                 </div>
                 <button onClick={() => window.location.hash = '/write/book/create'} className="ww-writer-new-story"><PlusIcon className="w-5 h-5" /> New story</button>
             </div>
+
+            {actionError && <div role="alert" className="mt-5 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{actionError}</div>}
 
             <section className="ww-writer-metrics" aria-label="Writing overview">
                 <article><span>Projects</span><strong>{allWrittenBooks.length}</strong><small>{drafts.length} currently drafting</small></article>
@@ -187,7 +202,7 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
                 <div className="ww-writer-section-heading ww-writer-section-heading-inline"><span>On the shelf</span><h2>Published works</h2></div>
                 {published.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {published.map(book => <PublishedBookCard key={book.id} book={book} onUnpublish={handleUnpublishBook} />)}
+                        {published.map(book => <PublishedBookCard key={book.id} book={book} onUnpublish={setUnpublishTarget} isUpdating={pendingBookId === book.id} />)}
                     </div>
                 ) : (
                     <div className="ww-writer-empty text-center py-10 bg-white dark:bg-dark-surface rounded-xl border-2 border-dashed dark:border-dark-border">
@@ -196,6 +211,17 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
                     </div>
                 )}
             </section>
+            <ConfirmDialog
+                isOpen={!!unpublishTarget}
+                title="Unpublish story?"
+                message={`“${unpublishTarget?.title || 'This story'}” will disappear from public reading pages and move back to Drafts. You can publish it again later.`}
+                confirmLabel="Unpublish story"
+                processingLabel="Unpublishing…"
+                isProcessing={!!unpublishTarget && pendingBookId === unpublishTarget.id}
+                tone="warning"
+                onCancel={() => setUnpublishTarget(null)}
+                onConfirm={handleUnpublishBook}
+            />
         </div>
     );
 };

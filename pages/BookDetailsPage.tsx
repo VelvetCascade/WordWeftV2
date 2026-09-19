@@ -18,6 +18,7 @@ import { warningLabel } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
 import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 import { applyBookMetadata } from '../utils/entityMetadata';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ bookId, chapter, index, onRead, progress, onToggleLike }) => {
     const isCompleted = progress >= 90;
@@ -244,6 +245,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const { trackEvent } = useAnalytics();
     const [book, setBook] = useState<Book | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [loadAttempt, setLoadAttempt] = useState(0);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
@@ -270,6 +273,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [isManageShelvesModalOpen, setIsManageShelvesModalOpen] = useState(false);
     const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set());
     const [isSavingShelves, setIsSavingShelves] = useState(false);
+    const [confirmation, setConfirmation] = useState<'library' | 'review' | null>(null);
+    const [pendingAction, setPendingAction] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const openManageShelvesModal = () => {
         if (!currentUser) return;
@@ -311,10 +317,17 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const handleRemoveFromLibrary = async () => {
         if (!currentUser || !book) return;
-        if (confirm("Remove this book from your library?")) {
+        setPendingAction('remove-library');
+        setActionError(null);
+        try {
             const updatedUser = await api.removeBookFromLibrary(currentUser.id, book.id);
             onUserUpdate(updatedUser);
             setIsManageShelvesModalOpen(false);
+            setConfirmation(null);
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'The story could not be removed from your library.');
+        } finally {
+            setPendingAction(null);
         }
     };
 
@@ -322,6 +335,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     useEffect(() => {
         let active = true;
         setIsLoading(true);
+        setLoadError(null);
         api.getBookById(bookId).then(fetchedBook => {
             if (!active) return;
             setBook(fetchedBook);
@@ -330,13 +344,13 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(result => { if (active) setAuthorBooks(result); }).catch(() => {});
             }
             setIsLoading(false);
-        }).catch(() => { if (active) { setBook(null); setIsLoading(false); } });
+        }).catch((error) => { if (active) { setBook(null); setLoadError(error instanceof Error ? error.message : 'This story could not be loaded.'); setIsLoading(false); } });
         api.getBookReviews(bookId).then(result => { if (active) setAllReviews(result); }).catch(() => {});
         if (currentUser) {
             api.getReadingProgressForBook(currentUser.id, bookId).then(result => { if (active) setReadingProgress(result); }).catch(() => {});
         }
         return () => { active = false; };
-    }, [currentUser, bookId]);
+    }, [currentUser, bookId, loadAttempt]);
 
     useEffect(() => book ? applyBookMetadata(book) : undefined, [book]);
 
@@ -374,8 +388,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             return;
         }
 
+        if (pendingAction === 'toggle-library') return;
         const nextState = !isBookInLibrary;
         setOptimisticInLibrary(nextState);
+        setPendingAction('toggle-library');
+        setActionError(null);
 
         try {
             const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
@@ -389,7 +406,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             }
         } catch (err) {
             setOptimisticInLibrary(null);
-            console.error("Failed to toggle library bookmark:", err);
+            setActionError(err instanceof Error ? err.message : 'Your library could not be updated.');
+        } finally {
+            setPendingAction(null);
         }
     };
 
@@ -412,24 +431,37 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const handleSubmitReview = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentUser || userRating === 0 || !userComment) return;
-
-        const updatedReviews = await api.submitReview(currentUser.id, bookId, userRating, userComment);
-        trackEvent('social', 'write_review', book?.title, userRating, { bookId, reviewLength: userComment.length });
-        setAllReviews(updatedReviews);
-        setIsEditingReview(false);
-        // R2: Show share nudge after review is submitted
-        setShowReviewShareNudge(true);
-        setTimeout(() => setShowReviewShareNudge(false), 10000);
+        if (!currentUser || userRating === 0 || !userComment.trim() || pendingAction) return;
+        setPendingAction('save-review');
+        setActionError(null);
+        try {
+            const updatedReviews = await api.submitReview(currentUser.id, bookId, userRating, userComment.trim());
+            trackEvent('social', 'write_review', book?.title, userRating, { bookId, reviewLength: userComment.trim().length });
+            setAllReviews(updatedReviews);
+            setIsEditingReview(false);
+            setShowReviewShareNudge(true);
+            setTimeout(() => setShowReviewShareNudge(false), 10000);
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'Your review could not be saved.');
+        } finally {
+            setPendingAction(null);
+        }
     };
 
     const handleDeleteReview = async () => {
-        if (!currentUser || !currentUserReview) return;
-        if (window.confirm('Are you sure you want to delete your review?')) {
+        if (!currentUser || !currentUserReview || pendingAction) return;
+        setPendingAction('delete-review');
+        setActionError(null);
+        try {
             const updatedReviews = await api.deleteReview(currentUser.id, bookId);
             setAllReviews(updatedReviews);
             setUserRating(0);
             setUserComment('');
+            setConfirmation(null);
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'Your review could not be deleted.');
+        } finally {
+            setPendingAction(null);
         }
     };
 
@@ -477,7 +509,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     };
 
     if (isLoading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading book details...</div>;
+        return <div className="min-h-screen flex items-center justify-center" role="status">Loading story details…</div>;
+    }
+
+    if (loadError) {
+        return <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center"><h1 className="text-2xl font-bold">This story couldn’t be loaded.</h1><p className="max-w-md text-text-body dark:text-dark-text-body">{loadError}</p><button onClick={() => setLoadAttempt(value => value + 1)} className="rounded-xl bg-accent px-6 py-3 font-semibold text-white">Try again</button></div>;
     }
 
     if (!book) {
@@ -495,6 +531,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     return (
         <div className="ww-story-page bg-white dark:bg-dark-surface">
+            {actionError && <div role="alert" className="fixed left-1/2 top-24 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-xl border border-danger/30 bg-white px-4 py-3 text-sm text-danger shadow-xl dark:bg-dark-surface">{actionError}</div>}
             {/* Sticky Header */}
             <div className="ww-story-header sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
                 <div className="ww-story-header-inner container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
@@ -509,7 +546,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <button className="ww-story-header-icon" aria-label="Share this book" onClick={() => setIsShareModalOpen(true)}>
                             <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
                         </button>
-                        <button className="ww-story-header-icon" aria-label={isBookInLibrary ? 'Remove bookmark' : 'Bookmark this book'} aria-pressed={isBookInLibrary} onClick={handleToggleLibrary}>
+                        <button className="ww-story-header-icon disabled:cursor-wait disabled:opacity-60" disabled={pendingAction === 'toggle-library'} aria-label={isBookInLibrary ? 'Remove bookmark' : 'Bookmark this book'} aria-pressed={isBookInLibrary} onClick={handleToggleLibrary}>
                             {isBookInLibrary ? (
                                 <BookmarkIconSolid className="w-6 h-6 text-accent transition-colors" />
                             ) : (
@@ -608,13 +645,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             </button>
                             <button
                                 onClick={handleToggleLibrary}
+                                disabled={pendingAction === 'toggle-library'}
                                 className={`w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${isBookInLibrary
                                     ? 'bg-success/10 text-success'
                                     : 'bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border'
                                     }`}
                             >
                                 {isBookInLibrary ? <CheckCircleIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
-                                {isBookInLibrary ? 'In Your Library' : 'Add to Library'}
+                                {pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In Your Library' : 'Add to Library'}
                             </button>
                             {isBookInLibrary && hasCustomShelves && (
                                 <button
@@ -724,7 +762,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                             <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-4">Your Review</h4>
                                             <div className="flex items-center gap-2">
                                                 <button onClick={() => setIsEditingReview(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
-                                                <button onClick={handleDeleteReview} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                                                <button onClick={() => setConfirmation('review')} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt" aria-label="Delete your review"><TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                                             </div>
                                         </div>
                                         <div className="flex items-center">
@@ -747,8 +785,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                         ></textarea>
                                         <div className="flex justify-end items-center gap-4 mt-4">
                                             {isEditingReview && <button type="button" onClick={() => setIsEditingReview(false)} className="font-sans font-semibold text-sm">Cancel</button>}
-                                            <button type="submit" disabled={!userRating || !userComment} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
-                                                {currentUserReview ? 'Update Review' : 'Submit Review'}
+                                            <button type="submit" disabled={!userRating || !userComment.trim() || pendingAction === 'save-review'} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
+                                                {pendingAction === 'save-review' ? 'Saving…' : currentUserReview ? 'Update Review' : 'Submit Review'}
                                             </button>
                                         </div>
                                     </form>
@@ -825,7 +863,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                 {isSavingShelves ? 'Saving...' : 'Save Changes'}
                             </button>
                             <button
-                                onClick={handleRemoveFromLibrary}
+                                onClick={() => setConfirmation('library')}
+                                disabled={pendingAction === 'remove-library'}
                                 className="w-full py-2.5 font-bold text-danger bg-danger/10 hover:bg-danger/20 rounded-xl transition-colors text-sm"
                             >
                                 Remove from Library
@@ -841,6 +880,18 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 book={book} 
             />
             <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} targetType="BOOK" targetId={book.id} targetTitle={book.title} />
+            <ConfirmDialog
+                isOpen={confirmation !== null}
+                title={confirmation === 'review' ? 'Delete your review?' : 'Remove from library?'}
+                message={confirmation === 'review'
+                    ? 'Your rating and review text will be permanently removed.'
+                    : `“${book.title}” will be removed from every shelf. Your reading progress will remain available if you add it again.`}
+                confirmLabel={confirmation === 'review' ? 'Delete review' : 'Remove story'}
+                processingLabel={confirmation === 'review' ? 'Deleting…' : 'Removing…'}
+                isProcessing={pendingAction === 'delete-review' || pendingAction === 'remove-library'}
+                onCancel={() => setConfirmation(null)}
+                onConfirm={confirmation === 'review' ? handleDeleteReview : handleRemoveFromLibrary}
+            />
 
             {/* R2: Post-review share nudge */}
             {showReviewShareNudge && (

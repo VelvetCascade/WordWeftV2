@@ -13,4 +13,7 @@ public interface ChapterReadEventRepository extends MongoRepository<ChapterReadE
 
     List<ChapterReadEvent> findByBookIdAndOccurredAtBetween(
             String bookId, Instant from, Instant to);
+
+    void deleteByChapterId(String chapterId);
+    void deleteByBookId(String bookId);
 }

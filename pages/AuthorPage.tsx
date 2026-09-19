@@ -81,6 +81,8 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [author, setAuthor] = useState<Author | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [loadAttempt, setLoadAttempt] = useState(0);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
     const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>('published');
@@ -99,6 +101,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     useEffect(() => {
         let active = true;
         setIsLoading(true);
+        setLoadError(null);
         Promise.all([
             api.getAuthorById(authorId),
             api.getBooksByAuthor(authorId)
@@ -106,13 +109,14 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
             if (!active) return;
             setAuthor(fetchedAuthor);
             setAuthorBooks(fetchedBooks);
-        }).catch(() => {
+        }).catch((error) => {
             if (!active) return;
             setAuthor(null);
             setAuthorBooks([]);
+            setLoadError(error instanceof Error ? error.message : 'This author profile could not be loaded.');
         }).finally(() => { if (active) setIsLoading(false); });
         return () => { active = false; };
-    }, [authorId]);
+    }, [authorId, loadAttempt]);
 
     useEffect(() => {
         if (author) applyAuthorMetadata(author, pageBooks);
@@ -178,6 +182,16 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                         </div>
                     </div>
                 </div>
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+                <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">This profile couldn’t be loaded.</h2>
+                <p className="max-w-md text-text-body dark:text-dark-text-body">{loadError}</p>
+                <button onClick={() => setLoadAttempt(value => value + 1)} className="bg-accent text-white px-6 py-2.5 rounded-xl font-sans font-bold hover:bg-primary transition-colors">Try again</button>
             </div>
         );
     }
