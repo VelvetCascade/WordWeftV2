@@ -3,7 +3,7 @@ import { metadataFor, parseRoute, chapterPath } from '../seo/metadata.mjs';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Flag } from 'lucide-react';
 import type { User, Book, BookProgress, ChapterContentResult, Comment, Character  } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, BookmarkIconSolid, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 import { discussLink } from '../utils/community';
@@ -283,9 +283,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     useEffect(() => {
         if (book && chapter && window.location.pathname === chapterPath(book.id, chapter.id)) applyMetadata(metadataFor(parseRoute(chapterPath(book.id, chapter.id)), book));
     }, [book, chapter]);
+    const [optimisticBookmarked, setOptimisticBookmarked] = useState<boolean | null>(null);
     const isBookmarked = useMemo(
-        () => !!currentUser?.library.some(shelf => shelf.books.some(savedBook => savedBook.id === bookId)),
-        [currentUser, bookId],
+        () => (optimisticBookmarked !== null
+            ? optimisticBookmarked
+            : !!currentUser?.library.some(shelf => shelf.books.some(savedBook => savedBook.id === bookId))),
+        [currentUser, bookId, optimisticBookmarked],
     );
     const disclaimerRequired = !!(book && chapter && ((book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21') || book.contentWarnings?.length || chapter.contentWarnings?.length || book.customDisclaimer || chapter.disclaimerNote));
     const disclaimerKey = chapter ? `ww_disclaimer_${bookId}_${chapter.id}` : '';
@@ -631,11 +634,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             return;
         }
         if (bookmarkSaving) return;
+        const nextState = !isBookmarked;
+        setOptimisticBookmarked(nextState);
         setBookmarkSaving(true);
         try {
-            onUserUpdate(await api.toggleBookInLibrary(currentUser.id, book));
+            const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
+            onUserUpdate(updatedUser);
+            setOptimisticBookmarked(null);
         } catch (error) {
             console.error('Unable to update bookmark', error);
+            setOptimisticBookmarked(null);
         } finally {
             setBookmarkSaving(false);
         }
@@ -814,7 +822,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     </div>
                     <div className="reader-header-actions">
                         <button onClick={handleToggleBookmark} disabled={bookmarkSaving} className={isBookmarked ? 'reader-action-active' : ''} aria-label={isBookmarked ? 'Remove story from library' : 'Save story to library'}>
-                            <BookmarkIcon className="w-5 h-5" />
+                            {isBookmarked ? <BookmarkIconSolid className="w-5 h-5 text-accent" /> : <BookmarkIcon className="w-5 h-5" />}
                         </button>
                         <button onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'reader-action-active reader-appearance-button' : 'reader-appearance-button'} aria-label="Reading appearance and themes"><span className="reader-aa">Aa</span></button>
                         <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>

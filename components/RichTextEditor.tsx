@@ -297,6 +297,7 @@ interface RichTextEditorProps {
     characters: Character[];
     readOnly?: boolean;
     onLargePaste?: (text: string) => void;
+    bookId?: string;
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -306,6 +307,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     characters,
     readOnly = false,
     onLargePaste,
+    bookId,
 }) => {
     const bubbleMenuRef = useRef<HTMLDivElement>(null);
     const [rteCropFile, setRteCropFile] = useState<File | null>(null);
@@ -467,23 +469,29 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const handleRteCropConfirm = useCallback(async (croppedFile: File) => {
         setRteCropFile(null);
         try {
-            // Compress before uploading
+            // Compress to WebP (< 500KB, max 1920px) before uploading
             const compressed = await imageCompression(croppedFile, {
-                maxSizeMB: 1,
+                maxSizeMB: 0.5,
                 maxWidthOrHeight: 1920,
                 useWebWorker: true,
+                fileType: 'image/webp',
             });
-            const formData = new FormData();
-            formData.append('file', compressed);
-            const res = await api.uploadFile(formData);
-            if (editor) {
+            let res: { url: string };
+            if (bookId) {
+                res = await api.uploadChapterImage(bookId, compressed);
+            } else {
+                const formData = new FormData();
+                formData.append('file', compressed);
+                res = await api.uploadFile(formData);
+            }
+            if (editor && res?.url) {
                 editor.chain().focus().setImage({ src: res.url }).run();
             }
         } catch (error) {
             console.error('Failed to upload image', error);
             alert('Failed to upload image. Please try again.');
         }
-    }, [editor]);
+    }, [editor, bookId]);
 
     return (
         <>

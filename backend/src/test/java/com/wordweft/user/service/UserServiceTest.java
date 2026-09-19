@@ -70,6 +70,8 @@ class UserServiceTest {
         java.util.Map<String, Object> matureBookMap = new java.util.HashMap<>();
         matureBookMap.put("id", "book-mature-21");
         matureBookMap.put("title", "A 21+ Story");
+        matureBookMap.put("isMature", true);
+        matureBookMap.put("ageRating", com.wordweft.book.model.AgeRating.ADULT_21);
         matureBookMap.put("isRestricted", true);
         when(service.bookService.enrichBookForProfileById("book-mature-21", "user-young")).thenReturn(matureBookMap);
 
@@ -81,5 +83,55 @@ class UserServiceTest {
         assertNotNull(enriched.get("library"));
         List<?> libraryShelves = (List<?>) enriched.get("library");
         assertFalse(libraryShelves.isEmpty());
+        // Mature book must NOT be present in any shelf because allowMatureContent is false
+        for (Object shelfObj : libraryShelves) {
+            Map<?, ?> shelf = (Map<?, ?>) shelfObj;
+            List<?> books = (List<?>) shelf.get("books");
+            if (books != null) {
+                assertFalse(books.stream().anyMatch(b -> "book-mature-21".equals(((Map<?, ?>) b).get("id"))));
+            }
+        }
+    }
+
+    @Test
+    void enrichUserIncludesMatureBooksWhenAllowedAndAgeIs18Plus() {
+        UserService service = new UserService();
+        service.userRepository = mock(UserRepository.class);
+        service.bookRepository = mock(BookRepository.class);
+        service.libraryRepository = mock(LibraryRepository.class);
+        service.shelfRepository = mock(ShelfRepository.class);
+        service.readingProgressRepository = mock(ReadingProgressRepository.class);
+        service.bookService = mock(BookService.class);
+        service.contentAccessService = mock(com.wordweft.book.service.ContentAccessService.class);
+
+        User user = new User("adultreader", "adult@example.com", "hash");
+        user.setId("user-adult");
+        user.setDateOfBirth(java.time.LocalDate.of(2000, 1, 1));
+        user.setAllowMatureContent(true);
+
+        com.wordweft.book.model.LibraryEntry entry = new com.wordweft.book.model.LibraryEntry();
+        entry.setId("entry-1");
+        entry.setUserId("user-adult");
+        entry.setBookId("book-mature-21");
+        when(service.libraryRepository.findByUserId("user-adult")).thenReturn(java.util.List.of(entry));
+        when(service.shelfRepository.findByUserId("user-adult")).thenReturn(java.util.List.of());
+        when(service.readingProgressRepository.findByUserId("user-adult")).thenReturn(java.util.List.of());
+        when(service.bookRepository.findByAuthorId("user-adult")).thenReturn(java.util.List.of());
+
+        java.util.Map<String, Object> matureBookMap = new java.util.HashMap<>();
+        matureBookMap.put("id", "book-mature-21");
+        matureBookMap.put("title", "A 21+ Story");
+        matureBookMap.put("isMature", true);
+        matureBookMap.put("ageRating", com.wordweft.book.model.AgeRating.MATURE_18);
+        when(service.bookService.enrichBookForProfileById("book-mature-21", "user-adult")).thenReturn(matureBookMap);
+
+        Map<String, Object> enriched = service.enrichUser(user, "user-adult");
+        assertNotNull(enriched);
+        List<?> libraryShelves = (List<?>) enriched.get("library");
+        assertFalse(libraryShelves.isEmpty());
+        // Should be present in 'all' shelf
+        Map<?, ?> allShelf = (Map<?, ?>) libraryShelves.get(0);
+        List<?> books = (List<?>) allShelf.get("books");
+        assertTrue(books.stream().anyMatch(b -> "book-mature-21".equals(((Map<?, ?>) b).get("id"))));
     }
 }

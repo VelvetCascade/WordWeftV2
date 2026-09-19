@@ -170,9 +170,23 @@ public class UserService {
         // Map to hold books for efficient lookup and shelf assignment
         Map<String, Map<String, Object>> bookMap = new HashMap<>();
 
+        boolean allowMature = user.isAllowMatureContent() && (user.getDateOfBirth() == null || java.time.Period.between(user.getDateOfBirth(), java.time.LocalDate.now()).getYears() >= 18);
+
         for (LibraryEntry e : entries) {
             Map<String, Object> b = bookService.enrichBookForProfileById(e.getBookId(), currentViewerId);
             if (b != null) {
+                Boolean isMature = (Boolean) b.get("isMature");
+                Object ratingObj = b.get("ageRating");
+                boolean isMatureBook = Boolean.TRUE.equals(isMature)
+                        || (ratingObj instanceof com.wordweft.book.model.AgeRating && ((com.wordweft.book.model.AgeRating) ratingObj).getMinimumAge() >= 18)
+                        || "MATURE_18".equals(String.valueOf(ratingObj))
+                        || "ADULT_21".equals(String.valueOf(ratingObj))
+                        || Boolean.TRUE.equals(b.get("isRestricted"));
+
+                if ((!allowMature && isMatureBook) || Boolean.TRUE.equals(b.get("isRestricted"))) {
+                    continue;
+                }
+
                 b.put("addedDate", e.getAddedDate());
                 b.put("libraryEntryId", e.getId());
 

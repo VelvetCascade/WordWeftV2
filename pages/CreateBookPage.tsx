@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User, AgeRating, ContentWarning } from '../types';
 import { ArrowLeftIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -56,8 +56,22 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         );
     };
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const isSubmittingRef = useRef(false);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
+        setIsSubmitting(true);
+
+        if (ageRating === 'MATURE_18' || ageRating === 'ADULT_21') {
+            if (!currentUser.dateOfBirth) {
+                alert("Date of birth is required in your profile before creating mature (18+/21+) stories. Please add your date of birth in Profile Settings.");
+                window.location.hash = '/profile/edit';
+                return;
+            }
+        }
 
         const finalCategory = category === 'Other' ? customCategory : category;
 
@@ -76,14 +90,22 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
             isAIGenerated,
         };
 
-        const updatedUser = await api.createBook(currentUser.id, newBookData);
-        onUserUpdate(updatedUser);
+        try {
+            const updatedUser = await api.createBook(currentUser.id, newBookData);
+            onUserUpdate(updatedUser);
 
-        const newBookId = updatedUser.writtenBooks?.find(b => b.title === title)?.id;
-        if (newBookId) {
-            replaceHash(`/write/book/${newBookId}/manage`);
-        } else {
-            replaceHash('/write');
+            const newBookId = updatedUser.writtenBooks?.find(b => b.title === title)?.id;
+            if (newBookId) {
+                replaceHash(`/write/book/${newBookId}/manage`);
+            } else {
+                replaceHash('/write');
+            }
+        } catch (error) {
+            console.error("Failed to create story:", error);
+            alert(error instanceof Error ? error.message : "Failed to create story");
+        } finally {
+            setIsSubmitting(false);
+            isSubmittingRef.current = false;
         }
     };
 
@@ -166,6 +188,11 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                     <option value="ADULT_21">Adult 21+ — highly explicit material</option>
                                 </select>
                                 <small>Choose based on the strongest material anywhere in the story. Mature stories are hidden unless an eligible reader opts in.</small>
+                                {(ageRating === 'MATURE_18' || ageRating === 'ADULT_21') && !currentUser.dateOfBirth && (
+                                    <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#c53030', fontWeight: 600 }}>
+                                        🛑 Date of birth is required in your profile before creating a Mature (18+) or Adult (21+) story. Please add your date of birth in <a href="#/profile/edit" style={{ textDecoration: 'underline' }}>Profile Settings</a>.
+                                    </p>
+                                )}
                             </div>
                             <div className="ww-create-field">
                                 <label>Content warnings</label>
@@ -209,8 +236,10 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                     </aside>
 
                     <footer className="ww-create-actions">
-                        <button type="button" onClick={() => goBackOrReplace('/write')}>Save for later</button>
-                        <button type="submit" disabled={!title || !description}>Create story <span>→</span></button>
+                        <button type="button" onClick={() => goBackOrReplace('/write')} disabled={isSubmitting}>Save for later</button>
+                        <button type="submit" disabled={!title || !description || isSubmitting}>
+                            {isSubmitting ? 'Creating story…' : 'Create story'} <span>→</span>
+                        </button>
                     </footer>
                 </form>
             </div>

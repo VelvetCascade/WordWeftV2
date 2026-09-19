@@ -58,6 +58,8 @@ class BookSchedulingControllerTest {
     @MockBean UserDetailsServiceImpl userDetailsService;
     @MockBean JwtUtils jwt;
     @MockBean AuthEntryPointJwt entryPoint;
+    @MockBean com.wordweft.book.service.ContentAccessService contentAccessService;
+    @MockBean com.wordweft.user.repository.UserRepository userRepository;
 
     private final UserDetailsImpl author = new UserDetailsImpl(
             "author", "writer", "writer@example.com", "password",

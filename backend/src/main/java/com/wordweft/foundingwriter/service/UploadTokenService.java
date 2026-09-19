@@ -42,6 +42,17 @@ public class UploadTokenService {
     }
 
     /**
+     * Generate a chapter image upload token valid for 15 minutes.
+     */
+    public String generateChapterImageUploadToken(String bookId, String fileName, long maxSizeBytes) {
+        long expiry = Instant.now().plusSeconds(900).getEpochSecond();
+        String payload = String.format(
+                "{\"type\":\"chapter-image-upload\",\"bookId\":\"%s\",\"fileName\":\"%s\",\"maxSize\":%d,\"exp\":%d}",
+                escapeJson(bookId), escapeJson(fileName), maxSizeBytes, expiry);
+        return signPayload(payload);
+    }
+
+    /**
      * Generate a download token valid for 5 minutes.
      */
     public String generateDownloadToken(String applicationId, String r2Key) {

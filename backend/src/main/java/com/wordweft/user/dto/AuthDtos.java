@@ -37,7 +37,7 @@ public class AuthDtos {
         private String email;
 
         @NotBlank
-        @Size(min = 8, max = 40)
+        @Size(min = 8, max = 64)
         private String password;
 
         @NotNull
@@ -89,7 +89,7 @@ public class AuthDtos {
         @NotBlank
         private String oldPassword;
         @NotBlank
-        @Size(min = 8)
+        @Size(min = 8, max = 64)
         private String newPassword;
     }
 
@@ -105,7 +105,7 @@ public class AuthDtos {
         @NotBlank
         private String token;
         @NotBlank
-        @Size(min = 8)
+        @Size(min = 8, max = 64)
         private String newPassword;
     }
 

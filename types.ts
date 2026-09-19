@@ -212,6 +212,7 @@ export interface FoundingWriterApplicationSubmission {
   earningsDisclaimerConfirmed: boolean;
   termsConfirmed: boolean;
   organizationName?: string;
+  website_ref_hp?: string;
   chaptersConfirmed: boolean;
 }
 

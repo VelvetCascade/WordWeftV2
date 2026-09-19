@@ -124,4 +124,53 @@ class ContentAccessServiceTest {
         // Author can access their own book even if DOB is under 18
         assertTrue(spyService.canAccess(matureBook));
     }
+
+    @Test
+    void validateAuthorCanPostRatingRequiresDOBForMature() {
+        User authorWithoutDob = new User();
+        authorWithoutDob.setId("author-no-dob");
+        authorWithoutDob.setDateOfBirth(null);
+
+        // ALL_AGES and TEEN_13 do not require DOB
+        assertDoesNotThrow(() -> service.validateAuthorCanPostRating(authorWithoutDob, AgeRating.ALL_AGES));
+        assertDoesNotThrow(() -> service.validateAuthorCanPostRating(authorWithoutDob, AgeRating.TEEN_13));
+
+        // MATURE_18 and ADULT_21 require DOB
+        org.springframework.web.server.ResponseStatusException ex1 = assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> service.validateAuthorCanPostRating(authorWithoutDob, AgeRating.MATURE_18)
+        );
+        assertEquals(400, ex1.getStatusCode().value());
+        assertTrue(ex1.getReason().contains("Date of birth is required"));
+
+        org.springframework.web.server.ResponseStatusException ex2 = assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> service.validateAuthorCanPostRating(authorWithoutDob, AgeRating.ADULT_21)
+        );
+        assertEquals(400, ex2.getStatusCode().value());
+    }
+
+    @Test
+    void validateAuthorCanPostRatingRejectsUnderageAuthorsForMature() {
+        User minorAuthor = new User();
+        minorAuthor.setId("minor-author");
+        minorAuthor.setDateOfBirth(LocalDate.now().minusYears(16)); // 16 years old
+
+        org.springframework.web.server.ResponseStatusException ex = assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> service.validateAuthorCanPostRating(minorAuthor, AgeRating.MATURE_18)
+        );
+        assertEquals(403, ex.getStatusCode().value());
+        assertTrue(ex.getReason().contains("at least 18 years old"));
+    }
+
+    @Test
+    void validateAuthorCanPostRatingAcceptsAdultAuthors() {
+        User adultAuthor = new User();
+        adultAuthor.setId("adult-author");
+        adultAuthor.setDateOfBirth(LocalDate.now().minusYears(22)); // 22 years old
+
+        assertDoesNotThrow(() -> service.validateAuthorCanPostRating(adultAuthor, AgeRating.MATURE_18));
+        assertDoesNotThrow(() -> service.validateAuthorCanPostRating(adultAuthor, AgeRating.ADULT_21));
+    }
 }

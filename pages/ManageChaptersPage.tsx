@@ -31,7 +31,7 @@ const BOOK_CATEGORIES = [
     'Journal', 'Guide', 'Other'
 ];
 
-const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; onUpdate: (updates: Partial<Book>) => void }> = ({ isOpen, onClose, book, onUpdate }) => {
+const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; currentUserDateOfBirth?: string; onUpdate: (updates: Partial<Book>) => void }> = ({ isOpen, onClose, book, currentUserDateOfBirth, onUpdate }) => {
     const [title, setTitle] = useState(book.title);
     const [description, setDescription] = useState(book.description || '');
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
@@ -87,6 +87,11 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
         e.preventDefault();
         if (RATING_SEVERITY[ageRating] < RATING_SEVERITY[minRequiredRating]) {
             alert(`This story contains chapters requiring at least ${minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}. You cannot set a lower age rating.`);
+            return;
+        }
+        if ((ageRating === 'MATURE_18' || ageRating === 'ADULT_21') && !currentUserDateOfBirth) {
+            alert("Date of birth is required in your profile before setting a story to Mature (18+) or Adult (21+). Please add your date of birth in Profile Settings.");
+            window.location.hash = '/profile/edit';
             return;
         }
         onUpdate({
@@ -202,6 +207,11 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             {RATING_SEVERITY[minRequiredRating] > RATING_SEVERITY['ALL_AGES'] && (
                                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
                                     ⚠️ Chapters in this story contain content warnings requiring at least {minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}.
+                                </p>
+                            )}
+                            {(ageRating === 'MATURE_18' || ageRating === 'ADULT_21') && !currentUserDateOfBirth && (
+                                <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-semibold">
+                                    🛑 Date of birth is required in your profile before setting a story to Mature (18+) or Adult (21+). Please add your date of birth in <a href="#/profile/edit" className="underline">Profile Settings</a>.
                                 </p>
                             )}
                             <label className="block text-sm font-bold mt-4 mb-2 dark:text-dark-text-body">Content warnings</label>
@@ -323,8 +333,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [showPublishCelebration, setShowPublishCelebration] = useState(false);
     const [bookShareOpen, setBookShareOpen] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
+    const isImportingRef = useRef(false);
     const [importNotice, setImportNotice] = useState('');
     const importInputRef = useRef<HTMLInputElement>(null);
+    const [isNavigatingNewChapter, setIsNavigatingNewChapter] = useState(false);
+
+    const handleNewChapterClick = () => {
+        if (isNavigatingNewChapter) return;
+        setIsNavigatingNewChapter(true);
+        window.location.hash = `/write/book/${bookId}/chapter/new/edit`;
+    };
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
 
@@ -374,8 +392,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     };
 
     const handleBookPublishToggle = async () => {
+        if (!book) return;
+        const newStatus = isBookPublished ? 'draft' : 'published';
+        if (newStatus === 'published' && (book.isMature || book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21')) {
+            if (!currentUser.dateOfBirth) {
+                setErrorMsg("Date of birth is required in your profile before publishing mature (18+/21+) content. Please add your date of birth in Profile Settings.");
+                setTimeout(() => setErrorMsg(null), 5000);
+                return;
+            }
+        }
         try {
-            const newStatus = isBookPublished ? 'draft' : 'published';
             const updatedUser = await api.setBookStatus(currentUser.id, bookId, newStatus);
             onUserUpdate(updatedUser);
             setErrorMsg(null);
@@ -395,7 +421,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     };
 
     const handleManuscriptImport = async (file?: File) => {
-        if (!file) return;
+        if (!file || isImportingRef.current) return;
+        isImportingRef.current = true;
         setErrorMsg(null);
         setImportNotice('');
         try {
@@ -408,6 +435,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             setErrorMsg(error instanceof Error ? error.message : 'Could not import this manuscript.');
         } finally {
             setIsImporting(false);
+            isImportingRef.current = false;
             if (importInputRef.current) importInputRef.current.value = '';
         }
     };
@@ -448,7 +476,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     </div>
 
                     <div className="ww-manage-actions">
-                        <button className="ww-manage-primary" onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}>
+                        <button className="ww-manage-primary" onClick={handleNewChapterClick} disabled={isNavigatingNewChapter}>
                             <PlusIcon className="w-4 h-4" /> New chapter
                         </button>
                         <button onClick={() => importInputRef.current?.click()} disabled={isImporting}>
@@ -459,6 +487,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                             className="sr-only"
                             type="file"
                             accept=".txt,.md,.markdown,.docx"
+                            disabled={isImporting}
                             onChange={event => handleManuscriptImport(event.target.files?.[0])}
                         />
                         <button className="ww-manage-publish" onClick={handleBookPublishToggle}>
@@ -505,7 +534,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                     <span>01</span>
                                     <h3>Every story starts with a blank page.</h3>
                                     <p>Create the opening chapter. It stays private until you decide to publish it.</p>
-                                    <button onClick={() => window.location.hash = `/write/book/${bookId}/chapter/new/edit`}>
+                                    <button onClick={handleNewChapterClick} disabled={isNavigatingNewChapter}>
                                         Start the first chapter <span>→</span>
                                     </button>
                                 </div>
@@ -523,6 +552,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
                 book={book}
+                currentUserDateOfBirth={currentUser.dateOfBirth}
                 onUpdate={handleBookUpdate}
             />
 

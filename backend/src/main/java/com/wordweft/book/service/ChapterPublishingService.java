@@ -27,6 +27,12 @@ public class ChapterPublishingService {
     private final NotificationService notifications;
     private final Clock clock;
 
+    @Autowired(required = false)
+    com.wordweft.user.repository.UserRepository userRepository;
+
+    @Autowired(required = false)
+    ContentAccessService contentAccessService;
+
     @Autowired
     public ChapterPublishingService(BookRepository books, NotificationService notifications) {
         this(books, notifications, Clock.systemUTC());
@@ -195,6 +201,10 @@ public class ChapterPublishingService {
             if (required.getMinimumAge() >= 18) {
                 book.setMature(true);
             }
+        }
+        if (contentAccessService != null && userRepository != null && (book.isMature() || (book.getAgeRating() != null && book.getAgeRating().getMinimumAge() >= 18))) {
+            com.wordweft.user.model.User author = userRepository.findById(book.getAuthorId()).orElse(null);
+            contentAccessService.validateAuthorCanPostRating(author, book.getAgeRating());
         }
     }
 }

@@ -3,12 +3,16 @@ package com.wordweft.manuscript.service;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.service.ChapterImageStorageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ManuscriptImportService {
@@ -16,10 +20,20 @@ public class ManuscriptImportService {
 
     private final BookRepository books;
     private final ManuscriptParser parser;
+    private final ChapterImageStorageService chapterImageStorageService;
+    private final ConcurrentHashMap<String, Long> importDebounce = new ConcurrentHashMap<>();
 
-    public ManuscriptImportService(BookRepository books, ManuscriptParser parser) {
+    public ManuscriptImportService(
+            BookRepository books,
+            ManuscriptParser parser,
+            @Autowired(required = false) ChapterImageStorageService chapterImageStorageService) {
         this.books = books;
         this.parser = parser;
+        this.chapterImageStorageService = chapterImageStorageService;
+    }
+
+    public ManuscriptImportService(BookRepository books, ManuscriptParser parser) {
+        this(books, parser, null);
     }
 
     public record ImportResult(int importedChapters, int totalChapters) {}
@@ -37,12 +51,33 @@ public class ManuscriptImportService {
                     HttpStatus.BAD_REQUEST, "Manuscripts must be 5 MB or smaller.");
         }
 
+        String debounceKey = authorId + ":" + bookId;
+        Long lastImport = importDebounce.get(debounceKey);
+        long now = System.currentTimeMillis();
+        if (lastImport != null && (now - lastImport) < 5000) {
+            throw new ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS, "A manuscript import is already in progress. Please wait a few moments.");
+        }
+        importDebounce.put(debounceKey, now);
+
+        ManuscriptParser.ImageUploader uploader = (imageBytes, originalName) -> {
+            if (chapterImageStorageService != null) {
+                return chapterImageStorageService.uploadChapterImageBytes(bookId, originalName, imageBytes);
+            }
+            return null;
+        };
+
         final List<ManuscriptParser.ImportedChapter> imported;
         try {
-            imported = parser.parse(filename, bytes);
+            imported = parser.parse(filename, bytes, uploader);
         } catch (IllegalArgumentException invalidFile) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, invalidFile.getMessage());
         }
+
+        if (book.getChapters() == null) {
+            book.setChapters(new ArrayList<>());
+        }
+
         for (ManuscriptParser.ImportedChapter source : imported) {
             Chapter chapter = new Chapter();
             chapter.setTitle(source.title());

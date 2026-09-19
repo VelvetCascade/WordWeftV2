@@ -4,7 +4,7 @@ import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../ty
 import { discussLink } from '../utils/community';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
-import { ArrowLeftIcon, BookmarkIcon, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon, ShareIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, BookmarkIcon, BookmarkIconSolid, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
@@ -269,19 +269,19 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     // Manage Shelves State
     const [isManageShelvesModalOpen, setIsManageShelvesModalOpen] = useState(false);
     const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set());
-    const [initialShelfIds, setInitialShelfIds] = useState<Set<string>>(new Set()); // Track existing shelves that are hidden
     const [isSavingShelves, setIsSavingShelves] = useState(false);
 
     const openManageShelvesModal = () => {
         if (!currentUser) return;
-        const currentShelfIds = new Set<string>();
+        const currentCustomShelfIds = new Set<string>();
         currentUser.library.forEach(shelf => {
-            if (shelf.books.some(b => b.id === bookId)) {
-                currentShelfIds.add(shelf.id);
+            if (shelf.id !== 'all' && shelf.id !== 'reading' && shelf.id !== 'toread' && shelf.id !== 'completed' && shelf.id !== '1' && shelf.name !== 'My List') {
+                if (shelf.books.some(b => b.id === bookId)) {
+                    currentCustomShelfIds.add(shelf.id);
+                }
             }
         });
-        setSelectedShelfIds(currentShelfIds);
-        setInitialShelfIds(currentShelfIds);
+        setSelectedShelfIds(currentCustomShelfIds);
         setIsManageShelvesModalOpen(true);
     };
 
@@ -289,13 +289,21 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser) return;
         setIsSavingShelves(true);
         try {
-            // Merge hidden (initial) shelves with selected shelves
-            const mergedShelves = new Set<string>([...initialShelfIds, ...selectedShelfIds]);
+            // Preserve system shelves that already include this book
+            const systemShelfIds = new Set<string>();
+            currentUser.library.forEach(shelf => {
+                if (shelf.id === 'all' || shelf.id === 'reading' || shelf.id === 'toread' || shelf.id === 'completed' || shelf.id === '1' || shelf.name === 'My List') {
+                    if (shelf.books.some(b => b.id === bookId)) {
+                        systemShelfIds.add(shelf.id);
+                    }
+                }
+            });
+            const mergedShelves = new Set<string>([...systemShelfIds, ...selectedShelfIds]);
             const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(mergedShelves));
             onUserUpdate(updatedUser);
             setIsManageShelvesModalOpen(false);
         } catch (e) {
-            console.error(e);
+            console.error("Failed to update shelves:", e);
         } finally {
             setIsSavingShelves(false);
         }
@@ -343,10 +351,18 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         }
     }, [currentUserReview]);
 
+    const [optimisticInLibrary, setOptimisticInLibrary] = useState<boolean | null>(null);
+
     const isBookInLibrary = useMemo(() => {
+        if (optimisticInLibrary !== null) return optimisticInLibrary;
         if (!currentUser) return false;
         return currentUser.library.some(shelf => shelf.books.some(b => b.id === bookId));
-    }, [currentUser, bookId]);
+    }, [currentUser, bookId, optimisticInLibrary]);
+
+    const hasCustomShelves = useMemo(() => {
+        if (!currentUser) return false;
+        return currentUser.library.some(s => s.id !== 'all' && s.id !== 'reading' && s.id !== 'toread' && s.id !== 'completed' && s.id !== '1' && s.name !== 'My List');
+    }, [currentUser]);
 
     const handleBack = () => {
         goBackOrReplace('/category');
@@ -356,23 +372,24 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser || !book) {
             window.location.hash = '/auth';
             return;
-        };
+        }
 
-        // Check if customized shelves exist
-        const customShelves = currentUser.library.filter(s => s.id !== 'all' && s.id !== '1' && s.name !== 'My List');
+        const nextState = !isBookInLibrary;
+        setOptimisticInLibrary(nextState);
 
-        if (customShelves.length > 0) {
-            openManageShelvesModal();
-        } else {
-            const wasInLibrary = isBookInLibrary;
+        try {
             const updatedUser = await api.toggleBookInLibrary(currentUser.id, book);
             onUserUpdate(updatedUser);
+            setOptimisticInLibrary(null);
             triggerFeedback('FIRST_EXPERIENCE');
             // R5: Show share nudge when adding (not removing)
-            if (!wasInLibrary) {
+            if (nextState) {
                 setShowLibraryNudge(true);
                 setTimeout(() => setShowLibraryNudge(false), 6000);
             }
+        } catch (err) {
+            setOptimisticInLibrary(null);
+            console.error("Failed to toggle library bookmark:", err);
         }
     };
 
@@ -493,7 +510,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             <ShareIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
                         </button>
                         <button className="ww-story-header-icon" aria-label={isBookInLibrary ? 'Remove bookmark' : 'Bookmark this book'} aria-pressed={isBookInLibrary} onClick={handleToggleLibrary}>
-                            <BookmarkIcon className={`w-6 h-6 transition-colors ${isBookInLibrary ? 'text-accent fill-accent/20' : 'text-gray-400 dark:text-gray-500'}`} />
+                            {isBookInLibrary ? (
+                                <BookmarkIconSolid className="w-6 h-6 text-accent transition-colors" />
+                            ) : (
+                                <BookmarkIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 hover:text-accent dark:hover:text-accent transition-colors" />
+                            )}
                         </button>
                     </div>
                 </div>
@@ -595,6 +616,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                 {isBookInLibrary ? <CheckCircleIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
                                 {isBookInLibrary ? 'In Your Library' : 'Add to Library'}
                             </button>
+                            {isBookInLibrary && hasCustomShelves && (
+                                <button
+                                    onClick={openManageShelvesModal}
+                                    className="w-full sm:w-auto font-sans font-semibold px-6 py-3 rounded-xl bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border transition-colors flex items-center justify-center gap-2"
+                                >
+                                    Organize Shelves
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsShareModalOpen(true)}
                                 className="w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border transition-colors flex items-center justify-center gap-2"
@@ -768,7 +797,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </div>
 
                         <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2">
-                            {currentUser?.library.filter(s => s.id !== 'all' && s.type !== 'default' && s.id !== 'reading' && s.id !== 'toread' && s.id !== 'completed' && !s.books.some(b => b.id === bookId)).map(shelf => (
+                            {currentUser?.library.filter(s => s.id !== 'all' && s.id !== 'reading' && s.id !== 'toread' && s.id !== 'completed' && s.id !== '1' && s.name !== 'My List').map(shelf => (
                                 <label key={shelf.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-surface-alt cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-dark-border">
                                     <input
                                         type="checkbox"

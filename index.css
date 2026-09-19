@@ -59,6 +59,8 @@
     --ww-radius-sm: 12px;
     --ww-radius-md: 18px;
     --ww-radius-lg: 28px;
+    --ww-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --ww-safe-top: env(safe-area-inset-top, 0px);
 }
 
 /* Age ratings, content disclosures, and reporting */
@@ -1306,7 +1308,7 @@ body[data-active-mood="serene"] .ww-prose {
 
 @keyframes sparkFly {
     0% { transform: translate(0, 100vh) scale(var(--particle-scale)); opacity: 0; }
-    10% { opacity: var(--particle-opacity); transform: translate(2vw, 80vh) scale(calc(var(--particle-scale) * 1.2)); }
+    10% { opacity: var(--particle-opacity); transform: translate(2vw, 80vh) scale(var(--particle-scale)) scale(1.2); }
     90% { opacity: var(--particle-opacity); }
     100% { transform: translate(-5vw, -20vh) scale(0); opacity: 0; }
 }
@@ -1321,15 +1323,15 @@ body[data-active-mood="serene"] .ww-prose {
 @keyframes triumphantRise {
     0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
     20% { opacity: var(--particle-opacity); }
-    50% { transform: translateY(50vh) scale(calc(var(--particle-scale) * 1.5)); opacity: var(--particle-opacity); }
+    50% { transform: translateY(50vh) scale(var(--particle-scale)) scale(1.5); opacity: var(--particle-opacity); }
     80% { opacity: var(--particle-opacity); }
     100% { transform: translateY(-10vh) scale(0.5); opacity: 0; }
 }
 
 @keyframes wispWaver {
     0% { transform: translate(0, 0) scale(var(--particle-scale)); opacity: 0; }
-    30% { opacity: var(--particle-opacity); transform: translate(6vw, 5vh) scale(calc(var(--particle-scale) * 1.3)); }
-    70% { opacity: var(--particle-opacity); transform: translate(-4vw, 10vh) scale(calc(var(--particle-scale) * 0.8)); }
+    30% { opacity: var(--particle-opacity); transform: translate(6vw, 5vh) scale(var(--particle-scale)) scale(1.3); }
+    70% { opacity: var(--particle-opacity); transform: translate(-4vw, 10vh) scale(var(--particle-scale)) scale(0.8); }
     100% { transform: translate(3vw, -15vh) scale(var(--particle-scale)); opacity: 0; }
 }
 
@@ -4693,7 +4695,7 @@ body[data-active-mood="serene"] .ww-prose {
     background: rgba(255, 255, 255, 0.97);
     border-radius: 24px 24px 0 0;
     box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.12);
-    padding: 0 0 calc(80px + env(safe-area-inset-bottom));
+    padding: 0 0 96px;
     max-height: 80vh;
     overflow-y: auto;
     animation: mobileMoreSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -5541,17 +5543,23 @@ body[data-active-mood="serene"] .ww-prose {
 }
 
 .mood-particle {
+    --particle-x: 50%;
+    --particle-y: 50%;
+    --particle-size: 6px;
+    --particle-delay: 0s;
+    --particle-duration: 6s;
+    --particle-opacity: 0.3;
     position: absolute;
-    left: var(--particle-x, 50%);
-    top: var(--particle-y, 50%);
-    width: var(--particle-size, 6px);
-    height: var(--particle-size, 6px);
+    left: var(--particle-x);
+    top: var(--particle-y);
+    width: var(--particle-size);
+    height: var(--particle-size);
     border-radius: 50%;
     opacity: 0;
     pointer-events: none;
     will-change: transform, opacity;
-    animation-delay: var(--particle-delay, 0s);
-    animation-duration: var(--particle-duration, 6s);
+    animation-delay: var(--particle-delay);
+    animation-duration: var(--particle-duration);
     animation-iteration-count: infinite;
     animation-fill-mode: both;
 }
@@ -5577,7 +5585,7 @@ body[data-active-mood="serene"] .ww-prose {
 /* Melancholy â€” rain droplets */
 .mood-particle--raindrop {
     width: 2px !important;
-    height: calc(var(--particle-size, 6px) * 3) !important;
+    height: 18px !important;
     background: linear-gradient(180deg, rgba(144, 164, 174, 0.7) 0%, rgba(176, 190, 197, 0.2) 100%);
     border-radius: 0 0 50% 50%;
     animation-name: particle-rain;
@@ -5595,8 +5603,8 @@ body[data-active-mood="serene"] .ww-prose {
 
 /* Eerie â€” fog wisps */
 .mood-particle--wisp {
-    width: calc(var(--particle-size, 6px) * 7) !important;
-    height: calc(var(--particle-size, 6px) * 4) !important;
+    width: 42px !important;
+    height: 24px !important;
     background: radial-gradient(ellipse, rgba(149, 117, 205, 0.28) 0%, rgba(126, 87, 194, 0.1) 60%, transparent 100%);
     border-radius: 50%;
     animation-name: particle-fog-drift;
@@ -5649,51 +5657,51 @@ body[data-active-mood="serene"] .ww-prose {
 
 @keyframes particle-float-up {
     0% { opacity: 0; transform: translateY(20px) rotate(0deg) scale(0.6); }
-    15% { opacity: var(--particle-opacity, 0.3); }
+    15% { opacity: var(--particle-opacity); }
     50% { transform: translateY(-40vh) translateX(30px) rotate(180deg) scale(1); }
-    85% { opacity: var(--particle-opacity, 0.3); }
+    85% { opacity: var(--particle-opacity); }
     100% { opacity: 0; transform: translateY(-80vh) translateX(-10px) rotate(360deg) scale(0.4); }
 }
 
 @keyframes particle-spark {
     0% { opacity: 0; transform: scale(0.2); }
-    10% { opacity: var(--particle-opacity, 0.5); transform: scale(1.5); }
-    30% { opacity: var(--particle-opacity, 0.3); transform: scale(0.8) translateY(-10px); }
+    10% { opacity: var(--particle-opacity); transform: scale(1.5); }
+    30% { opacity: var(--particle-opacity); transform: scale(0.8) translateY(-10px); }
     60% { opacity: 0.1; transform: scale(0.4) translateY(-30px); }
     100% { opacity: 0; transform: scale(0) translateY(-50px); }
 }
 
 @keyframes particle-rain {
     0% { opacity: 0; transform: translateY(-20px); }
-    5% { opacity: var(--particle-opacity, 0.25); }
-    90% { opacity: var(--particle-opacity, 0.2); }
+    5% { opacity: var(--particle-opacity); }
+    90% { opacity: var(--particle-opacity); }
     100% { opacity: 0; transform: translateY(100vh); }
 }
 
 @keyframes particle-rise-sparkle {
     0% { opacity: 0; transform: translateY(10px) scale(0.3); }
-    20% { opacity: var(--particle-opacity, 0.5); transform: translateY(-10vh) scale(1); }
-    40% { opacity: calc(var(--particle-opacity, 0.5) * 0.5); transform: translateY(-25vh) scale(0.7); }
-    60% { opacity: var(--particle-opacity, 0.5); transform: translateY(-40vh) scale(1.1); }
-    80% { opacity: calc(var(--particle-opacity, 0.5) * 0.6); transform: translateY(-55vh) scale(0.6); }
+    20% { opacity: var(--particle-opacity); transform: translateY(-10vh) scale(1); }
+    40% { opacity: 0.25; transform: translateY(-25vh) scale(0.7); }
+    60% { opacity: var(--particle-opacity); transform: translateY(-40vh) scale(1.1); }
+    80% { opacity: 0.25; transform: translateY(-55vh) scale(0.6); }
     100% { opacity: 0; transform: translateY(-70vh) scale(0.2); }
 }
 
 @keyframes particle-fog-drift {
     0% { opacity: 0; transform: translateX(-80px) scale(0.8); }
-    20% { opacity: var(--particle-opacity, 0.15); }
-    50% { opacity: var(--particle-opacity, 0.2); transform: translateX(20px) scale(1.1); }
-    80% { opacity: var(--particle-opacity, 0.15); }
+    20% { opacity: var(--particle-opacity); }
+    50% { opacity: var(--particle-opacity); transform: translateX(20px) scale(1.1); }
+    80% { opacity: var(--particle-opacity); }
     100% { opacity: 0; transform: translateX(120px) scale(0.9); }
 }
 
 @keyframes particle-orb-float {
     0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
-    15% { opacity: var(--particle-opacity, 0.3); }
+    15% { opacity: var(--particle-opacity); }
     25% { transform: translate(15px, -20px) scale(1); }
-    50% { transform: translate(-10px, -35px) scale(0.9); opacity: var(--particle-opacity, 0.35); }
+    50% { transform: translate(-10px, -35px) scale(0.9); opacity: var(--particle-opacity); }
     75% { transform: translate(20px, -15px) scale(1.05); }
-    85% { opacity: var(--particle-opacity, 0.3); }
+    85% { opacity: var(--particle-opacity); }
     100% { opacity: 0; transform: translate(5px, 5px) scale(0.5); }
 }
 
@@ -8273,7 +8281,7 @@ body {
 .ww-app-main { min-height: 70vh; }
 
 .ww-app h1,
-.ww-app h2:not(.font-sans.text-sm),
+.ww-app h2:not(.font-sans):not(.text-sm),
 .ww-app .ft-hero-headline,
 .ww-app .ft-section-title,
 .ww-app .ft-upcoming-headline,
@@ -8301,20 +8309,25 @@ body {
 .ww-app button,
 .ww-app a { -webkit-tap-highlight-color: transparent; }
 
-.ww-app :is(input:not([type='checkbox']):not([type='radio']), textarea, select) {
+.ww-app input:not([type='checkbox']):not([type='radio']),
+.ww-app textarea,
+.ww-app select {
     border-color: var(--ww-line) !important;
     background-color: color-mix(in srgb, var(--ww-paper-strong) 92%, transparent) !important;
     color: var(--ww-ink) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
-.ww-app :is(input:not([type='checkbox']):not([type='radio']), textarea, select):focus {
+.ww-app input:not([type='checkbox']):not([type='radio']):focus,
+.ww-app textarea:focus,
+.ww-app select:focus {
     border-color: color-mix(in srgb, var(--ww-brand) 58%, transparent) !important;
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--ww-brand) 12%, transparent) !important;
     outline: none;
 }
 
-.ww-app :is(input, textarea)::placeholder { color: var(--ww-muted); }
+.ww-app input::placeholder,
+.ww-app textarea::placeholder { color: var(--ww-muted); }
 
 .ww-page-eyebrow {
     display: inline-flex;
@@ -9497,9 +9510,11 @@ body {
 .ww-analytics-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 0.75fr); gap: 14px; }
 .ww-funnel-table-wrap { overflow-x: auto; }
 .ww-funnel-table { width: 100%; border-collapse: collapse; color: var(--ww-ink); font-size: 0.78rem; }
-.ww-funnel-table :is(th, td) { padding: 14px 12px; border-bottom: 1px solid var(--ww-border); text-align: right; white-space: nowrap; }
+.ww-funnel-table th,
+.ww-funnel-table td { padding: 14px 12px; border-bottom: 1px solid var(--ww-border); text-align: right; white-space: nowrap; }
 .ww-funnel-table thead th { color: var(--ww-muted); font-size: 0.64rem; letter-spacing: 0.07em; text-transform: uppercase; }
-.ww-funnel-table :is(th, td):first-child { min-width: 190px; text-align: left; }
+.ww-funnel-table th:first-child,
+.ww-funnel-table td:first-child { min-width: 190px; text-align: left; }
 .ww-funnel-table tbody th { display: grid; grid-template-columns: 30px minmax(120px, 1fr); align-items: center; gap: 8px; }
 .ww-funnel-table tbody th small { color: var(--ww-brand-strong); }
 .ww-funnel-table tbody th span { overflow: hidden; text-overflow: ellipsis; }
@@ -9771,7 +9786,9 @@ body {
     line-height: 0.73;
 }
 
-.reader-copy :is(p, li, blockquote) { color: var(--reader-copy) !important; }
+.reader-copy p,
+.reader-copy li,
+.reader-copy blockquote { color: var(--reader-copy) !important; }
 .reader-copy p { margin-bottom: 1.35em; }
 .reader-copy h2,
 .reader-copy h3 { margin-top: 2.2em; color: var(--reader-ink) !important; font-family: 'Newsreader', serif !important; letter-spacing: -0.035em; }
@@ -10202,7 +10219,7 @@ body {
 }
 
 @media (max-width: 780px) {
-    .ft-audience-section { width: min(100% - 28px, 1240px); }
+    .ft-audience-section { width: min(calc(100% - 28px), 1240px); }
     .ft-audience-grid { grid-template-columns: 1fr; }
     .ft-audience-card { min-height: 560px; }
     .ft-journey-steps { grid-template-columns: 1fr; }
@@ -10569,7 +10586,7 @@ body {
     .ww-manage-stats { overflow-x: auto; }
     .ww-manage-stats > div { min-width: 75px; }
     .ww-manage-actions { grid-template-columns: 1fr 1fr; }
-    .ww-manage-workspace { width: min(100% - 28px, 1120px); }
+    .ww-manage-workspace { width: min(calc(100% - 28px), 1120px); }
     .ww-manage-tabs { width: 100%; overflow-x: auto; }
     .ww-manage-tabs button { flex: 1; justify-content: center; padding-inline: 10px; }
     .ww-editor-topbar { grid-template-columns: minmax(120px, 1fr) auto; padding-inline: 10px; }
@@ -10582,7 +10599,7 @@ body {
     .ww-editor-paper { min-height: calc(100vh - 66px); border: 0; border-radius: 0; }
     .ww-editor-title-block { padding: 42px 24px 24px; }
     .ww-editor-paper .rte-content { padding: 34px 24px 80px; }
-    .ft-section { width: min(100% - 24px, 1240px); padding-block: 9px; }
+    .ft-section { width: min(calc(100% - 24px), 1240px); padding-block: 9px; }
     .ft-section-inner { min-height: 0; grid-template-columns: 1fr; padding: 26px; border-radius: 23px; }
     .ft-section-reversed .ft-section-text,
     .ft-section-reversed .ft-section-demo { order: initial; }
@@ -10692,11 +10709,14 @@ body {
 }
 
 /* Native controls keep readable values and placeholders in dark mode. */
-.dark :is(input, textarea, select) {
+.dark input,
+.dark textarea,
+.dark select {
     color: var(--ww-ink);
     caret-color: var(--ww-brand-strong);
 }
-.dark :is(input, textarea)::placeholder { color: var(--ww-muted); opacity: 0.9; }
+.dark input::placeholder,
+.dark textarea::placeholder { color: var(--ww-muted); opacity: 0.9; }
 
 /* Writer workspace: stable alignment for long titles and dense action rows. */
 .ww-manage-chapter-main,
@@ -10829,9 +10849,9 @@ body {
 
 /* Product-quality responsive pass: sharing, portfolios, writer studio, and reader controls. */
 .ww-share-dialog { max-width: 470px; max-height: calc(100dvh - 32px); }
-.ww-share-dialog-poster { max-width: 780px; }
+.ww-share-dialog-poster { max-width: 840px; }
 .ww-share-content { min-height: 0; }
-.ww-poster-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 290px; align-items: center; gap: 28px; }
+.ww-poster-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: center; gap: 28px; }
 .ww-poster-controls { display: flex; flex-direction: column; gap: 18px; }
 .ww-poster-controls h4 { color: var(--ww-ink); font-family: 'Newsreader', serif; font-size: 2rem; font-weight: 600; line-height: 1; }
 .ww-poster-controls p, .ww-poster-controls > small { color: var(--ww-muted); font: 500 0.72rem/1.6 'Inter', sans-serif; }
@@ -10841,7 +10861,7 @@ body {
 .ww-poster-themes i { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 2px var(--ww-paper), 0 0 0 3px var(--ww-line); }
 .ww-poster-share-button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding-inline: 18px; color: #fff; background: var(--ww-brand); border-radius: 11px; font: 750 0.72rem/1 'Inter', sans-serif; box-shadow: 0 10px 22px rgba(80,49,39,.18); }
 .ww-poster-share-button:disabled { opacity: .55; }
-.ww-poster-preview { width: 100%; max-width: 290px; justify-self: center; }
+.ww-poster-preview { width: 100%; max-width: 320px; justify-self: center; }
 
 .image-upload-error { display: grid; gap: 5px; max-width: 330px; }
 .image-upload-error > span, .image-upload-error > button { display: flex; align-items: center; gap: 5px; }
@@ -10878,7 +10898,7 @@ body {
     .ww-poster-themes { display: flex; overflow-x: auto; padding-bottom: 2px; }
     .ww-poster-themes button { min-width: max-content; min-height: 38px; }
     .ww-poster-share-button { min-height: 42px; }
-    .ww-poster-preview { max-width: min(245px, 76vw); }
+    .ww-poster-preview { max-width: min(280px, 82vw); }
 
     .ww-author-hero-inner { padding: 24px 16px 20px !important; }
     .ww-author-identity { gap: 20px !important; }
@@ -11020,20 +11040,29 @@ body,
     overflow-x: clip;
 }
 
-.ww-app-main :where(img, video, canvas, iframe) {
+.ww-app-main img,
+.ww-app-main video,
+.ww-app-main canvas,
+.ww-app-main iframe {
     max-width: 100%;
 }
 
-.ww-app-main :where(h1, h2, h3) {
+.ww-app-main h1,
+.ww-app-main h2,
+.ww-app-main h3 {
     overflow-wrap: break-word;
     text-wrap: balance;
 }
 
-.ww-app-main :where(p, li) {
+.ww-app-main p,
+.ww-app-main li {
     text-wrap: pretty;
 }
 
-.ww-app-main :where(input, textarea, select, button) {
+.ww-app-main input,
+.ww-app-main textarea,
+.ww-app-main select,
+.ww-app-main button {
     max-width: 100%;
 }
 
@@ -11358,7 +11387,12 @@ body,
 .mood-atmosphere__vignette { opacity: .26 !important; }
 
 body[data-active-mood] .ww-prose,
-body[data-active-mood] .ww-prose :where(h1, h2, h3, h4, h5, h6) {
+body[data-active-mood] .ww-prose h1,
+body[data-active-mood] .ww-prose h2,
+body[data-active-mood] .ww-prose h3,
+body[data-active-mood] .ww-prose h4,
+body[data-active-mood] .ww-prose h5,
+body[data-active-mood] .ww-prose h6 {
     color: var(--reader-copy) !important;
     text-shadow: none !important;
 }
@@ -11375,19 +11409,19 @@ body[data-active-mood] .ww-prose :where(h1, h2, h3, h4, h5, h6) {
     }
 
     .ww-app-main-with-nav {
-        padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+        padding-bottom: 96px !important;
     }
 
     .ww-mobile-topbar { display: flex !important; }
-    .ww-mobile-bottom-nav { display: block !important; height: calc(72px + env(safe-area-inset-bottom)) !important; padding-bottom: env(safe-area-inset-bottom); }
+    .ww-mobile-bottom-nav { display: block !important; min-height: 72px !important; padding-bottom: env(safe-area-inset-bottom); }
     .ww-mobile-bottom-nav nav { width: min(720px, 100%); margin-inline: auto; padding-inline: 4px; }
     .mobile-nav-tab { min-width: 0 !important; flex: 1 1 0; min-height: 58px; padding-inline: 2px !important; }
     .mobile-nav-tab > span:last-child { max-width: 100%; overflow: hidden; font-size: clamp(.52rem, 1.6vw, .65rem); text-overflow: ellipsis; white-space: nowrap; }
     .mobile-more-drawer { max-height: min(82dvh, 680px); overflow-y: auto; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
     .ww-author-tabs { top: 62px !important; }
     .ww-story-header { top: 62px !important; }
-    .ww-feedback-banner { bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
-    .ww-feedback-toast { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+    .ww-feedback-banner { bottom: 84px !important; }
+    .ww-feedback-toast { bottom: 96px !important; }
 }
 
 @media (min-width: 1280px) {
@@ -11446,16 +11480,21 @@ body[data-active-mood] .ww-prose :where(h1, h2, h3, h4, h5, h6) {
         font-size: 1.2rem !important;
     }
 
-    .ww-page-terms :where(p, li),
-    .ww-page-privacy :where(p, li),
-    .ww-page-safety :where(p, li) {
+    .ww-page-terms p,
+    .ww-page-terms li,
+    .ww-page-privacy p,
+    .ww-page-privacy li,
+    .ww-page-safety p,
+    .ww-page-safety li {
         overflow-wrap: anywhere;
         font-size: .92rem;
     }
 
     .ww-page-privacy a[href^="mailto:"] { overflow-wrap: anywhere; }
 
-    .ww-app-main :where(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+    .ww-app-main input:not([type="checkbox"]):not([type="radio"]),
+    .ww-app-main textarea,
+    .ww-app-main select {
         font-size: 16px !important;
     }
 

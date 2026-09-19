@@ -3,12 +3,14 @@ package com.wordweft.manuscript.service;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -60,6 +62,181 @@ class ManuscriptParserTest {
         assertEquals(2, chapters.size());
         assertEquals("Chapter Two", chapters.get(1).title());
         assertTrue(chapters.get(1).content().contains("The second paragraph."));
+    }
+
+    @Test
+    void docxRunsDoNotInsertSpuriousSpacesInsideWords() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+                  <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 1</w:t></w:r></w:p>
+                  <w:p>
+                    <w:r><w:t>We don</w:t></w:r>
+                    <w:r><w:t>'t</w:t></w:r>
+                    <w:r><w:t> break words.</w:t></w:r>
+                  </w:p>
+                </w:body></w:document>
+                """;
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(bytes)) {
+            zip.putNextEntry(new ZipEntry("word/document.xml"));
+            zip.write(document.getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+        }
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse("story.docx", bytes.toByteArray());
+
+        assertEquals(1, chapters.size());
+        assertTrue(chapters.get(0).content().contains("<p>We don&#39;t break words.</p>"));
+        assertFalse(chapters.get(0).content().contains("don &#39; t"));
+    }
+
+    @Test
+    void docxEmbeddedImagesAreExtractedAndUploaded() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                  <w:body>
+                    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 1: The Map</w:t></w:r></w:p>
+                    <w:p>
+                      <w:r><w:t>Here is the illustration:</w:t></w:r>
+                    </w:p>
+                    <w:p>
+                      <w:r>
+                        <w:drawing>
+                          <a:blip r:embed="rId10"/>
+                        </w:drawing>
+                      </w:r>
+                    </w:p>
+                  </w:body>
+                </w:document>
+                """;
+
+        String rels = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                  <Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/map.png"/>
+                </Relationships>
+                """;
+
+        byte[] fakePng = new byte[] { (byte)0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00 };
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(bytes)) {
+            zip.putNextEntry(new ZipEntry("word/document.xml"));
+            zip.write(document.getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+
+            zip.putNextEntry(new ZipEntry("word/_rels/document.xml.rels"));
+            zip.write(rels.getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+
+            zip.putNextEntry(new ZipEntry("word/media/map.png"));
+            zip.write(fakePng);
+            zip.closeEntry();
+        }
+
+        ManuscriptParser.ImageUploader uploader = (imgBytes, filename) -> {
+            assertEquals("map.png", filename);
+            return "https://cdn.wordweft.com/chapter-images/book-1/map.png";
+        };
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse("story.docx", bytes.toByteArray(), uploader);
+
+        assertEquals(1, chapters.size());
+        assertTrue(chapters.get(0).content().contains("https://cdn.wordweft.com/chapter-images/book-1/map.png"));
+        assertTrue(chapters.get(0).content().contains("class=\"chapter-image\""));
+    }
+
+    @Test
+    void windows1252EncodingIsDecodedWithoutErrors() {
+        // Windows-1252 bytes for curly quotes: 0x93 (“), 0x94 (”)
+        byte[] bytes = new byte[] {
+                '#', ' ', 'C', 'h', 'a', 'p', 't', 'e', 'r', ' ', '1', '\n',
+                (byte) 0x93, 'H', 'e', 'l', 'l', 'o', (byte) 0x94, ' ', 'w', 'o', 'r', 'l', 'd', '.'
+        };
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse("story.txt", bytes);
+        assertEquals(1, chapters.size());
+        assertTrue(chapters.get(0).content().contains("Hello"));
+    }
+
+    @Test
+    void utf8BomIsStrippedWithoutBreakingHeading() {
+        byte[] bom = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+        byte[] text = "Chapter 1. The Journey\nFirst line of text.".getBytes(StandardCharsets.UTF_8);
+        byte[] combined = new byte[bom.length + text.length];
+        System.arraycopy(bom, 0, combined, 0, bom.length);
+        System.arraycopy(text, 0, combined, bom.length, text.length);
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse("story.txt", combined);
+        assertEquals(1, chapters.size());
+        assertEquals("Chapter 1. The Journey", chapters.get(0).title());
+    }
+
+    @Test
+    void enhancedHeadingFormatsAreRecognized() {
+        String source = """
+                Chapter 1. The Beginning
+                First paragraph.
+                
+                Chapter Twenty-One: The Turning Point
+                Second paragraph.
+                
+                Part 2: The Return
+                Third paragraph.
+                """;
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse(
+                "story.txt", source.getBytes(StandardCharsets.UTF_8));
+
+        assertEquals(3, chapters.size());
+        assertEquals("Chapter 1. The Beginning", chapters.get(0).title());
+        assertEquals("Chapter Twenty-One: The Turning Point", chapters.get(1).title());
+        assertEquals("Part 2: The Return", chapters.get(2).title());
+    }
+
+    @Test
+    void hardWrappedLinesAreJoinedIntoSingleParagraphs() {
+        String source = """
+                Chapter 1
+                This is a line that was
+                hard-wrapped across multiple
+                lines by an author's text editor.
+                
+                This is the second paragraph.
+                """;
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse(
+                "story.txt", source.getBytes(StandardCharsets.UTF_8));
+
+        assertEquals(1, chapters.size());
+        assertTrue(chapters.get(0).content().contains("<p>This is a line that was hard-wrapped across multiple lines by an author&#39;s text editor.</p>"));
+        assertTrue(chapters.get(0).content().contains("<p>This is the second paragraph.</p>"));
+    }
+
+    @Test
+    void briefFrontMatterBeforeChapterOneDoesNotCreatePhantomChapter() {
+        String source = """
+                My Great Novel
+                By Jane Doe
+                Copyright 2026
+                
+                Chapter 1
+                The story actually begins here.
+                
+                Chapter 2
+                The story continues here.
+                """;
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse(
+                "story.txt", source.getBytes(StandardCharsets.UTF_8));
+
+        assertEquals(2, chapters.size());
+        assertEquals("Chapter 1", chapters.get(0).title());
+        assertEquals("Chapter 2", chapters.get(1).title());
     }
 
     @Test
