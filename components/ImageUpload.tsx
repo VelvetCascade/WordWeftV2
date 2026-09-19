@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { getImageKitAuth, reportImageUploadDiagnostic } from '../api/client';
+import { getImageKitAuth, reportImageUploadDiagnostic, uploadImageToImageKit } from '../api/client';
 import imageCompression from 'browser-image-compression';
 import { Upload, X, Loader2, AlertCircle, RotateCcw } from 'lucide-react';
 import { ImageCropModal } from './ImageCropModal';
@@ -15,6 +15,8 @@ interface ImageUploadProps {
     aspectRatio?: number;
     /** Shape of the crop area. 'circle' for avatars, 'rect' for everything else. */
     cropShape?: 'rect' | 'circle';
+    disabled?: boolean;
+    onBusyChange?: (busy: boolean) => void;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -25,13 +27,17 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     label = "Upload Image",
     aspectRatio,
     cropShape = 'rect',
+    disabled = false,
+    onBusyChange,
 }) => {
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [statusText, setStatusText] = useState('');
     const [error, setError] = useState('');
     const [uploadReference, setUploadReference] = useState('');
     const [retryFile, setRetryFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const uploadingRef = useRef(false);
     const [cropFile, setCropFile] = useState<File | null>(null);
     const uniqueId = useRef(`image-upload-${Math.random().toString(36).slice(2, 8)}`);
 
@@ -41,9 +47,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
         setError('');
 
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            setError('Choose a JPG, PNG, or WEBP image.');
+            e.target.value = '';
+            return;
+        }
+
         // 1. Size Check (5MB max before compression)
         if (file.size > 5 * 1024 * 1024) {
-            setError('File size must be less than 5MB');
+            setError('This image is over 5 MB. Choose a smaller file and try again.');
+            e.target.value = '';
             return;
         }
 
@@ -62,73 +75,43 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     };
 
     const processAndUpload = async (file: File) => {
+        if (uploadingRef.current || disabled) return;
+        uploadingRef.current = true;
         const reference = newUploadReference();
         setUploadReference(reference);
         setRetryFile(file);
         setError('');
         setUploading(true);
-        setProgress(10);
+        onBusyChange?.(true);
+        setProgress(5);
+        setStatusText('Preparing image…');
         void reportImageUploadDiagnostic({ uploadId: reference, event: 'selected', contentType: file.type, sizeBytes: file.size }).catch(() => undefined);
 
         try {
-            // 2. Compress Image
             const options = {
                 maxSizeMB: 1,
                 maxWidthOrHeight: 1920,
                 useWebWorker: true
             };
             const compressedFile = await imageCompression(file, options);
-            setProgress(30);
+            setProgress(20);
+            setStatusText('Starting secure upload…');
 
-            // 3. NSFW Check
-            const isSafe = await checkNSFW(compressedFile);
-            if (!isSafe) {
-                setError('Image blocked: Explicit content detected.');
-                setRetryFile(null);
-                void reportImageUploadDiagnostic({ uploadId: reference, event: 'failed', contentType: file.type, sizeBytes: file.size, message: 'client_content_check_blocked' }).catch(() => undefined);
-                setUploading(false);
-                return;
-            }
-            setProgress(50);
-
-            // 4. Get Auth Signature
             const auth = await getImageKitAuth(reference);
             void reportImageUploadDiagnostic({ uploadId: reference, event: 'auth_ready', contentType: compressedFile.type, sizeBytes: compressedFile.size }).catch(() => undefined);
-            setProgress(70);
+            setProgress(25);
+            setStatusText('Uploading image…');
 
-            // 5. Upload to ImageKit
-            const formData = new FormData();
-            formData.append('file', compressedFile);
-            formData.append('publicKey', auth.publicKey);
-            formData.append('signature', auth.signature);
-            formData.append('expire', auth.expire.toString());
-            formData.append('token', auth.token);
-            formData.append('fileName', file.name || 'upload.jpg');
-
-            const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!uploadRes.ok) {
-                const errText = await uploadRes.text();
-                let providerMessage = errText;
-                try {
-                    const parsed = JSON.parse(errText);
-                    providerMessage = parsed.message || parsed.error?.message || errText;
-                } catch {
-                    // ImageKit can return plain-text errors.
-                }
-                const uploadError = new Error(uploadErrorMessage(uploadRes.status, providerMessage)) as Error & { status?: number; diagnostic?: string };
-                uploadError.status = uploadRes.status;
-                uploadError.diagnostic = providerMessage;
-                throw uploadError;
-            }
-
-            const data = await uploadRes.json();
+            const data = await uploadImageToImageKit(
+                compressedFile,
+                auth,
+                file.name || compressedFile.name || 'upload.jpg',
+                (providerProgress) => setProgress(25 + Math.round(providerProgress * 0.75)),
+            );
             setProgress(100);
+            setStatusText('Upload complete');
             setRetryFile(null);
-            void reportImageUploadDiagnostic({ uploadId: reference, event: 'uploaded', contentType: compressedFile.type, sizeBytes: compressedFile.size, httpStatus: uploadRes.status }).catch(() => undefined);
+            void reportImageUploadDiagnostic({ uploadId: reference, event: 'uploaded', contentType: compressedFile.type, sizeBytes: compressedFile.size, httpStatus: 200 }).catch(() => undefined);
             
             // Pass back URL and File ID
             onChange(data.url, data.fileId);
@@ -146,39 +129,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 message: String(err?.diagnostic || err?.message || 'client_upload_failure').slice(0, 300),
             }).catch(() => undefined);
         } finally {
+            uploadingRef.current = false;
             setUploading(false);
+            onBusyChange?.(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
-    };
-
-    const checkNSFW = async (file: File): Promise<boolean> => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            img.onload = async () => {
-                try {
-                    // The TensorFlow-backed safety model is several megabytes, so keep it
-                    // off the initial application path and load it only for an actual upload.
-                    const { load } = await import('nsfwjs');
-                    const model = await load();
-                    const predictions = await model.classify(img);
-                    URL.revokeObjectURL(img.src);
-                    
-                    // predictions is sorted by probability descending
-                    // Check if Porn or Hentai is highly probable (e.g. > 60%)
-                    const explicit = predictions.find(p => 
-                        (p.className === 'Porn' || p.className === 'Hentai') && p.probability > 0.6
-                    );
-                    
-                    if (explicit) resolve(false);
-                    else resolve(true);
-                } catch (e) {
-                    console.error("NSFW check failed", e);
-                    resolve(true); // default to allow if check breaks
-                }
-            };
-            img.onerror = () => resolve(false);
-        });
     };
 
     const handleRemove = () => {
@@ -202,7 +157,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                             className={`w-24 h-24 ${previewShape} object-cover ring-2 ring-gray-100 dark:ring-dark-border bg-gray-50 flex-shrink-0`}
                             onError={(e) => (e.currentTarget.src = fallbackUrl)}
                         />
-                        {value && !uploading && (
+                        {value && !uploading && !disabled && (
                             <button 
                                 type="button" 
                                 onClick={handleRemove}
@@ -219,22 +174,29 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                             type="file" 
                             ref={fileInputRef}
                             onChange={handleFileChange}
-                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            disabled={uploading || disabled}
+                            accept="image/jpeg,image/png,image/webp"
                             className="hidden"
                             id={uniqueId.current}
                         />
                         <label 
                             htmlFor={uniqueId.current}
-                            className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors cursor-pointer w-max ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                            aria-disabled={uploading || disabled}
+                            className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors cursor-pointer w-max ${(uploading || disabled) ? 'opacity-50 pointer-events-none' : ''}`}
                         >
                             {uploading ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Upload className="w-4 h-4" />}
                             {uploading ? 'Processing...' : 'Choose Image'}
                         </label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">JPG, PNG, WEBP or GIF (Max 5MB)</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">JPG, PNG or WEBP (Max 5MB)</p>
                         
                         {uploading && (
-                            <div className="w-full max-w-xs bg-gray-200 dark:bg-dark-border rounded-full h-1.5 mt-1 overflow-hidden">
-                                <div className="bg-primary h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                            <div className="w-full max-w-xs mt-1" role="status" aria-live="polite" aria-label={`${statusText} ${progress}%`}>
+                                <div className="flex items-center justify-between mb-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    <span>{statusText}</span><span>{progress}%</span>
+                                </div>
+                                <div className="bg-gray-200 dark:bg-dark-border rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-primary h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                                </div>
                             </div>
                         )}
 

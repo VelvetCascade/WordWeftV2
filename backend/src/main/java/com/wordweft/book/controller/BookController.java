@@ -541,8 +541,20 @@ public class BookController {
             return ResponseEntity.status(403).body("Not authorized to edit this book");
         }
 
-        book.getChapters().removeIf(c -> c.getId().equals(chapterId));
+        int deletedChapterIndex = -1;
+        for (int index = 0; index < book.getChapters().size(); index++) {
+            if (chapterId.equals(book.getChapters().get(index).getId())) {
+                deletedChapterIndex = index;
+                break;
+            }
+        }
+        if (deletedChapterIndex < 0) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "Chapter not found.");
+        }
+        book.getChapters().remove(deletedChapterIndex);
         bookRepository.save(book);
+        bookService.deleteChapterData(bookId, chapterId, deletedChapterIndex, book.getChapters().size());
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }
 }

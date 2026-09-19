@@ -119,6 +119,7 @@ const App: React.FC = () => {
   const [authInitialView, setAuthInitialView] = useState<ReaderAuthView>('login');
   const notif = useNotifications(isAuthenticated);
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Preserve the complete intended destination through sign-in and onboarding.
   const navigateTo = (target: Page) => {
@@ -243,15 +244,23 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    // Track logout event before clearing state
-    analytics.trackEvent('auth', 'logout');
-    await analytics.flush();
-
-    await api.logout();
-    sessionAuthenticated.current = false;
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    window.location.hash = '/';
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      // Analytics must never hold the account open if its endpoint is slow.
+      analytics.trackEvent('auth', 'logout');
+      await Promise.race([
+        analytics.flush(),
+        new Promise<void>(resolve => window.setTimeout(resolve, 1_200)),
+      ]);
+    } finally {
+      await api.logout();
+      sessionAuthenticated.current = false;
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setIsLoggingOut(false);
+      window.location.hash = '/';
+    }
   };
 
   const handleUpdateProfile = async (updatedData: Partial<User>) => {
@@ -566,7 +575,7 @@ const App: React.FC = () => {
     <AnalyticsProvider>
     <FeedbackContext.Provider value={feedbackCtx}>
       <div className={`ww-app ww-route-${page.name} min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20`}>
-        {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout}
+        {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} isLoggingOut={isLoggingOut}
           notificationBell={
             isAuthenticated ? (
               <NotificationBell

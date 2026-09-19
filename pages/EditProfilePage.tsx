@@ -64,11 +64,14 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
   // Genres
   const [selectedGenres, setSelectedGenres] = useState<string[]>(user.favoriteGenres || []);
   const [allGenres, setAllGenres] = useState<string[]>([]);
   const [genreSearch, setGenreSearch] = useState('');
+  const [genreError, setGenreError] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -78,6 +81,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
 
   useEffect(() => {
@@ -109,17 +113,20 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {
       setSelectedGenres(prev => prev.filter(g => g !== genre));
+      setGenreError(null);
     } else {
       if (selectedGenres.length >= 5) {
-        alert("You can only select up to 5 favorite genres.");
+        setGenreError('Choose up to 5 favorite genres. Remove one before adding another.');
         return;
       }
       setSelectedGenres(prev => [...prev, genre]);
+      setGenreError(null);
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving || isAvatarUploading) return;
 
     // Check validation before submitting
     const twErr = validateUrl(twitter, 'twitter');
@@ -135,6 +142,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     }
 
     try {
+      setIsSaving(true);
       await onUpdateProfile({
         name,
         avatarUrl,
@@ -151,6 +159,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch (err: any) {
       setSaveError(err.message || "Failed to update profile.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -165,6 +175,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPasswordSaving) return;
     setPasswordError(null);
     setPasswordSuccess(null);
 
@@ -184,6 +195,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     }
 
     try {
+      setIsPasswordSaving(true);
       await onChangePassword(currentPassword, newPassword);
       setPasswordSuccess("Password updated successfully!");
       setCurrentPassword('');
@@ -192,6 +204,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
       setTimeout(() => setPasswordSuccess(null), 3000);
     } catch (err: any) {
       setPasswordError(err.message || "Failed to update password.");
+    } finally {
+      setIsPasswordSaving(false);
     }
   };
 
@@ -229,6 +243,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               label="Profile Avatar"
               aspectRatio={1}
               cropShape="circle"
+              onBusyChange={setIsAvatarUploading}
             />
 
             <div>
@@ -340,6 +355,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             {/* Favorite Genres */}
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 mt-4">Favorite Genres (Max 5)</h3>
+              {genreError && <p role="alert" className="mb-3 text-sm text-danger">{genreError}</p>}
               {selectedGenres.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {selectedGenres.map(genre => (
@@ -413,10 +429,10 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 </button>
                 <button
                   type="submit"
-                  disabled={!!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
+                  disabled={isSaving || isAvatarUploading || !!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
                   className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Changes
+                  {isAvatarUploading ? 'Uploading avatar…' : isSaving ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
             </div>
@@ -428,7 +444,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">Change Password</h2>
             <div>
               <label htmlFor="currentPassword" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
-                Current Password (use "password")
+                Current Password
               </label>
               <div className="relative">
                 <input
@@ -508,9 +524,10 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors"
+                disabled={isPasswordSaving}
+                className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Update Password
+                {isPasswordSaving ? 'Updating…' : 'Update Password'}
               </button>
             </div>
           </form>

@@ -13,6 +13,9 @@ export const uploadErrorMessage = (status?: number, providerMessage?: string) =>
     if (status === 429 || detail.includes('rate limit')) {
         return 'Image uploads are busy right now. Wait a moment, then retry.';
     }
+    if (status === 408 || detail.includes('timeout') || detail.includes('too long')) {
+        return 'The image upload took too long. Check your connection and retry.';
+    }
     if (detail.includes('network') || detail.includes('failed to fetch')) {
         return 'The upload could not reach the image service. Check your connection and retry.';
     }

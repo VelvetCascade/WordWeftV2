@@ -10,6 +10,7 @@ import java.util.Collection;
 public interface ReadingProgressRepository extends MongoRepository<ReadingProgress, String> {
     Optional<ReadingProgress> findByUserIdAndBookId(String userId, String bookId);
     List<ReadingProgress> findByUserId(String userId);
+    List<ReadingProgress> findByBookId(String bookId);
     List<ReadingProgress> findByBookIdIn(Collection<String> bookIds);
     void deleteByUserIdAndBookId(String userId, String bookId);
     void deleteByBookId(String bookId);

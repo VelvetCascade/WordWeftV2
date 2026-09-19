@@ -1,10 +1,9 @@
 package com.wordweft.book.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordweft.foundingwriter.service.UploadTokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,21 +15,28 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.UUID;
 
 @Service
 public class ChapterImageStorageService {
     private static final Logger log = LoggerFactory.getLogger(ChapterImageStorageService.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(8);
+    private static final Duration UPLOAD_TIMEOUT = Duration.ofSeconds(30);
 
     private final UploadTokenService uploadTokenService;
     private final HttpClient httpClient;
 
+    @Autowired
     public ChapterImageStorageService(UploadTokenService uploadTokenService) {
+        this(uploadTokenService, HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build());
+    }
+
+    ChapterImageStorageService(UploadTokenService uploadTokenService, HttpClient httpClient) {
         this.uploadTokenService = uploadTokenService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = httpClient;
     }
 
     public record ImageUploadResult(String url, String filename) {}
@@ -62,12 +68,14 @@ public class ChapterImageStorageService {
         }
 
         ImageInfo info = validateAndDetectImage(originalFilename, bytes);
-        String uniqueName = generateUniqueFilename(originalFilename, info.extension());
+        String uniqueName = generateUniqueFilename(info.extension());
 
         String workerBaseUrl = uploadTokenService.getWorkerBaseUrl();
         if (workerBaseUrl == null || workerBaseUrl.isBlank()) {
-            log.warn("WORKER_BASE_URL is not configured; returning fallback chapter image path for book {}", bookId);
-            return "/api/chapter-images/" + bookId + "/" + uniqueName;
+            log.error("WORKER_BASE_URL is not configured; refusing a chapter image upload for book {}", bookId);
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Image storage is temporarily unavailable. Please try again later.");
         }
 
         // Upload to R2 via Cloudflare Worker
@@ -77,6 +85,7 @@ public class ChapterImageStorageService {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
+                    .timeout(UPLOAD_TIMEOUT)
                     .PUT(HttpRequest.BodyPublishers.ofByteArray(bytes))
                     .header("Authorization", "Bearer " + token)
                     .header("Content-Type", info.contentType())
@@ -84,8 +93,11 @@ public class ChapterImageStorageService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                log.error("Cloudflare worker image upload failed with status {}: {}", response.statusCode(), response.body());
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Image upload to R2 failed.");
+                log.error("Chapter image storage rejected an upload with status {}: {}",
+                        response.statusCode(), safeResponseBody(response.body()));
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_GATEWAY,
+                        "Image storage rejected the upload. Please try again.");
             }
 
             return workerBaseUrl.replaceAll("/+$", "") + "/chapter-images/" + bookId + "/" + uniqueName;
@@ -93,10 +105,12 @@ public class ChapterImageStorageService {
             throw rse;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Image upload was interrupted.", e);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Image upload was interrupted. Please retry.", e);
+        } catch (java.net.http.HttpTimeoutException e) {
+            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "Image upload timed out. Please retry.", e);
         } catch (Exception e) {
             log.error("Error uploading chapter image to worker", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload chapter image.", e);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Image storage is unavailable. Please retry.", e);
         }
     }
 
@@ -147,19 +161,14 @@ public class ChapterImageStorageService {
                 "Unsupported image format. Allowed formats: WebP, JPEG, PNG, GIF.");
     }
 
-    private String generateUniqueFilename(String originalFilename, String fallbackExtension) {
+    static String generateUniqueFilename(String detectedExtension) {
         String base = "img_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        String ext = fallbackExtension;
-        if (originalFilename != null) {
-            int dot = originalFilename.lastIndexOf('.');
-            if (dot >= 0) {
-                String existingExt = originalFilename.substring(dot).toLowerCase(Locale.ROOT);
-                if (existingExt.equals(".jpg") || existingExt.equals(".jpeg") ||
-                        existingExt.equals(".png") || existingExt.equals(".webp") || existingExt.equals(".gif")) {
-                    ext = existingExt;
-                }
-            }
-        }
-        return base + ext;
+        return base + detectedExtension;
+    }
+
+    private String safeResponseBody(String responseBody) {
+        if (responseBody == null || responseBody.isBlank()) return "(empty response)";
+        String singleLine = responseBody.replaceAll("[\\r\\n]+", " ");
+        return singleLine.length() > 300 ? singleLine.substring(0, 300) + "..." : singleLine;
     }
 }

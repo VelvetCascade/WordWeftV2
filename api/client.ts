@@ -9,6 +9,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 
 
 const JWT_KEY = JWT_STORAGE_KEY;
+const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
+const DEFAULT_JSON_TIMEOUT_MS = 30_000;
 
 // --- Helper Functions ---
 
@@ -19,6 +21,32 @@ const getHeaders = () => {
         'Authorization': token ? `Bearer ${token}` : ''
     };
 };
+
+export class ApiError extends Error {
+    constructor(message: string, public readonly status: number, public readonly code?: string) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
+
+const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = DEFAULT_JSON_TIMEOUT_MS) => {
+    if (init.signal) return globalThis.fetch(input, init);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await globalThis.fetch(input, { ...init, signal: controller.signal });
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            throw new ApiError('The server took too long to respond. Check your connection and retry.', 408, 'request_timeout');
+        }
+        throw error;
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+};
+
+// Keep every API request bounded without repeating timeout plumbing at each call site.
+const fetch = fetchWithTimeout;
 
 const handleResponse = async (response: Response) => {
     if (!response.ok) {
@@ -43,11 +71,7 @@ const handleResponse = async (response: Response) => {
         } catch {
             // Non-JSON response, keep errorText
         }
-        const err = new Error(message);
-        if (errorCode) {
-            (err as any).code = errorCode;
-        }
-        throw err;
+        throw new ApiError(message, response.status, errorCode);
     }
     try {        return await response.json();
     } catch (e) {
@@ -55,6 +79,73 @@ const handleResponse = async (response: Response) => {
         return null;
     }
 };
+
+type UploadError = Error & { status?: number; diagnostic?: string };
+
+const createUploadError = (message: string, status?: number, diagnostic?: string): UploadError => {
+    const error = new Error(message) as UploadError;
+    error.status = status;
+    error.diagnostic = diagnostic;
+    return error;
+};
+
+const parseErrorMessage = (responseText: string, fallback: string) => {
+    if (!responseText) return fallback;
+    try {
+        const parsed = JSON.parse(responseText);
+        if (typeof parsed?.message === 'string' && parsed.message.trim()) return parsed.message;
+        if (typeof parsed?.error === 'string' && parsed.error.trim()) return parsed.error;
+        if (typeof parsed?.error?.message === 'string' && parsed.error.message.trim()) return parsed.error.message;
+    } catch {
+        // Some upload providers return plain text errors.
+    }
+    return responseText.trim() || fallback;
+};
+
+const uploadFormData = <T>(
+    url: string,
+    formData: FormData,
+    options: {
+        authorization?: string;
+        onProgress?: (percent: number) => void;
+        timeoutMs?: number;
+    } = {},
+): Promise<T> => new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.timeout = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    if (options.authorization) xhr.setRequestHeader('Authorization', options.authorization);
+
+    xhr.upload.addEventListener('progress', (event) => {
+        if (!event.lengthComputable || event.total <= 0) return;
+        options.onProgress?.(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+    });
+
+    xhr.addEventListener('load', () => {
+        const message = parseErrorMessage(xhr.responseText, 'The upload could not be completed.');
+        if (xhr.status < 200 || xhr.status >= 300) {
+            reject(createUploadError(message, xhr.status, message));
+            return;
+        }
+        try {
+            resolve(JSON.parse(xhr.responseText) as T);
+        } catch {
+            reject(createUploadError('The upload service returned an unreadable response.', xhr.status, 'invalid_upload_response'));
+        }
+    });
+    xhr.addEventListener('error', () => reject(createUploadError(
+        'The upload could not reach the image service. Check your connection and retry.',
+        undefined,
+        'network_error',
+    )));
+    xhr.addEventListener('timeout', () => reject(createUploadError(
+        'The image upload took too long. Check your connection and retry.',
+        408,
+        'upload_timeout',
+    )));
+    xhr.addEventListener('abort', () => reject(createUploadError('The image upload was cancelled.', 499, 'upload_cancelled')));
+    xhr.send(formData);
+});
 
 // --- Auth & User API ---
 
@@ -68,7 +159,7 @@ async function establishSession(token: string): Promise<User> {
 }
 
 export async function login(email: string, password_used: string): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: password_used })
@@ -83,7 +174,7 @@ export async function login(email: string, password_used: string): Promise<User>
 }
 
 export async function signup(username: string, email: string, password: string, dateOfBirth: string): Promise<{ requiresOtp: boolean; message: string; user?: User }> {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, dateOfBirth })
@@ -104,7 +195,7 @@ export async function signup(username: string, email: string, password: string, 
 }
 
 export async function verifyOtp(email: string, otp: string): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
@@ -119,7 +210,7 @@ export async function verifyOtp(email: string, otp: string): Promise<User> {
 }
 
 export async function resendOtp(email: string): Promise<string> {
-    const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -128,7 +219,7 @@ export async function resendOtp(email: string): Promise<string> {
 }
 
 export async function forgotPassword(email: string): Promise<string> {
-    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -137,7 +228,7 @@ export async function forgotPassword(email: string): Promise<string> {
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<string> {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword })
@@ -146,7 +237,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
 }
 
 export async function googleLogin(idToken: string): Promise<{ user: User; needsProfileCompletion: boolean } | null> {
-    const response = await fetch(`${API_BASE_URL}/auth/google`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken })
@@ -170,7 +261,7 @@ export async function getMe(): Promise<User | null> {
     if (!token) return null;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
+        const response = await fetchWithTimeout(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
 
         // Only 401 Unauthorized means the token/session itself is definitely expired or invalid.
         // 403 Forbidden is a permissions/content issue and must NOT blow away the user's session.
@@ -320,17 +411,17 @@ export async function getBooksByGenre(genre: string, filters: {
 }
 
 export async function getBookById(id: string): Promise<Book | null> {
-    const response = await fetch(`${API_BASE_URL}/books/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/books/${id}`, {
         headers: getHeaders(),
         cache: 'no-store',
     });
-    if (!response.ok) return null;
+    if (response.status === 404) return null;
     return mapBackendBookToFrontend(await handleResponse(response));
 }
 
 export async function getAuthorById(id: string): Promise<Author | null> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`, { headers: getHeaders() });
-    if (!response.ok) return null;
+    const response = await fetchWithTimeout(`${API_BASE_URL}/users/${id}/profile`, { headers: getHeaders() });
+    if (response.status === 404) return null;
     const data = await handleResponse(response);
     if (!data) return null;
 
@@ -593,10 +684,11 @@ export async function saveReadingProgress(userId: string, book: Book, chapterInd
 }
 
 export async function clearReadingProgress(userId: string, bookId: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, {
+    const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, {
         method: 'DELETE',
         headers: getHeaders()
     });
+    await handleResponse(response);
 }
 
 export async function toggleBookInLibrary(userId: string, book: Book): Promise<User> {
@@ -848,10 +940,11 @@ export async function updateCharacter(id: string, character: any): Promise<Chara
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/characters/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/characters/${id}`, {
         method: 'DELETE',
         headers: getHeaders()
     });
+    await handleResponse(response);
 }
 
 // --- Scene API ---
@@ -885,10 +978,11 @@ export async function updateScene(id: string, scene: any): Promise<Scene> {
 }
 
 export async function deleteScene(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/scenes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/scenes/${id}`, {
         method: 'DELETE',
         headers: getHeaders()
     });
+    await handleResponse(response);
 }
 
 // --- Note API ---
@@ -922,47 +1016,83 @@ export async function updateNote(id: string, note: any): Promise<Note> {
 }
 
 export async function deleteNote(id: string): Promise<void> {
-    await fetch(`${API_BASE_URL}/notes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
         method: 'DELETE',
         headers: getHeaders()
     });
+    await handleResponse(response);
 }
 
 
 
 // --- File API ---
 
-export async function uploadFile(formData: FormData): Promise<{ filename: string, url: string }> {
-    const response = await fetch(`${API_BASE_URL}/files/upload`, {
-        method: 'POST',
-        headers: {
-            'Authorization': getHeaders()['Authorization']
-            // Content-Type is set automatically by fetch when using FormData
-        },
-        body: formData
+export async function uploadFile(formData: FormData, onProgress?: (percent: number) => void): Promise<{ filename: string, url: string }> {
+    return uploadFormData(`${API_BASE_URL}/files/upload`, formData, {
+        authorization: getHeaders()['Authorization'],
+        onProgress,
     });
-    return await handleResponse(response);
 }
 
-export async function uploadChapterImage(bookId: string, file: File): Promise<{ filename: string, url: string }> {
+export async function uploadChapterImage(bookId: string, file: File, onProgress?: (percent: number) => void): Promise<{ filename: string, url: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/images`, {
-        method: 'POST',
-        headers: {
-            'Authorization': getHeaders()['Authorization']
-        },
-        body: formData
+    return uploadFormData(`${API_BASE_URL}/books/${encodeURIComponent(bookId)}/chapters/images`, formData, {
+        authorization: getHeaders()['Authorization'],
+        onProgress,
     });
-    return await handleResponse(response);
 }
 
 // --- ImageKit API ---
 
 export async function getImageKitAuth(uploadId?: string): Promise<{ token: string, expire: number, signature: string, publicKey: string }> {
     const suffix = uploadId ? `?uploadId=${encodeURIComponent(uploadId)}` : '';
-    const response = await fetch(`${API_BASE_URL}/imagekit/auth${suffix}`, { headers: getHeaders() });
-    return await handleResponse(response);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15_000);
+    try {
+        const response = await fetch(`${API_BASE_URL}/imagekit/auth${suffix}`, {
+            headers: getHeaders(),
+            signal: controller.signal,
+            cache: 'no-store',
+        });
+        const auth = await handleResponse(response);
+        if (!auth?.token || !auth?.signature || !auth?.expire || !auth?.publicKey) {
+            throw createUploadError('The secure upload session could not be created.', response.status, 'missing_imagekit_auth_fields');
+        }
+        return auth;
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            throw createUploadError('The secure upload service took too long to respond. Please retry.', 408, 'auth_timeout');
+        }
+        throw error;
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+}
+
+export async function uploadImageToImageKit(
+    file: File,
+    auth: { token: string; expire: number; signature: string; publicKey: string },
+    fileName: string,
+    onProgress?: (percent: number) => void,
+): Promise<{ url: string; fileId: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('publicKey', auth.publicKey);
+    formData.append('signature', auth.signature);
+    formData.append('expire', String(auth.expire));
+    formData.append('token', auth.token);
+    formData.append('fileName', fileName || file.name || 'upload.jpg');
+
+    const result = await uploadFormData<{ url?: string; fileId?: string }>(
+        'https://upload.imagekit.io/api/v1/files/upload',
+        formData,
+        { onProgress, timeoutMs: 60_000 },
+    );
+    if (!result?.url || !result?.fileId) {
+        throw createUploadError('The image service completed without returning a usable image.', 502, 'missing_image_result');
+    }
+    return { url: result.url, fileId: result.fileId };
 }
 
 export interface ImageUploadDiagnostic {
@@ -1134,17 +1264,19 @@ export const getUnreadNotificationCount = async (): Promise<number> => {
 };
 
 export const markNotificationRead = async (id: string): Promise<void> => {
-    await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
         method: 'POST',
         headers: getHeaders(),
     });
+    await handleResponse(response);
 };
 
 export const markAllNotificationsRead = async (): Promise<void> => {
-    await fetch(`${API_BASE_URL}/notifications/read-all`, {
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
         method: 'POST',
         headers: getHeaders(),
     });
+    await handleResponse(response);
 };
 
 export const updateNotificationPreferences = async (prefs: NotificationPreferences): Promise<NotificationPreferences> => {

@@ -138,7 +138,7 @@ const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
 };
 
 // ─── Menu Bar ──────────────────────────────────────────────────────
-const MenuBar = ({ editor, addImage }: { editor: Editor | null; addImage: () => void }) => {
+const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; addImage: () => void; imageUploading: boolean }) => {
     if (!editor) return null;
 
     const setLink = () => {
@@ -232,7 +232,7 @@ const MenuBar = ({ editor, addImage }: { editor: Editor | null; addImage: () => 
                     <UnlinkIcon />
                 </ToolbarButton>
             )}
-            <ToolbarButton onClick={addImage} title="Insert Image">
+            <ToolbarButton onClick={addImage} disabled={imageUploading} title={imageUploading ? 'Image upload in progress' : 'Insert Image'}>
                 <ImageIconSvg />
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Insert Table">
@@ -311,6 +311,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
     const bubbleMenuRef = useRef<HTMLDivElement>(null);
     const [rteCropFile, setRteCropFile] = useState<File | null>(null);
+    const [imageUploading, setImageUploading] = useState(false);
+    const [imageUploadProgress, setImageUploadProgress] = useState(0);
+    const [imageUploadError, setImageUploadError] = useState('');
+    const [retryImageFile, setRetryImageFile] = useState<File | null>(null);
+    const imageUploadingRef = useRef(false);
 
     // Use a ref so the mention suggestion always sees the *latest* characters,
     // even though useEditor freezes extensions config at mount time.
@@ -453,21 +458,37 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }, [value, editor]);
 
     const addImage = useCallback(() => {
+        if (imageUploadingRef.current) return;
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*';
+        input.accept = 'image/jpeg,image/png,image/webp';
         input.onchange = async () => {
             if (input.files?.length) {
                 const file = input.files[0];
+                setImageUploadError('');
+                if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                    setImageUploadError('Choose a JPG, PNG, or WEBP image.');
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    setImageUploadError('This image is over 5 MB. Choose a smaller file and try again.');
+                    return;
+                }
                 // Open crop modal for inline images (free-form)
                 setRteCropFile(file);
             }
         };
         input.click();
-    }, [editor]);
+    }, []);
 
     const handleRteCropConfirm = useCallback(async (croppedFile: File) => {
+        if (imageUploadingRef.current) return;
         setRteCropFile(null);
+        imageUploadingRef.current = true;
+        setImageUploading(true);
+        setImageUploadProgress(5);
+        setImageUploadError('');
+        setRetryImageFile(croppedFile);
         try {
             // Compress to WebP (< 500KB, max 1920px) before uploading
             const compressed = await imageCompression(croppedFile, {
@@ -476,27 +497,61 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 useWebWorker: true,
                 fileType: 'image/webp',
             });
+            setImageUploadProgress(20);
+            const originalBase = (croppedFile.name || 'chapter-image').replace(/\.[^.]+$/, '');
+            const uploadFile = new File([compressed], `${originalBase}.webp`, {
+                type: 'image/webp',
+                lastModified: Date.now(),
+            });
             let res: { url: string };
             if (bookId) {
-                res = await api.uploadChapterImage(bookId, compressed);
+                res = await api.uploadChapterImage(bookId, uploadFile, (providerProgress) => {
+                    setImageUploadProgress(20 + Math.round(providerProgress * 0.8));
+                });
             } else {
                 const formData = new FormData();
-                formData.append('file', compressed);
-                res = await api.uploadFile(formData);
+                formData.append('file', uploadFile);
+                res = await api.uploadFile(formData, (providerProgress) => {
+                    setImageUploadProgress(20 + Math.round(providerProgress * 0.8));
+                });
             }
             if (editor && res?.url) {
                 editor.chain().focus().setImage({ src: res.url }).run();
+                setRetryImageFile(null);
+                setImageUploadProgress(100);
             }
         } catch (error) {
             console.error('Failed to upload image', error);
-            alert('Failed to upload image. Please try again.');
+            const uploadError = error as Error & { status?: number; diagnostic?: string };
+            setImageUploadError(uploadError.message || 'The image could not be uploaded. Please try again.');
+        } finally {
+            imageUploadingRef.current = false;
+            setImageUploading(false);
         }
     }, [editor, bookId]);
 
     return (
         <>
         <div className="rte-wrapper">
-            {!readOnly && <MenuBar editor={editor} addImage={addImage} />}
+            {!readOnly && <MenuBar editor={editor} addImage={addImage} imageUploading={imageUploading} />}
+
+            {!readOnly && imageUploading && (
+                <div className="rte-image-upload-status" role="status" aria-live="polite">
+                    <span>Uploading chapter image…</span>
+                    <div><i style={{ width: `${imageUploadProgress}%` }} /></div>
+                    <strong>{imageUploadProgress}%</strong>
+                </div>
+            )}
+            {!readOnly && imageUploadError && (
+                <div className="rte-image-upload-error" role="alert">
+                    <span>{imageUploadError}</span>
+                    {retryImageFile && (
+                        <button type="button" onClick={() => handleRteCropConfirm(retryImageFile)} disabled={imageUploading}>
+                            Retry image upload
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* BubbleMenu element — positioned by BubbleMenuPlugin */}
             {editor && !readOnly && (

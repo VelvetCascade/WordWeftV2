@@ -145,6 +145,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
 
     // Google Auth State
     const [showGoogleProfileModal, setShowGoogleProfileModal] = useState(false);
@@ -167,6 +168,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
         isGoogleProcessingRef.current = true;
 
         setIsLoading(true);
+        setLoadingMessage('Finishing your Google sign-in…');
         setError(null);
         try {
             const result = await api.googleLogin(response.credential);
@@ -186,6 +188,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
             setError(err.message || 'Google Auth Error');
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
             isGoogleProcessingRef.current = false;
         }
     }, [onLogin]);
@@ -345,6 +348,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
         setError(null);
         setSuccessMsg(null);
         setIsLoading(true);
+        setLoadingMessage(
+            view === 'login' ? 'Signing you in…' :
+            view === 'signup' ? 'Creating your account…' :
+            view === 'otp' ? 'Verifying your email…' :
+            'Sending your reset link…',
+        );
 
         try {
             if (view === 'login') {
@@ -393,6 +402,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
              }
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
         }
     };
 
@@ -545,9 +555,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                     <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
                 </a>
                 <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                    {isLoading && (
+                        <div className="sticky -top-8 -mx-8 -mt-8 mb-5 z-50 min-h-[92px] px-6 py-4 flex items-center justify-center gap-3 bg-surface/95 dark:bg-dark-surface/95 border-b border-gray-200 dark:border-dark-border backdrop-blur-md" role="status" aria-live="assertive">
+                            <span className="w-5 h-5 rounded-full border-2 border-accent/25 border-t-accent animate-spin" aria-hidden="true" />
+                            <span className="font-sans text-sm font-semibold text-text-rich dark:text-dark-text-rich">{loadingMessage || 'Please wait…'}</span>
+                        </div>
+                    )}
                     <button
                         type="button"
                         onClick={() => window.location.hash = '/'}
+                        disabled={isLoading}
                         className="ww-auth-close absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
                         aria-label="Close sign in"
                     >
@@ -576,7 +593,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                     {(view === 'login' || view === 'signup') && (
                         <>
                             {/* Google Sign-in Button Container */}
-                            <div className="w-full flex justify-center h-11 mb-2">
+                            <div className={`w-full flex justify-center h-11 mb-2 ${isLoading ? 'pointer-events-none opacity-50' : ''}`} aria-disabled={isLoading}>
                                 <div ref={googleButtonRef} className="w-full overflow-hidden rounded-xl"></div>
                             </div>
 
@@ -588,7 +605,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                         </>
                     )}
 
-                    <form onSubmit={handleAuthAction} className="space-y-4">
+                    <form onSubmit={handleAuthAction} className={`space-y-4 ${isLoading ? 'pointer-events-none opacity-60' : ''}`} aria-busy={isLoading}>
                         {view === 'signup' && (
                             <>
                                 <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
@@ -717,6 +734,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                         <p className="text-center text-sm text-text-body dark:text-dark-text-body mt-8">
                             {view === 'login' ? "Don't have an account?" : "Already have an account?"}
                             <button
+                                type="button"
+                                disabled={isLoading}
                                 onClick={() => resetForm(view === 'login' ? 'signup' : 'login')}
                                 className="font-semibold text-accent hover:underline ml-1"
                             >

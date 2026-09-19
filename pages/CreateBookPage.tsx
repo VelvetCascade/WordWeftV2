@@ -28,6 +28,8 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const [isLoadingGenres, setIsLoadingGenres] = useState(true);
     const [genreSearch, setGenreSearch] = useState('');
     const [customCategory, setCustomCategory] = useState('');
+    const [isCoverUploading, setIsCoverUploading] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const BOOK_CATEGORIES = [
         'Novel', 'Novella', 'Short Story', 'Poetry', 'Essay',
@@ -61,24 +63,25 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (isSubmittingRef.current) return;
-        isSubmittingRef.current = true;
-        setIsSubmitting(true);
+        if (isSubmittingRef.current || isCoverUploading) return;
+        setSubmitError('');
 
         if (ageRating === 'MATURE_18' || ageRating === 'ADULT_21') {
             if (!currentUser.dateOfBirth) {
-                alert("Date of birth is required in your profile before creating mature (18+/21+) stories. Please add your date of birth in Profile Settings.");
-                window.location.hash = '/profile/edit';
+                setSubmitError('Add your date of birth in Profile Settings before creating an 18+ or 21+ story.');
                 return;
             }
         }
+
+        isSubmittingRef.current = true;
+        setIsSubmitting(true);
 
         const finalCategory = category === 'Other' ? customCategory : category;
 
         const newBookData = {
             title,
             description,
-            summary: description.substring(0, 150) + '...',
+            summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
             coverUrl: coverUrl || 'https://picsum.photos/seed/newbook/400/600',
             coverFileId,
             genres: selectedGenres,
@@ -91,10 +94,11 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         };
 
         try {
+            const existingBookIds = new Set((currentUser.writtenBooks || []).map(book => book.id));
             const updatedUser = await api.createBook(currentUser.id, newBookData);
             onUserUpdate(updatedUser);
 
-            const newBookId = updatedUser.writtenBooks?.find(b => b.title === title)?.id;
+            const newBookId = updatedUser.writtenBooks?.find(book => !existingBookIds.has(book.id))?.id;
             if (newBookId) {
                 replaceHash(`/write/book/${newBookId}/manage`);
             } else {
@@ -102,7 +106,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
             }
         } catch (error) {
             console.error("Failed to create story:", error);
-            alert(error instanceof Error ? error.message : "Failed to create story");
+            setSubmitError(error instanceof Error ? error.message : 'The story could not be created. Please try again.');
         } finally {
             setIsSubmitting(false);
             isSubmittingRef.current = false;
@@ -190,7 +194,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <small>Choose based on the strongest material anywhere in the story. Mature stories are hidden unless an eligible reader opts in.</small>
                                 {(ageRating === 'MATURE_18' || ageRating === 'ADULT_21') && !currentUser.dateOfBirth && (
                                     <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#c53030', fontWeight: 600 }}>
-                                        🛑 Date of birth is required in your profile before creating a Mature (18+) or Adult (21+) story. Please add your date of birth in <a href="#/profile/edit" style={{ textDecoration: 'underline' }}>Profile Settings</a>.
+                                        Date of birth is required before creating a Mature (18+) or Adult (21+) story. Add it in <a href="#/edit-profile" style={{ textDecoration: 'underline' }}>Profile Settings</a>.
                                     </p>
                                 )}
                             </div>
@@ -220,6 +224,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 fallbackUrl="https://picsum.photos/seed/newbook/400/600"
                                 aspectRatio={2/3}
                                 cropShape="rect"
+                                onBusyChange={setIsCoverUploading}
                             />
                         </section>
 
@@ -236,9 +241,17 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                     </aside>
 
                     <footer className="ww-create-actions">
-                        <button type="button" onClick={() => goBackOrReplace('/write')} disabled={isSubmitting}>Save for later</button>
-                        <button type="submit" disabled={!title || !description || isSubmitting}>
-                            {isSubmitting ? 'Creating story…' : 'Create story'} <span>→</span>
+                        {submitError && (
+                            <p className="ww-create-submit-error" role="alert">
+                                {submitError}{' '}
+                                {submitError.startsWith('Add your date of birth') && (
+                                    <button type="button" onClick={() => replaceHash('/edit-profile')}>Open Profile Settings</button>
+                                )}
+                            </p>
+                        )}
+                        <button className="ww-create-cancel" type="button" onClick={() => goBackOrReplace('/write')} disabled={isSubmitting || isCoverUploading}>Cancel</button>
+                        <button className="ww-create-submit" type="submit" disabled={!title || !description || isSubmitting || isCoverUploading}>
+                            {isCoverUploading ? 'Uploading cover…' : isSubmitting ? 'Creating story…' : 'Create story'} <span>→</span>
                         </button>
                     </footer>
                 </form>

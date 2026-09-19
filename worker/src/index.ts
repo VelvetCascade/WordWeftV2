@@ -304,6 +304,9 @@ async function handleChapterImageUpload(
   }
 
   const sanitized = sanitizeFilename(filename);
+  if (!payload.fileName || sanitizeFilename(payload.fileName) !== sanitized) {
+    return json({ error: 'Filename does not match token' }, 403, origin, env);
+  }
   const buf = await req.arrayBuffer();
   let contentType = 'image/webp';
   try {

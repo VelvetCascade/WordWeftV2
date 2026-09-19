@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface ChapterRevisionRepository extends MongoRepository<ChapterRevision, String> {
     Optional<ChapterRevision> findFirstByChapterIdOrderByCreatedAtDesc(String chapterId);
     List<ChapterRevision> findByChapterIdOrderByCreatedAtDesc(String chapterId);
+    void deleteByChapterId(String chapterId);
     void deleteByBookId(String bookId);
 }

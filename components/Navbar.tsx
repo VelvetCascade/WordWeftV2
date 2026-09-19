@@ -38,14 +38,15 @@ const SearchIcon = () => (
 
 interface NavbarProps {
   isAuthenticated: boolean;
-  onLogout: () => void;
+  onLogout: () => Promise<void> | void;
+  isLoggingOut?: boolean;
   notificationBell?: React.ReactNode;
   onForYouClick?: () => void;
   unreadCount?: number;
   currentUser?: User | null;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notificationBell, onForYouClick, unreadCount = 0, currentUser }) => {
+export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLoggingOut = false, notificationBell, onForYouClick, unreadCount = 0, currentUser }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -257,8 +258,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
                 <button onClick={() => { window.location.hash = '/profile'; }} className="ww-icon-button" aria-label="Open profile">
                   <UserCircleIcon className="w-5 h-5" />
                 </button>
-                <button onClick={onLogout} title="Logout" className="ww-icon-button" aria-label="Log out">
-                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <button onClick={onLogout} disabled={isLoggingOut} title="Logout" className="ww-icon-button disabled:cursor-wait disabled:opacity-60" aria-label={isLoggingOut ? 'Logging out' : 'Log out'} aria-busy={isLoggingOut}>
+                  <ArrowRightOnRectangleIcon className={`w-5 h-5 ${isLoggingOut ? 'animate-pulse' : ''}`} />
                 </button>
               </>
             ) : (
@@ -445,9 +446,11 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, notif
                 <button
                   className="mobile-more-item mobile-more-item-danger"
                   onClick={() => handleMobileNav(onLogout)}
+                  disabled={isLoggingOut}
+                  aria-busy={isLoggingOut}
                 >
                   <ArrowRightOnRectangleIcon className="mobile-more-item-icon" />
-                  <span className="mobile-more-item-label">Log Out</span>
+                  <span className="mobile-more-item-label">{isLoggingOut ? 'Logging out…' : 'Log Out'}</span>
                 </button>
               </>
             ) : (

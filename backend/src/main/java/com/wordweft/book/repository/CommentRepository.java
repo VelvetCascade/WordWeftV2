@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface CommentRepository extends MongoRepository<Comment, String> {
     List<Comment> findByChapterIdOrderByCreatedAtDesc(String chapterId);
+    void deleteByChapterId(String chapterId);
     void deleteByUserIdAndBookId(String userId, String bookId); // Cleanup
     void deleteByBookId(String bookId);
 }

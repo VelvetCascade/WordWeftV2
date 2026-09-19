@@ -21,7 +21,48 @@ test('reader progress is scoped to manuscript bounds', () => {
 test('upload failures are converted to actionable reader-safe messages', () => {
     assert.match(uploadErrorMessage(403, 'bad signature'), /session expired/i);
     assert.match(uploadErrorMessage(429), /busy/i);
+    assert.match(uploadErrorMessage(408), /(timed out|too long)/i);
     assert.doesNotMatch(uploadErrorMessage(500, 'provider internals'), /provider internals/i);
+});
+
+test('image uploads avoid heavyweight client-side ML and expose bounded progress-aware requests', () => {
+    const packageJson = readFileSync(new URL('../package.json', import.meta.url), 'utf8');
+    const imageUpload = readFileSync(new URL('../components/ImageUpload.tsx', import.meta.url), 'utf8');
+    const api = readFileSync(new URL('../api/client.ts', import.meta.url), 'utf8');
+
+    assert.doesNotMatch(packageJson, /nsfwjs|@tensorflow\/tfjs/);
+    assert.doesNotMatch(imageUpload, /nsfwjs|tensorflow|loadNSFWModel/);
+    assert.match(api, /xhr\.upload\.addEventListener\('progress'/);
+    assert.match(api, /upload_timeout/);
+});
+
+test('cropped image filenames match their exported JPEG bytes', () => {
+    const source = readFileSync(new URL('../components/ImageCropModal.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /toBlob\([\s\S]*'image\/jpeg'/);
+    assert.match(source, /`\$\{originalBase\}\.jpg`/);
+    assert.doesNotMatch(source, /new File\(\[blob\], file\.name/);
+});
+
+test('writer autosave preserves published status and profile links use the actual route', () => {
+    const editor = readFileSync(new URL('../pages/ChapterEditorPage.tsx', import.meta.url), 'utf8');
+    const create = readFileSync(new URL('../pages/CreateBookPage.tsx', import.meta.url), 'utf8');
+    const manage = readFileSync(new URL('../pages/ManageChaptersPage.tsx', import.meta.url), 'utf8');
+
+    assert.match(editor, /debouncedSave\('preserve', newContent, title\)/);
+    assert.doesNotMatch(editor, /onChange=.*debouncedSave\('draft'/);
+    assert.doesNotMatch(`${editor}\n${create}\n${manage}`, /profile\/edit/);
+    assert.match(`${editor}\n${create}\n${manage}`, /edit-profile/);
+});
+
+test('chapter image storage never reports success without a configured worker', () => {
+    const storage = readFileSync(new URL('../backend/src/main/java/com/wordweft/book/service/ChapterImageStorageService.java', import.meta.url), 'utf8');
+    const worker = readFileSync(new URL('../worker/src/index.ts', import.meta.url), 'utf8');
+
+    assert.match(storage, /HttpStatus\.SERVICE_UNAVAILABLE/);
+    assert.doesNotMatch(storage, /return "\/api\/chapter-images\//);
+    assert.match(storage, /\.timeout\(UPLOAD_TIMEOUT\)/);
+    assert.match(worker, /Filename does not match token/);
 });
 
 test('reader sign-in gate ships enabled with the approved reader language', () => {

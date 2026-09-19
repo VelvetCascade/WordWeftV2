@@ -8,6 +8,7 @@ import com.wordweft.user.repository.UserRepository;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.exception.ContentRestrictedException;
 import com.wordweft.manuscript.repository.ChapterRevisionRepository;
+import com.wordweft.analytics.repository.ChapterReadEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,6 +41,8 @@ public class BookService {
     @Autowired
     ChapterRevisionRepository chapterRevisionRepository;
     @Autowired
+    ChapterReadEventRepository chapterReadEventRepository;
+    @Autowired
     ContentAccessService contentAccessService;
     @Value("${wordweft.reader-sign-in-gate-enabled:true}")
     private boolean readerSignInGateEnabled = true;
@@ -56,6 +59,54 @@ public class BookService {
         noteRepository.deleteByBookId(bookId);
         libraryRepository.deleteByBookId(bookId);
         chapterRevisionRepository.deleteByBookId(bookId);
+        chapterReadEventRepository.deleteByBookId(bookId);
+    }
+
+    public void deleteChapterData(
+            String bookId,
+            String chapterId,
+            int deletedChapterIndex,
+            int remainingChapterCount) {
+        commentRepository.deleteByChapterId(chapterId);
+        chapterRevisionRepository.deleteByChapterId(chapterId);
+        chapterReadEventRepository.deleteByChapterId(chapterId);
+
+        List<ReadingProgress> progressRecords = readingProgressRepository.findByBookId(bookId);
+        for (ReadingProgress progress : progressRecords) {
+            if (progress.getChapters() != null) {
+                progress.getChapters().remove(chapterId);
+            }
+            if (progress.getCompletedChapterIds() != null) {
+                progress.getCompletedChapterIds().remove(chapterId);
+            }
+
+            if (remainingChapterCount <= 0) {
+                progress.setOverallProgress(0);
+                progress.setLastReadChapterIndex(0);
+                progress.setLastReadScrollPosition(0);
+                continue;
+            }
+
+            int currentIndex = progress.getLastReadChapterIndex();
+            if (currentIndex > deletedChapterIndex) {
+                progress.setLastReadChapterIndex(currentIndex - 1);
+            } else if (currentIndex == deletedChapterIndex) {
+                progress.setLastReadChapterIndex(Math.min(currentIndex, remainingChapterCount - 1));
+                progress.setLastReadScrollPosition(0);
+            } else {
+                progress.setLastReadChapterIndex(Math.min(currentIndex, remainingChapterCount - 1));
+            }
+
+            int accumulatedChapterProgress = progress.getChapters() == null
+                    ? 0
+                    : progress.getChapters().values().stream()
+                            .mapToInt(item -> Math.max(0, Math.min(100, item.getProgress())))
+                            .sum();
+            progress.setOverallProgress(Math.min(100, accumulatedChapterProgress / remainingChapterCount));
+        }
+        if (!progressRecords.isEmpty()) {
+            readingProgressRepository.saveAll(progressRecords);
+        }
     }
 
     private String getCurrentUserId() {

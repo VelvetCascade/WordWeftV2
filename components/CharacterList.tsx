@@ -4,6 +4,7 @@ import * as api from '../api/client';
 import { ImageUpload } from './ImageUpload';
 import { CharacterAvatar } from './CharacterAvatar';
 import { CharacterPreview } from './CharacterPreview';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface CharacterListProps {
 
@@ -17,34 +18,69 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
     const [newCharacter, setNewCharacter] = useState<Partial<Character>>({ name: '', role: '', description: '', goal: '', imageUrl: '' });
     const [editingId, setEditingId] = useState<string | null>(null);
     const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Character | null>(null);
+    const [busyAction, setBusyAction] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
     useEffect(() => {
         loadCharacters();
     }, [bookId]);
 
     const loadCharacters = async () => {
-        const data = await api.getCharactersByBookId(bookId);
-        setCharacters(data);
+        try {
+            const data = await api.getCharactersByBookId(bookId);
+            setCharacters(data);
+            setError(null);
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : 'Characters could not be loaded.');
+        }
     };
 
     const handleCreate = async () => {
-        if (!newCharacter.name) return;
-        await api.createCharacter({ ...newCharacter, bookId });
-        setIsCreating(false);
-        setNewCharacter({ name: '', role: '', description: '', goal: '', imageUrl: '' });
-        loadCharacters();
+        if (!newCharacter.name?.trim() || busyAction || isImageUploading) return;
+        setBusyAction('create');
+        setError(null);
+        try {
+            const created = await api.createCharacter({ ...newCharacter, name: newCharacter.name.trim(), bookId });
+            setCharacters(current => [...current, created]);
+            setIsCreating(false);
+            setNewCharacter({ name: '', role: '', description: '', goal: '', imageUrl: '' });
+        } catch (saveError) {
+            setError(saveError instanceof Error ? saveError.message : 'The character could not be saved.');
+        } finally {
+            setBusyAction(null);
+        }
     };
 
     const handleUpdate = async (id: string, updates: Partial<Character>) => {
-        await api.updateCharacter(id, updates);
-        setEditingId(null);
-        loadCharacters();
+        if (busyAction || isImageUploading) return;
+        setBusyAction(`update:${id}`);
+        setError(null);
+        try {
+            const updated = await api.updateCharacter(id, updates);
+            setCharacters(current => current.map(character => character.id === id ? updated : character));
+            setEditingId(null);
+        } catch (saveError) {
+            setError(saveError instanceof Error ? saveError.message : 'The character could not be updated.');
+        } finally {
+            setBusyAction(null);
+        }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Are you sure you want to delete this character?')) {
-            await api.deleteCharacter(id);
-            loadCharacters();
+    const handleDelete = async () => {
+        if (!deleteTarget || busyAction) return;
+        const target = deleteTarget;
+        setBusyAction(`delete:${target.id}`);
+        setError(null);
+        try {
+            await api.deleteCharacter(target.id);
+            setCharacters(current => current.filter(character => character.id !== target.id));
+            setDeleteTarget(null);
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : 'The character could not be deleted.');
+        } finally {
+            setBusyAction(null);
         }
     };
 
@@ -61,6 +97,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                     </button>
                 )}
             </div>
+
+            {error && <div role="alert" className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>}
 
             {isCreating && (
                 <div className="ww-story-tool-form p-6 md:p-8 bg-white dark:bg-dark-surface rounded-3xl border border-gray-100 dark:border-dark-border mb-8 animate-in slide-in-from-top-4 fade-in duration-300 relative overflow-hidden">
@@ -82,6 +120,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                     label="Portrait (Optional)"
                                     aspectRatio={1}
                                     cropShape="circle"
+                                    disabled={busyAction !== null}
+                                    onBusyChange={setIsImageUploading}
                                 />
                             </div>
                         </div>
@@ -163,10 +203,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                 </button>
                                 <button
                                     onClick={handleCreate}
-                                    disabled={!newCharacter.name}
+                                    disabled={!newCharacter.name?.trim() || busyAction !== null || isImageUploading}
                                     className="px-8 py-2.5 bg-accent text-white font-medium text-sm rounded-xl hover:bg-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                                 >
-                                    Save Character
+                                    {busyAction === 'create' ? 'Saving…' : isImageUploading ? 'Uploading portrait…' : 'Save Character'}
                                 </button>
                             </div>
                         </div>
@@ -255,6 +295,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                     label="Character Image"
                                     aspectRatio={1}
                                     cropShape="circle"
+                                    disabled={busyAction !== null}
+                                    onBusyChange={setIsImageUploading}
                                 />
                                 <div className="flex justify-end gap-2">
                                     <button
@@ -265,9 +307,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                     </button>
                                     <button
                                         onClick={() => handleUpdate(char.id, { name: char.name, role: char.role, description: char.description, goal: char.goal, imageUrl: char.imageUrl, imageFileId: char.imageFileId })}
+                                        disabled={busyAction !== null || isImageUploading}
                                         className="px-3 py-1 bg-primary text-white rounded-md text-sm"
                                     >
-                                        Save
+                                        {busyAction === `update:${char.id}` ? 'Saving…' : 'Save'}
                                     </button>
                                 </div>
                             </div>
@@ -293,7 +336,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                                             Edit
                                         </button>
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); handleDelete(char.id); }}
+                                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(char); }}
                                             className="p-2 text-text-muted hover:text-red-500 transition-colors"
                                         >
                                             Delete
@@ -310,6 +353,16 @@ export const CharacterList: React.FC<CharacterListProps> = ({ bookId, readOnly =
                 character={selectedCharacter}
                 isOpen={!!selectedCharacter}
                 onClose={() => setSelectedCharacter(null)}
+            />
+            <ConfirmDialog
+                isOpen={!!deleteTarget}
+                title="Delete character?"
+                message={`“${deleteTarget?.name || 'This character'}” will be permanently removed from this story.`}
+                confirmLabel="Delete character"
+                processingLabel="Deleting…"
+                isProcessing={!!deleteTarget && busyAction === `delete:${deleteTarget.id}`}
+                onCancel={() => setDeleteTarget(null)}
+                onConfirm={handleDelete}
             />
         </div>
     );

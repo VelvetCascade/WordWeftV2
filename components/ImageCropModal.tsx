@@ -506,7 +506,11 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                 outC.toBlob(b => b ? resolve(b) : reject(new Error('Canvas export failed')), 'image/jpeg', 0.92)
             );
 
-            const croppedFile = new File([blob], file.name || 'cropped.jpg', { type: 'image/jpeg' });
+            const originalBase = (file.name || 'cropped').replace(/\.[^.]+$/, '');
+            const croppedFile = new File([blob], `${originalBase}.jpg`, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+            });
             onConfirmRef.current(croppedFile);
         } catch (err) {
             console.error('Crop export failed:', err);
