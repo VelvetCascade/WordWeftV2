@@ -49,4 +49,17 @@ class ManuscriptImportServiceTest {
 
         assertEquals(403, error.getStatusCode().value());
     }
+
+    @Test
+    void springContextCanInstantiateManuscriptImportService() {
+        org.springframework.context.support.GenericApplicationContext context = new org.springframework.context.support.GenericApplicationContext();
+        context.registerBean(BookRepository.class, () -> mock(BookRepository.class));
+        context.registerBean(ManuscriptParser.class, ManuscriptParser::new);
+        context.registerBean(ManuscriptImportService.class);
+        context.refresh();
+
+        ManuscriptImportService service = context.getBean(ManuscriptImportService.class);
+        org.junit.jupiter.api.Assertions.assertNotNull(service);
+        context.close();
+    }
 }
