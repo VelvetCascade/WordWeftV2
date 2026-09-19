@@ -9,5 +9,15 @@ bucket_name = "wordweft-writer-fw-submission"
 [vars]
 ALLOWED_ORIGINS = "https://word-weft-v2.vercel.app,https://wordweftstudio.com,https://www.wordweftstudio.com,http://localhost:3000,http://localhost:5173"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+redact_query_string = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+head_sampling_rate = 1
+
 # UPLOAD_SIGNING_SECRET must be set via:
 # npx wrangler secret put UPLOAD_SIGNING_SECRET
