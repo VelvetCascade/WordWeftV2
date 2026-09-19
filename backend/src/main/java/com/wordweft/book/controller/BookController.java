@@ -16,6 +16,8 @@ import com.wordweft.manuscript.service.ManuscriptImportService;
 import com.wordweft.manuscript.model.ChapterRevision;
 import com.wordweft.manuscript.service.ChapterRevisionService;
 import com.wordweft.security.services.UserDetailsImpl;
+import com.wordweft.user.model.User;
+import com.wordweft.user.repository.UserRepository;
 import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -66,6 +68,12 @@ public class BookController {
     ChapterContentService chapterContentService;
     @Autowired
     com.wordweft.support.ImageKitService imageKitService;
+    @Autowired(required = false)
+    UserRepository userRepository;
+    @Autowired(required = false)
+    ContentAccessService contentAccessService;
+    @Autowired(required = false)
+    com.wordweft.book.service.ChapterImageStorageService chapterImageStorageService;
 
     private String getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -217,16 +225,52 @@ public class BookController {
                 "user", userService.getUserProfile(userId)));
     }
 
+    @PostMapping(value = "/{bookId}/chapters/images", consumes = "multipart/form-data")
+    public ResponseEntity<?> uploadChapterImage(
+            @PathVariable String bookId,
+            @RequestParam("file") MultipartFile file) {
+        String userId = getCurrentUserId();
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Story not found."));
+        if (!userId.equals(book.getAuthorId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "You do not have permission to edit this story.");
+        }
+        if (chapterImageStorageService == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "Image storage service not available.");
+        }
+        var uploadResult = chapterImageStorageService.uploadChapterImage(bookId, file);
+        return ResponseEntity.ok(Map.of(
+                "url", uploadResult.url(),
+                "filename", uploadResult.filename()));
+    }
+
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> bookCreationDebounce = new java.util.concurrent.ConcurrentHashMap<>();
+
     @PostMapping
     public ResponseEntity<?> createBook(@Valid @RequestBody Book book) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
+        String debounceKey = userDetails.getId() + ":" + (book.getTitle() != null ? book.getTitle().trim().toLowerCase(java.util.Locale.ROOT) : "");
+        Long lastCreated = bookCreationDebounce.get(debounceKey);
+        long now = System.currentTimeMillis();
+        if (lastCreated != null && (now - lastCreated) < 5000) {
+            return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+        }
+        bookCreationDebounce.put(debounceKey, now);
+
         book.setAuthorId(userDetails.getId());
         book.setPublicationStatus("draft");
         book.setCreatedAt(LocalDate.now());
         if (!STORY_STATUSES.contains(book.getReadingStatus())) book.setReadingStatus("Ongoing");
         if (book.getAgeRating() == null) book.setAgeRating(AgeRating.ALL_AGES);
         book.setMature(book.getAgeRating().getMinimumAge() >= 18);
+        if ((book.isMature() || book.getAgeRating().getMinimumAge() >= 18) && contentAccessService != null && userRepository != null) {
+            User author = userRepository.findById(userDetails.getId()).orElse(null);
+            contentAccessService.validateAuthorCanPostRating(author, book.getAgeRating());
+        }
         if (book.getCoverUrl() == null || book.getCoverUrl().isEmpty()) {
             book.setCoverUrl("https://picsum.photos/seed/" + System.currentTimeMillis() + "/400/600");
         }
@@ -275,6 +319,10 @@ public class BookController {
                 return ResponseEntity.badRequest().body("Cannot lower age rating to " + updates.getAgeRating()
                         + " because existing chapters contain content warnings that require at least " + minRequired + ".");
             }
+            if (updates.getAgeRating().getMinimumAge() >= 18 && contentAccessService != null && userRepository != null) {
+                User author = userRepository.findById(userDetails.getId()).orElse(null);
+                contentAccessService.validateAuthorCanPostRating(author, updates.getAgeRating());
+            }
             book.setAgeRating(updates.getAgeRating());
             book.setMature(updates.getAgeRating().getMinimumAge() >= 18);
         }
@@ -308,7 +356,17 @@ public class BookController {
             chapter = new Chapter();
             book.getChapters().add(chapter);
         } else {
-            chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst().orElseThrow();
+            java.util.Optional<Chapter> existing = book.getChapters().stream()
+                    .filter(c -> chapterId.equals(c.getId()))
+                    .findFirst();
+            if (existing.isPresent()) {
+                chapter = existing.get();
+            } else {
+                chapter = new Chapter();
+                chapter.setId(chapterId);
+                book.getChapters().add(chapter);
+                isNew = true;
+            }
         }
 
         Map<String, String> data = (Map<String, String>) payload.get("data");
@@ -334,6 +392,11 @@ public class BookController {
             }
             if (requiredRating.getMinimumAge() >= 18) {
                 book.setMature(true);
+            }
+
+            if ((book.isMature() || (book.getAgeRating() != null && book.getAgeRating().getMinimumAge() >= 18)) && contentAccessService != null && userRepository != null) {
+                User author = userRepository.findById(userDetails.getId()).orElse(null);
+                contentAccessService.validateAuthorCanPostRating(author, book.getAgeRating());
             }
 
             if (book.getContentWarnings() == null) {
@@ -379,6 +442,11 @@ public class BookController {
             boolean hasPublishedChapters = book.getChapters().stream().anyMatch(c -> "published".equals(c.getStatus()));
             if (!hasPublishedChapters) {
                 return ResponseEntity.badRequest().body("Cannot publish a book with no published chapters.");
+            }
+            AgeRating effective = contentAccessService != null ? contentAccessService.effectiveRating(book) : (book.getAgeRating() != null ? book.getAgeRating() : AgeRating.ALL_AGES);
+            if ((effective.getMinimumAge() >= 18 || book.isMature()) && contentAccessService != null && userRepository != null) {
+                User author = userRepository.findById(userDetails.getId()).orElse(null);
+                contentAccessService.validateAuthorCanPostRating(author, effective);
             }
             book.setPublicationStatus("published");
             // Set date only if it wasn't set before or if we want to bump it

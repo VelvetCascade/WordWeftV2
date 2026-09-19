@@ -20,8 +20,9 @@ interface Env {
 }
 
 interface TokenPayload {
-  type: 'upload' | 'download';
-  appId: string;
+  type: 'upload' | 'download' | 'chapter-image-upload';
+  appId?: string;
+  bookId?: string;
   fileName?: string;
   maxSize?: number;
   r2Key?: string;
@@ -62,7 +63,7 @@ function base64UrlDecode(str: string): string {
 // ── Token validation ────────────────────────────────────────────────
 
 async function validateToken(
-  token: string, secret: string, expectedType: 'upload' | 'download',
+  token: string, secret: string, expectedType: 'upload' | 'download' | 'chapter-image-upload',
 ): Promise<TokenPayload> {
   const parts = token.split('.');
   if (parts.length !== 2) throw new Error('Invalid token format');
@@ -74,7 +75,11 @@ async function validateToken(
 
   const payload: TokenPayload = JSON.parse(base64UrlDecode(payloadB64));
   if (payload.type !== expectedType) throw new Error('Invalid token type');
-  if (!payload.appId) throw new Error('Missing application ID');
+  if (expectedType === 'chapter-image-upload') {
+    if (!payload.bookId) throw new Error('Missing book ID');
+  } else {
+    if (!payload.appId) throw new Error('Missing application ID');
+  }
   if (payload.exp * 1000 < Date.now()) throw new Error('Token expired');
   return payload;
 }
@@ -82,8 +87,10 @@ async function validateToken(
 // ── File validation ─────────────────────────────────────────────────
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const ALLOWED_EXTENSIONS: ReadonlySet<string> = new Set(['.pdf', '.docx', '.txt']);
+const ALLOWED_IMAGE_EXTENSIONS: ReadonlySet<string> = new Set(['.webp', '.jpg', '.jpeg', '.png', '.gif']);
 
 const MAGIC_BYTES: Record<string, readonly number[]> = {
   '.pdf': [0x25, 0x50, 0x44, 0x46, 0x2d],   // %PDF-
@@ -117,6 +124,51 @@ function validateFile(buf: ArrayBuffer, fileName: string, maxSize: number): void
       }
     }
   }
+}
+
+function validateImageFile(buf: ArrayBuffer, fileName: string, maxSize: number): string {
+  if (buf.byteLength === 0) throw new Error('Image file is empty');
+  if (buf.byteLength > maxSize) {
+    throw new Error(`Image exceeds the ${Math.round(maxSize / 1024 / 1024)} MB limit`);
+  }
+  const ext = getExtension(fileName);
+  if (ext === '.svg') {
+    throw new Error('SVG images are not permitted for security reasons');
+  }
+  if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
+    throw new Error('Image format not supported. Allowed: WebP, JPEG, PNG, GIF');
+  }
+
+  const bytes = new Uint8Array(buf.slice(0, 16));
+  // JPEG: FF D8 FF
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+    bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a
+  ) {
+    return 'image/png';
+  }
+  // GIF: GIF8
+  if (
+    bytes.length >= 4 &&
+    bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38
+  ) {
+    return 'image/gif';
+  }
+  // WebP: RIFF....WEBP
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+  ) {
+    return 'image/webp';
+  }
+
+  throw new Error('Image content does not match allowed image signatures (JPEG, PNG, WebP, GIF)');
 }
 
 // ── CORS ────────────────────────────────────────────────────────────
@@ -230,6 +282,79 @@ async function handleDownload(
   });
 }
 
+// ── Route: PUT /upload/chapter-image/:bookId/:filename ──────────────
+
+async function handleChapterImageUpload(
+  req: Request, bookId: string, filename: string, env: Env, origin: string,
+): Promise<Response> {
+  const auth = req.headers.get('Authorization');
+  if (!auth?.startsWith('Bearer ')) {
+    return json({ error: 'Missing authorization token' }, 401, origin, env);
+  }
+
+  let payload: TokenPayload;
+  try {
+    payload = await validateToken(auth.slice(7), env.UPLOAD_SIGNING_SECRET, 'chapter-image-upload');
+  } catch {
+    return json({ error: 'Invalid or expired upload token' }, 401, origin, env);
+  }
+
+  if (payload.bookId !== bookId) {
+    return json({ error: 'Token does not match this story' }, 403, origin, env);
+  }
+
+  const sanitized = sanitizeFilename(filename);
+  const buf = await req.arrayBuffer();
+  let contentType = 'image/webp';
+  try {
+    contentType = validateImageFile(buf, filename, payload.maxSize || MAX_IMAGE_SIZE);
+  } catch (err) {
+    return json({ error: err instanceof Error ? err.message : 'Image validation failed' }, 400, origin, env);
+  }
+
+  const r2Key = `chapter-images/${bookId}/${sanitized}`;
+  await env.CHAPTERS_BUCKET.put(r2Key, buf, {
+    httpMetadata: {
+      contentType,
+      cacheControl: 'public, max-age=31536000, immutable',
+    },
+    customMetadata: {
+      bookId,
+      originalFileName: filename,
+      uploadedAt: new Date().toISOString(),
+    },
+  });
+
+  return json({
+    success: true,
+    r2Key,
+    path: `/chapter-images/${bookId}/${sanitized}`,
+  }, 200, origin, env);
+}
+
+// ── Route: GET /chapter-images/:bookId/:filename ────────────────────
+
+async function handleChapterImageServe(
+  bookId: string, filename: string, env: Env, origin: string,
+): Promise<Response> {
+  const sanitized = sanitizeFilename(filename);
+  const r2Key = `chapter-images/${bookId}/${sanitized}`;
+  const obj = await env.CHAPTERS_BUCKET.get(r2Key);
+  if (!obj) {
+    return json({ error: 'Image not found' }, 404, origin, env);
+  }
+
+  return new Response(obj.body, {
+    status: 200,
+    headers: {
+      'Content-Type': obj.httpMetadata?.contentType || 'image/webp',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Access-Control-Allow-Origin': '*',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
 // ── Main entry ──────────────────────────────────────────────────────
 
 export default {
@@ -252,6 +377,18 @@ export default {
     const downloadMatch = pathname.match(/^\/download\/([a-zA-Z0-9]+)\/(.+)$/);
     if (downloadMatch && request.method === 'GET') {
       return handleDownload(request, downloadMatch[1], decodeURIComponent(downloadMatch[2]), env, origin);
+    }
+
+    // PUT /upload/chapter-image/:bookId/:filename
+    const chapterImageUploadMatch = pathname.match(/^\/upload\/chapter-image\/([a-zA-Z0-9_-]+)\/(.+)$/);
+    if (chapterImageUploadMatch && request.method === 'PUT') {
+      return handleChapterImageUpload(request, chapterImageUploadMatch[1], decodeURIComponent(chapterImageUploadMatch[2]), env, origin);
+    }
+
+    // GET /chapter-images/:bookId/:filename
+    const chapterImageServeMatch = pathname.match(/^\/chapter-images\/([a-zA-Z0-9_-]+)\/(.+)$/);
+    if (chapterImageServeMatch && request.method === 'GET') {
+      return handleChapterImageServe(chapterImageServeMatch[1], decodeURIComponent(chapterImageServeMatch[2]), env, origin);
     }
 
     // Health check

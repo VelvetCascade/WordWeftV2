@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.EnumSet;
 import java.util.Set;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ContentAccessService {
@@ -114,5 +116,20 @@ public class ContentAccessService {
     public boolean canAccess(Book book) {
         String userId = currentUserId();
         return (userId != null && userId.equals(book.getAuthorId())) || canDiscover(book);
+    }
+
+    public void validateAuthorCanPostRating(User author, AgeRating rating) {
+        if (rating == null || rating.getMinimumAge() < 18) {
+            return;
+        }
+        if (author == null || author.getDateOfBirth() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Date of birth is required in your profile before creating or publishing mature (18+/21+) content.");
+        }
+        int age = Period.between(author.getDateOfBirth(), LocalDate.now()).getYears();
+        if (age < 18) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You must be at least 18 years old to create or publish mature (18+/21+) content.");
+        }
     }
 }

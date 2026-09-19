@@ -53,64 +53,64 @@ interface ThemeDef {
 
 const POSTER_THEMES: Record<PosterTheme, ThemeDef> = {
     midnight: {
-        label: 'Midnight',
-        bg: ['#0a0a1a', '#1a1040', '#0d0d2b'],
-        accent: '#a78bfa',
-        text: '#ffffff',
-        subtext: '#a0a0c0',
-        card: 'rgba(255,255,255,0.08)',
-        cardBorder: 'rgba(255,255,255,0.15)',
-        badgeBg: 'rgba(167,139,250,0.25)',
-        badgeText: '#c4b5fd',
-        previewBg: '#0a0a1a',
+        label: 'Obsidian',
+        bg: ['#111317', '#1a1e26', '#0e1014'],
+        accent: '#e2b16a',
+        text: '#fdfdfd',
+        subtext: '#a2a8b5',
+        card: 'rgba(255,255,255,0.06)',
+        cardBorder: 'rgba(255,255,255,0.14)',
+        badgeBg: 'rgba(226,177,106,0.18)',
+        badgeText: '#f5d6a7',
+        previewBg: '#111317',
     },
     ember: {
-        label: 'Ember',
-        bg: ['#1a0a00', '#3d1500', '#1a0800'],
-        accent: '#f59e0b',
-        text: '#ffffff',
-        subtext: '#d4a574',
-        card: 'rgba(245,158,11,0.08)',
-        cardBorder: 'rgba(245,158,11,0.2)',
-        badgeBg: 'rgba(245,158,11,0.25)',
-        badgeText: '#fbbf24',
-        previewBg: '#1a0a00',
+        label: 'Espresso',
+        bg: ['#181310', '#28201b', '#130e0b'],
+        accent: '#e59a42',
+        text: '#fcf8f2',
+        subtext: '#c4b3a3',
+        card: 'rgba(229,154,66,0.08)',
+        cardBorder: 'rgba(229,154,66,0.22)',
+        badgeBg: 'rgba(229,154,66,0.20)',
+        badgeText: '#fcd9a8',
+        previewBg: '#181310',
     },
     frost: {
-        label: 'Frost',
-        bg: ['#e8eef5', '#f0f4f8', '#dce4ed'],
-        accent: '#3b82f6',
-        text: '#1e293b',
-        subtext: '#64748b',
-        card: 'rgba(59,130,246,0.06)',
-        cardBorder: 'rgba(59,130,246,0.15)',
-        badgeBg: 'rgba(59,130,246,0.15)',
-        badgeText: '#2563eb',
-        previewBg: '#e8eef5',
+        label: 'Linen',
+        bg: ['#f7f4ed', '#eee8dc', '#e2dacb'],
+        accent: '#991b1b',
+        text: '#1c1917',
+        subtext: '#57534e',
+        card: 'rgba(0,0,0,0.04)',
+        cardBorder: 'rgba(0,0,0,0.10)',
+        badgeBg: 'rgba(153,27,27,0.10)',
+        badgeText: '#991b1b',
+        previewBg: '#f7f4ed',
     },
     blossom: {
-        label: 'Blossom',
-        bg: ['#1a0a14', '#2d1028', '#180a18'],
-        accent: '#f472b6',
-        text: '#ffffff',
-        subtext: '#d4a0c0',
-        card: 'rgba(244,114,182,0.08)',
-        cardBorder: 'rgba(244,114,182,0.2)',
-        badgeBg: 'rgba(244,114,182,0.25)',
-        badgeText: '#f9a8d4',
-        previewBg: '#1a0a14',
+        label: 'Rosewood',
+        bg: ['#181014', '#291722', '#140b10'],
+        accent: '#e8a5b8',
+        text: '#fffbfa',
+        subtext: '#beaab5',
+        card: 'rgba(232,165,184,0.08)',
+        cardBorder: 'rgba(232,165,184,0.22)',
+        badgeBg: 'rgba(232,165,184,0.20)',
+        badgeText: '#f7ced9',
+        previewBg: '#181014',
     },
     monochrome: {
-        label: 'Mono',
-        bg: ['#000000', '#111111', '#000000'],
-        accent: '#ffffff',
+        label: 'Gallery',
+        bg: ['#0f0f10', '#1c1c1e', '#0b0b0c'],
+        accent: '#f3f4f6',
         text: '#ffffff',
-        subtext: '#999999',
-        card: 'rgba(255,255,255,0.06)',
-        cardBorder: 'rgba(255,255,255,0.12)',
-        badgeBg: 'rgba(255,255,255,0.15)',
-        badgeText: '#cccccc',
-        previewBg: '#000000',
+        subtext: '#9ca3af',
+        card: 'rgba(255,255,255,0.05)',
+        cardBorder: 'rgba(255,255,255,0.15)',
+        badgeBg: 'rgba(255,255,255,0.14)',
+        badgeText: '#f3f4f6',
+        previewBg: '#0f0f10',
     },
 };
 
@@ -218,37 +218,43 @@ async function drawStoryPoster(
     const ctx = canvas.getContext('2d')!;
     const t = POSTER_THEMES[themeName];
 
-    // ── 1. Smooth atmospheric background ──
+    // ── 1. Sophisticated organic editorial background (no synthetic AI glows) ──
     const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
     bgGrad.addColorStop(0, t.bg[0]);
-    bgGrad.addColorStop(0.42, t.bg[1]);
+    bgGrad.addColorStop(0.5, t.bg[1]);
     bgGrad.addColorStop(1, t.bg[2]);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Ambient spotlight glow behind the book
-    const glow = ctx.createRadialGradient(W / 2, 600, 40, W / 2, 600, 600);
-    glow.addColorStop(0, t.accent + '26');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
+    // Subtle overhead ambient light falloff (natural publication lighting)
+    const ambientLight = ctx.createRadialGradient(W / 2, 120, 60, W / 2, 220, W * 0.95);
+    if (themeName === 'frost') {
+        ambientLight.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+        ambientLight.addColorStop(1, 'rgba(0, 0, 0, 0.04)');
+    } else {
+        ambientLight.addColorStop(0, 'rgba(255, 255, 255, 0.04)');
+        ambientLight.addColorStop(1, 'rgba(0, 0, 0, 0.22)');
+    }
+    ctx.fillStyle = ambientLight;
     ctx.fillRect(0, 0, W, H);
 
-    // Subtle edge vignette
-    const vignette = ctx.createRadialGradient(W / 2, H / 2, W * 0.42, W / 2, H / 2, W * 0.85);
-    vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, 'rgba(0,0,0,0.38)');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, W, H);
+    // Editorial inset framing hairline border (authentic gallery/book jacket finish)
+    ctx.save();
+    ctx.strokeStyle = t.cardBorder;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, 44, 44, W - 88, H - 88, 28);
+    ctx.stroke();
+    ctx.restore();
 
-    // ── 2. Refined top badge (no emojis) ──
+    // ── 2. Top publication badge ──
     const topTag = chapter ? 'CURRENTLY READING' : 'FEATURED STORY';
-    ctx.font = '700 20px "Inter", sans-serif';
+    ctx.font = '700 22px "Inter", sans-serif';
     const tagTextW = ctx.measureText(topTag).width;
-    const tagPadX = 24;
-    const tagH = 38;
+    const tagPadX = 28;
+    const tagH = 44;
     const tagW = tagTextW + tagPadX * 2;
     const tagX = Math.round((W - tagW) / 2);
-    const tagY = 120;
+    const tagY = 100;
 
     roundRect(ctx, tagX, tagY, tagW, tagH, tagH / 2);
     ctx.fillStyle = t.card;
@@ -263,11 +269,12 @@ async function drawStoryPoster(
     ctx.fillText(topTag, W / 2, tagY + tagH / 2);
 
     // ── 3. Uncropped 3D Floating Book (Hero) ──
+    // Rebalanced height to 650px (was 820px) to unlock ~250px vertical room for large readable text
     const coverImg = await loadImage(book.coverUrl);
-    const maxBookH = 820;
-    const maxBookW = 580;
+    const maxBookH = 650;
+    const maxBookW = 460;
     let bookH = maxBookH;
-    let bookW = 546; // standard 2:3 ratio fallback
+    let bookW = 433; // standard 2:3 ratio fallback
 
     if (coverImg && coverImg.naturalWidth && coverImg.naturalHeight) {
         const naturalAspect = coverImg.naturalWidth / coverImg.naturalHeight;
@@ -281,22 +288,22 @@ async function drawStoryPoster(
     }
 
     const bookX = Math.round((W - bookW) / 2);
-    const bookY = 200;
+    const bookY = 175;
 
-    // Realistic drop shadow behind book
+    // Realistic natural drop shadow behind book
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-    ctx.shadowBlur = 50;
-    ctx.shadowOffsetY = 28;
+    ctx.shadowColor = themeName === 'frost' ? 'rgba(30, 20, 10, 0.25)' : 'rgba(0, 0, 0, 0.65)';
+    ctx.shadowBlur = 48;
+    ctx.shadowOffsetY = 24;
     ctx.shadowOffsetX = 0;
-    roundRect(ctx, bookX, bookY, bookW, bookH, 18);
+    roundRect(ctx, bookX, bookY, bookW, bookH, 16);
     ctx.fillStyle = '#000000';
     ctx.fill();
     ctx.restore();
 
     // Draw cover artwork
     ctx.save();
-    roundRect(ctx, bookX, bookY, bookW, bookH, 18);
+    roundRect(ctx, bookX, bookY, bookW, bookH, 16);
     ctx.clip();
 
     if (coverImg) {
@@ -310,7 +317,7 @@ async function drawStoryPoster(
         ctx.fillRect(bookX, bookY, bookW, bookH);
 
         // Fallback title on cover
-        ctx.font = 'bold 44px "Literata", Georgia, serif';
+        ctx.font = 'bold 44px "Newsreader", "Literata", Georgia, serif';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -321,7 +328,7 @@ async function drawStoryPoster(
     }
 
     // Book spine crease effect on left edge
-    const spineW = 30;
+    const spineW = 28;
     const spineGrad = ctx.createLinearGradient(bookX, 0, bookX + spineW, 0);
     spineGrad.addColorStop(0, 'rgba(0, 0, 0, 0.45)');
     spineGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.12)');
@@ -341,30 +348,30 @@ async function drawStoryPoster(
     ctx.restore();
 
     // Crisp book edge border
-    roundRect(ctx, bookX, bookY, bookW, bookH, 18);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    roundRect(ctx, bookX, bookY, bookW, bookH, 16);
+    ctx.strokeStyle = themeName === 'frost' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.18)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // ── 4. Story information section (below book) ──
-    let currentY = bookY + bookH + 46;
+    // ── 4. Story information section (below book) — High Legibility ──
+    let currentY = bookY + bookH + 48;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    // Title
+    // Title (Large, prominent editorial serif)
     const displayTitle = chapter ? chapter.title : book.title;
-    let titleFontSize = 54;
-    ctx.font = `bold ${titleFontSize}px "Literata", Georgia, serif`;
-    let titleLines = wrapText(ctx, displayTitle, W - 160);
+    let titleFontSize = 68;
+    ctx.font = `bold ${titleFontSize}px "Newsreader", "Literata", Georgia, serif`;
+    let titleLines = wrapText(ctx, displayTitle, W - 140);
     if (titleLines.length > 2) {
-        titleFontSize = 46;
-        ctx.font = `bold ${titleFontSize}px "Literata", Georgia, serif`;
-        titleLines = wrapText(ctx, displayTitle, W - 160);
+        titleFontSize = 58;
+        ctx.font = `bold ${titleFontSize}px "Newsreader", "Literata", Georgia, serif`;
+        titleLines = wrapText(ctx, displayTitle, W - 140);
     }
     titleLines = titleLines.slice(0, 2);
 
     ctx.fillStyle = t.text;
-    const titleLineH = titleFontSize * 1.22;
+    const titleLineH = titleFontSize * 1.20;
     titleLines.forEach((line) => {
         ctx.fillText(line, W / 2, currentY);
         currentY += titleLineH;
@@ -373,23 +380,23 @@ async function drawStoryPoster(
 
     // Chapter or Book context
     if (chapter) {
-        ctx.font = '500 26px "Inter", sans-serif';
+        ctx.font = '500 32px "Inter", sans-serif';
         ctx.fillStyle = t.subtext;
         ctx.fillText(`from "${book.title}"`, W / 2, currentY);
-        currentY += 36;
+        currentY += 44;
     }
 
-    // Author
-    ctx.font = '500 30px "Inter", sans-serif';
+    // Author (Crisp and legible)
+    ctx.font = '600 36px "Inter", sans-serif';
     ctx.fillStyle = t.subtext;
     ctx.fillText(`by ${book.author?.name || 'Unknown Author'}`, W / 2, currentY);
-    currentY += 46;
+    currentY += 50;
 
-    // Rating stars (vector geometry - no emojis)
+    // Rating stars (vector geometry - large and distinct)
     if (book.rating > 0) {
         const starCount = 5;
-        const starSize = 28;
-        const starSpacing = 36;
+        const starSize = 34;
+        const starSpacing = 46;
         const filledStars = Math.round(book.rating);
         const totalStarsWidth = starCount * starSpacing;
         const starsStartX = (W - totalStarsWidth) / 2;
@@ -408,28 +415,28 @@ async function drawStoryPoster(
                 if (pt === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
             }
             ctx.closePath();
-            ctx.fillStyle = s < filledStars ? (themeName === 'frost' ? '#f59e0b' : t.accent) : (t.accent + '25');
+            ctx.fillStyle = s < filledStars ? (themeName === 'frost' ? '#d97706' : t.accent) : (t.accent + '25');
             ctx.fill();
         }
 
-        ctx.font = '600 24px "Inter", sans-serif';
+        ctx.font = '700 32px "Inter", sans-serif';
         ctx.fillStyle = t.text;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(book.rating.toFixed(1), starsStartX + totalStarsWidth + 8, starCenterY);
+        ctx.fillText(book.rating.toFixed(1), starsStartX + totalStarsWidth + 12, starCenterY);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
 
-        currentY += 46;
+        currentY += 52;
     }
 
-    // Genre pills (clean minimal chips - no emojis)
+    // Genre pills (clean minimal chips with readable 24px typography)
     const genres = (book.genres || []).slice(0, 3);
     if (genres.length > 0) {
-        ctx.font = '600 20px "Inter", sans-serif';
-        const pillH = 38;
-        const pillGap = 12;
-        const pillPadX = 22;
+        ctx.font = '600 24px "Inter", sans-serif';
+        const pillH = 48;
+        const pillGap = 14;
+        const pillPadX = 26;
 
         const pillWidths = genres.map(g => ctx.measureText(g).width + pillPadX * 2);
         const totalPillsWidth = pillWidths.reduce((sum, w) => sum + w, 0) + (genres.length - 1) * pillGap;
@@ -452,20 +459,20 @@ async function drawStoryPoster(
             pillX += pW + pillGap;
         });
 
-        currentY += pillH + 26;
+        currentY += pillH + 30;
     }
 
-    // Summary excerpt (if space permits)
+    // Summary excerpt (if space permits, rendered with elegant 32px book serif)
     if (!chapter && book.summary && currentY < 1720) {
-        ctx.font = 'italic 24px "Literata", Georgia, serif';
-        ctx.fillStyle = t.subtext + 'dd';
+        ctx.font = 'italic 32px "Newsreader", "Literata", Georgia, serif';
+        ctx.fillStyle = themeName === 'frost' ? '#44403c' : (t.text + 'd9');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        const summaryLines = wrapText(ctx, book.summary, W - 240);
+        const summaryLines = wrapText(ctx, book.summary, W - 200);
         const linesToDraw = summaryLines.slice(0, 2);
         linesToDraw.forEach((line, idx) => {
             const lineText = idx === 0 && linesToDraw.length === 1 ? `"${line}"` : (idx === 0 ? `"${line}` : (idx === linesToDraw.length - 1 ? `${line}"` : line));
-            ctx.fillText(lineText, W / 2, currentY + idx * 34);
+            ctx.fillText(lineText, W / 2, currentY + idx * 46);
         });
     }
 
@@ -474,25 +481,25 @@ async function drawStoryPoster(
 
     // Subtle divider
     ctx.beginPath();
-    ctx.moveTo(100, footerY);
-    ctx.lineTo(W - 100, footerY);
+    ctx.moveTo(80, footerY);
+    ctx.lineTo(W - 80, footerY);
     ctx.strokeStyle = t.cardBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
 
     // Brand name
-    ctx.font = '700 24px "Inter", sans-serif';
+    ctx.font = '700 30px "Inter", sans-serif';
     ctx.fillStyle = t.text;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText('WORDWEFT', 100, footerY + 44);
+    ctx.fillText('WORDWEFT', 80, footerY + 44);
 
     // Domain
-    ctx.font = '400 20px "Inter", sans-serif';
+    ctx.font = '500 24px "Inter", sans-serif';
     ctx.fillStyle = t.subtext;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    ctx.fillText('wordweftstudio.com', W - 100, footerY + 44);
+    ctx.fillText('wordweftstudio.com', W - 80, footerY + 44);
 }
 
 async function drawQuoteCard(
@@ -516,69 +523,83 @@ async function drawQuoteCard(
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Glow
-    const glow = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 500);
-    glow.addColorStop(0, t.accent + '15');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
+    // Natural light falloff (no neon glow)
+    const ambientLight = ctx.createRadialGradient(W / 2, 100, 50, W / 2, 200, W * 0.9);
+    if (themeName === 'frost') {
+        ambientLight.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+        ambientLight.addColorStop(1, 'rgba(0, 0, 0, 0.04)');
+    } else {
+        ambientLight.addColorStop(0, 'rgba(255, 255, 255, 0.04)');
+        ambientLight.addColorStop(1, 'rgba(0, 0, 0, 0.22)');
+    }
+    ctx.fillStyle = ambientLight;
     ctx.fillRect(0, 0, W, H);
 
+    // Editorial inset border
+    ctx.save();
+    ctx.strokeStyle = t.cardBorder;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, 36, 36, W - 72, H - 72, 24);
+    ctx.stroke();
+    ctx.restore();
+
     // --- Large opening quote mark ---
-    ctx.font = '200px "Literata", Georgia, serif';
-    ctx.fillStyle = t.accent + '25';
+    ctx.font = '220px "Newsreader", "Literata", Georgia, serif';
+    ctx.fillStyle = t.accent + '2e';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText('\u201C', W / 2, 80);
+    ctx.fillText('\u201C', W / 2, 65);
 
     // --- Quote text ---
-    ctx.font = 'italic 40px "Literata", Georgia, serif';
+    ctx.font = 'italic 46px "Newsreader", "Literata", Georgia, serif';
     ctx.fillStyle = t.text;
     const quoteLines = wrapText(ctx, quoteText, W - 200);
-    const maxQuoteLines = 8;
-    const totalQuoteHeight = Math.min(quoteLines.length, maxQuoteLines) * 56;
-    let quoteStartY = (H / 2) - (totalQuoteHeight / 2) - 20;
-    if (quoteStartY < 260) quoteStartY = 260;
+    const maxQuoteLines = 7;
+    const lineHeight = 62;
+    const totalQuoteHeight = Math.min(quoteLines.length, maxQuoteLines) * lineHeight;
+    let quoteStartY = (H / 2) - (totalQuoteHeight / 2) - 30;
+    if (quoteStartY < 240) quoteStartY = 240;
 
     quoteLines.slice(0, maxQuoteLines).forEach((line, i) => {
-        ctx.fillText(line, W / 2, quoteStartY + i * 56);
+        ctx.fillText(line, W / 2, quoteStartY + i * lineHeight);
     });
 
     // --- Divider line ---
-    const divY = quoteStartY + Math.min(quoteLines.length, maxQuoteLines) * 56 + 50;
+    const divY = quoteStartY + Math.min(quoteLines.length, maxQuoteLines) * lineHeight + 44;
     ctx.beginPath();
     ctx.moveTo(W / 2 - 60, divY);
     ctx.lineTo(W / 2 + 60, divY);
-    ctx.strokeStyle = t.accent + '60';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = t.cardBorder;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // --- Book / Chapter info ---
-    let infoY = divY + 40;
+    let infoY = divY + 36;
     if (chapter) {
-        ctx.font = '500 28px "Inter", sans-serif';
+        ctx.font = '600 32px "Inter", sans-serif';
         ctx.fillStyle = t.subtext;
         ctx.fillText(chapter.title, W / 2, infoY);
-        infoY += 40;
-        ctx.font = '400 24px "Inter", sans-serif';
-        ctx.fillText(`from ${book.title}`, W / 2, infoY);
-        infoY += 36;
+        infoY += 42;
+        ctx.font = '500 28px "Inter", sans-serif';
+        ctx.fillText(`from "${book.title}"`, W / 2, infoY);
+        infoY += 38;
     } else {
-        ctx.font = '500 30px "Inter", sans-serif';
+        ctx.font = '600 34px "Inter", sans-serif';
         ctx.fillStyle = t.text;
         ctx.fillText(book.title, W / 2, infoY);
-        infoY += 40;
+        infoY += 42;
     }
-    ctx.font = '400 24px "Inter", sans-serif';
+    ctx.font = '500 28px "Inter", sans-serif';
     ctx.fillStyle = t.subtext;
     ctx.fillText(`by ${book.author?.name || 'Unknown Author'}`, W / 2, infoY);
 
     // --- Footer branding ---
     const brandText = 'WORDWEFT';
-    ctx.font = 'bold 18px "Inter", sans-serif';
+    ctx.font = 'bold 22px "Inter", sans-serif';
     const bm = ctx.measureText(brandText);
-    const pW = bm.width + 48, pH = 38, pX = (W - pW) / 2, pY = H - 80;
+    const pW = bm.width + 52, pH = 42, pX = (W - pW) / 2, pY = H - 84;
     roundRect(ctx, pX, pY, pW, pH, pH / 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillStyle = t.card;
     ctx.fill();
     ctx.strokeStyle = t.cardBorder;
     ctx.lineWidth = 1;
@@ -632,7 +653,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setCopied(false);
-            setActiveTab(quickShareOnly ? 'quick' : initialTab);
+            const targetTab = (quickShareOnly || initialTab === 'story') ? 'quick' : initialTab;
+            setActiveTab(targetTab);
         }
     }, [isOpen, initialTab, quickShareOnly]);
 
@@ -721,7 +743,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         ? [{ key: 'quick' as const, label: 'Share' }]
         : [
             { key: 'quick' as const, label: 'Quick Share' },
-            { key: 'story' as const, label: 'Story Poster' },
+            // Story poster temporarily disabled
+            // { key: 'story' as const, label: 'Story Poster' },
             ...(quoteText ? [{ key: 'quote' as const, label: 'Quote Card' }] : []),
           ];
 
@@ -789,7 +812,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 </button>
                             )}
 
-                            <div className="ww-share-channels grid grid-cols-5 gap-3">
+                            <div className="ww-share-channels grid grid-cols-4 gap-3">
                                 <button onClick={() => openLink(shareLinks.twitter)} className="flex flex-col items-center gap-2 group">
                                     <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><TwitterIcon className="w-5 h-5" /></div>
                                     <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">X</span>
@@ -806,12 +829,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                     <div className="w-12 h-12 bg-[#229ED9] text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><TelegramIconSvg /></div>
                                     <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">Telegram</span>
                                 </button>
+                                {/* Story poster button temporarily disabled
                                 {!quickShareOnly && (
                                     <button onClick={() => setActiveTab('story')} className="flex flex-col items-center gap-2 group">
                                         <div className="w-12 h-12 bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-full flex items-center justify-center group-hover:-translate-y-1 transition-transform shadow-md"><InstagramIcon className="w-6 h-6"/></div>
                                         <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-text-rich dark:group-hover:text-dark-text-rich transition-colors">Instagram</span>
                                     </button>
                                 )}
+                                */}
                             </div>
 
                             <hr className="border-gray-200 dark:border-dark-border" />
@@ -833,8 +858,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         </div>
                     )}
 
-                    {/* ========== STORY POSTER TAB ========== */}
-                    {activeTab === 'story' && (
+                    {/* ========== STORY POSTER TAB (Temporarily disabled) ========== */}
+                    {/* {activeTab === 'story' && (
                         <div className="ww-poster-workspace animate-fade-in">
                             <div className="ww-poster-controls">
                                 <div>
@@ -874,7 +899,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 />
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     {/* ========== QUOTE CARD TAB ========== */}
                     {activeTab === 'quote' && quoteText && (

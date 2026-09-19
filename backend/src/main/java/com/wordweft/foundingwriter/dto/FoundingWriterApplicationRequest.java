@@ -94,11 +94,14 @@ public class FoundingWriterApplicationRequest {
     @Size(max = 200)
     private String organizationName;
 
+    @Size(max = 200)
+    private String website_ref_hp;
+
     @AssertTrue(message = "Confirm that your uploaded file contains at least three chapters")
     private boolean chaptersConfirmed;
 
     public boolean isHoneypotFilled() {
-        return hasText(organizationName);
+        return hasText(website_ref_hp) || hasText(organizationName);
     }
 
     private static boolean hasText(String value) {

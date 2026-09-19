@@ -117,15 +117,33 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         api.getBooksByAuthor(user.id).then(setWrittenBooks);
     }, [user.id]);
 
+    const isMatureAllowed = useMemo(() => {
+        if (!user.allowMatureContent) return false;
+        if (user.dateOfBirth) {
+            const d = new Date(user.dateOfBirth);
+            const now = new Date();
+            let age = now.getFullYear() - d.getFullYear();
+            if (now < new Date(now.getFullYear(), d.getMonth(), d.getDate())) age--;
+            if (age < 18) return false;
+        }
+        return true;
+    }, [user.allowMatureContent, user.dateOfBirth]);
+
+    const isMatureBook = (book: LibraryBook | Book) => {
+        return !!(book.isMature || book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21');
+    };
+
     const userLibraryWithProgress = useMemo(() => {
         return user.library.map(shelf => ({
             ...shelf,
-            books: shelf.books.map(book => ({
-                ...book,
-                progress: allProgress[book.id]?.overallProgress ?? 0,
-            }))
+            books: shelf.books
+                .filter(book => isMatureAllowed || !isMatureBook(book))
+                .map(book => ({
+                    ...book,
+                    progress: allProgress[book.id]?.overallProgress ?? 0,
+                }))
         }));
-    }, [user.library, allProgress]);
+    }, [user.library, allProgress, isMatureAllowed]);
 
     // Helpers for Reading Time Display
     const formatReadingTime = (minutes: number) => {
@@ -136,10 +154,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
     };
 
     const dynamicShelves = useMemo(() => {
-        // Use shelves directly from backend, ensuring proper ordering
+        // Use shelves with progress and mature filtering applied
         // We filter out 'all' because it's handled separately as the default active state
-        return user.library.filter(s => s.id !== 'all' && s.id !== '1' && s.name !== 'My List');
-    }, [user.library]);
+        return userLibraryWithProgress.filter(s => s.id !== 'all' && s.id !== '1' && s.name !== 'My List');
+    }, [userLibraryWithProgress]);
 
     const allBooks = useMemo(() => {
         const books = new Map<string, LibraryBook>();

@@ -304,7 +304,7 @@ public class AuthController {
                 .findFirst()
                 .orElse(null);
 
-        if (user == null || user.getResetPasswordTokenExpiry().isBefore(Instant.now())) {
+        if (user == null || user.getResetPasswordTokenExpiry() == null || user.getResetPasswordTokenExpiry().isBefore(Instant.now())) {
             return ResponseEntity.badRequest().body("Invalid or expired reset link. Please request a new one.");
         }
 

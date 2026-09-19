@@ -133,7 +133,7 @@ export async function forgotPassword(email: string): Promise<string> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
     });
-    return await response.text();
+    return await handleResponse(response);
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<string> {
@@ -142,7 +142,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword })
     });
-    return await response.text();
+    return await handleResponse(response);
 }
 
 export async function googleLogin(idToken: string): Promise<{ user: User; needsProfileCompletion: boolean } | null> {
@@ -938,6 +938,19 @@ export async function uploadFile(formData: FormData): Promise<{ filename: string
         headers: {
             'Authorization': getHeaders()['Authorization']
             // Content-Type is set automatically by fetch when using FormData
+        },
+        body: formData
+    });
+    return await handleResponse(response);
+}
+
+export async function uploadChapterImage(bookId: string, file: File): Promise<{ filename: string, url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/images`, {
+        method: 'POST',
+        headers: {
+            'Authorization': getHeaders()['Authorization']
         },
         body: formData
     });

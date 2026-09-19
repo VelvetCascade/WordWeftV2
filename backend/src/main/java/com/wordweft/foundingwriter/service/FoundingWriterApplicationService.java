@@ -39,8 +39,6 @@ public class FoundingWriterApplicationService {
     }
 
     public boolean submit(FoundingWriterApplicationRequest request, org.springframework.web.multipart.MultipartFile file) {
-        if (request.isHoneypotFilled()) return false;
-
         var chapterFile = ChapterFileValidator.validate(file);
 
         String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
@@ -74,6 +72,7 @@ public class FoundingWriterApplicationService {
         application.setStatus(FoundingWriterApplicationStatus.PENDING);
         application.setAdminNotes(null);
         application.setFileUploaded(false);
+        application.setHoneypotTriggered(request.isHoneypotFilled());
         Instant now = Instant.now();
         application.setCreatedAt(now);
         application.setUpdatedAt(now);
@@ -98,13 +97,15 @@ public class FoundingWriterApplicationService {
         return true;
     }
 
-    /**
-     * Uploads a chapter file to R2 via the Cloudflare Worker.
-     * The HMAC token is generated and consumed entirely server-side — it never leaves this JVM.
-     */
     private String uploadToR2(String applicationId, String fileName, String contentType, byte[] data) {
+        String workerBaseUrl = uploadTokenService.getWorkerBaseUrl();
+        if (workerBaseUrl == null || workerBaseUrl.isBlank()) {
+            log.warn("Worker base URL not configured, skipping R2 upload for application {}", applicationId);
+            return "founding-writers/" + applicationId + "/" + fileName;
+        }
+
         String token = uploadTokenService.generateUploadToken(applicationId, fileName, data.length);
-        String url = uploadTokenService.getWorkerBaseUrl() + "/upload/" + applicationId;
+        String url = workerBaseUrl.replaceAll("/+$", "") + "/upload/" + applicationId;
 
         try {
             HttpRequest request = HttpRequest.newBuilder()

@@ -61,7 +61,7 @@ const initialForm: FormState = {
   existingPublishingPlatform: '', draftedChapterCount: '', plannedChapterCount: '',
   expectedCompletionPeriod: '', ageConfirmed: false, rightsConfirmed: false,
   completionCommitted: false, weeklyPublishingCommitted: false,
-  earningsDisclaimerConfirmed: false, termsConfirmed: false, organizationName: '', chaptersConfirmed: false,
+  earningsDisclaimerConfirmed: false, termsConfirmed: false, organizationName: '', website_ref_hp: '', chaptersConfirmed: false,
 };
 
 export const FoundingWritersPage: React.FC = () => {
@@ -247,8 +247,15 @@ export const FoundingWritersPage: React.FC = () => {
                 </div>
               </fieldset>
 
-              <div className="fw-honeypot" aria-hidden="true">
-                <label>Organization name<input tabIndex={-1} autoComplete="off" value={form.organizationName} onChange={event => setField('organizationName', event.target.value)} /></label>
+              <div className="fw-honeypot" aria-hidden="true" style={{ display: 'none' }}>
+                <input
+                  type="text"
+                  name="website_ref_hp"
+                  tabIndex={-1}
+                  autoComplete="new-password"
+                  value={form.website_ref_hp || ''}
+                  onChange={event => setField('website_ref_hp', event.target.value)}
+                />
               </div>
 
               {error && <p className="fw-form-error" role="alert">{error}</p>}

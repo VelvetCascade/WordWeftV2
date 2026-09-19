@@ -44,11 +44,14 @@ class FoundingWriterApplicationServiceTest {
     }
 
     @Test
-    void silentlyIgnoresHoneypotSubmissions() {
+    void flagsHoneypotSubmissionsWithoutDroppingData() {
         FoundingWriterApplicationRequest request = request();
-        request.setOrganizationName("Spam Incorporated");
-        assertFalse(service.submit(request, file()));
-        verifyNoInteractions(repository);
+        request.setWebsite_ref_hp("Spam Bot Entry");
+        boolean result = service.submit(request, file());
+        assertTrue(result);
+        ArgumentCaptor<FoundingWriterApplication> captor = ArgumentCaptor.forClass(FoundingWriterApplication.class);
+        verify(repository).insert(captor.capture());
+        assertTrue(captor.getValue().isHoneypotTriggered());
     }
 
     @Test

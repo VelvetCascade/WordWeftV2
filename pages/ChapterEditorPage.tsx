@@ -115,17 +115,49 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
 export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUser, bookId, chapterId: initialChapterId, onUserUpdate }) => {
     const { trackEvent } = useAnalytics();
     const { triggerFeedback } = useFeedback();
-    const [chapterId, setChapterId] = useState(initialChapterId);
-    const isNewChapter = chapterId === 'new';
+    const [chapterId, setChapterId] = useState(() =>
+        initialChapterId === 'new'
+            ? (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'ch_' + Math.random().toString(36).substring(2, 11) + Date.now().toString(36))
+            : initialChapterId
+    );
+    const isNewChapter = initialChapterId === 'new' && (!currentUser.writtenBooks?.find(b => b.id === bookId)?.chapters.some(c => c.id === chapterId));
 
     const book = currentUser.writtenBooks?.find(b => b.id === bookId);
     const chapter = isNewChapter ? null : book?.chapters.find(c => c.id === chapterId);
 
     const [title, setTitle] = useState(chapter?.title || '');
     const [content, setContent] = useState(chapter?.content || '');
+    const [isLoadingContent, setIsLoadingContent] = useState(false);
     const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>(chapter?.contentWarnings || []);
     const [disclaimerNote, setDisclaimerNote] = useState(chapter?.disclaimerNote || '');
     const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+    const isSavingRef = useRef(false);
+
+    useEffect(() => {
+        let isMounted = true;
+        if (!isNewChapter && chapterId && chapterId !== 'new') {
+            setIsLoadingContent(true);
+            api.getChapterContent(bookId, chapterId)
+                .then(result => {
+                    if (!isMounted) return;
+                    if (result && typeof result.content === 'string') {
+                        setContent(result.content);
+                        if (result.chapterTitle) {
+                            setTitle(result.chapterTitle);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load chapter content:", err);
+                })
+                .finally(() => {
+                    if (isMounted) setIsLoadingContent(false);
+                });
+        }
+        return () => {
+            isMounted = false;
+        };
+    }, [bookId, chapterId, isNewChapter]);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showDemoModal, setShowDemoModal] = useState(false);
@@ -189,7 +221,19 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const handleSave = async (status: 'draft' | 'published' | 'preserve', currentContent: string, currentTitle: string) => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        if (isLoadingContent) return; // Never save while loading initial chapter content
         if (!currentTitle.trim() && !currentContent.trim()) return; // Don't save completely empty chapters
+
+        if (isSavingRef.current) return;
+
+        const hasMatureWarnings = contentWarnings.some(w => ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'].includes(w));
+        if (status === 'published' && (hasMatureWarnings || book?.isMature || book?.ageRating === 'MATURE_18' || book?.ageRating === 'ADULT_21')) {
+            if (!currentUser.dateOfBirth) {
+                alert("Date of birth is required in your profile before publishing mature (18+/21+) content. Please add your date of birth in Profile Settings.");
+                window.location.hash = '/profile/edit';
+                return;
+            }
+        }
 
         let finalTitle = currentTitle.trim();
         if (status === 'published' && !finalTitle) {
@@ -206,28 +250,22 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             return;
         }
 
+        isSavingRef.current = true;
         setSaveState('saving');
 
         try {
             const updatedUser = await api.saveChapter(currentUser.id, bookId, chapterId, { title: finalTitle, content: currentContent, contentWarnings, disclaimerNote }, status);
             onUserUpdate(updatedUser);
 
-            // If it was a new chapter, find its newly created ID and update state
-            if (chapterId === 'new') {
-                const newChapter = updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === currentTitle);
-                if (newChapter) {
-                    setChapterId(newChapter.id);
-                }
+            if (isNewChapter) {
+                replaceHash(`/write/book/${bookId}/chapter/${chapterId}/edit`);
             }
 
             setSaveState('saved');
 
             if (status === 'published') {
                 triggerFeedback('PUBLISH_FLOW');
-                // Determine the final saved chapter ID (either existing or newly created)
-                const savedChapterId = chapterId !== 'new'
-                    ? chapterId
-                    : updatedUser.writtenBooks?.find(b => b.id === bookId)?.chapters.find(c => c.title === finalTitle)?.id ?? null;
+                const savedChapterId = chapterId;
                 setPublishedChapterTitle(finalTitle);
                 setPublishedChapterId(savedChapterId);
                 setShowPublishSuccess(true);
@@ -235,6 +273,11 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         } catch (error) {
             console.error("Failed to save chapter:", error);
             setSaveState('unsaved');
+            if (error instanceof Error && error.message) {
+                alert(error.message);
+            }
+        } finally {
+            isSavingRef.current = false;
         }
     };
 
@@ -315,8 +358,16 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         if (!title.trim()) setTitle(finalTitle);
         setSaveState('saving');
 
+        const hasMatureWarnings = contentWarnings.some(w => ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'].includes(w));
+        if (hasMatureWarnings || book?.isMature || book?.ageRating === 'MATURE_18' || book?.ageRating === 'ADULT_21') {
+            if (!currentUser.dateOfBirth) {
+                alert("Date of birth is required in your profile before scheduling mature (18+/21+) content. Please add your date of birth in Profile Settings.");
+                window.location.hash = '/profile/edit';
+                return;
+            }
+        }
+
         try {
-            const previousIds = new Set(book.chapters.map(item => item.id));
             const savedUser = await api.saveChapter(
                 currentUser.id,
                 bookId,
@@ -324,10 +375,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 { title: finalTitle, content, contentWarnings, disclaimerNote },
                 'draft',
             );
-            const savedBook = savedUser.writtenBooks?.find(item => item.id === bookId);
-            const targetId = chapterId === 'new'
-                ? savedBook?.chapters.find(item => !previousIds.has(item.id))?.id
-                : chapterId;
+            const targetId = chapterId;
             if (!targetId) {
                 throw new Error('The chapter was saved, but WordWeft could not identify it for scheduling.');
             }
@@ -377,16 +425,18 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                         </button>
                         {!isNewChapter && <button className="ww-editor-history" onClick={() => setIsVersionHistoryOpen(true)} title="Open version history"><span>History</span></button>}
                         <span className="ww-editor-action-divider" />
-                        <button className="ww-editor-save-button" onClick={() => handleSave('draft', content, title)}>Save draft</button>
+                        <button className="ww-editor-save-button" disabled={saveState === 'saving'} onClick={() => handleSave('draft', content, title)}>Save draft</button>
                         <button
                             className="ww-editor-schedule-button"
                             onClick={() => setIsScheduleOpen(true)}
-                            disabled={book.publicationStatus !== 'published' || chapter?.status === 'published'}
+                            disabled={saveState === 'saving' || book.publicationStatus !== 'published' || chapter?.status === 'published'}
                             title={book.publicationStatus !== 'published' ? 'Publish the story before scheduling a chapter' : 'Schedule this chapter'}
                         >
                             {chapter?.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
                         </button>
-                        <button className="ww-editor-publish-button" onClick={() => handleSave('published', content, title)}>Publish</button>
+                        <button className="ww-editor-publish-button" disabled={saveState === 'saving'} onClick={() => handleSave('published', content, title)}>
+                            {saveState === 'saving' ? 'Publishing...' : 'Publish'}
+                        </button>
                     </div>
                 </header>
 
@@ -417,20 +467,33 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                         ⚠️ Selecting mature warnings automatically elevates this story to Mature (18+) and restricts it from readers under 18.
                                     </p>
                                 )}
+                                {contentWarnings.some(w => ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'].includes(w)) && !currentUser.dateOfBirth && (
+                                    <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#c53030', fontWeight: 600 }}>
+                                        🛑 You have not added your Date of Birth in your profile. You must add your Date of Birth in <a href="#/profile/edit" style={{ textDecoration: 'underline' }}>Profile Settings</a> before publishing mature content.
+                                    </p>
+                                )}
                                 <label>Author’s note <small>Optional, avoid spoilers</small><textarea rows={2} maxLength={1000} value={disclaimerNote} onChange={e => { setDisclaimerNote(e.target.value); setSaveState('unsaved'); }} placeholder="Add context that helps readers decide whether to continue." /></label>
                             </div>
                         </details>
 
-                        <RichTextEditor
-                            value={content}
-                            onChange={(newContent) => {
-                                setContent(newContent);
-                                debouncedSave('draft', newContent, title);
-                                setSaveState('saving');
-                            }}
-                            characters={characters}
-                            onLargePaste={handleLargePaste}
-                        />
+                        {isLoadingContent ? (
+                            <div style={{ padding: '4rem 1rem', textAlign: 'center', color: '#888' }}>
+                                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite', marginRight: '0.5rem' }}>◌</span>
+                                Loading chapter content…
+                            </div>
+                        ) : (
+                            <RichTextEditor
+                                value={content}
+                                onChange={(newContent) => {
+                                    setContent(newContent);
+                                    debouncedSave('draft', newContent, title);
+                                    setSaveState('saving');
+                                }}
+                                characters={characters}
+                                onLargePaste={handleLargePaste}
+                                bookId={bookId}
+                            />
+                        )}
                     </article>
                 </main>
             </div>

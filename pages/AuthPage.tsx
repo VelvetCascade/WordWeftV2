@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User } from '../types';
-import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon } from '../components/icons/Icons';
+import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
@@ -23,7 +23,7 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
     if (!isVisible) return null;
 
     const requirements = [
-        { label: "8-10 characters", valid: password.length >= 8 && password.length <= 10 },
+        { label: "8-64 characters", valid: password.length >= 8 && password.length <= 64 },
         { label: "One uppercase letter", valid: /[A-Z]/.test(password) },
         { label: "One lowercase letter", valid: /[a-z]/.test(password) },
         { label: "One number", valid: /\d/.test(password) },
@@ -64,25 +64,45 @@ const InputField: React.FC<{
     onFocus?: () => void;
     onBlur?: () => void;
     children?: React.ReactNode;
-}> = ({ id, label, type, placeholder, value, onChange, required = true, min, max, helpText, onFocus, onBlur, children }) => (
+    showToggle?: boolean;
+    isPasswordVisible?: boolean;
+    onToggleVisibility?: () => void;
+}> = ({ id, label, type, placeholder, value, onChange, required = true, min, max, helpText, onFocus, onBlur, children, showToggle, isPasswordVisible, onToggleVisibility }) => (
     <div className="relative">
         <label htmlFor={id} className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
             {label}
         </label>
         {children}
-        <input
-            type={type}
-            id={id}
-            placeholder={placeholder}
-            className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
-            required={required}
-            value={value}
-            onChange={onChange}
-            min={min}
-            max={max}
-            onFocus={onFocus}
-            onBlur={onBlur}
-        />
+        <div className="relative">
+            <input
+                type={showToggle ? (isPasswordVisible ? 'text' : 'password') : type}
+                id={id}
+                placeholder={placeholder}
+                className={`w-full h-11 px-4 ${showToggle ? 'pr-11' : ''} rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich`}
+                required={required}
+                value={value}
+                onChange={onChange}
+                min={min}
+                max={max}
+                onFocus={onFocus}
+                onBlur={onBlur}
+            />
+            {showToggle && (
+                <button
+                    type="button"
+                    onClick={onToggleVisibility}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    tabIndex={-1}
+                    aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                >
+                    {isPasswordVisible ? (
+                        <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                        <EyeIcon className="w-5 h-5" />
+                    )}
+                </button>
+            )}
+        </div>
         {helpText && <p className="mt-1 text-[10px] text-gray-500 font-sans leading-tight">{helpText}</p>}
     </div>
 );
@@ -114,6 +134,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [username, setUsername] = useState('');
     const [birthday, setBirthday] = useState('');
     const [otp, setOtp] = useState('');
@@ -288,7 +310,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     };
 
     const validatePassword = (pw: string) => {
-        const hasLength = pw.length >= 8 && pw.length <= 10;
+        const hasLength = pw.length >= 8 && pw.length <= 64;
         const hasUpper = /[A-Z]/.test(pw);
         const hasLower = /[a-z]/.test(pw);
         const hasNumber = /\d/.test(pw);
@@ -492,6 +514,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+        setShowPassword(false);
+        setShowConfirmPassword(false);
         setUsername('');
         setBirthday('');
         setTermsAccepted(false);
@@ -617,6 +641,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                                 required={true}
                                 onFocus={() => setIsPasswordFocused(true)}
                                 onBlur={() => setIsPasswordFocused(false)}
+                                showToggle={true}
+                                isPasswordVisible={showPassword}
+                                onToggleVisibility={() => setShowPassword(!showPassword)}
                             >
                                 <PasswordRequirements password={password} isVisible={isPasswordFocused && view === 'signup'} />
                             </InputField>
@@ -640,6 +667,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     required={true}
+                                    showToggle={true}
+                                    isPasswordVisible={showConfirmPassword}
+                                    onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
                                 />
                                 <div className="space-y-3 pt-2">
                                     <label className="flex items-start gap-3 cursor-pointer group">

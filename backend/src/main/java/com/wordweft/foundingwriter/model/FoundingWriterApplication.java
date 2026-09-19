@@ -50,6 +50,7 @@ public class FoundingWriterApplication {
     private FoundingWriterApplicationStatus status = FoundingWriterApplicationStatus.PENDING;
 
     private String adminNotes;
+    private boolean honeypotTriggered = false;
 
     @Indexed
     private Instant createdAt = Instant.now();

@@ -43,8 +43,11 @@ public class FoundingWriterApplicationController {
         Long fileSize = file != null ? file.getSize() : 0L;
 
         try {
+            boolean honeypot = request.isHoneypotFilled();
             service.submit(request, file);
-            sheetService.logAttempt(request, fileName, fileSize, clientIp, "SUCCESS", null);
+            String logStatus = honeypot ? "HONEYPOT_FLAGGED" : "SUCCESS";
+            String logMsg = honeypot ? "Honeypot field was populated by client/autofill" : null;
+            sheetService.logAttempt(request, fileName, fileSize, clientIp, logStatus, logMsg);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("success", true, "message", SUCCESS_MESSAGE));
         } catch (DuplicateFoundingWriterApplicationException duplicate) {
             sheetService.logAttempt(request, fileName, fileSize, clientIp, "DUPLICATE", DUPLICATE_MESSAGE);
