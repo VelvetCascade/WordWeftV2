@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
-import Image from '@tiptap/extension-image';
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import Mention from '@tiptap/extension-mention';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -22,6 +21,7 @@ import { PullQuote, PullQuoteText, PullQuoteCite } from './extensions/PullQuoteE
 import * as api from '../api/client';
 import { ImageCropModal } from './ImageCropModal';
 import imageCompression from 'browser-image-compression';
+import { ResizableImage } from './extensions/ResizableImageExtension';
 
 // ─── SVG Icon Components ───────────────────────────────────────────
 const Icon: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -377,7 +377,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 heading: { levels: [1, 2, 3] },
             }),
             Underline,
-            Image,
+            ResizableImage,
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
@@ -516,7 +516,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 });
             }
             if (editor && res?.url) {
-                editor.chain().focus().setImage({ src: res.url }).run();
+                editor.chain().focus().setImage({ src: res.url, width: 75, alignment: 'center' } as any).run();
                 setRetryImageFile(null);
                 setImageUploadProgress(100);
             }

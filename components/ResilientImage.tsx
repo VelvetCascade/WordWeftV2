@@ -19,6 +19,8 @@ export const ResilientImage: React.FC<ResilientImageProps> = ({
     className = '',
     fallbackLabel,
     variant = 'avatar',
+    loading = 'lazy',
+    decoding = 'async',
     onError,
     ...props
 }) => {
@@ -45,6 +47,8 @@ export const ResilientImage: React.FC<ResilientImageProps> = ({
             src={src!}
             alt={alt}
             className={className}
+            loading={loading}
+            decoding={decoding}
             onError={(event) => {
                 onError?.(event);
                 setFailed(true);

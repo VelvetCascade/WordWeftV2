@@ -13,10 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 @Service
 public class BookService {
@@ -44,6 +49,8 @@ public class BookService {
     ChapterReadEventRepository chapterReadEventRepository;
     @Autowired
     ContentAccessService contentAccessService;
+    @Autowired
+    MongoTemplate mongoTemplate;
     @Value("${wordweft.reader-sign-in-gate-enabled:true}")
     private boolean readerSignInGateEnabled = true;
 
@@ -122,75 +129,15 @@ public class BookService {
     }
 
     public Map<String, Object> getAllBooks(String sort, String genre, int page, int size) {
-        List<Book> books = bookRepository.findByPublicationStatus("published").stream()
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 50));
+        Query query = discoverableBooksQuery(genre).with(discoverySort(sort));
+        long totalElements = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Book.class);
+        query.skip((long) safePage * safeSize).limit(safeSize);
+        List<Book> pageBooks = mongoTemplate.find(query, Book.class).stream()
                 .filter(contentAccessService::canDiscover)
-                .collect(Collectors.toList());
-
-        // Genre filter
-        if (genre != null && !genre.isBlank()) {
-            books = books.stream()
-                    .filter(b -> b.getGenres().stream().anyMatch(g -> g.equalsIgnoreCase(genre)))
-                    .collect(Collectors.toList());
-        }
-
-        // Transparent sorting — exactly one field, no scoring
-        switch (sort != null ? sort : "most_read") {
-            case "most_viewed":
-                books.sort((a, b) -> {
-                    int cmp = Integer.compare(
-                            b.getViewCountLast7Days() != null ? b.getViewCountLast7Days() : 0,
-                            a.getViewCountLast7Days() != null ? a.getViewCountLast7Days() : 0);
-                    if (cmp != 0)
-                        return cmp;
-                    return Integer.compare(
-                            b.getViewCount() != null ? b.getViewCount() : 0,
-                            a.getViewCount() != null ? a.getViewCount() : 0);
-                });
-                break;
-            case "recent_update":
-                books.sort((a, b) -> {
-                    java.time.LocalDate dateA = a.getLastUpdatedAt() != null ? a.getLastUpdatedAt()
-                            : a.getPublishedDate();
-                    java.time.LocalDate dateB = b.getLastUpdatedAt() != null ? b.getLastUpdatedAt()
-                            : b.getPublishedDate();
-                    if (dateA == null)
-                        return 1;
-                    if (dateB == null)
-                        return -1;
-                    return dateB.compareTo(dateA);
-                });
-                break;
-            case "new":
-                books.sort((a, b) -> {
-                    java.time.LocalDate dateA = a.getCreatedAt() != null ? a.getCreatedAt() : a.getPublishedDate();
-                    java.time.LocalDate dateB = b.getCreatedAt() != null ? b.getCreatedAt() : b.getPublishedDate();
-                    if (dateA == null)
-                        return 1;
-                    if (dateB == null)
-                        return -1;
-                    return dateB.compareTo(dateA);
-                });
-                break;
-            default: // most_read
-                books.sort((a, b) -> {
-                    int cmp = Integer.compare(
-                            b.getReadCountLast7Days() != null ? b.getReadCountLast7Days() : 0,
-                            a.getReadCountLast7Days() != null ? a.getReadCountLast7Days() : 0);
-                    if (cmp != 0)
-                        return cmp;
-                    return Integer.compare(
-                            b.getReadCount() != null ? b.getReadCount() : 0,
-                            a.getReadCount() != null ? a.getReadCount() : 0);
-                });
-                break;
-        }
-
-        // Pagination
-        int totalElements = books.size();
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        int fromIndex = Math.min(page * size, totalElements);
-        int toIndex = Math.min(fromIndex + size, totalElements);
-        List<Book> pageBooks = books.subList(fromIndex, toIndex);
+                .toList();
+        int totalPages = (int) Math.ceil((double) totalElements / safeSize);
 
         String currentUserId = getCurrentUserId();
         List<Map<String, Object>> content = pageBooks.stream()
@@ -199,12 +146,51 @@ public class BookService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", content);
-        result.put("page", page);
-        result.put("size", size);
+        result.put("page", safePage);
+        result.put("size", safeSize);
         result.put("totalElements", totalElements);
         result.put("totalPages", totalPages);
-        result.put("hasMore", page < totalPages - 1);
+        result.put("hasMore", safePage < totalPages - 1);
         return result;
+    }
+
+    private Query discoverableBooksQuery(String genre) {
+        Set<AgeRating> allowedRatings = contentAccessService.allowedRatings();
+        List<Criteria> filters = new ArrayList<>();
+        filters.add(Criteria.where("publicationStatus").is("published"));
+        filters.add(new Criteria().orOperator(
+                Criteria.where("ageRating").in(allowedRatings),
+                Criteria.where("ageRating").exists(false),
+                Criteria.where("ageRating").is(null)));
+
+        if (!allowedRatings.contains(AgeRating.MATURE_18)) {
+            filters.add(Criteria.where("isMature").ne(true));
+        }
+
+        Set<String> disallowedWarnings = new HashSet<>();
+        if (!allowedRatings.contains(AgeRating.TEEN_13)) {
+            disallowedWarnings.addAll(ContentAccessService.TEEN_13_WARNINGS);
+        }
+        if (!allowedRatings.contains(AgeRating.MATURE_18)) {
+            disallowedWarnings.addAll(ContentAccessService.MATURE_18_WARNINGS);
+        }
+        if (!disallowedWarnings.isEmpty()) {
+            filters.add(Criteria.where("contentWarnings").nin(disallowedWarnings));
+            filters.add(Criteria.where("chapters.contentWarnings").nin(disallowedWarnings));
+        }
+        if (genre != null && !genre.isBlank()) {
+            filters.add(Criteria.where("genres").regex("^" + Pattern.quote(genre.trim()) + "$", "i"));
+        }
+        return new Query(new Criteria().andOperator(filters));
+    }
+
+    private Sort discoverySort(String sort) {
+        return switch (sort != null ? sort : "most_read") {
+            case "most_viewed" -> Sort.by(Sort.Order.desc("viewCountLast7Days"), Sort.Order.desc("viewCount"), Sort.Order.asc("id"));
+            case "recent_update" -> Sort.by(Sort.Order.desc("lastUpdatedAt"), Sort.Order.desc("publishedDate"), Sort.Order.asc("id"));
+            case "new" -> Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("publishedDate"), Sort.Order.asc("id"));
+            default -> Sort.by(Sort.Order.desc("readCountLast7Days"), Sort.Order.desc("readCount"), Sort.Order.asc("id"));
+        };
     }
 
     public Map<String, Object> getBookById(String id, boolean incrementView) {
@@ -468,81 +454,6 @@ public class BookService {
     }
 
     public Map<String, Object> getBooksByGenre(String genre, String sort, int page, int size) {
-        List<Book> books = bookRepository.findByPublicationStatus("published").stream()
-                .filter(contentAccessService::canDiscover)
-                .filter(b -> b.getGenres().stream().anyMatch(g -> g.equalsIgnoreCase(genre)))
-                .collect(Collectors.toList());
-
-        // Same transparent sorting as getAllBooks
-        switch (sort != null ? sort : "most_read") {
-            case "most_viewed":
-                books.sort((a, b) -> {
-                    int cmp = Integer.compare(
-                            b.getViewCountLast7Days() != null ? b.getViewCountLast7Days() : 0,
-                            a.getViewCountLast7Days() != null ? a.getViewCountLast7Days() : 0);
-                    if (cmp != 0)
-                        return cmp;
-                    return Integer.compare(
-                            b.getViewCount() != null ? b.getViewCount() : 0,
-                            a.getViewCount() != null ? a.getViewCount() : 0);
-                });
-                break;
-            case "recent_update":
-                books.sort((a, b) -> {
-                    java.time.LocalDate dateA = a.getLastUpdatedAt() != null ? a.getLastUpdatedAt()
-                            : a.getPublishedDate();
-                    java.time.LocalDate dateB = b.getLastUpdatedAt() != null ? b.getLastUpdatedAt()
-                            : b.getPublishedDate();
-                    if (dateA == null)
-                        return 1;
-                    if (dateB == null)
-                        return -1;
-                    return dateB.compareTo(dateA);
-                });
-                break;
-            case "new":
-                books.sort((a, b) -> {
-                    java.time.LocalDate dateA = a.getCreatedAt() != null ? a.getCreatedAt() : a.getPublishedDate();
-                    java.time.LocalDate dateB = b.getCreatedAt() != null ? b.getCreatedAt() : b.getPublishedDate();
-                    if (dateA == null)
-                        return 1;
-                    if (dateB == null)
-                        return -1;
-                    return dateB.compareTo(dateA);
-                });
-                break;
-            default: // most_read
-                books.sort((a, b) -> {
-                    int cmp = Integer.compare(
-                            b.getReadCountLast7Days() != null ? b.getReadCountLast7Days() : 0,
-                            a.getReadCountLast7Days() != null ? a.getReadCountLast7Days() : 0);
-                    if (cmp != 0)
-                        return cmp;
-                    return Integer.compare(
-                            b.getReadCount() != null ? b.getReadCount() : 0,
-                            a.getReadCount() != null ? a.getReadCount() : 0);
-                });
-                break;
-        }
-
-        int totalElements = books.size();
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        int fromIndex = Math.min(page * size, totalElements);
-        int toIndex = Math.min(fromIndex + size, totalElements);
-        List<Book> pageBooks = books.subList(fromIndex, toIndex);
-
-        String currentUserId = getCurrentUserId();
-        List<Map<String, Object>> content = pageBooks.stream()
-                .map(b -> enrichBook(b, currentUserId))
-                .collect(Collectors.toList());
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("content", content);
-        resultMap.put("page", page);
-        resultMap.put("size", size);
-        resultMap.put("totalElements", totalElements);
-        resultMap.put("totalPages", totalPages);
-        resultMap.put("hasMore", page < totalPages - 1);
-        return resultMap;
+        return getAllBooks(sort, genre, page, size);
     }
 }

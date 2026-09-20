@@ -108,6 +108,9 @@ const uploadFormData = <T>(
         authorization?: string;
         onProgress?: (percent: number) => void;
         timeoutMs?: number;
+        networkErrorMessage?: string;
+        timeoutErrorMessage?: string;
+        cancelledErrorMessage?: string;
     } = {},
 ): Promise<T> => new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -134,16 +137,20 @@ const uploadFormData = <T>(
         }
     });
     xhr.addEventListener('error', () => reject(createUploadError(
-        'The upload could not reach the image service. Check your connection and retry.',
+        options.networkErrorMessage || 'The upload could not reach the image service. Check your connection and retry.',
         undefined,
         'network_error',
     )));
     xhr.addEventListener('timeout', () => reject(createUploadError(
-        'The image upload took too long. Check your connection and retry.',
+        options.timeoutErrorMessage || 'The image upload took too long. Check your connection and retry.',
         408,
         'upload_timeout',
     )));
-    xhr.addEventListener('abort', () => reject(createUploadError('The image upload was cancelled.', 499, 'upload_cancelled')));
+    xhr.addEventListener('abort', () => reject(createUploadError(
+        options.cancelledErrorMessage || 'The image upload was cancelled.',
+        499,
+        'upload_cancelled',
+    )));
     xhr.send(formData);
 });
 
@@ -793,15 +800,21 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function importManuscript(bookId: string, file: File): Promise<{ user: User; importedChapters: number; totalChapters: number; embeddedImages: number; uploadedImages: number; characterCandidates: string[] }> {
+export async function importManuscript(bookId: string, file: File, onProgress?: (phase: 'uploading' | 'processing', percent: number) => void): Promise<{ user: User; importedChapters: number; totalChapters: number; embeddedImages: number; uploadedImages: number; characterCandidates: string[] }> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetchWithTimeout(`${API_BASE_URL}/books/${bookId}/import`, {
-        method: 'POST',
-        headers: { 'Authorization': getHeaders().Authorization },
-        body: formData,
-    }, 180_000);
-    const data = await handleResponse(response);
+    onProgress?.('uploading', 0);
+    const data = await uploadFormData<any>(`${API_BASE_URL}/books/${bookId}/import`, formData, {
+        authorization: getHeaders().Authorization,
+        timeoutMs: 180_000,
+        networkErrorMessage: 'The manuscript could not reach WordWeft. Check your connection and retry.',
+        timeoutErrorMessage: 'The manuscript import took too long. Check your connection and retry.',
+        cancelledErrorMessage: 'The manuscript import was cancelled.',
+        onProgress: percent => {
+            onProgress?.('uploading', percent);
+            if (percent >= 100) onProgress?.('processing', 100);
+        },
+    });
     return {
         user: mapBackendUserToFrontend(data.user),
         importedChapters: data.result.importedChapters,

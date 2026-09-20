@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { User } from '../types';
 import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon, XMarkIcon, PlusIcon, EyeIcon, EyeSlashIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -83,6 +83,17 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
+  const [activeSection, setActiveSection] = useState<'profile' | 'preferences' | 'security'>('profile');
+  const initialProfileState = useMemo(() => JSON.stringify({
+    name: user.name, avatarUrl: user.avatarUrl, avatarFileId: user.avatarFileId || null,
+    bio: user.bio || '', location: user.location || '', website: user.website || '',
+    dateOfBirth: user.dateOfBirth || '', allowMatureContent: user.allowMatureContent || false,
+    twitter: user.socials?.twitter || '', instagram: user.socials?.instagram || '', threads: user.socials?.threads || '',
+    selectedGenres: user.favoriteGenres || [],
+  }), [user]);
+  const [lastSavedState, setLastSavedState] = useState(initialProfileState);
+  const currentProfileState = JSON.stringify({ name, avatarUrl, avatarFileId, bio, location, website, dateOfBirth, allowMatureContent, twitter, instagram, threads, selectedGenres });
+  const isDirty = currentProfileState !== lastSavedState;
 
   useEffect(() => {
     api.getGenres().then(setAllGenres);
@@ -155,6 +166,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         socials: { twitter, instagram, threads },
         favoriteGenres: selectedGenres
       });
+      setLastSavedState(currentProfileState);
       setSaveSuccess("Profile updated successfully!");
       setTimeout(() => setSaveSuccess(null), 3000);
     } catch (err: any) {
@@ -217,22 +229,39 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-background">
-      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-2xl">
-        <div className="flex items-center gap-4 mb-8">
+    <div className="ww-profile-settings min-h-screen bg-gray-50 dark:bg-dark-background">
+      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl">
+        <div className="flex items-center gap-4 mb-3">
           <button
             onClick={handleCancel}
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors"
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">
-            Edit Profile
-          </h1>
+          <div><p className="ww-page-eyebrow">Account settings</p><h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Your profile</h1></div>
         </div>
+        <p className="ml-14 mb-7 text-sm text-text-body dark:text-dark-text-body">Manage what readers see, tune discovery, or update account security.</p>
 
-        <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl border dark:border-dark-border">
-          <form onSubmit={handleSave} className="space-y-6">
+        <div className="ww-settings-layout">
+          <nav className="ww-settings-nav" aria-label="Profile settings">
+            {([
+              ['profile', 'Public profile', 'Photo, bio and links'],
+              ['preferences', 'Reading preferences', 'Genres and content access'],
+              ['security', 'Security', 'Email and password'],
+            ] as const).map(([id, label, description]) => (
+              <button type="button" key={id} onClick={() => setActiveSection(id)} className={activeSection === id ? 'active' : ''}>
+                <strong>{label}</strong><span>{description}</span>
+              </button>
+            ))}
+          </nav>
+
+        <div className="ww-settings-panel bg-white dark:bg-dark-surface rounded-2xl border dark:border-dark-border">
+          {activeSection !== 'security' && <form onSubmit={handleSave} className="space-y-6">
+            <header className="ww-settings-panel-head">
+              <div><h2>{activeSection === 'profile' ? 'Public profile' : 'Reading preferences'}</h2><p>{activeSection === 'profile' ? 'This is how your author portfolio appears to readers.' : 'Choose what helps WordWeft shape your library.'}</p></div>
+              {isDirty && <span>Unsaved changes</span>}
+            </header>
+            {activeSection === 'profile' && <>
             <ImageUpload 
               value={avatarUrl}
               onChange={(url, fileId) => {
@@ -352,8 +381,10 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               </div>
             </div>
 
+            </>}
+
             {/* Favorite Genres */}
-            <div>
+            {activeSection === 'preferences' && <><div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 mt-4">Favorite Genres (Max 5)</h3>
               {genreError && <p role="alert" className="mb-3 text-sm text-danger">{genreError}</p>}
               {selectedGenres.length > 0 && (
@@ -390,19 +421,6 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               </div>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={user.email}
-                disabled
-                className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm bg-gray-100 dark:bg-dark-surface-alt/50 dark:border-dark-border dark:text-dark-text-body cursor-not-allowed"
-              />
-            </div>
-
             <section className="rounded-2xl border border-gray-200 dark:border-dark-border p-5 bg-gray-50 dark:bg-dark-surface-alt/40">
               <h3 className="font-sans font-bold text-text-rich dark:text-dark-text-rich">Content preferences</h3>
               <p className="text-sm text-text-body dark:text-dark-text-body mt-1 mb-4">Your birthday is private and is used to enforce age-appropriate access.</p>
@@ -413,8 +431,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 <span><strong className="block text-sm text-text-rich dark:text-dark-text-rich">Include mature stories</strong><small className="text-xs text-text-body dark:text-dark-text-body">Show 18+/21+ stories in discovery when your age permits. You’ll still see chapter-specific warnings.</small></span>
               </label>
             </section>
+            </>}
 
-            <div className="flex justify-between items-center pt-4 w-full">
+            <div className="ww-settings-savebar flex justify-between items-center w-full">
               <div>
                 {saveError && <p className="text-sm text-danger font-sans">{saveError}</p>}
                 {saveSuccess && <p className="text-sm text-success font-sans">{saveSuccess}</p>}
@@ -429,19 +448,23 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 </button>
                 <button
                   type="submit"
-                  disabled={isSaving || isAvatarUploading || !!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
+                  disabled={!isDirty || isSaving || isAvatarUploading || !!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
                   className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAvatarUploading ? 'Uploading avatar…' : isSaving ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
             </div>
-          </form>
+          </form>}
 
-          <div className="my-8 border-t border-gray-200 dark:border-dark-border"></div>
-
-          <form onSubmit={handlePasswordChange} className="space-y-6">
-            <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">Change Password</h2>
+          {activeSection === 'security' && <form onSubmit={handlePasswordChange} className="space-y-6">
+            <header className="ww-settings-panel-head"><div><h2>Security</h2><p>Your sign-in email and password.</p></div></header>
+            <div>
+              <label htmlFor="email" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Email</label>
+              <input type="email" id="email" value={user.email} disabled className="w-full h-11 px-4 rounded-xl font-sans text-base border-gray-300 shadow-sm bg-gray-100 dark:bg-dark-surface-alt/50 dark:border-dark-border dark:text-dark-text-body cursor-not-allowed" />
+              <p className="mt-1.5 text-xs text-gray-500">Your email is tied to this account and cannot be edited here.</p>
+            </div>
+            <div className="border-t border-gray-200 dark:border-dark-border pt-6"><h3 className="font-sans text-lg font-bold text-text-rich dark:text-dark-text-rich">Change password</h3></div>
             <div>
               <label htmlFor="currentPassword" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
                 Current Password
@@ -530,7 +553,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 {isPasswordSaving ? 'Updating…' : 'Update Password'}
               </button>
             </div>
-          </form>
+          </form>}
+        </div>
         </div>
       </div>
     </div>
