@@ -62,30 +62,34 @@ public class ChapterContentService {
         }
 
         Chapter chapter = visibleChapters.get(chapterIndex);
+        PublishedChapterView.Snapshot publicChapter = owner ? null : PublishedChapterView.of(chapter);
         if (!owner) {
-            AgeRating chapterRating = ContentAccessService.requiredRatingForWarnings(chapter.getContentWarnings());
+            AgeRating chapterRating = ContentAccessService.requiredRatingForWarnings(publicChapter.contentWarnings());
             if (!contentAccessService.allowedRatings().contains(chapterRating)) {
                 throw new ContentRestrictedException(
                         "This chapter contains mature content (" + chapterRating.getMinimumAge()
                                 + "+). Sign in and enable mature content in your profile if you are eligible.");
             }
         }
-        String fullContent = Objects.requireNonNullElse(chapter.getContent(), "");
+        String fullContent = owner
+                ? Objects.requireNonNullElse(chapter.getContent(), "")
+                : publicChapter.content();
         ChapterPreviewService.Preview preview = chapterPreviewService.preview(fullContent);
 
         if (currentUserId == null && readerSignInGateEnabled) {
             if (chapterIndex != 0) {
                 throw new AuthRequiredException();
             }
-            return response(book, chapter, chapterIndex, PREVIEW, preview.html(), preview);
+            return response(book, chapter, publicChapter, chapterIndex, PREVIEW, preview.html(), preview);
         }
 
-        return response(book, chapter, chapterIndex, FULL, fullContent, preview);
+        return response(book, chapter, publicChapter, chapterIndex, FULL, fullContent, preview);
     }
 
     private ChapterContentResponse response(
             Book book,
             Chapter chapter,
+            PublishedChapterView.Snapshot publicChapter,
             int chapterIndex,
             ChapterContentResponse.ChapterAccess access,
             String content,
@@ -94,7 +98,9 @@ public class ChapterContentService {
                 book.getId(),
                 Objects.requireNonNullElse(book.getTitle(), ""),
                 chapter.getId(),
-                Objects.requireNonNullElse(chapter.getTitle(), ""),
+                publicChapter == null
+                        ? Objects.requireNonNullElse(chapter.getTitle(), "")
+                        : publicChapter.title(),
                 chapterIndex,
                 access,
                 content,

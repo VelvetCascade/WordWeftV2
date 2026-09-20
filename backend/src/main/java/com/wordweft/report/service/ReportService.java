@@ -5,6 +5,7 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.model.Comment;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.CommentRepository;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.report.dto.ReportRequest;
 import com.wordweft.report.model.Report;
@@ -90,7 +91,7 @@ public class ReportService {
                 Book book = bookRepository.findById(parts[0]).orElseThrow(() -> new IllegalArgumentException("Story not found."));
                 Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(parts[1])).findFirst()
                         .orElseThrow(() -> new IllegalArgumentException("Chapter not found."));
-                yield target(book.getAuthorId(), book.getTitle() + " — " + chapter.getTitle());
+                yield target(book.getAuthorId(), book.getTitle() + " — " + PublishedChapterView.of(chapter).title());
             }
             case "COMMENT" -> {
                 Comment comment = commentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Comment not found."));

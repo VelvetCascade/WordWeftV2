@@ -135,6 +135,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const contentWarningsRef = useRef<ContentWarning[]>(chapter?.contentWarnings || []);
     const disclaimerNoteRef = useRef(chapter?.disclaimerNote || '');
     const [saveState, setSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+    const [publishState, setPublishState] = useState<'idle' | 'publishing'>('idle');
     const [saveError, setSaveError] = useState('');
     const isSavingRef = useRef(false);
     const queuedSaveRef = useRef<{ status: 'draft' | 'published' | 'preserve'; content: string; title: string } | null>(null);
@@ -254,6 +255,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 title: currentTitle,
             };
             setSaveState('unsaved');
+            if (status === 'published') setPublishState('publishing');
             return;
         }
 
@@ -281,6 +283,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         }
 
         isSavingRef.current = true;
+        if (status === 'published') setPublishState('publishing');
         setSaveState('saving');
         setSaveError('');
 
@@ -314,7 +317,11 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             isSavingRef.current = false;
             const queued = queuedSaveRef.current;
             queuedSaveRef.current = null;
-            if (queued) void handleSave(queued.status, queued.content, queued.title);
+            if (queued) {
+                void handleSave(queued.status, queued.content, queued.title);
+            } else if (status === 'published') {
+                setPublishState('idle');
+            }
         }
     };
 
@@ -470,8 +477,8 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                         >
                             {chapter?.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
                         </button>
-                        <button className="ww-editor-publish-button" disabled={saveState === 'saving' || isLoadingContent || !!contentLoadError} onClick={() => handleSave('published', content, title)}>
-                            {saveState === 'saving' ? 'Publishing...' : 'Publish'}
+                        <button className="ww-editor-publish-button" disabled={publishState === 'publishing' || isLoadingContent || !!contentLoadError} onClick={() => handleSave('published', content, title)}>
+                            {publishState === 'publishing' ? 'Publishing…' : chapter?.status === 'published' ? 'Publish updates' : 'Publish'}
                         </button>
                     </div>
                 </header>

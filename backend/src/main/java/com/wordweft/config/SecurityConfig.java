@@ -85,7 +85,8 @@ public class SecurityConfig {
                             response.getWriter().write("{\"message\":\"You do not have permission to perform this action.\"}");
                         }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/admin/founding-writer-applications/**").hasRole("ADMIN")
                         .requestMatchers("/api/feedback/**").permitAll()

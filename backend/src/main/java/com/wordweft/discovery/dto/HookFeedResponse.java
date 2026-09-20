@@ -20,6 +20,7 @@ public record HookFeedResponse(
             List<String> matchedGenres,
             int wordCount,
             int readingMinutes,
-            int likesCount
+            int likesCount,
+            boolean liked
     ) {}
 }

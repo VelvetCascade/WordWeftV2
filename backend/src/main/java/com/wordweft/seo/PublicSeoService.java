@@ -4,6 +4,7 @@ import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.service.ChapterPreviewService;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.user.model.User;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -60,7 +61,8 @@ public class PublicSeoService {
                         .filter(ch -> chapterId.equals(ch.getId()) && "published".equals(ch.getStatus()))
                         .findFirst()
                         .ifPresent(ch -> {
-                            ChapterPreviewService.Preview preview = chapterPreviewService.preview(ch.getContent());
+                            ChapterPreviewService.Preview preview = chapterPreviewService.preview(
+                                    PublishedChapterView.of(ch).content());
                             chapter.put("content", preview.html());
                             chapter.put("previewWordCount", preview.previewWordCount());
                             chapter.put("fullWordCount", preview.fullWordCount());
@@ -125,11 +127,12 @@ public class PublicSeoService {
                 .toList();
         String firstChapterId = publishedChapters.isEmpty() ? null : publishedChapters.get(0).getId();
         result.put("chapters", publishedChapters.stream().map(ch -> {
+            PublishedChapterView.Snapshot publicChapter = PublishedChapterView.of(ch);
             Map<String, Object> dto = new LinkedHashMap<>();
-            dto.put("id", ch.getId()); dto.put("title", ch.getTitle()); dto.put("status", "published");
+            dto.put("id", ch.getId()); dto.put("title", publicChapter.title()); dto.put("status", "published");
             dto.put("access", Objects.equals(ch.getId(), firstChapterId) ? "PREVIEW" : "AUTH_REQUIRED");
-            dto.put("wordCount", ch.getWordCount()); dto.put("publishedAt", ch.getPublishedAt());
-            dto.put("contentWarnings", ch.getContentWarnings()); dto.put("disclaimerNote", ch.getDisclaimerNote());
+            dto.put("wordCount", publicChapter.wordCount()); dto.put("publishedAt", ch.getPublishedAt());
+            dto.put("contentWarnings", publicChapter.contentWarnings()); dto.put("disclaimerNote", publicChapter.disclaimerNote());
             return dto;
         }).toList());
         return result;

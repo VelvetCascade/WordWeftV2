@@ -16,3 +16,19 @@ test('toUtcSchedule emits an ISO UTC instant', () => {
     const result = toUtcSchedule('2026-09-01T18:00', new Date('2026-08-29T12:00:00Z'));
     assert.match(result, /^2026-09-01T\d{2}:\d{2}:00\.000Z$/);
 });
+
+test('chapter editor keeps autosave and publishing states separate', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const editor = await readFile(new URL('../pages/ChapterEditorPage.tsx', import.meta.url), 'utf8');
+
+    assert.match(editor, /publishState/);
+    assert.match(editor, /Publish updates/);
+    assert.doesNotMatch(editor, /saveState === 'saving' \? 'Publishing/);
+});
+
+test('saving a draft revision does not silently unpublish an already public chapter', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const controller = await readFile(new URL('../backend/src/main/java/com/wordweft/book/controller/BookController.java', import.meta.url), 'utf8');
+
+    assert.match(controller, /"draft"\.equals\(status\) && !"published"\.equals\(chapter\.getStatus\(\)\)/);
+});

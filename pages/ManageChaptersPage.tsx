@@ -271,9 +271,10 @@ const ConfirmDialog: React.FC<{
     confirmLabel?: string;
     processingLabel?: string;
     isProcessing?: boolean;
+    tone?: 'danger' | 'warning' | 'primary';
     onConfirm: () => void;
     onCancel: () => void;
-}> = ({ isOpen, title, message, confirmLabel = 'Delete', processingLabel = 'Deleting…', isProcessing = false, onConfirm, onCancel }) => {
+}> = ({ isOpen, title, message, confirmLabel = 'Delete', processingLabel = 'Deleting…', isProcessing = false, tone = 'danger', onConfirm, onCancel }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -282,9 +283,131 @@ const ConfirmDialog: React.FC<{
                 <p className="text-sm text-text-body dark:text-dark-text-body mb-6">{message}</p>
                 <div className="flex justify-end gap-3">
                     <button onClick={onCancel} disabled={isProcessing} className="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg transition-colors disabled:opacity-50">Cancel</button>
-                    <button onClick={onConfirm} disabled={isProcessing} className="min-w-28 px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-wait">{isProcessing ? processingLabel : confirmLabel}</button>
+                    <button
+                        onClick={onConfirm}
+                        disabled={isProcessing}
+                        className={`min-w-28 rounded-lg px-4 py-2 text-sm font-bold text-white transition-colors disabled:cursor-wait disabled:opacity-70 ${
+                            tone === 'primary'
+                                ? 'bg-primary hover:bg-primary/90'
+                                : tone === 'warning'
+                                    ? 'bg-amber-600 hover:bg-amber-700'
+                                    : 'bg-red-600 hover:bg-red-700'
+                        }`}
+                    >
+                        {isProcessing ? processingLabel : confirmLabel}
+                    </button>
                 </div>
             </div>
+        </div>
+    );
+};
+
+const PublishStoryDialog: React.FC<{
+    isOpen: boolean;
+    chapters: Chapter[];
+    isPublishing: boolean;
+    onClose: () => void;
+    onPublish: (chapterIds: string[]) => void;
+}> = ({ isOpen, chapters, isPublishing, onClose, onPublish }) => {
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    const isComplete = (chapter: Chapter) => Boolean(
+        chapter.title?.trim()
+        && (chapter.content?.replace(/<[^>]*>/g, ' ').trim() || chapter.wordCount > 0)
+    );
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const contiguous: string[] = [];
+        for (const chapter of chapters) {
+            if (!isComplete(chapter)) break;
+            contiguous.push(chapter.id);
+        }
+        setSelectedIds(contiguous);
+    }, [isOpen, chapters]);
+
+    if (!isOpen) return null;
+
+    const toggleThrough = (index: number, checked: boolean) => {
+        if (checked) {
+            setSelectedIds(chapters.slice(0, index + 1).map(chapter => chapter.id));
+        } else {
+            setSelectedIds(chapters.slice(0, index).map(chapter => chapter.id));
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <section className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-dark-surface" role="dialog" aria-modal="true" aria-labelledby="publish-story-title">
+                <header className="border-b p-5 dark:border-dark-border">
+                    <h3 id="publish-story-title" className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Publish story</h3>
+                    <p className="mt-1 text-sm text-text-body dark:text-dark-text-body">Choose how much of the story readers can see now. Chapters must be published in order.</p>
+                </header>
+                <div className="max-h-[55vh] space-y-2 overflow-y-auto p-5">
+                    {chapters.length === 0 && <p className="text-sm text-gray-500">Create a chapter before publishing this story.</p>}
+                    {chapters.map((chapter, index) => {
+                        const complete = isComplete(chapter);
+                        const prefixComplete = chapters.slice(0, index + 1).every(isComplete);
+                        const checked = selectedIds.includes(chapter.id);
+                        return (
+                            <label key={chapter.id} className={`flex items-start gap-3 rounded-xl border p-3 ${prefixComplete ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'} dark:border-dark-border`}>
+                                <input
+                                    type="checkbox"
+                                    className="mt-1 h-4 w-4 accent-primary"
+                                    checked={checked}
+                                    disabled={!prefixComplete || isPublishing}
+                                    onChange={event => toggleThrough(index, event.target.checked)}
+                                />
+                                <span className="min-w-0">
+                                    <strong className="block truncate text-sm text-text-rich dark:text-dark-text-rich">{index + 1}. {chapter.title || 'Untitled chapter'}</strong>
+                                    <small className="text-gray-500">{complete ? `${chapter.wordCount.toLocaleString()} words` : 'Add a title and content before publishing'}</small>
+                                </span>
+                            </label>
+                        );
+                    })}
+                </div>
+                <footer className="flex items-center justify-end gap-3 border-t p-5 dark:border-dark-border">
+                    <button type="button" onClick={onClose} disabled={isPublishing} className="rounded-lg px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-surface-alt">Cancel</button>
+                    <button type="button" onClick={() => onPublish(selectedIds)} disabled={isPublishing || selectedIds.length === 0} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+                        {isPublishing ? 'Publishing…' : `Publish ${selectedIds.length || ''} ${selectedIds.length === 1 ? 'chapter' : 'chapters'}`.trim()}
+                    </button>
+                </footer>
+            </section>
+        </div>
+    );
+};
+
+const ImportCharacterReviewDialog: React.FC<{
+    candidates: string[];
+    embeddedImages: number;
+    uploadedImages: number;
+    isSaving: boolean;
+    onClose: () => void;
+    onCreate: (names: string[]) => void;
+}> = ({ candidates, embeddedImages, uploadedImages, isSaving, onClose, onCreate }) => {
+    const [selected, setSelected] = useState<string[]>([]);
+    useEffect(() => setSelected([]), [candidates]);
+    return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <section className="w-full max-w-lg rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-dark-surface sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="import-review-title">
+                <h3 id="import-review-title" className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Import complete</h3>
+                <p className="mt-1 text-sm text-text-body dark:text-dark-text-body">
+                    {uploadedImages > 0 ? `${uploadedImages} of ${embeddedImages} embedded images were uploaded to chapter storage. ` : ''}
+                    We also found names that may be characters. Choose any you want to add to the story bible.
+                </p>
+                <div className="my-5 max-h-64 space-y-2 overflow-y-auto">
+                    {candidates.map(name => (
+                        <label key={name} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 dark:border-dark-border">
+                            <input type="checkbox" checked={selected.includes(name)} onChange={() => setSelected(current => current.includes(name) ? current.filter(value => value !== name) : [...current, name])} className="h-4 w-4 accent-primary" />
+                            <span className="font-semibold text-text-rich dark:text-dark-text-rich">{name}</span>
+                        </label>
+                    ))}
+                </div>
+                <div className="flex justify-end gap-3">
+                    <button type="button" onClick={onClose} disabled={isSaving} className="rounded-lg px-4 py-2 text-sm font-bold text-gray-600">Not now</button>
+                    <button type="button" onClick={() => onCreate(selected)} disabled={isSaving || selected.length === 0} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{isSaving ? 'Adding…' : `Add ${selected.length || ''} ${selected.length === 1 ? 'character' : 'characters'}`.trim()}</button>
+                </div>
+            </section>
         </div>
     );
 };
@@ -303,6 +426,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
                     {chapter.status === 'scheduled' && chapter.scheduledAt && (
                         <p className="ww-manage-scheduled-time">{new Date(chapter.scheduledAt).toLocaleString()}</p>
                     )}
+                    {chapter.hasUnpublishedChanges && <p className="text-xs font-semibold text-amber-700">Unpublished changes</p>}
                 </div>
             </div>
         </div>
@@ -357,9 +481,14 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [isImporting, setIsImporting] = useState(false);
     const isImportingRef = useRef(false);
     const [importNotice, setImportNotice] = useState('');
+    const [importReview, setImportReview] = useState<{ candidates: string[]; embeddedImages: number; uploadedImages: number } | null>(null);
+    const [isCreatingImportedCharacters, setIsCreatingImportedCharacters] = useState(false);
     const importInputRef = useRef<HTMLInputElement>(null);
     const [isNavigatingNewChapter, setIsNavigatingNewChapter] = useState(false);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
+    const [showPublishStoryDialog, setShowPublishStoryDialog] = useState(false);
+    const [showReturnDraftConfirm, setShowReturnDraftConfirm] = useState(false);
+    const [chapterStatusTarget, setChapterStatusTarget] = useState<{ id: string; title: string; mode: 'publish-story' | 'unpublish-cascade'; laterCount: number } | null>(null);
 
     const handleNewChapterClick = () => {
         if (isNavigatingNewChapter) return;
@@ -374,7 +503,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const isBookPublished = book?.publicationStatus === 'published';
     const totalWords = book?.chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0) || 0;
 
-    const handlePublishChapterToggle = async (chapterId: string) => {
+    const performChapterPublishToggle = async (chapterId: string) => {
         const action = `chapter-status:${chapterId}`;
         if (pendingAction) return;
         setPendingAction(action);
@@ -387,6 +516,24 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         } finally {
             setPendingAction(null);
         }
+    };
+
+    const handlePublishChapterToggle = (chapterId: string) => {
+        if (!book || pendingAction) return;
+        const index = book.chapters.findIndex(chapter => chapter.id === chapterId);
+        const chapter = book.chapters[index];
+        if (!chapter) return;
+        if (chapter.status === 'published') {
+            const laterCount = book.chapters.slice(index + 1).filter(item => item.status === 'published' || item.status === 'scheduled').length;
+            if (laterCount > 0) {
+                setChapterStatusTarget({ id: chapter.id, title: chapter.title, mode: 'unpublish-cascade', laterCount });
+                return;
+            }
+        } else if (!isBookPublished) {
+            setChapterStatusTarget({ id: chapter.id, title: chapter.title, mode: 'publish-story', laterCount: index });
+            return;
+        }
+        void performChapterPublishToggle(chapterId);
     };
 
     const handleCancelSchedule = async (chapterId: string) => {
@@ -438,26 +585,45 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
 
     const handleBookPublishToggle = async () => {
         if (!book || pendingAction) return;
-        const newStatus = isBookPublished ? 'draft' : 'published';
-        if (newStatus === 'published' && (book.isMature || book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21')) {
-            if (!currentUser.dateOfBirth) {
-                setErrorMsg("Date of birth is required in your profile before publishing mature (18+/21+) content. Please add your date of birth in Profile Settings.");
-                setTimeout(() => setErrorMsg(null), 5000);
-                return;
-            }
+        if (!isBookPublished) {
+            setShowPublishStoryDialog(true);
+            return;
         }
+        setShowReturnDraftConfirm(true);
+    };
+
+    const confirmReturnStoryToDraft = async () => {
+        if (!book || pendingAction) return;
         try {
             setPendingAction('book-status');
-            const updatedUser = await api.setBookStatus(currentUser.id, bookId, newStatus);
+            const updatedUser = await api.setBookStatus(currentUser.id, bookId, 'draft');
             onUserUpdate(updatedUser);
+            setShowReturnDraftConfirm(false);
             setErrorMsg(null);
-            // W2: Show celebration on first publish
-            if (newStatus === 'published') {
-                setShowPublishCelebration(true);
-            }
         } catch (e: any) {
             setErrorMsg(e.message);
             setTimeout(() => setErrorMsg(null), 5000);
+        } finally {
+            setPendingAction(null);
+        }
+    };
+
+    const confirmStoryPublication = async (chapterIds: string[]) => {
+        if (!book || pendingAction || chapterIds.length === 0) return;
+        if ((book.isMature || book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21') && !currentUser.dateOfBirth) {
+            setErrorMsg('Date of birth is required in your profile before publishing mature (18+/21+) content.');
+            setShowPublishStoryDialog(false);
+            return;
+        }
+        try {
+            setPendingAction('book-status');
+            const updatedUser = await api.setBookStatus(currentUser.id, bookId, 'published', chapterIds);
+            onUserUpdate(updatedUser);
+            setShowPublishStoryDialog(false);
+            setShowPublishCelebration(true);
+            setErrorMsg(null);
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'The story could not be published.');
         } finally {
             setPendingAction(null);
         }
@@ -478,7 +644,18 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             setIsImporting(true);
             const result = await api.importManuscript(bookId, file);
             onUserUpdate(result.user);
-            setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.`);
+            const imageSummary = result.embeddedImages > 0 ? ` ${result.uploadedImages} embedded ${result.uploadedImages === 1 ? 'image' : 'images'} uploaded.` : '';
+            setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.${imageSummary}`);
+            if (result.characterCandidates.length > 0) {
+                try {
+                    const existing = await api.getCharactersByBookId(bookId);
+                    const existingNames = new Set(existing.map(character => character.name.toLowerCase()));
+                    const candidates = result.characterCandidates.filter(name => !existingNames.has(name.toLowerCase()));
+                    if (candidates.length > 0) setImportReview({ candidates, embeddedImages: result.embeddedImages, uploadedImages: result.uploadedImages });
+                } catch {
+                    setImportReview({ candidates: result.characterCandidates, embeddedImages: result.embeddedImages, uploadedImages: result.uploadedImages });
+                }
+            }
         } catch (error) {
             setErrorMsg(error instanceof Error ? error.message : 'Could not import this manuscript.');
         } finally {
@@ -486,6 +663,17 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             isImportingRef.current = false;
             if (importInputRef.current) importInputRef.current.value = '';
         }
+    };
+
+    const createImportedCharacters = async (names: string[]) => {
+        if (isCreatingImportedCharacters || names.length === 0) return;
+        setIsCreatingImportedCharacters(true);
+        const results = await Promise.allSettled(names.map(name => api.createCharacter({ bookId, name, role: 'Secondary' })));
+        const created = results.filter(result => result.status === 'fulfilled').length;
+        const failed = results.length - created;
+        setImportReview(null);
+        setImportNotice(`${created} ${created === 1 ? 'character' : 'characters'} added to the story bible.${failed ? ` ${failed} could not be added; you can add them manually from Characters.` : ''}`);
+        setIsCreatingImportedCharacters(false);
     };
 
     if (!book) {
@@ -603,6 +791,56 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 book={book}
                 currentUserDateOfBirth={currentUser.dateOfBirth}
                 onUpdate={handleBookUpdate}
+            />
+
+            <PublishStoryDialog
+                isOpen={showPublishStoryDialog}
+                chapters={book.chapters}
+                isPublishing={pendingAction === 'book-status'}
+                onClose={() => setShowPublishStoryDialog(false)}
+                onPublish={confirmStoryPublication}
+            />
+
+            {importReview && (
+                <ImportCharacterReviewDialog
+                    candidates={importReview.candidates}
+                    embeddedImages={importReview.embeddedImages}
+                    uploadedImages={importReview.uploadedImages}
+                    isSaving={isCreatingImportedCharacters}
+                    onClose={() => setImportReview(null)}
+                    onCreate={createImportedCharacters}
+                />
+            )}
+
+            <ConfirmDialog
+                isOpen={showReturnDraftConfirm}
+                title="Return story to draft?"
+                message="The story and every chapter will be removed from public reading. Your writing stays saved and can be published again later."
+                confirmLabel="Return to draft"
+                processingLabel="Updating story…"
+                tone="warning"
+                isProcessing={pendingAction === 'book-status'}
+                onConfirm={confirmReturnStoryToDraft}
+                onCancel={() => setShowReturnDraftConfirm(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={!!chapterStatusTarget}
+                title={chapterStatusTarget?.mode === 'publish-story' ? 'Publish story with this chapter?' : 'Unpublish this chapter and later chapters?'}
+                message={chapterStatusTarget?.mode === 'publish-story'
+                    ? `“${chapterStatusTarget?.title}” belongs to a private story. Publishing it will also publish the story and ${chapterStatusTarget?.laterCount ? `${chapterStatusTarget.laterCount} preceding ${chapterStatusTarget.laterCount === 1 ? 'chapter' : 'chapters'}` : 'make this its first public chapter'}.`
+                    : `To keep the reading order intact, “${chapterStatusTarget?.title}” and ${chapterStatusTarget?.laterCount} later ${chapterStatusTarget?.laterCount === 1 ? 'chapter' : 'chapters'} will return to draft.`}
+                confirmLabel={chapterStatusTarget?.mode === 'publish-story' ? 'Publish story' : 'Unpublish chapters'}
+                processingLabel="Updating chapters…"
+                tone={chapterStatusTarget?.mode === 'publish-story' ? 'primary' : 'warning'}
+                isProcessing={!!chapterStatusTarget && pendingAction === `chapter-status:${chapterStatusTarget.id}`}
+                onConfirm={() => {
+                    if (!chapterStatusTarget) return;
+                    const id = chapterStatusTarget.id;
+                    setChapterStatusTarget(null);
+                    void performChapterPublishToggle(id);
+                }}
+                onCancel={() => setChapterStatusTarget(null)}
             />
 
             {/* Delete Chapter Confirmation */}

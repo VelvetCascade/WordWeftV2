@@ -71,6 +71,24 @@ class ChapterContentServiceTest {
     }
 
     @Test
+    void signedInReaderGetsPublishedSnapshotWhileWriterEditsWorkingDraft() {
+        Book book = publishedBook();
+        Chapter chapter = book.getChapters().get(1);
+        chapter.setPublishedTitle("Second — live");
+        chapter.setPublishedContent("SECOND_PUBLISHED");
+        chapter.setPublishedWordCount(1);
+        chapter.setTitle("Second — revised privately");
+        chapter.setContent("SECOND_WORKING_DRAFT");
+        when(repository.findById("book")).thenReturn(Optional.of(book));
+        when(contentAccess.currentUserId()).thenReturn("reader");
+
+        ChapterContentResponse response = service.load("book", "second");
+
+        assertEquals("Second — live", response.chapterTitle());
+        assertEquals("SECOND_PUBLISHED", response.content());
+    }
+
+    @Test
     void emergencyRollbackFlagRestoresLegacyGuestReading() {
         when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
         when(contentAccess.currentUserId()).thenReturn(null);

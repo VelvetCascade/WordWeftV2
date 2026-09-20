@@ -8,8 +8,11 @@ const LABELS: Record<AgeRating, string> = {
     ADULT_21: '21+',
 };
 
-export const AgeRatingBadge: React.FC<{ rating?: AgeRating; compact?: boolean }> = ({ rating = 'ALL_AGES', compact = false }) => (
-    <span className={`age-rating-badge age-rating-${rating.toLowerCase()}${compact ? ' compact' : ''}`} title={`Age rating: ${LABELS[rating]}`}>
-        {LABELS[rating]}
-    </span>
-);
+export const AgeRatingBadge: React.FC<{ rating?: AgeRating; compact?: boolean }> = ({ rating = 'ALL_AGES', compact = false }) => {
+    if (rating === 'ALL_AGES') return null;
+    return (
+        <span className={`age-rating-badge age-rating-${rating.toLowerCase()}${compact ? ' compact' : ''}`} title={`Age rating: ${LABELS[rating]}`}>
+            {LABELS[rating]}
+        </span>
+    );
+};

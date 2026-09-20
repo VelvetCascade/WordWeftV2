@@ -151,6 +151,25 @@ class ManuscriptParserTest {
     }
 
     @Test
+    void embeddedImageUploadFailureRejectsTheImportInsteadOfDroppingTheImage() throws Exception {
+        ManuscriptParser.ImageUploadException error = assertThrows(ManuscriptParser.ImageUploadException.class, () -> parser.parse(
+                "story.docx",
+                embeddedImageDocx(),
+                (bytes, filename) -> { throw new RuntimeException("storage unavailable"); }));
+
+        assertTrue(error.getMessage().contains("map.png"));
+        assertTrue(error.getMessage().toLowerCase().contains("image"));
+    }
+
+    @Test
+    void embeddedImagesRequireConfiguredStorage() throws Exception {
+        ManuscriptParser.ImageUploadException error = assertThrows(ManuscriptParser.ImageUploadException.class,
+                () -> parser.parse("story.docx", embeddedImageDocx(), null));
+
+        assertTrue(error.getMessage().toLowerCase().contains("storage"));
+    }
+
+    @Test
     void windows1252EncodingIsDecodedWithoutErrors() {
         // Windows-1252 bytes for curly quotes: 0x93 (“), 0x94 (”)
         byte[] bytes = new byte[] {
@@ -243,5 +262,50 @@ class ManuscriptParserTest {
     void emptyAndUnsupportedFilesAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> parser.parse("empty.txt", new byte[0]));
         assertThrows(IllegalArgumentException.class, () -> parser.parse("story.pdf", "data".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void repeatedProperNamesBecomeConservativeCharacterCandidates() {
+        ManuscriptParser.ParseResult result = parser.parseDetailed(
+                "story.txt",
+                "Chapter 1\nMira crossed the bridge. Mira called for Rowan. Rowan answered Mira."
+                        .getBytes(StandardCharsets.UTF_8),
+                null);
+
+        assertTrue(result.characterCandidates().contains("Mira"));
+        assertTrue(result.characterCandidates().contains("Rowan"));
+        assertEquals(0, result.embeddedImages());
+    }
+
+    private static byte[] embeddedImageDocx() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><w:body>
+                  <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 1</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>Illustration</w:t><w:drawing><a:blip r:embed="rId10"/></w:drawing></w:r></w:p>
+                </w:body></w:document>
+                """;
+        String rels = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                  <Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/map.png"/>
+                </Relationships>
+                """;
+        byte[] png = new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00 };
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(bytes)) {
+            zip.putNextEntry(new ZipEntry("word/document.xml"));
+            zip.write(document.getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+            zip.putNextEntry(new ZipEntry("word/_rels/document.xml.rels"));
+            zip.write(rels.getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+            zip.putNextEntry(new ZipEntry("word/media/map.png"));
+            zip.write(png);
+            zip.closeEntry();
+        }
+        return bytes.toByteArray();
     }
 }

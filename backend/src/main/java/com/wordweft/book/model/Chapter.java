@@ -20,6 +20,14 @@ public class Chapter {
     private String status = "draft"; // "draft", "scheduled", or "published"
     private Instant scheduledAt;
     private Instant publishedAt;
+    // The writer can keep editing title/content after release without changing
+    // what readers see. Null values mean a legacy published chapter and are
+    // read through the compatibility projection until first saved/published.
+    private String publishedTitle;
+    private String publishedContent;
+    private Integer publishedWordCount;
+    private List<String> publishedContentWarnings;
+    private String publishedDisclaimerNote;
     private List<String> contentWarnings = new ArrayList<>();
     private String disclaimerNote;
     

@@ -16,12 +16,14 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [inputValue, setInputValue] = useState('');
+    const [searchError, setSearchError] = useState('');
 
     useEffect(() => { setQuery(searchQuery); setInputValue(searchQuery); }, [searchQuery]);
 
     const fetchResults = useCallback(async (q: string, tab: SearchTab, page: number) => {
         if (q.trim().length < 2) return;
         setIsLoading(true);
+        setSearchError('');
         try {
             const data = await api.searchFull(q, tab, page, 12);
             if (page === 0) {
@@ -41,6 +43,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
             }
         } catch (e) {
             console.error('Search error:', e);
+            setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -115,7 +118,13 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                 </div>
 
                 {/* Results */}
-                {isLoading && currentPage === 0 ? (
+                {searchError ? (
+                    <div className="search-results-empty" role="alert">
+                        <h3 className="text-xl font-bold text-text-rich dark:text-dark-text-rich mb-2">Search could not be loaded</h3>
+                        <p className="text-text-body dark:text-dark-text-body">{searchError}</p>
+                        <button type="button" className="search-results-load-more-btn mt-5" onClick={() => void fetchResults(query, activeTab, 0)}>Try again</button>
+                    </div>
+                ) : isLoading && currentPage === 0 ? (
                     <div className="search-results-loading">
                         <div className="search-overlay-spinner" />
                         <p>Searching for "{query}"...</p>
@@ -199,10 +208,12 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
 // ─── Book Result Card ─────────────────────────────────────────
 
 const BookResultCard: React.FC<{ book: SearchBookResult; index: number }> = ({ book, index }) => (
-    <div
+    <button
+        type="button"
         className="search-book-card"
         style={{ animationDelay: `${index * 60}ms` }}
         onClick={() => { window.location.hash = `/book/${book.id}`; }}
+        aria-label={`Open ${book.title}${book.author ? ` by ${book.author.name}` : ''}`}
     >
         <div className="search-book-card-cover-wrapper">
             <img
@@ -217,10 +228,7 @@ const BookResultCard: React.FC<{ book: SearchBookResult; index: number }> = ({ b
         <div className="search-book-card-info">
             <h3 className="search-book-card-title">{book.title}</h3>
             {book.author && (
-                <p className="search-book-card-author" onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.hash = `/author/${book.author!.id}`;
-                }}>
+                <p className="search-book-card-author">
                     by {book.author.name}
                 </p>
             )}
@@ -250,13 +258,14 @@ const BookResultCard: React.FC<{ book: SearchBookResult; index: number }> = ({ b
                 </p>
             )}
         </div>
-    </div>
+    </button>
 );
 
 // ─── Author Result Card ───────────────────────────────────────
 
 const AuthorResultCard: React.FC<{ author: SearchAuthorResult; index: number }> = ({ author, index }) => (
-    <div
+    <button
+        type="button"
         className="search-author-card"
         style={{ animationDelay: `${index * 80}ms` }}
         onClick={() => { window.location.hash = `/author/${author.id}`; }}
@@ -282,11 +291,8 @@ const AuthorResultCard: React.FC<{ author: SearchAuthorResult; index: number }> 
                 )}
             </div>
         </div>
-        <button className="search-author-card-btn" onClick={(e) => {
-            e.stopPropagation();
-            window.location.hash = `/author/${author.id}`;
-        }}>
+        <span className="search-author-card-btn">
             View Profile
-        </button>
-    </div>
+        </span>
+    </button>
 );

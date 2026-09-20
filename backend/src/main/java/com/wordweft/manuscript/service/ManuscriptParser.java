@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,10 +33,14 @@ public class ManuscriptParser {
     private static final int MAX_CHAPTERS = 200;
     private static final int MAX_DOCUMENT_XML_BYTES = 8 * 1024 * 1024;
     private static final int MAX_RELS_XML_BYTES = 2 * 1024 * 1024;
-    private static final int MAX_MEDIA_FILE_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
 
     private static final Pattern CONVENTIONAL_HEADING = Pattern.compile(
             "(?i)^(?:(?:chapter|part|act|book)\\s+(?:[0-9ivxlcdm]+|[a-z]+(?:[\\s-][a-z]+)*)|prologue|epilogue|[0-9]{1,3}\\s*[:—–\\.-])(?:\\s*[:—–\\.-]\\s*.*)?$");
+    private static final Pattern CHARACTER_CANDIDATE = Pattern.compile("\\b[A-Z][a-z]{2,}(?:\\s+[A-Z][a-z]{2,})?\\b");
+    private static final Set<String> CHARACTER_STOP_WORDS = Set.of(
+            "The", "This", "That", "Then", "When", "Where", "What", "Chapter", "Part", "Book",
+            "Prologue", "Epilogue", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
 
     @FunctionalInterface
     public interface ImageUploader {
@@ -42,6 +48,15 @@ public class ManuscriptParser {
     }
 
     public record ImportedChapter(String title, String content) {}
+    public record ParseResult(
+            List<ImportedChapter> chapters,
+            int embeddedImages,
+            int uploadedImages,
+            List<String> characterCandidates) {}
+    public static class ImageUploadException extends RuntimeException {
+        public ImageUploadException(String message) { super(message); }
+        public ImageUploadException(String message, Throwable cause) { super(message, cause); }
+    }
     private record Paragraph(String htmlContent, String plainText, boolean heading) {}
 
     public List<ImportedChapter> parse(String filename, byte[] bytes) {
@@ -49,13 +64,18 @@ public class ManuscriptParser {
     }
 
     public List<ImportedChapter> parse(String filename, byte[] bytes, ImageUploader imageUploader) {
+        return parseDetailed(filename, bytes, imageUploader).chapters();
+    }
+
+    public ParseResult parseDetailed(String filename, byte[] bytes, ImageUploader imageUploader) {
         if (filename == null || filename.isBlank() || bytes == null || bytes.length == 0) {
             throw new IllegalArgumentException("Choose a non-empty manuscript file.");
         }
         String extension = extension(filename);
+        int[] imageCounts = new int[] { 0, 0 };
         List<Paragraph> paragraphs = switch (extension) {
             case "txt", "md", "markdown" -> textParagraphs(decodeUtf8(bytes));
-            case "docx" -> docxParagraphs(bytes, imageUploader);
+            case "docx" -> docxParagraphs(bytes, imageUploader, imageCounts);
             default -> throw new IllegalArgumentException("Import a .txt, .md, or .docx manuscript.");
         };
         List<ImportedChapter> chapters = buildChapters(paragraphs);
@@ -65,7 +85,7 @@ public class ManuscriptParser {
         if (chapters.size() > MAX_CHAPTERS) {
             throw new IllegalArgumentException("A manuscript can contain at most 200 chapters per import.");
         }
-        return chapters;
+        return new ParseResult(chapters, imageCounts[0], imageCounts[1], characterCandidates(chapters));
     }
 
     private List<Paragraph> textParagraphs(String source) {
@@ -111,7 +131,7 @@ public class ManuscriptParser {
         return result;
     }
 
-    private List<Paragraph> docxParagraphs(byte[] bytes, ImageUploader imageUploader) {
+    private List<Paragraph> docxParagraphs(byte[] bytes, ImageUploader imageUploader, int[] imageCounts) {
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes))) {
             ZipEntry entry;
             byte[] documentXml = null;
@@ -131,7 +151,12 @@ public class ManuscriptParser {
                 } else if (lowerName.equals("word/_rels/document.xml.rels")) {
                     relsXml = zip.readNBytes(MAX_RELS_XML_BYTES + 1);
                 } else if (lowerName.startsWith("word/media/")) {
-                    byte[] mediaBytes = zip.readNBytes(MAX_MEDIA_FILE_BYTES);
+                    byte[] mediaBytes = zip.readNBytes(MAX_MEDIA_FILE_BYTES + 1);
+                    if (mediaBytes.length > MAX_MEDIA_FILE_BYTES) {
+                        String mediaName = name.substring(name.lastIndexOf('/') + 1);
+                        throw new ImageUploadException(
+                                "Embedded image " + mediaName + " exceeds the 5 MB image limit.");
+                    }
                     mediaFiles.put(lowerName, mediaBytes);
                 }
             }
@@ -141,7 +166,9 @@ public class ManuscriptParser {
             }
 
             Map<String, String> relIdToMediaPath = parseRelsXml(relsXml);
-            return parseDocumentXml(documentXml, relIdToMediaPath, mediaFiles, imageUploader);
+            return parseDocumentXml(documentXml, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+        } catch (ImageUploadException error) {
+            throw error;
         } catch (IllegalArgumentException error) {
             throw error;
         } catch (Exception error) {
@@ -181,7 +208,8 @@ public class ManuscriptParser {
             byte[] xml,
             Map<String, String> relIdToMediaPath,
             Map<String, byte[]> mediaFiles,
-            ImageUploader imageUploader) throws Exception {
+            ImageUploader imageUploader,
+            int[] imageCounts) throws Exception {
 
         Document document = createSecureDocumentBuilder().parse(new InputSource(new ByteArrayInputStream(xml)));
         NodeList paragraphNodes = document.getElementsByTagNameNS("*", "p");
@@ -190,7 +218,7 @@ public class ManuscriptParser {
         for (int index = 0; index < paragraphNodes.getLength(); index++) {
             Element paragraph = (Element) paragraphNodes.item(index);
             String plainText = wordText(paragraph).trim();
-            List<String> imageUrls = extractParagraphImages(paragraph, relIdToMediaPath, mediaFiles, imageUploader);
+            List<String> imageUrls = extractParagraphImages(paragraph, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
 
             if (plainText.isEmpty() && imageUrls.isEmpty()) continue;
 
@@ -219,7 +247,8 @@ public class ManuscriptParser {
             Element paragraph,
             Map<String, String> relIdToMediaPath,
             Map<String, byte[]> mediaFiles,
-            ImageUploader imageUploader) {
+            ImageUploader imageUploader,
+            int[] imageCounts) {
 
         List<String> urls = new ArrayList<>();
         if (relIdToMediaPath.isEmpty() || mediaFiles.isEmpty()) return urls;
@@ -249,24 +278,57 @@ public class ManuscriptParser {
             if (relId != null && !relId.isBlank()) {
                 String mediaPath = relIdToMediaPath.get(relId);
                 if (mediaPath != null && mediaFiles.containsKey(mediaPath)) {
+                    imageCounts[0]++;
                     byte[] mediaBytes = mediaFiles.get(mediaPath);
                     if (isValidImageBytes(mediaBytes)) {
                         String origName = mediaPath.substring(mediaPath.lastIndexOf('/') + 1);
-                        if (imageUploader != null) {
-                            try {
-                                String url = imageUploader.uploadImage(mediaBytes, origName);
-                                if (url != null && !url.isBlank()) {
-                                    urls.add(url);
-                                }
-                            } catch (Exception e) {
-                                // If image upload fails, don't crash whole manuscript import
-                            }
+                        if (imageUploader == null) {
+                            throw new ImageUploadException(
+                                    "Image storage is not configured, so embedded image " + origName + " was not imported.");
                         }
+                        try {
+                            String url = imageUploader.uploadImage(mediaBytes, origName);
+                            if (url == null || url.isBlank()) {
+                                throw new ImageUploadException(
+                                        "Image storage returned no URL for embedded image " + origName + ".");
+                            }
+                            urls.add(url);
+                            imageCounts[1]++;
+                        } catch (ImageUploadException error) {
+                            throw error;
+                        } catch (Exception error) {
+                            throw new ImageUploadException(
+                                    "Embedded image " + origName + " could not be uploaded. No chapters were imported.", error);
+                        }
+                    } else {
+                        String origName = mediaPath.substring(mediaPath.lastIndexOf('/') + 1);
+                        throw new ImageUploadException(
+                                "Embedded image " + origName + " uses an unsupported or invalid image format.");
                     }
                 }
             }
         }
         return urls;
+    }
+
+    private List<String> characterCandidates(List<ImportedChapter> chapters) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (ImportedChapter chapter : chapters) {
+            String text = chapter.content().replaceAll("<[^>]+>", " ")
+                    .replace("&quot;", "\"").replace("&#39;", "'")
+                    .replace("&amp;", "&").replaceAll("\\s+", " ");
+            var matcher = CHARACTER_CANDIDATE.matcher(text);
+            while (matcher.find()) {
+                String candidate = matcher.group().trim();
+                if (!CHARACTER_STOP_WORDS.contains(candidate)) counts.merge(candidate, 1, Integer::sum);
+            }
+        }
+        return counts.entrySet().stream()
+                .filter(entry -> entry.getValue() >= 2)
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .limit(20)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     private boolean isValidImageBytes(byte[] bytes) {

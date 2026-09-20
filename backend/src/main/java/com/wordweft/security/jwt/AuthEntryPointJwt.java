@@ -11,6 +11,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
@@ -21,6 +22,11 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
   public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
       throws IOException, ServletException {
     logger.error("Unauthorized error: {}", authException.getMessage());
-    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+    response.setContentType("application/json");
+    response.setHeader("Cache-Control", "private, no-store");
+    response.getWriter().write("{\"errorCode\":\"SESSION_INVALID\","
+        + "\"message\":\"Your session has expired. Please sign in again.\"}");
   }
 }

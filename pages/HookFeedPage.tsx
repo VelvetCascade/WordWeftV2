@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, BookOpen, Heart, RotateCcw, SlidersHorizontal, Sparkles, X } from 'lucide-react';
+import { ArrowRight, BookOpen, Heart, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import type { HookCard, User } from '../types';
 import * as api from '../api/client';
 import { appendSeenStory, toggleTasteGenre } from '../utils/hookFeed';
@@ -28,11 +28,12 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
     const [seen, setSeen] = useState<string[]>(readSeenStories);
     const [genres, setGenres] = useState<string[]>([]);
     const [taste, setTaste] = useState<string[]>(currentUser?.favoriteGenres || []);
-    const [editingTaste, setEditingTaste] = useState((currentUser?.favoriteGenres?.length || 0) === 0);
+    const [editingTaste, setEditingTaste] = useState(false);
     const [loading, setLoading] = useState(true);
     const [savingTaste, setSavingTaste] = useState(false);
     const [error, setError] = useState('');
     const [liked, setLiked] = useState<Set<string>>(new Set());
+    const [likingChapterId, setLikingChapterId] = useState<string | null>(null);
 
     const current = cards[index];
     const remaining = cards.length - index;
@@ -44,6 +45,7 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
         try {
             const result = await api.getHookFeed(excluded, requestedTaste, 10);
             setCards(result.items);
+            setLiked(new Set(result.items.filter(card => card.liked).map(card => card.chapterId)));
             setIndex(0);
         } catch (feedError) {
             setError(feedError instanceof Error ? feedError.message : 'The Hook Feed could not be loaded.');
@@ -122,9 +124,11 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
     };
 
     const toggleLike = async () => {
-        if (!current) return;
+        if (!current || likingChapterId === current.chapterId) return;
         if (!currentUser) { onSignIn(); return; }
         const wasLiked = liked.has(current.chapterId);
+        const previousCount = current.likesCount;
+        setLikingChapterId(current.chapterId);
         setLiked(previous => {
             const next = new Set(previous);
             wasLiked ? next.delete(current.chapterId) : next.add(current.chapterId);
@@ -135,27 +139,31 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
             : card));
         try {
             await api.toggleChapterLike(current.bookId, current.chapterId);
-        } catch {
+        } catch (likeError) {
             setLiked(previous => {
                 const next = new Set(previous);
                 wasLiked ? next.add(current.chapterId) : next.delete(current.chapterId);
                 return next;
             });
+            setCards(previous => previous.map(card => card.chapterId === current.chapterId
+                ? { ...card, likesCount: previousCount }
+                : card));
+            setError(likeError instanceof Error ? likeError.message : 'Could not update your like. Please retry.');
+        } finally {
+            setLikingChapterId(null);
         }
     };
 
     const catalog = useMemo(() => genres.slice(0, 24), [genres]);
 
     return (
-        <div className="min-h-[calc(100vh-5rem)] bg-[radial-gradient(circle_at_top,_rgba(141,110,99,0.13),_transparent_38%)] px-4 py-8 sm:py-12">
+        <div className="hook-feed-page min-h-[calc(100vh-5rem)] px-4 py-4 sm:py-10">
             <div className="mx-auto max-w-5xl">
-                <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <header className="mb-4 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                     <div>
-                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-                            <Sparkles className="h-3.5 w-3.5" /> Opening lines, not algorithms
-                        </div>
-                        <h1 className="font-serif text-4xl font-bold text-text-rich dark:text-dark-text-rich sm:text-5xl">Find your next obsession.</h1>
-                        <p className="mt-2 max-w-2xl text-text-body dark:text-dark-text-body">Read the opening before you judge the cover. Skip freely; open a story when the writing catches you.</p>
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent">Hook Feed</p>
+                        <h1 className="font-serif text-3xl font-bold text-text-rich dark:text-dark-text-rich sm:text-5xl">Find your next read.</h1>
+                        <p className="mt-2 max-w-2xl text-sm text-text-body dark:text-dark-text-body sm:text-base">Read a short opening, then open the story or move to the next one.</p>
                     </div>
                     <button onClick={() => { setTaste(currentUser?.favoriteGenres || taste); setEditingTaste(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-surface px-4 py-2.5 text-sm font-semibold text-text-rich transition hover:border-accent dark:bg-dark-surface dark:text-dark-text-rich">
                         <SlidersHorizontal className="h-4 w-4" /> Tune my feed
@@ -163,10 +171,11 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
                 </header>
 
                 {editingTaste && (
-                    <section className="mb-7 rounded-3xl border border-accent/20 bg-surface p-5 shadow-sm dark:bg-dark-surface sm:p-7" aria-labelledby="taste-heading">
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setEditingTaste(false)}>
+                    <section className="w-full max-w-2xl rounded-t-3xl border border-accent/20 bg-surface p-5 shadow-2xl dark:bg-dark-surface sm:rounded-3xl sm:p-7" aria-labelledby="taste-heading" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}>
                         <div className="flex items-start justify-between gap-4">
-                            <div><h2 id="taste-heading" className="font-serif text-2xl font-bold text-text-rich dark:text-dark-text-rich">What do you reach for?</h2><p className="mt-1 text-sm text-text-body dark:text-dark-text-body">Pick up to eight. This is the only signal used to personalize your Hook Feed.</p></div>
-                            {(currentUser?.favoriteGenres?.length || 0) > 0 && <button onClick={() => setEditingTaste(false)} aria-label="Close taste settings" className="rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10"><X className="h-5 w-5" /></button>}
+                            <div><h2 id="taste-heading" className="font-serif text-2xl font-bold text-text-rich dark:text-dark-text-rich">Choose genres</h2><p className="mt-1 text-sm text-text-body dark:text-dark-text-body">Pick up to eight. You can change these any time.</p></div>
+                            <button onClick={() => setEditingTaste(false)} aria-label="Close taste settings" className="rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10"><X className="h-5 w-5" /></button>
                         </div>
                         <div className="mt-5 flex flex-wrap gap-2">
                             {catalog.map(genre => {
@@ -175,30 +184,30 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
                             })}
                         </div>
                         <div className="mt-5 flex items-center justify-between gap-3"><span className="text-xs text-text-body dark:text-dark-text-body">{taste.length}/8 selected</span><button disabled={!taste.length || savingTaste} onClick={() => void saveTaste()} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50">{savingTaste ? 'Saving…' : currentUser ? 'Save my taste' : 'Use these genres'}</button></div>
-                    </section>
+                    </section></div>
                 )}
 
                 {error && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">{error}</div>}
 
                 {loading ? (
-                    <div className="flex min-h-[430px] items-center justify-center rounded-[2rem] border border-gray-200 bg-surface dark:border-dark-border dark:bg-dark-surface" role="status"><div className="flex items-center gap-2 text-text-body dark:text-dark-text-body"><Sparkles className="h-5 w-5 animate-pulse text-accent" /> Gathering strong openings…</div></div>
+                    <div className="flex min-h-[360px] items-center justify-center rounded-[2rem] border border-gray-200 bg-surface dark:border-dark-border dark:bg-dark-surface" role="status"><div className="text-text-body dark:text-dark-text-body">Loading openings…</div></div>
                 ) : current ? (
                     <article className="overflow-hidden rounded-[2rem] border border-gray-200 bg-surface shadow-xl shadow-black/5 dark:border-dark-border dark:bg-dark-surface md:grid md:grid-cols-[280px_1fr]">
-                        <div className="relative min-h-64 bg-gradient-to-br from-primary via-accent to-amber-700 md:min-h-[520px]">
+                        <div className="relative h-36 bg-gradient-to-br from-primary via-accent to-amber-700 md:h-auto md:min-h-[480px]">
                             {current.coverUrl && <img src={current.coverUrl} alt={`Cover of ${current.title}`} className="absolute inset-0 h-full w-full object-cover" />}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-                            <div className="absolute bottom-0 p-6 text-white"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">{current.chapterTitle}</p><h2 className="mt-2 font-serif text-3xl font-bold leading-tight">{current.title}</h2><p className="mt-2 text-sm text-white/80">by {current.authorName}</p></div>
+                            <div className="absolute bottom-0 p-4 text-white sm:p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">{current.chapterTitle}</p><h2 className="mt-1 font-serif text-2xl font-bold leading-tight sm:mt-2 sm:text-3xl">{current.title}</h2><p className="mt-1 text-xs text-white/80 sm:mt-2 sm:text-sm">by {current.authorName}</p></div>
                         </div>
-                        <div className="flex min-h-[520px] flex-col p-6 sm:p-9">
+                        <div className="flex flex-col p-4 sm:min-h-[480px] sm:p-9">
                             <div className="flex flex-wrap gap-2">
                                 {current.matchedGenres.length > 0 && <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">Matched: {current.matchedGenres.join(' + ')}</span>}
                                 <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-text-body dark:bg-white/10 dark:text-dark-text-body">{current.readingMinutes} min chapter</span>
                             </div>
-                            <blockquote className="my-auto py-8 font-serif text-2xl leading-relaxed text-text-rich dark:text-dark-text-rich sm:text-[1.72rem]">“{current.excerpt}”</blockquote>
+                            <blockquote className="hook-feed-excerpt my-4 font-serif text-lg leading-relaxed text-text-rich dark:text-dark-text-rich sm:my-auto sm:py-8 sm:text-[1.72rem]">“{current.excerpt}”</blockquote>
                             <div className="border-t border-gray-100 pt-5 dark:border-dark-border">
-                                <div className="mb-5 flex items-center justify-between"><div className="flex flex-wrap gap-1.5">{current.genres.slice(0, 3).map(genre => <span key={genre} className="text-xs text-text-body dark:text-dark-text-body">#{genre.replace(/\s+/g, '')}</span>)}</div><button onClick={() => void toggleLike()} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition ${liked.has(current.chapterId) ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/30' : 'hover:bg-gray-100 dark:hover:bg-white/10'}`} aria-label="Like this opening"><Heart className={`h-4 w-4 ${liked.has(current.chapterId) ? 'fill-current' : ''}`} /> {current.likesCount}</button></div>
+                                <div className="mb-4 flex items-center justify-between"><div className="flex flex-wrap gap-1.5">{current.genres.slice(0, 3).map(genre => <span key={genre} className="text-xs text-text-body dark:text-dark-text-body">#{genre.replace(/\s+/g, '')}</span>)}</div><button disabled={likingChapterId === current.chapterId} onClick={() => void toggleLike()} className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition disabled:opacity-60 ${liked.has(current.chapterId) ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/30' : 'hover:bg-gray-100 dark:hover:bg-white/10'}`} aria-label={liked.has(current.chapterId) ? 'Unlike this opening' : 'Like this opening'}><Heart className={`h-4 w-4 ${liked.has(current.chapterId) ? 'fill-current' : ''}`} /> {current.likesCount}</button></div>
                                 <div className="grid grid-cols-2 gap-3"><button onClick={advance} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-text-body transition hover:border-accent hover:text-accent dark:border-dark-border dark:text-dark-text-body"><X className="h-4 w-4" /> Not for me</button><button onClick={openStory} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold text-white transition hover:bg-accent"><BookOpen className="h-4 w-4" /> Open story <ArrowRight className="h-4 w-4" /></button></div>
-                                <p className="mt-3 text-center text-[11px] text-text-body/60 dark:text-dark-text-body/60">Keyboard: ← skip · → open</p>
+                                <p className="mt-3 hidden text-center text-[11px] text-text-body/60 dark:text-dark-text-body/60 sm:block">Keyboard: ← skip · → open</p>
                             </div>
                         </div>
                     </article>

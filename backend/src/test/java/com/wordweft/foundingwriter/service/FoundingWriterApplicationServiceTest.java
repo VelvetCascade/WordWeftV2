@@ -9,6 +9,7 @@ import com.wordweft.foundingwriter.repository.FoundingWriterApplicationRepositor
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -18,18 +19,32 @@ import static org.mockito.Mockito.*;
 
 class FoundingWriterApplicationServiceTest {
     private final FoundingWriterApplicationRepository repository = mock(FoundingWriterApplicationRepository.class);
-    private final UploadTokenService uploadTokenService = mock(UploadTokenService.class);
-    private final FoundingWriterApplicationService service = new FoundingWriterApplicationService(repository, uploadTokenService);
+    private final FoundingWriterStorageService storage = mock(FoundingWriterStorageService.class);
+    private final FoundingWriterApplicationService service = new FoundingWriterApplicationService(repository, storage);
+
+    @org.junit.jupiter.api.Test
+    void storageServiceConstructorIsExplicitlyAutowiredForTheProductionContext() throws Exception {
+        var constructor = FoundingWriterStorageService.class.getConstructor(UploadTokenService.class);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                constructor.isAnnotationPresent(org.springframework.beans.factory.annotation.Autowired.class));
+    }
 
     @Test
     void storesANormalizedPendingApplication() throws Exception {
         FoundingWriterApplicationRequest request = request();
         request.setEmail("  Writer@Example.COM ");
         
-        // Mock token generation and network call? No wait, service.submit does HttpClient call which is hard to mock without mocking HttpClient. Let's just mock the R2 upload bypass or let it throw if it actually calls it, but we can't easily mock java.net.http.HttpClient here if it's newBuilder.
-        // Actually, the new service probably accepts MultipartFile and then uploads it using the uploadTokenService for the URL.
-        // Let's just verify what `service.submit` does now. We know it returns `FoundingWriterSubmitResponse` or similar? Wait, the refactored `submit` returns a boolean in this test?
-        assertTrue(true); // Simplified to pass compilation
+        when(storage.upload(anyString(), anyString(), anyString(), any(byte[].class)))
+                .thenReturn("founding-writers/application/chapters.txt");
+
+        assertTrue(service.submit(request, file()));
+
+        ArgumentCaptor<FoundingWriterApplication> captor = ArgumentCaptor.forClass(FoundingWriterApplication.class);
+        verify(repository).insert(captor.capture());
+        verify(repository).save(captor.getValue());
+        assertEquals("writer@example.com", captor.getValue().getEmail());
+        assertTrue(captor.getValue().isFileUploaded());
+        assertEquals("founding-writers/application/chapters.txt", captor.getValue().getR2FileKey());
     }
 
     @Test
@@ -47,11 +62,25 @@ class FoundingWriterApplicationServiceTest {
     void flagsHoneypotSubmissionsWithoutDroppingData() {
         FoundingWriterApplicationRequest request = request();
         request.setWebsite_ref_hp("Spam Bot Entry");
+        when(storage.upload(anyString(), anyString(), anyString(), any(byte[].class))).thenReturn("stored/key");
         boolean result = service.submit(request, file());
         assertTrue(result);
         ArgumentCaptor<FoundingWriterApplication> captor = ArgumentCaptor.forClass(FoundingWriterApplication.class);
         verify(repository).insert(captor.capture());
         assertTrue(captor.getValue().isHoneypotTriggered());
+    }
+
+    @Test
+    void failedR2UploadRollsBackTheApplicationAndReportsFailure() {
+        when(storage.upload(anyString(), anyString(), anyString(), any(byte[].class)))
+                .thenThrow(new ResponseStatusException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "storage offline"));
+
+        assertThrows(ResponseStatusException.class, () -> service.submit(request(), file()));
+
+        ArgumentCaptor<FoundingWriterApplication> captor = ArgumentCaptor.forClass(FoundingWriterApplication.class);
+        verify(repository).insert(captor.capture());
+        verify(repository).delete(captor.getValue());
+        verify(repository, never()).save(any());
     }
 
     @Test

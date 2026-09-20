@@ -3,6 +3,7 @@ package com.wordweft.book.controller;
 
 import com.wordweft.book.model.*;
 import com.wordweft.book.repository.*;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
 import com.wordweft.user.repository.UserRepository;
@@ -115,7 +116,7 @@ public class ReadingController {
                 if (chapterOpt.isPresent()) {
                     user.getStats().setChaptersRead(user.getStats().getChaptersRead() + 1);
                     user.getStats()
-                            .setTotalWordsRead(user.getStats().getTotalWordsRead() + chapterOpt.get().getWordCount());
+                            .setTotalWordsRead(user.getStats().getTotalWordsRead() + PublishedChapterView.of(chapterOpt.get()).wordCount());
 
                     // Increment books read if all chapters are done (simple logic)
                     long completedPublishedChapters = readableChapters.stream()

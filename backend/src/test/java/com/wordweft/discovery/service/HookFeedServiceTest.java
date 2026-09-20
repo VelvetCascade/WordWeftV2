@@ -89,6 +89,20 @@ class HookFeedServiceTest {
         assertTrue(excerpt.endsWith("…"));
     }
 
+    @Test
+    void includesTheCurrentReadersLikeState() {
+        Chapter opening = chapter("chapter", "published", "Opening");
+        opening.getLikes().add("reader");
+        when(books.findByPublicationStatus("published")).thenReturn(List.of(
+                story("book", "Story", List.of("Literary"), 1, opening)));
+        when(users.findById("author")).thenReturn(Optional.empty());
+
+        HookFeedResponse.Hook hook = service.getFeed("reader", List.of(), Set.of(), 10).items().get(0);
+
+        assertTrue(hook.liked());
+        assertEquals(1, hook.likesCount());
+    }
+
     private Book story(String id, String title, List<String> genres, int recentReads, Chapter... chapters) {
         Book book = new Book();
         book.setId(id);

@@ -2,6 +2,7 @@ package com.wordweft.community.service;
 
 import com.wordweft.book.model.*;
 import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.community.dto.CommunityDtos.*;
 import com.wordweft.community.model.*;
 import com.wordweft.community.model.CommunityEnums.*;
@@ -115,7 +116,7 @@ public class CommunityMapper {
         if (post.getAttachedChapterId() != null && book.getChapters() != null) {
             for (int i = 0; i < book.getChapters().size(); i++) {
                 Chapter chapter = book.getChapters().get(i);
-                if (post.getAttachedChapterId().equals(chapter.getId())) { chapterTitle = chapter.getTitle(); chapterIndex = i; break; }
+                if (post.getAttachedChapterId().equals(chapter.getId())) { chapterTitle = PublishedChapterView.of(chapter).title(); chapterIndex = i; break; }
             }
         }
         User author = source.authors().get(book.getAuthorId());
