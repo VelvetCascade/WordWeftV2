@@ -17,6 +17,14 @@
 .seo-cta:hover { background:var(--ww-brand); }
 .seo-sections { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.5rem; margin:1rem 0 3rem; }
 .seo-sections section { padding:2rem; border:1px solid var(--ww-line); background:var(--ww-paper); border-radius:24px; }
+.seo-criteria { display:grid; grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr); gap:clamp(2rem,6vw,5rem); margin:1rem 0 4rem; padding:clamp(1.5rem,4vw,3rem); background:var(--ww-ink); border-radius:28px; color:rgba(255,253,249,.74); }
+.seo-criteria h2 { color:var(--ww-paper); }
+.seo-criteria .ww-page-eyebrow { color:#d9bda9; }
+.seo-criteria dl { margin:0; }
+.seo-criteria dl div { display:grid; grid-template-columns:minmax(120px,.65fr) minmax(0,1.35fr); gap:1.25rem; padding:1.25rem 0; border-top:1px solid rgba(255,255,255,.14); }
+.seo-criteria dl div:first-child { padding-top:0; border-top:0; }
+.seo-criteria dt { color:var(--ww-paper); font:700 .84rem/1.5 Inter,sans-serif; }
+.seo-criteria dd { margin:0; font-size:.9rem; line-height:1.75; }
 .seo-steps,.seo-faq { margin:3rem 0; max-width:840px; }
 .seo-steps ol,.seo-chapters { list-style:decimal; padding-left:1.5rem; }
 .seo-steps li,.seo-chapters li { padding:.65rem 0 .65rem .4rem; line-height:1.7; }
@@ -38,7 +46,7 @@
 .seo-pagination { display:flex; justify-content:space-between; gap:1.5rem; padding:2rem 0; font:600 .95rem Inter,sans-serif; }
 .seo-manuscript { max-width:760px; margin:2rem auto; font-size:1.125rem; }
 [data-server-rendered] .ft-hero,[data-server-rendered] .ft-section,[data-server-rendered] .ft-upcoming-card { opacity:1!important; transform:none!important; }
-@media(max-width:700px) { .seo-sections { grid-template-columns:1fr; } .seo-sections section { padding:1.5rem; } .seo-book-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; } .seo-book-header { flex-direction:column; gap:1.5rem; } .seo-landing { padding-top:1rem; } .seo-hero { padding-top:1rem; } }
+@media(max-width:700px) { .seo-sections,.seo-criteria { grid-template-columns:1fr; } .seo-sections section { padding:1.5rem; } .seo-criteria dl div { grid-template-columns:1fr; gap:.35rem; } .seo-book-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; } .seo-book-header { flex-direction:column; gap:1.5rem; } .seo-landing { padding-top:1rem; } .seo-hero { padding-top:1rem; } }
 
 /* WordWeft 2026 visual system — shared application shell */
 :root {

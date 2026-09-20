@@ -1,8 +1,8 @@
-import { SITE_ORIGIN, staticPages, discoveryLinks } from './content.mjs';
+import { SITE_ORIGIN, staticPages, primaryDiscoveryLinks } from './content.mjs';
 import { escapeHtml as h, plainText, excerpt, safeImage, serializeJson, parseRoute, metadataFor, renderHead, bookPath, chapterPath, authorPath, segment, isPublicBook, publicChapters } from './metadata.mjs';
 
 const navigation = `<nav class="seo-public-nav" aria-label="Main navigation"><a href="/">WordWeft</a><a href="/category">Browse stories</a><a href="/writing-tools">Writing tools</a><a href="/features">Features</a><a href="/auth">Sign in</a></nav>`;
-const footer = `<footer class="seo-related">${discoveryLinks.map(link => `<a href="${link.href}">${h(link.label)}</a>`).join('')}<a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/safety">Safety</a></footer>`;
+const footer = `<footer class="seo-related">${primaryDiscoveryLinks.map(link => `<a href="${link.href}">${h(link.label)}</a>`).join('')}<a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/safety">Safety</a></footer>`;
 export const wrapPublic = body => navigation + `<main class="seo-landing">${body}</main>` + footer;
 const paragraphs = text => String(text || '').split(/<\/(?:p|h[1-6]|div|li|blockquote)>|<br\s*\/?\s*>|\n\s*\n/gi).map(plainText).filter(Boolean).map(line => `<p>${h(line)}</p>`).join('');
 const links = (values, kind) => (values || []).filter(Boolean).map(value => `<a href="/${kind}/${segment(value)}">${h(value)}</a>`).join(' ');
