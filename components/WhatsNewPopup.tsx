@@ -23,23 +23,21 @@ export const WhatsNewPopup: React.FC = () => {
     const handleDismiss = () => {
         setIsVisible(false);
         localStorage.setItem('hasSeenWhatsNewPopup_v1', 'true');
-        setTimeout(() => setHasDismissed(true), 500);
+        setHasDismissed(true);
     };
 
     const handleDiscover = () => {
         setIsVisible(false);
         localStorage.setItem('hasSeenWhatsNewPopup_v1', 'true');
-        setTimeout(() => {
-            setHasDismissed(true);
-            window.location.hash = '/features';
-        }, 300); // Give it a brief moment to animate away before navigating
+        setHasDismissed(true);
+        window.location.hash = '/features';
     };
 
-    if (hasDismissed) return null;
+    if (hasDismissed || !isVisible) return null;
 
     return (
-        <div className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[60] transition-all duration-500 ease-in-out transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'}`}>
-            <div className="bg-surface dark:bg-dark-surface border border-gray-200/80 dark:border-dark-border shadow-xl rounded-2xl p-5 w-[calc(100vw-2rem)] sm:w-88 md:w-96 relative overflow-hidden group">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[60] animate-fade-in">
+            <div role="region" aria-labelledby="whats-new-title" className="bg-surface dark:bg-dark-surface border border-gray-200/80 dark:border-dark-border shadow-xl rounded-2xl p-5 w-[calc(100vw-2rem)] sm:w-88 md:w-96 relative overflow-hidden group">
                 {/* Decorative corner element */}
                 <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-accent/15 rounded-full blur-2xl"></div>
 
@@ -63,17 +61,17 @@ export const WhatsNewPopup: React.FC = () => {
                     </div>
                     <div className="flex-1 pr-3">
                         <h4 className="font-sans font-bold text-text-rich dark:text-dark-text-rich text-lg mb-1.5 align-middle">
-                            Discover What's New!
+                            <span id="whats-new-title">New writing tools</span>
                         </h4>
                         <p className="text-sm text-text-body dark:text-dark-text-body mb-5 leading-relaxed">
-                            We've added powerful new tools to elevate your storytelling experience on WordWeft. See what we've been building!
+                            Review the latest updates to planning, drafting, and publishing on WordWeft.
                         </p>
                         <div className="flex space-x-3">
                             <button
                                 onClick={handleDiscover}
                                 className="flex-1 bg-accent/90 text-white font-sans font-medium text-sm py-2 px-4 rounded-lg hover:bg-accent transition-all active:scale-[0.98] shadow-sm hover:shadow"
                             >
-                                See Features
+                                View updates
                             </button>
                         </div>
                     </div>

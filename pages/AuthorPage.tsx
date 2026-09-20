@@ -14,6 +14,7 @@ import { AuthorShareModal } from '../components/AuthorShareModal';
 import { ReportModal } from '../components/ReportModal';
 import { applyAuthorMetadata } from '../utils/entityMetadata';
 import { authorPath, isPublicBook, parseRoute, publicChapters } from '../seo/metadata.mjs';
+import { ResilientImage } from '../components/ResilientImage';
 
 // ── Inline icons not in the shared set ──
 
@@ -84,6 +85,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loadAttempt, setLoadAttempt] = useState(0);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
+    const [followError, setFollowError] = useState('');
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
     const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>('published');
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -125,7 +127,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     useEffect(() => { setActiveTab('published'); }, [authorId, page]);
 
     const handleFollowToggle = async () => {
-        if (!author) return;
+        if (!author || isFollowLoading) return;
         if (!currentUser) { onSignIn(); return; }
         
         // Optimistic UI update
@@ -137,6 +139,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
             followersCount: (author.followersCount || 0) + (isNowFollowing ? 1 : -1)
         });
         
+        setFollowError('');
         setIsFollowLoading(true);
         try {
             if (prevAuthor.isFollowing) {
@@ -147,6 +150,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         } catch (error) {
             // Revert on failure
             setAuthor(prevAuthor);
+            setFollowError(error instanceof Error ? error.message : 'This follow could not be updated.');
         } finally {
             setIsFollowLoading(false);
         }
@@ -229,17 +233,12 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                     <div className="ww-author-identity flex flex-col md:flex-row items-center md:items-start gap-8">
                         {/* Avatar */}
                         <div className="ww-author-avatar relative group flex-shrink-0">
-                            {author.avatarUrl ? (
-                                <img
-                                    src={author.avatarUrl}
-                                    alt={author.name}
-                                    className="w-36 h-36 rounded-full object-cover ring-4 ring-white dark:ring-dark-surface shadow-lifted transition-transform duration-300 group-hover:scale-105"
-                                />
-                            ) : (
-                                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center ring-4 ring-white dark:ring-dark-surface shadow-lifted">
-                                    <span className="text-5xl font-bold text-white font-sans">{initial}</span>
-                                </div>
-                            )}
+                            <ResilientImage
+                                src={author.avatarUrl}
+                                alt={author.name}
+                                fallbackLabel={initial}
+                                className="w-36 h-36 rounded-full object-cover ring-4 ring-white dark:ring-dark-surface shadow-lifted transition-transform duration-300 group-hover:scale-105"
+                            />
                             {/* Reader level badge */}
                             {author.stats?.readerLevel && (
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-surface px-3 py-1 rounded-full shadow-md border border-gray-100 dark:border-dark-border">
@@ -261,13 +260,14 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 {isOwnProfile ? <a href="/edit-profile" className="ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit portfolio</a> : <button
                                     onClick={handleFollowToggle}
                                     disabled={isFollowLoading}
+                                    aria-busy={isFollowLoading}
                                     className={`ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all transform active:scale-95 flex-shrink-0 ${
                                         author.isFollowing 
                                         ? 'bg-gray-100 dark:bg-dark-border text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-dark-border hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950 dark:hover:text-red-400'
                                         : 'bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl'
                                     }`}
                                 >
-                                    {author.isFollowing ? (
+                                    {isFollowLoading ? 'Updating…' : author.isFollowing ? (
                                         <>
                                             <CheckCircleIcon className="w-4 h-4" /> Following
                                         </>
@@ -288,6 +288,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 </button>
                                 {!isOwnProfile && <button onClick={() => currentUser ? setIsReportOpen(true) : onSignIn()} className="px-3 py-2.5 rounded-full text-xs font-semibold text-gray-500 hover:text-danger" title="Report profile">Report</button>}
                             </div>
+                            {followError && <p role="alert" className="mb-3 text-sm font-semibold text-danger">{followError}</p>}
 
                             {/* Bio */}
                             {author.bio && (

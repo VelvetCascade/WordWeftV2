@@ -8,13 +8,21 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
+import { ResilientImage } from '../components/ResilientImage';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
 
+const SORT_OPTIONS: Array<[SortOption, string]> = [
+  ['most_read', 'Most Read'],
+  ['most_viewed', 'Most Viewed'],
+  ['recent_update', 'Recently Updated'],
+  ['new', 'Newly Added'],
+];
+
 const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onClick }) => (
   <div onClick={onClick} className="flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
-    <img src={book.coverUrl} alt={book.title} className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
+    <ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
         {book.genres.map(g => <button type="button" key={g} onClick={event => { event.stopPropagation(); window.location.hash = `/genre/${encodeURIComponent(g)}`; }} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full hover:bg-accent/20">{g}</button>)}
@@ -74,6 +82,21 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   }, []);
 
   useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setIsFilterOpen(false);
+      setIsGenreOpen(false);
+      setIsSortOpen(false);
+    };
+    window.addEventListener('keydown', handleEscape);
+    if (isFilterOpen) document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [isFilterOpen]);
+
+  useEffect(() => {
     setGenresError(false);
     api.getGenres().then(setAllGenres).catch(() => setGenresError(true));
   }, [loadAttempt]);
@@ -111,10 +134,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   };
 
   const FilterDrawer: React.FC = () => (
-    <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isFilterOpen ? 'bg-black/40' : 'bg-transparent pointer-events-none'}`} onClick={() => setIsFilterOpen(false)}>
-      <div className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-surface rounded-t-3xl p-6 shadow-2xl transform transition-transform duration-300 ${isFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setIsFilterOpen(false)}>
+      <div className="absolute bottom-0 left-0 right-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="mobile-filter-heading">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
+          <h3 id="mobile-filter-heading" className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
           <button type="button" aria-label="Close filters" onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body" /></button>
         </div>
         <div>
@@ -170,10 +193,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             {/* Desktop Filters */}
             <div className="hidden md:flex items-center gap-4">
               <div ref={genreDropdownRef} className="relative">
-                <button onClick={handleGenreToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                <button type="button" onClick={handleGenreToggle} aria-expanded={isGenreOpen} aria-haspopup="true" className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
                   Genre <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isGenreOpen ? 'rotate-180' : ''}`} />
                 </button>
-                <div className={`absolute top-full mt-2 w-80 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 transition-all duration-200 origin-top-left border dark:border-dark-border ${isGenreOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                {isGenreOpen && <div className="absolute top-full mt-2 w-80 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 border dark:border-dark-border" role="group" aria-label="Filter by genre">
                   <input
                     type="text"
                     placeholder="Search genres..."
@@ -190,17 +213,17 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
                     {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match.</p>}
                   </div>
                   {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="text-xs text-accent mt-3 hover:underline">Clear all</button>}
-                </div>
+                </div>}
               </div>
               <div ref={sortDropdownRef} className="relative">
-                <button onClick={handleSortToggle} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                  Sort by: {sortOption} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                <button type="button" onClick={handleSortToggle} aria-expanded={isSortOpen} aria-haspopup="menu" className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                  Sort by: {SORT_OPTIONS.find(([value]) => value === sortOption)?.[1]} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
                 </button>
-                <div className={`absolute top-full mt-2 w-40 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 transition-all duration-200 origin-top-left border dark:border-dark-border ${isSortOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                  {([['most_read', 'Most Read'], ['most_viewed', 'Most Viewed'], ['recent_update', 'Recently Updated'], ['new', 'Newly Added']] as [SortOption, string][]).map(([val, label]) => (
-                    <a key={val} href="#" onClick={(e) => { e.preventDefault(); setSortOption(val); setIsSortOpen(false); }} className="block px-4 py-2 text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{label}</a>
+                {isSortOpen && <div className="absolute top-full mt-2 w-48 bg-white dark:bg-dark-surface rounded-xl shadow-lg py-2 border dark:border-dark-border" role="menu">
+                  {SORT_OPTIONS.map(([val, label]) => (
+                    <button type="button" role="menuitemradio" aria-checked={sortOption === val} key={val} onClick={() => { setSortOption(val); setIsSortOpen(false); }} className="block w-full px-4 py-2 text-left text-sm text-text-body dark:text-dark-text-body hover:bg-gray-100 dark:hover:bg-dark-surface-alt">{label}</button>
                   ))}
-                </div>
+                </div>}
               </div>
             </div>
 
@@ -263,7 +286,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
       </div>
       {genresError && !loadError && <div className="sr-only" role="status">Genre filters are temporarily unavailable.</div>}
-      <FilterDrawer />
+      {isFilterOpen && <FilterDrawer />}
       <Footer />
     </div>
   );

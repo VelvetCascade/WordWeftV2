@@ -392,7 +392,7 @@ const ImportCharacterReviewDialog: React.FC<{
             <section className="w-full max-w-lg rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-dark-surface sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="import-review-title">
                 <h3 id="import-review-title" className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Import complete</h3>
                 <p className="mt-1 text-sm text-text-body dark:text-dark-text-body">
-                    {uploadedImages > 0 ? `${uploadedImages} of ${embeddedImages} embedded images were uploaded to chapter storage. ` : ''}
+                    {uploadedImages > 0 ? `${uploadedImages} of ${embeddedImages} embedded images were placed in the imported chapters. ` : ''}
                     We also found names that may be characters. Choose any you want to add to the story bible.
                 </p>
                 <div className="my-5 max-h-64 space-y-2 overflow-y-auto">
@@ -644,7 +644,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             setIsImporting(true);
             const result = await api.importManuscript(bookId, file);
             onUserUpdate(result.user);
-            const imageSummary = result.embeddedImages > 0 ? ` ${result.uploadedImages} embedded ${result.uploadedImages === 1 ? 'image' : 'images'} uploaded.` : '';
+            const imageSummary = result.embeddedImages > 0 ? ` ${result.uploadedImages} embedded ${result.uploadedImages === 1 ? 'image was' : 'images were'} placed in the imported chapters.` : '';
             setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.${imageSummary}`);
             if (result.characterCandidates.length > 0) {
                 try {

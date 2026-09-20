@@ -20,7 +20,7 @@ import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 import { applyBookMetadata } from '../utils/entityMetadata';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
-const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void }> = ({ bookId, chapter, index, onRead, progress, onToggleLike }) => {
+const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void; isLikePending: boolean }> = ({ bookId, chapter, index, onRead, progress, onToggleLike, isLikePending }) => {
     const isCompleted = progress >= 90;
     const isInProgress = progress > 0 && progress < 90;
     const accessLabel = chapter.accessLabel ?? 'FULL';
@@ -67,7 +67,9 @@ const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; inde
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); onToggleLike(chapter.id); }}
-                                className={`flex items-center gap-1 hover:text-danger transition-colors ${chapter.isLiked ? 'text-danger' : ''}`}
+                                disabled={isLikePending}
+                                aria-busy={isLikePending}
+                                className={`flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full p-2 transition-colors hover:text-danger disabled:cursor-wait disabled:opacity-60 ${chapter.isLiked ? 'text-danger' : ''}`}
                                 title={chapter.isLiked ? "Unlike Chapter" : "Like Chapter"}
                                 aria-label={`${chapter.isLiked ? 'Unlike' : 'Like'} ${chapter.title}`}
                                 aria-pressed={chapter.isLiked}
@@ -276,6 +278,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [confirmation, setConfirmation] = useState<'library' | 'review' | null>(null);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [pendingChapterLikes, setPendingChapterLikes] = useState<Set<string>>(new Set());
 
     const openManageShelvesModal = () => {
         if (!currentUser) return;
@@ -477,6 +480,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             return;
         }
 
+        if (pendingChapterLikes.has(chapterId)) return;
         const chapterIndex = book.chapters.findIndex(c => c.id === chapterId);
         if (chapterIndex === -1) return;
 
@@ -493,6 +497,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
         // Update book level likes count locally
         const bookLikesAdjustment = prevIsLiked ? -1 : 1;
+        const previousBook = book;
+        setPendingChapterLikes(previous => new Set(previous).add(chapterId));
+        setActionError(null);
         setBook({
             ...book,
             chapters: newChapters,
@@ -505,6 +512,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         } catch (e) {
             // Revert on error
             console.error("Failed to like chapter", e);
+            setBook(previousBook);
+            setActionError(e instanceof Error ? e.message : 'The chapter like could not be updated.');
+        } finally {
+            setPendingChapterLikes(previous => {
+                const next = new Set(previous);
+                next.delete(chapterId);
+                return next;
+            });
         }
     };
 
@@ -729,6 +744,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                             progress={chapterProgress}
                                             onRead={() => handleReadChapterClick(i)}
                                             onToggleLike={handleToggleChapterLike}
+                                            isLikePending={pendingChapterLikes.has(chapter.id)}
                                         />
                                     )
                                 })}
