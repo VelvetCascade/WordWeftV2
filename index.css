@@ -6873,11 +6873,11 @@ body[data-active-mood="serene"] .ww-prose {
 .dark .search-overlay-item-active,
 .search-overlay-footer:hover { background: rgba(141, 110, 99, .11); }
 .search-overlay-genre-pill,
-.dark .search-overlay-genre-pill { color: var(--ww-brand, #7a4f3b); background: rgba(141, 110, 99, .12); }
-.search-overlay-spinner { border-color: rgba(141, 110, 99, .18); border-top-color: var(--ww-brand, #7a4f3b); }
+.dark .search-overlay-genre-pill { color: var(--ww-brand); background: rgba(141, 110, 99, .12); }
+.search-overlay-spinner { border-color: rgba(141, 110, 99, .18); border-top-color: var(--ww-brand); }
 .search-navbar-btn:hover { border-color: rgba(141, 110, 99, .35); background: rgba(141, 110, 99, .06); box-shadow: 0 0 0 3px rgba(141, 110, 99, .08); }
 .search-mobile-fab,
-.search-results-bar-btn { background: linear-gradient(135deg, var(--ww-brand, #7a4f3b), var(--ww-brand-strong, #573528)); box-shadow: 0 6px 20px rgba(73, 44, 34, .28); }
+.search-results-bar-btn { background: linear-gradient(135deg, var(--ww-brand), var(--ww-brand-strong)); box-shadow: 0 6px 20px rgba(73, 44, 34, .28); }
 .search-results-bar:focus-within { border-color: rgba(141, 110, 99, .45); box-shadow: 0 0 0 4px rgba(141, 110, 99, .1); }
 .search-results-tab:hover,
 .search-results-tab-active,
@@ -6885,12 +6885,12 @@ body[data-active-mood="serene"] .ww-prose {
 .search-book-card-author,
 .search-author-card-genres,
 .search-author-card-btn,
-.search-results-load-more-btn { color: var(--ww-brand, #7a4f3b) !important; }
-.search-results-tab-active::after { background: var(--ww-brand, #7a4f3b); }
+.search-results-load-more-btn { color: var(--ww-brand) !important; }
+.search-results-tab-active::after { background: var(--ww-brand); }
 .search-results-tab-count,
 .search-status-ongoing,
 .search-genre-pill,
-.dark .search-genre-pill { color: var(--ww-brand, #7a4f3b); background: rgba(141, 110, 99, .11); }
+.dark .search-genre-pill { color: var(--ww-brand); background: rgba(141, 110, 99, .11); }
 .search-book-card:hover,
 .search-author-card:hover,
 .search-author-card-avatar,
@@ -6901,7 +6901,7 @@ body[data-active-mood="serene"] .ww-prose {
 .search-author-card { width: 100%; text-align: left; font: inherit; }
 .search-overlay-error { display: grid; gap: 4px; padding: 18px 20px; color: #9f2d24; background: #fff4f2; border-top: 1px solid #f2d0cb; font-size: .82rem; }
 .search-overlay-error span { color: #7b443d; }
-.search-overlay-error button { justify-self: start; margin-top: 5px; color: var(--ww-brand, #7a4f3b); font-weight: 750; }
+.search-overlay-error button { justify-self: start; margin-top: 5px; color: var(--ww-brand); font-weight: 750; }
 
 @media (min-width: 640px) {
     .hook-feed-excerpt { -webkit-line-clamp: 4; }
@@ -10178,6 +10178,20 @@ body {
 .reader-copy { color: var(--reader-copy) !important; }
 .reader-copy.reader-font-literary { font-family: 'Literata', Georgia, serif !important; }
 .reader-copy.reader-font-modern { font-family: 'Inter', system-ui, sans-serif !important; letter-spacing: -0.012em; }
+.reader-copy.has-cipher-font { font-family: var(--reader-cipher-font) !important; }
+.reader-copy.has-cipher-font p,
+.reader-copy.has-cipher-font span,
+.reader-copy.has-cipher-font li,
+.reader-copy.has-cipher-font blockquote,
+.reader-copy.has-cipher-font h1,
+.reader-copy.has-cipher-font h2,
+.reader-copy.has-cipher-font h3,
+.reader-copy.has-cipher-font h4,
+.reader-copy.has-cipher-font h5,
+.reader-copy.has-cipher-font h6,
+.reader-copy.has-cipher-font div.reader-comment-block { font-family: var(--reader-cipher-font) !important; }
+.reader-copy.has-cipher-font > div:first-child > p:first-child::first-letter,
+.reader-copy.has-cipher-font > p:first-child::first-letter { font-family: var(--reader-cipher-font) !important; }
 .reader-copy > div:first-child > p:first-child::first-letter,
 .reader-copy > p:first-child::first-letter {
     float: left;

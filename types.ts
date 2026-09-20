@@ -94,6 +94,9 @@ export interface ChapterContentResult {
   content: string;
   previewWordCount: number;
   fullWordCount: number;
+  obfuscated?: boolean;
+  obfuscationSeed?: string;
+  fontFamily?: string;
 }
 
 export interface ChapterRevision {

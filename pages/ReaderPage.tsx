@@ -24,6 +24,7 @@ import { readReaderPreferences } from '../utils/runtimeLifecycle';
 import { manuscriptProgress } from '../utils/readerProgress';
 import { ReaderSignInGate } from '../components/ReaderSignInGate';
 import { consumeReaderResumeIntent, readerChapterPath, saveReaderAuthIntent, type ReaderAuthView } from '../utils/readerAuthIntent';
+import { ensureCipherFontLoaded, preloadCipherFonts } from '../utils/cipherFont';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -335,6 +336,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             .then(result => {
                 if (!active) return;
                 setChapterContent(result);
+                if (result.obfuscated && result.obfuscationSeed) {
+                    preloadCipherFonts(result.obfuscationSeed);
+                }
                 setBook(current => current ? {
                     ...current,
                     chapters: current.chapters.map(chapterItem => chapterItem.id === selectedChapterId
@@ -811,6 +815,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const plainChapterText = chapter.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim();
     const wordCount = chapterContent.fullWordCount || (plainChapterText ? plainChapterText.split(/\s+/).length : chapter.wordCount);
     const readingMinutes = Math.max(1, Math.ceil(wordCount / 230));
+    const cipherFontFamily = chapterContent?.obfuscated && chapterContent.obfuscationSeed
+        ? ensureCipherFontLoaded(chapterContent.obfuscationSeed, readerFont)
+        : '';
 
     // Reset block index
     blockIndex = 0;
@@ -896,8 +903,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 {chapterContent.access !== 'AUTH_REQUIRED' ? (
                     <div
                         ref={moodContentRef}
-                        className={`ww-prose reader-copy reader-font-${readerFont}`}
-                        style={{ fontSize: `${fontSize}px`, lineHeight }}
+                        className={`ww-prose reader-copy reader-font-${readerFont} ${cipherFontFamily ? 'has-cipher-font' : ''}`}
+                        style={{
+                            fontSize: `${fontSize}px`,
+                            lineHeight,
+                            ...(cipherFontFamily ? { '--reader-cipher-font': `'${cipherFontFamily}', sans-serif` } as React.CSSProperties : {})
+                        }}
                     >
                         {parse(chapter.content, parseOptions)}
                     </div>

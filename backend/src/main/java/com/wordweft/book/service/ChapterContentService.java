@@ -7,10 +7,13 @@ import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.exception.AuthRequiredException;
 import com.wordweft.exception.ContentRestrictedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,23 +27,43 @@ public class ChapterContentService {
     private final BookRepository bookRepository;
     private final ContentAccessService contentAccessService;
     private final ChapterPreviewService chapterPreviewService;
+    private final FontObfuscationService fontObfuscationService;
 
     @Value("${wordweft.reader-sign-in-gate-enabled:true}")
     private boolean readerSignInGateEnabled = true;
+
+    @Autowired
+    public ChapterContentService(
+            BookRepository bookRepository,
+            ContentAccessService contentAccessService,
+            ChapterPreviewService chapterPreviewService,
+            @Nullable FontObfuscationService fontObfuscationService) {
+        this.bookRepository = bookRepository;
+        this.contentAccessService = contentAccessService;
+        this.chapterPreviewService = chapterPreviewService;
+        this.fontObfuscationService = fontObfuscationService != null ? fontObfuscationService : new FontObfuscationService();
+    }
 
     public ChapterContentService(
             BookRepository bookRepository,
             ContentAccessService contentAccessService,
             ChapterPreviewService chapterPreviewService) {
-        this.bookRepository = bookRepository;
-        this.contentAccessService = contentAccessService;
-        this.chapterPreviewService = chapterPreviewService;
+        this(bookRepository, contentAccessService, chapterPreviewService, null);
     }
 
     public ChapterContentResponse load(String bookId, String chapterId) {
+        return load(bookId, chapterId, "read");
+    }
+
+    public ChapterContentResponse load(String bookId, String chapterId, String mode) {
         Book book = bookRepository.findById(bookId).orElseThrow(ContentNotFoundException::new);
         String currentUserId = contentAccessService.currentUserId();
         boolean owner = currentUserId != null && currentUserId.equals(book.getAuthorId());
+        boolean isEditMode = "edit".equalsIgnoreCase(mode);
+
+        if (isEditMode && !owner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the author can access editable chapter content.");
+        }
 
         if (!owner && !"published".equals(book.getPublicationStatus())) {
             throw new ContentNotFoundException();
@@ -76,14 +99,25 @@ public class ChapterContentService {
                 : publicChapter.content();
         ChapterPreviewService.Preview preview = chapterPreviewService.preview(fullContent);
 
+        // Edit mode: Author always gets pristine, un-obfuscated content
+        if (isEditMode) {
+            return response(book, chapter, publicChapter, chapterIndex, FULL, fullContent, preview, false, null, null);
+        }
+
+        // Reader mode: Check sign-in gate
         if (currentUserId == null && readerSignInGateEnabled) {
             if (chapterIndex != 0) {
                 throw new AuthRequiredException();
             }
-            return response(book, chapter, publicChapter, chapterIndex, PREVIEW, preview.html(), preview);
+            String seed = fontObfuscationService.getSeedForChapter(bookId, chapterId);
+            String obfuscatedPreview = fontObfuscationService.obfuscateHtml(preview.html(), seed);
+            return response(book, chapter, publicChapter, chapterIndex, PREVIEW, obfuscatedPreview, preview, true, seed, "WW-Cipher-" + seed);
         }
 
-        return response(book, chapter, publicChapter, chapterIndex, FULL, fullContent, preview);
+        // Reader mode: Authenticated reader gets obfuscated full content
+        String seed = fontObfuscationService.getSeedForChapter(bookId, chapterId);
+        String obfuscatedContent = fontObfuscationService.obfuscateHtml(fullContent, seed);
+        return response(book, chapter, publicChapter, chapterIndex, FULL, obfuscatedContent, preview, true, seed, "WW-Cipher-" + seed);
     }
 
     private ChapterContentResponse response(
@@ -93,7 +127,10 @@ public class ChapterContentService {
             int chapterIndex,
             ChapterContentResponse.ChapterAccess access,
             String content,
-            ChapterPreviewService.Preview preview) {
+            ChapterPreviewService.Preview preview,
+            boolean obfuscated,
+            String obfuscationSeed,
+            String fontFamily) {
         return new ChapterContentResponse(
                 book.getId(),
                 Objects.requireNonNullElse(book.getTitle(), ""),
@@ -105,7 +142,10 @@ public class ChapterContentService {
                 access,
                 content,
                 access == PREVIEW ? preview.previewWordCount() : preview.fullWordCount(),
-                preview.fullWordCount());
+                preview.fullWordCount(),
+                obfuscated,
+                obfuscationSeed,
+                fontFamily);
     }
 
     private int indexOf(List<Chapter> chapters, String chapterId) {

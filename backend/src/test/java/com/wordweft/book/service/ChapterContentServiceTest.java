@@ -10,15 +10,14 @@ import com.wordweft.exception.ContentRestrictedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
 
 import static com.wordweft.book.dto.ChapterContentResponse.ChapterAccess.FULL;
 import static com.wordweft.book.dto.ChapterContentResponse.ChapterAccess.PREVIEW;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,11 +27,12 @@ class ChapterContentServiceTest {
     private final BookRepository repository = mock(BookRepository.class);
     private final ContentAccessService contentAccess = mock(ContentAccessService.class);
     private final ChapterPreviewService previewService = new ChapterPreviewService();
+    private final FontObfuscationService fontObfuscationService = new FontObfuscationService();
     private ChapterContentService service;
 
     @BeforeEach
     void setUp() {
-        service = new ChapterContentService(repository, contentAccess, previewService);
+        service = new ChapterContentService(repository, contentAccess, previewService, fontObfuscationService);
         when(contentAccess.canAccess(any(Book.class))).thenReturn(true);
         when(contentAccess.effectiveRating(any(Book.class))).thenReturn(AgeRating.ALL_AGES);
         when(contentAccess.allowedRatings()).thenReturn(java.util.Set.of(AgeRating.ALL_AGES, AgeRating.TEEN_13, AgeRating.MATURE_18, AgeRating.ADULT_21));
@@ -49,6 +49,7 @@ class ChapterContentServiceTest {
         assertEquals(PREVIEW, response.access());
         assertFalse(response.content().contains("FIRST_END_SECRET"));
         assertEquals(0, response.chapterIndex());
+        assertTrue(response.obfuscated());
     }
 
     @Test
@@ -60,14 +61,37 @@ class ChapterContentServiceTest {
     }
 
     @Test
-    void signedInEligibleReaderGetsFullText() {
+    void signedInEligibleReaderGetsFullTextObfuscated() {
         when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
         when(contentAccess.currentUserId()).thenReturn("reader");
 
         ChapterContentResponse response = service.load("book", "second");
 
         assertEquals(FULL, response.access());
+        assertTrue(response.obfuscated());
+        assertNotNull(response.obfuscationSeed());
+        assertNotNull(response.fontFamily());
+        assertEquals("SECOND_FULL", fontObfuscationService.deobfuscate(response.content(), response.obfuscationSeed()));
+    }
+
+    @Test
+    void authorInEditModeGetsUnobfuscatedText() {
+        when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
+        when(contentAccess.currentUserId()).thenReturn("writer");
+
+        ChapterContentResponse response = service.load("book", "second", "edit");
+
+        assertEquals(FULL, response.access());
+        assertFalse(response.obfuscated());
         assertEquals("SECOND_FULL", response.content());
+    }
+
+    @Test
+    void nonAuthorCannotAccessEditMode() {
+        when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
+        when(contentAccess.currentUserId()).thenReturn("reader");
+
+        assertThrows(ResponseStatusException.class, () -> service.load("book", "second", "edit"));
     }
 
     @Test
@@ -85,7 +109,8 @@ class ChapterContentServiceTest {
         ChapterContentResponse response = service.load("book", "second");
 
         assertEquals("Second — live", response.chapterTitle());
-        assertEquals("SECOND_PUBLISHED", response.content());
+        assertTrue(response.obfuscated());
+        assertEquals("SECOND_PUBLISHED", fontObfuscationService.deobfuscate(response.content(), response.obfuscationSeed()));
     }
 
     @Test
@@ -97,7 +122,8 @@ class ChapterContentServiceTest {
         ChapterContentResponse response = service.load("book", "second");
 
         assertEquals(FULL, response.access());
-        assertEquals("SECOND_FULL", response.content());
+        assertTrue(response.obfuscated());
+        assertEquals("SECOND_FULL", fontObfuscationService.deobfuscate(response.content(), response.obfuscationSeed()));
     }
 
     @Test
