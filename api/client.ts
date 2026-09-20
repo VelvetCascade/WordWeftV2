@@ -574,9 +574,10 @@ export async function updateFoundingWriterApplication(
     return await handleResponse(response);
 }
 
-export async function getChapterContent(bookId: string, chapterId: string): Promise<ChapterContentResult> {
+export async function getChapterContent(bookId: string, chapterId: string, mode: 'read' | 'edit' = 'read'): Promise<ChapterContentResult> {
+    const query = mode === 'edit' ? '?mode=edit' : '';
     const response = await fetch(
-        `${API_BASE_URL}/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}/content`,
+        `${API_BASE_URL}/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}/content${query}`,
         {
             headers: getHeaders(),
             // The same URL returns PREVIEW for a guest and FULL after sign-in.

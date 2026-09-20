@@ -145,7 +145,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         if (!isNewChapter && chapterId && chapterId !== 'new') {
             setIsLoadingContent(true);
             setContentLoadError('');
-            api.getChapterContent(bookId, chapterId)
+            api.getChapterContent(bookId, chapterId, 'edit')
                 .then(result => {
                     if (!isMounted) return;
                     if (result && typeof result.content === 'string') {

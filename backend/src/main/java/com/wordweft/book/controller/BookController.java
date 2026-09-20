@@ -128,8 +128,11 @@ public class BookController {
     @GetMapping("/{bookId}/chapters/{chapterId}/content")
     public ResponseEntity<ChapterContentResponse> getChapterContent(
             @PathVariable String bookId,
-            @PathVariable String chapterId) {
-        ChapterContentResponse content = chapterContentService.load(bookId, chapterId);
+            @PathVariable String chapterId,
+            @RequestParam(required = false) String mode) {
+        ChapterContentResponse content = (mode != null && !mode.isBlank() && !"read".equalsIgnoreCase(mode))
+                ? chapterContentService.load(bookId, chapterId, mode)
+                : chapterContentService.load(bookId, chapterId);
         return viewerScoped(content);
     }
 
