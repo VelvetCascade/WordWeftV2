@@ -49,7 +49,7 @@ import { useFeedbackTriggers } from './hooks/useFeedbackTriggers';
 import { useNotifications } from './hooks/useNotifications';
 import type { Book, User, Author } from './types';
 import * as api from './api/client';
-import { replaceHash } from './utils/navigation';
+import { restoreLockedNavigation } from './utils/navigation';
 import { updateRouteMetadata } from './utils/pageMetadata';
 import { landingPages } from './seo/content.mjs';
 import { parseRoute } from './seo/metadata.mjs';
@@ -266,7 +266,6 @@ const App: React.FC = () => {
     if (currentUser) {
       const updatedUser = await api.updateUserProfile(currentUser.id, updatedData);
       setCurrentUser(updatedUser);
-      replaceHash('/profile');
     }
   };
 
@@ -293,6 +292,7 @@ const App: React.FC = () => {
     };
 
     const handleHashChange = () => {
+      if (restoreLockedNavigation()) return;
       const hash = getEffectiveHash();
       const publicRoute = parseRoute('/' + hash);
       const cleanPath = window.location.pathname;

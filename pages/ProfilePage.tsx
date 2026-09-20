@@ -119,6 +119,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
     const [loadAttempt, setLoadAttempt] = useState(0);
     const [libraryAction, setLibraryAction] = useState<{ kind: 'remove' | 'restart'; bookId: string } | null>(null);
     const [libraryActionBusy, setLibraryActionBusy] = useState(false);
+    const [profileSection, setProfileSection] = useState<'portfolio' | 'library'>(() => user.writtenBooks?.length ? 'portfolio' : 'library');
+    const [visibleBookCount, setVisibleBookCount] = useState(20);
 
     const [writtenBooks, setWrittenBooks] = useState<Book[]>([]);
 
@@ -208,6 +210,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
         if (activeShelfId === 'published') return writtenBooks;
         return dynamicShelves.find(s => s.id === activeShelfId)?.books ?? [];
     }, [activeShelfId, allBooks, writtenBooks, dynamicShelves]);
+
+    useEffect(() => setVisibleBookCount(20), [activeShelfId, profileSection]);
+    const visibleLibraryBooks = booksToDisplay.slice(0, visibleBookCount);
 
     const activeShelfName = useMemo(() => {
         if (activeShelfId === 'all') return 'All Books';
@@ -401,65 +406,52 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                 </div>
             )}
 
-            <div className="container mx-auto px-6 py-12">
-                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-                    {/* Sidebar Navigation */}
-                    <aside className="lg:w-72 flex-shrink-0">
-                        <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-6 px-2">Library Shelves</h2>
-                        <nav className="space-y-2">
-                            <ShelfLink name="All Books" count={allBooks.length} isActive={activeShelfId === 'all'} onClick={() => setActiveShelfId('all')} />
-                            {dynamicShelves.map(shelf => (
-                                <ShelfLink key={shelf.id} name={shelf.name} count={shelf.books.length} isActive={activeShelfId === shelf.id} onClick={() => setActiveShelfId(shelf.id)} />
-                            ))}
-                            {writtenBooks.length > 0 && (
-                                <div className="pt-4 mt-4 border-t border-gray-200 dark:border-dark-border">
-                                    <h3 className="font-sans text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-2">Written By You</h3>
-                                    <ShelfLink name="Published Works" count={writtenBooks.length} isActive={activeShelfId === 'published'} onClick={() => setActiveShelfId('published')} />
-                                </div>
-                            )}
-                        </nav>
-                        <button
-                            onClick={() => setIsCreateShelfModalOpen(true)}
-                            className="w-full mt-6 flex items-center justify-center gap-2 text-sm font-sans font-bold text-accent bg-accent/10 px-4 py-3 rounded-xl hover:bg-accent/20 transition-colors border border-accent/20"
-                        >
-                            <PlusIcon className="w-4 h-4" /> Create New Shelf
-                        </button>
-                    </aside>
+            <nav className="ww-own-profile-tabs" aria-label="Your profile sections">
+                <div className="container mx-auto px-6">
+                    <button className={profileSection === 'portfolio' ? 'active' : ''} onClick={() => setProfileSection('portfolio')}>Portfolio <span>{writtenBooks.length}</span></button>
+                    <button className={profileSection === 'library' ? 'active' : ''} onClick={() => setProfileSection('library')}>Reading library <span>{allBooks.length}</span></button>
+                </div>
+            </nav>
 
-                    {/* Content Area */}
-                    <main className="flex-1">
-                        <div className="flex justify-between items-center mb-8">
-                            <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">
-                                {activeShelfName}
-                            </h2>
-                            {/* Potential Sort/Filter controls here */}
-                        </div>
-
-                        {booksToDisplay.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
-                                {booksToDisplay.map(book => (
-                                    <div key={book.id} onClick={() => activeShelfId === 'published' ? null : handleBookClick(book as LibraryBook)}>
-                                        {activeShelfId === 'published' ? (
-                                            <BookCard book={book as Book} onClick={() => window.location.hash = `/book/${book.id}`} />
-                                        ) : (
-                                            <LibraryBookCard
-                                                book={book as LibraryBook}
-                                                onRemove={(bookId) => setLibraryAction({ kind: 'remove', bookId })}
-                                                onRestart={(bookId) => setLibraryAction({ kind: 'restart', bookId })}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
+            <div className="container mx-auto px-4 sm:px-6 py-10">
+                {profileSection === 'portfolio' ? (
+                    <section>
+                        <div className="ww-profile-section-head"><div><span>Written by you</span><h2>Your published work</h2><p>The public stories readers see when they visit your portfolio.</p></div><button onClick={() => { window.location.hash = '/write/book/create'; }}><PlusIcon className="w-4 h-4" /> New story</button></div>
+                        {writtenBooks.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
+                                {writtenBooks.map(book => <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />)}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-dark-surface rounded-3xl border-2 border-dashed border-gray-200 dark:border-dark-border">
-                                <BookOpenIcon className="w-12 h-12 text-gray-300 dark:text-dark-border mb-4" />
-                                <p className="text-text-body dark:text-dark-text-body font-medium">This shelf is empty.</p>
-                                <button onClick={() => window.location.hash = '/category'} className="mt-4 font-sans font-bold text-accent hover:underline">Browse Library</button>
-                            </div>
+                            <div className="ww-profile-empty"><BookOpenIcon className="w-11 h-11" /><h3>Your portfolio is ready for its first story.</h3><p>Publish a story and it will appear here automatically.</p><button onClick={() => { window.location.hash = '/write'; }}>Open writer studio</button></div>
                         )}
-                    </main>
-                </div>
+                    </section>
+                ) : (
+                    <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+                        <aside className="ww-library-shelf-nav lg:w-64 flex-shrink-0">
+                            <div className="ww-library-shelf-nav-inner">
+                                <div className="ww-library-shelf-label"><h2>Library shelves</h2><button onClick={() => setIsCreateShelfModalOpen(true)} aria-label="Create a shelf"><PlusIcon className="w-4 h-4" /></button></div>
+                                <nav>
+                                    <ShelfLink name="All Books" count={allBooks.length} isActive={activeShelfId === 'all'} onClick={() => setActiveShelfId('all')} />
+                                    {dynamicShelves.map(shelf => <ShelfLink key={shelf.id} name={shelf.name} count={shelf.books.length} isActive={activeShelfId === shelf.id} onClick={() => setActiveShelfId(shelf.id)} />)}
+                                </nav>
+                            </div>
+                        </aside>
+
+                        <main className="flex-1 min-w-0">
+                            <div className="flex justify-between items-end mb-7"><div><span className="ww-page-eyebrow">Reading library</span><h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">{activeShelfName}</h2></div><span className="text-xs text-gray-500">{booksToDisplay.length} {booksToDisplay.length === 1 ? 'book' : 'books'}</span></div>
+                            {booksToDisplay.length > 0 ? (
+                                <>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+                                        {visibleLibraryBooks.map(book => <div key={book.id} onClick={() => handleBookClick(book as LibraryBook)}><LibraryBookCard book={book as LibraryBook} onRemove={(bookId) => setLibraryAction({ kind: 'remove', bookId })} onRestart={(bookId) => setLibraryAction({ kind: 'restart', bookId })} /></div>)}
+                                    </div>
+                                    {visibleBookCount < booksToDisplay.length && <div className="mt-10 text-center"><button onClick={() => setVisibleBookCount(count => count + 20)} className="rounded-xl border border-accent/25 px-6 py-3 text-sm font-bold text-accent">Show more books</button></div>}
+                                </>
+                            ) : (
+                                <div className="ww-profile-empty"><BookOpenIcon className="w-11 h-11" /><h3>This shelf is empty.</h3><p>Save a story to keep it close and track your reading progress.</p><button onClick={() => window.location.hash = '/category'}>Browse library</button></div>
+                            )}
+                        </main>
+                    </div>
+                )}
             </div>
 
             <ConnectionsModal

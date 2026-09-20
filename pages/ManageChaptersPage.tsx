@@ -9,6 +9,8 @@ import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
 import { ShareModal } from '../components/ShareModal';
 import { validateManuscriptFile } from '../utils/manuscriptImport';
+import { importProgressCopy, type ImportProgressPhase } from '../utils/importProgress';
+import { lockNavigation } from '../utils/navigation';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -480,6 +482,11 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [bookShareOpen, setBookShareOpen] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const isImportingRef = useRef(false);
+    const releaseImportNavigationLockRef = useRef<null | (() => void)>(null);
+    const [importFileName, setImportFileName] = useState('');
+    const [importPhase, setImportPhase] = useState<ImportProgressPhase>('uploading');
+    const [importPercent, setImportPercent] = useState(0);
+    const [importElapsedSeconds, setImportElapsedSeconds] = useState(0);
     const [importNotice, setImportNotice] = useState('');
     const [importReview, setImportReview] = useState<{ candidates: string[]; embeddedImages: number; uploadedImages: number } | null>(null);
     const [isCreatingImportedCharacters, setIsCreatingImportedCharacters] = useState(false);
@@ -489,6 +496,19 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [showPublishStoryDialog, setShowPublishStoryDialog] = useState(false);
     const [showReturnDraftConfirm, setShowReturnDraftConfirm] = useState(false);
     const [chapterStatusTarget, setChapterStatusTarget] = useState<{ id: string; title: string; mode: 'publish-story' | 'unpublish-cascade'; laterCount: number } | null>(null);
+
+    useEffect(() => {
+        if (!isImporting) return;
+        const startedAt = Date.now();
+        document.body.style.overflow = 'hidden';
+        const timer = window.setInterval(() => setImportElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+        return () => {
+            window.clearInterval(timer);
+            document.body.style.overflow = '';
+        };
+    }, [isImporting]);
+
+    useEffect(() => () => releaseImportNavigationLockRef.current?.(), []);
 
     const handleNewChapterClick = () => {
         if (isNavigatingNewChapter) return;
@@ -641,8 +661,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         setImportNotice('');
         try {
             validateManuscriptFile(file.name, file.size);
+            setImportFileName(file.name);
+            setImportPhase('uploading');
+            setImportPercent(0);
+            setImportElapsedSeconds(0);
+            releaseImportNavigationLockRef.current = lockNavigation('Your manuscript is still being imported.');
             setIsImporting(true);
-            const result = await api.importManuscript(bookId, file);
+            const result = await api.importManuscript(bookId, file, (phase, percent) => {
+                setImportPhase(phase);
+                setImportPercent(percent);
+            });
             onUserUpdate(result.user);
             const imageSummary = result.embeddedImages > 0 ? ` ${result.uploadedImages} embedded ${result.uploadedImages === 1 ? 'image was' : 'images were'} placed in the imported chapters.` : '';
             setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.${imageSummary}`);
@@ -659,6 +687,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         } catch (error) {
             setErrorMsg(error instanceof Error ? error.message : 'Could not import this manuscript.');
         } finally {
+            releaseImportNavigationLockRef.current?.();
+            releaseImportNavigationLockRef.current = null;
             setIsImporting(false);
             isImportingRef.current = false;
             if (importInputRef.current) importInputRef.current.value = '';
@@ -679,6 +709,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     if (!book) {
         return <div className="p-8">Book not found.</div>;
     }
+
+    const progressCopy = importProgressCopy({ phase: importPhase, percent: importPercent, elapsedSeconds: importElapsedSeconds });
 
     return (
         <div className="ww-manage-book-page">
@@ -810,6 +842,23 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     onClose={() => setImportReview(null)}
                     onCreate={createImportedCharacters}
                 />
+            )}
+
+            {isImporting && (
+                <div className="ww-import-progress-overlay" role="dialog" aria-modal="true" aria-labelledby="import-progress-title" aria-describedby="import-progress-detail">
+                    <div className="ww-import-progress-card" aria-busy="true">
+                        <div className="ww-import-progress-mark" aria-hidden="true">
+                            <span /><span /><span />
+                        </div>
+                        <p className="ww-import-progress-eyebrow">Importing {importFileName}</p>
+                        <h2 id="import-progress-title">{progressCopy.title}</h2>
+                        <p id="import-progress-detail">{progressCopy.detail}</p>
+                        <div className={`ww-import-progress-track ${progressCopy.determinate ? '' : 'indeterminate'}`} aria-hidden="true">
+                            <i style={progressCopy.determinate ? { width: `${progressCopy.percent}%` } : undefined} />
+                        </div>
+                        <p className="ww-import-progress-note">Keep this page open. You can continue when every chapter and embedded image is safely saved.</p>
+                    </div>
+                </div>
             )}
 
             <ConfirmDialog

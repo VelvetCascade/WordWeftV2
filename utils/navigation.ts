@@ -1,6 +1,38 @@
 import { chapterPath } from '../seo/metadata.mjs';
+let navigationLock: { url: string; message: string } | null = null;
+
+const currentUrl = () => window.location.pathname + window.location.search + window.location.hash;
+
+export const lockNavigation = (message: string) => {
+    navigationLock = { url: currentUrl(), message };
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+        event.preventDefault();
+        event.returnValue = message;
+        return message;
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => {
+        navigationLock = null;
+        window.removeEventListener('beforeunload', beforeUnload);
+    };
+};
+
+export const restoreLockedNavigation = () => {
+    if (!navigationLock) return false;
+    if (currentUrl() !== navigationLock.url) {
+        window.history.replaceState(window.history.state, '', navigationLock.url);
+    }
+    window.dispatchEvent(new CustomEvent('wordweft:navigation-blocked', { detail: navigationLock.message }));
+    return true;
+};
+
+export const isNavigationLocked = () => navigationLock !== null;
 export const routePath = () => window.location.pathname + window.location.search;
 export const navigatePath = (path: string, replace = false) => {
+    if (isNavigationLocked()) {
+        restoreLockedNavigation();
+        return;
+    }
     const target = new URL(path.replace(/^#/, ''), window.location.origin);
     if (target.origin !== window.location.origin) return;
     const next = target.pathname + target.search + target.hash;
@@ -26,6 +58,7 @@ export const installNavigation = () => {
         if (raw.startsWith('#') && !raw.startsWith('#/')) return;
         const target = new URL(raw.replace(/^#\//, '/'), window.location.href);
         if (target.origin !== window.location.origin || /\.[a-z0-9]+$/i.test(target.pathname) || target.pathname.startsWith('/api/')) return;
+        if (isNavigationLocked()) { event.preventDefault(); restoreLockedNavigation(); return; }
         event.preventDefault(); navigatePath(target.pathname + target.search + target.hash);
     };
     document.addEventListener('click', click);

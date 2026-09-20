@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { manuscriptProgress } from '../utils/readerProgress.ts';
 import { authorShareUrl, storyShareUrl } from '../utils/shareLinks.ts';
 import { uploadErrorMessage } from '../utils/uploadDiagnostics.ts';
+import { imageLayoutStyle, normalizeImageWidth } from '../utils/editorImageLayout.ts';
 
 test('share URLs use crawler-visible routes instead of hash fragments', () => {
     assert.equal(storyShareUrl('book 1', 'https://example.com/'), 'https://example.com/book/book%201');
@@ -109,4 +110,21 @@ test('reader comments and coaching use responsive contextual controls', () => {
     assert.match(css, /env\(safe-area-inset-bottom\)/);
     assert.doesNotMatch(css, /opacity: \.78 !important/);
     assert.doesNotMatch(coach, /positionStyles/);
+});
+
+test('chapter image layout stays bounded and portable between editor and reader', () => {
+    const extension = readFileSync(new URL('../components/extensions/ResizableImageExtension.tsx', import.meta.url), 'utf8');
+    assert.equal(normalizeImageWidth(8), 25);
+    assert.equal(normalizeImageWidth(63.4), 63);
+    assert.equal(normalizeImageWidth(140), 100);
+    assert.deepEqual(imageLayoutStyle(60, 'right'), {
+        width: '60%',
+        marginLeft: 'auto',
+        marginRight: '0',
+    });
+    assert.match(extension, /draggable: true/);
+    assert.match(extension, /data-width/);
+    assert.match(extension, /data-align/);
+    assert.match(extension, /data-drag-handle/);
+    assert.match(extension, /onPointerDown=\{startResize\}/);
 });

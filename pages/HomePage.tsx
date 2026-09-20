@@ -355,12 +355,9 @@ export const HomePage: React.FC = () => {
   const [searchValue, setSearchValue] = useState("");
   const [books, setBooks] = useState<Book[]>([]);
   const [rankedGenres, setRankedGenres] = useState<{ name: string; bookCount: number; readCount: number }[]>([]);
-  const [showAllGenres, setShowAllGenres] = useState(false);
   const [spotlightAuthor, setSpotlightAuthor] = useState<Author | null>(null);
   const [heroSearchPast, setHeroSearchPast] = useState(false);
   const [sortMode, setSortMode] = useState<'most_read' | 'most_viewed' | 'recent_update' | 'new'>('most_read');
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
   const [genreBooks, setGenreBooks] = useState<Record<string, Book[]>>({});
@@ -377,7 +374,6 @@ export const HomePage: React.FC = () => {
     setIsLoading(true);
     api.getBooks({ sort: sort as any, page: pageNum, size: 12 }).then(res => {
       setBooks(prev => append ? [...prev, ...res.content] : res.content);
-      setHasMore(res.hasMore);
       if (window.location.pathname === '/home') applyMetadata(metadataFor(parseRoute('/home'), { books: res.content.filter(isPublicBook) }));
       setIsLoading(false);
       if (!append && res.content.length > 0) {
@@ -387,7 +383,6 @@ export const HomePage: React.FC = () => {
   };
 
   useEffect(() => {
-    setPage(0);
     fetchBooks(sortMode, 0, false);
   }, [sortMode]);
 
@@ -395,13 +390,6 @@ export const HomePage: React.FC = () => {
     api.getGenresRanked().then(setRankedGenres);
     api.getHomeGenres().then(setGenreBooks);
   }, []);
-
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchBooks(sortMode, nextPage, true);
-  };
-
 
   // Dispatch custom event so Navbar can react
   useEffect(() => {
@@ -489,17 +477,7 @@ export const HomePage: React.FC = () => {
             ))
           }
         </div>
-        {hasMore && (
-          <div className="text-center mt-8">
-            <button
-              onClick={handleLoadMore}
-              disabled={isLoading}
-              className="font-sans font-semibold text-sm bg-accent text-white px-6 py-3 rounded-xl hover:bg-primary transition-colors disabled:opacity-50"
-            >
-              {isLoading ? 'Loading...' : 'Load More'}
-            </button>
-          </div>
-        )}
+        <div className="text-center mt-8"><a href="/category" className="inline-flex min-h-11 items-center rounded-xl bg-accent px-6 py-3 font-sans text-sm font-semibold text-white hover:bg-primary">Browse all stories</a></div>
       </section>
 
       {/* Top Genres */}
@@ -508,16 +486,15 @@ export const HomePage: React.FC = () => {
           <div className="flex items-center justify-between gap-4 mb-6">
             <h2 className="font-sans text-2xl sm:text-3xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">Top Genres</h2>
             {rankedGenres.length > 6 && (
-              <button
-                onClick={() => setShowAllGenres(prev => !prev)}
+              <a href="/category"
                 className="flex-shrink-0 font-sans text-sm font-semibold text-accent hover:text-primary transition-colors whitespace-nowrap"
               >
-                {showAllGenres ? 'Show Less' : `View All (${rankedGenres.length})`}
-              </button>
+                Browse all genres
+              </a>
             )}
           </div>
-          <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 ${showAllGenres ? 'max-h-[600px] overflow-y-auto pr-1' : ''}`}>
-            {(showAllGenres ? rankedGenres : rankedGenres.slice(0, 6)).map((genre, idx) => {
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {rankedGenres.slice(0, 6).map((genre, idx) => {
               const gradients = [
                 'bg-gradient-to-br from-violet-600 to-purple-800',
                 'bg-gradient-to-br from-rose-500 to-pink-700',

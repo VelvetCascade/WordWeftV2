@@ -51,6 +51,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [isGenreOpen, setIsGenreOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalBooks, setTotalBooks] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [allGenres, setAllGenres] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -61,9 +65,11 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   const genreDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const requestSequenceRef = useRef(0);
 
   const toggleGenre = (g: string) => {
-    setSelectedGenres(prev => prev.includes(g) ? prev.filter(i => i !== g) : [...prev, g]);
+    setSelectedGenres(prev => prev.includes(g) ? [] : [g]);
   };
 
   useEffect(() => {
@@ -103,16 +109,53 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   useEffect(() => {
     let active = true;
+    const requestSequence = ++requestSequenceRef.current;
     setIsLoading(true);
+    setIsLoadingMore(false);
     setLoadError(null);
-    api.getBooks({ genre: selectedGenres.length > 0 ? selectedGenres[0] : undefined, sort: sortOption }).then(res => {
-      if (!active) return;
+    setPage(0);
+    api.getBooks({ genre: selectedGenres[0], sort: sortOption, page: 0, size: 20 }).then(res => {
+      if (!active || requestSequence !== requestSequenceRef.current) return;
       setBooks(res.content);
+      setHasMore(res.hasMore);
+      setTotalBooks(res.totalElements);
       setIsLoading(false);
       if (window.location.pathname === '/category') applyMetadata(metadataFor(parseRoute('/category'), { books: res.content.filter(isPublicBook) }));
     }).catch((error) => { if (active) { setLoadError(error instanceof Error ? error.message : 'The library could not be loaded.'); setIsLoading(false); } });
     return () => { active = false; };
   }, [selectedGenres, sortOption, loadAttempt]);
+
+  const loadNextPage = async () => {
+    if (!hasMore || isLoading || isLoadingMore) return;
+    const nextPage = page + 1;
+    const requestSequence = requestSequenceRef.current;
+    setIsLoadingMore(true);
+    try {
+      const response = await api.getBooks({ genre: selectedGenres[0], sort: sortOption, page: nextPage, size: 20 });
+      if (requestSequence !== requestSequenceRef.current) return;
+      setBooks(current => {
+        const seen = new Set(current.map(book => book.id));
+        return [...current, ...response.content.filter(book => !seen.has(book.id))];
+      });
+      setPage(nextPage);
+      setHasMore(response.hasMore);
+      setTotalBooks(response.totalElements);
+    } catch (error) {
+      if (requestSequence === requestSequenceRef.current) setLoadError(error instanceof Error ? error.message : 'More stories could not be loaded.');
+    } finally {
+      if (requestSequence === requestSequenceRef.current) setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasMore || isLoading) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting) void loadNextPage();
+    }, { rootMargin: '500px 0px' });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, isLoadingMore, page, selectedGenres, sortOption]);
 
   const handleGenreToggle = () => {
     setIsGenreOpen(prev => !prev);
@@ -235,6 +278,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             </div>
 
             <div className="flex items-center gap-2 bg-gray-100 dark:bg-dark-surface-alt p-1 rounded-lg">
+              {!isLoading && <span className="hidden sm:inline px-2 text-xs text-gray-500">{totalBooks.toLocaleString()} stories</span>}
               <button type="button" aria-label="Grid view" aria-pressed={viewMode === 'grid'} onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-dark-surface shadow-sm' : 'text-gray-500'}`}>
                 <Squares2X2Icon className="w-5 h-5" />
               </button>
@@ -281,6 +325,18 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             {books.map(book => (
               <BookListItem key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
             ))}
+          </div>
+        )}
+
+        {!isLoading && books.length > 0 && (
+          <div ref={loadMoreRef} className="flex min-h-28 items-center justify-center py-8" aria-live="polite">
+            {hasMore ? (
+              <button type="button" onClick={() => void loadNextPage()} disabled={isLoadingMore} className="rounded-xl border border-accent/25 bg-white px-6 py-3 text-sm font-bold text-accent shadow-sm hover:bg-accent/5 disabled:opacity-60 dark:bg-dark-surface">
+                {isLoadingMore ? 'Loading more stories…' : 'Load more stories'}
+              </button>
+            ) : (
+              <p className="text-sm text-gray-500">You’ve reached the end of this collection.</p>
+            )}
           </div>
         )}
 
