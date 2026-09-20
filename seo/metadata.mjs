@@ -1,4 +1,4 @@
-import { SITE_ORIGIN, SITE_NAME, DEFAULT_IMAGE, staticPages } from './content.mjs';
+import { SITE_ORIGIN, SITE_NAME, DEFAULT_IMAGE, staticPages, landingPages } from './content.mjs';
 
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 export const plainText = value => String(value ?? '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/\s+/g, ' ').trim();
@@ -42,7 +42,12 @@ export function metadataFor(route, data = null) {
   let path = route.path + (['catalog', 'author'].includes(route.kind) && route.page > 1 ? `?page=${route.page}` : ''), graph = [];
   if (route.kind === 'static') {
     ({ title, description } = staticPages[path]);
-    graph = path === '/' ? [website, { '@type': 'Organization', '@id': `${SITE_ORIGIN}/#organization`, name: 'WordWeft Studio', url: SITE_ORIGIN + '/', logo: `${SITE_ORIGIN}/logo.svg` }] : [{ '@type': 'WebPage', name: title, description, url: SITE_ORIGIN + path, isPartOf: { '@id': website['@id'] } }, breadcrumbs([['Home', '/'], [title.split(' | ')[0], path]])];
+    const landing = landingPages[path];
+    graph = path === '/' ? [website, { '@type': 'Organization', '@id': `${SITE_ORIGIN}/#organization`, name: 'WordWeft Studio', url: SITE_ORIGIN + '/', logo: `${SITE_ORIGIN}/logo.svg` }] : [
+      { '@type': 'WebPage', '@id': `${SITE_ORIGIN + path}#webpage`, name: title, headline: landing?.heading || title.split(' | ')[0], description, url: SITE_ORIGIN + path, inLanguage: 'en', isPartOf: { '@id': website['@id'] } },
+      breadcrumbs([['Home', '/'], [title.split(' | ')[0], path]]),
+      ...(landing?.faqs?.length ? [{ '@type': 'FAQPage', '@id': `${SITE_ORIGIN + path}#faq`, url: SITE_ORIGIN + path, mainEntity: landing.faqs.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) }] : []),
+    ];
   } else if ((route.kind === 'book' || route.kind === 'chapter') && data) {
     const book = data;
     const author = book.author || { name: 'WordWeft writer' };
@@ -95,5 +100,5 @@ export function metadataFor(route, data = null) {
 
 export function renderHead(meta, noindex = false) {
   const tag = (key, value) => `<meta ${key.startsWith('og:') ? 'property' : 'name'}="${key}" content="${escapeHtml(value)}">`;
-  return `<title>${escapeHtml(meta.title)}</title>${tag('description', meta.description)}<link rel="canonical" href="${escapeHtml(meta.canonical)}">${tag('robots', noindex || !meta.index ? 'noindex, follow' : 'index, follow, max-image-preview:large')}${tag('og:site_name', SITE_NAME)}${tag('og:title', meta.title)}${tag('og:description', meta.description)}${tag('og:type', meta.type)}${tag('og:url', meta.canonical)}${tag('og:image', meta.image)}${tag('og:image:alt', meta.imageAlt)}${tag('twitter:card', 'summary_large_image')}${tag('twitter:title', meta.title)}${tag('twitter:description', meta.description)}${tag('twitter:image', meta.image)}${tag('twitter:image:alt', meta.imageAlt)}${meta.image === DEFAULT_IMAGE ? tag('og:image:width', '1024') + tag('og:image:height', '1024') : ''}<script id="ww-seo-schema" type="application/ld+json">${serializeJson({ '@context': 'https://schema.org', '@graph': meta.index ? meta.graph : [] })}</script>`;
+  return `<title>${escapeHtml(meta.title)}</title>${tag('description', meta.description)}<link rel="canonical" href="${escapeHtml(meta.canonical)}">${tag('robots', noindex || !meta.index ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1')}${tag('og:site_name', SITE_NAME)}${tag('og:locale', 'en_US')}${tag('og:title', meta.title)}${tag('og:description', meta.description)}${tag('og:type', meta.type)}${tag('og:url', meta.canonical)}${tag('og:image', meta.image)}${tag('og:image:alt', meta.imageAlt)}${tag('twitter:card', 'summary_large_image')}${tag('twitter:title', meta.title)}${tag('twitter:description', meta.description)}${tag('twitter:image', meta.image)}${tag('twitter:image:alt', meta.imageAlt)}${meta.image === DEFAULT_IMAGE ? tag('og:image:width', '1024') + tag('og:image:height', '1024') : ''}<script id="ww-seo-schema" type="application/ld+json">${serializeJson({ '@context': 'https://schema.org', '@graph': meta.index ? meta.graph : [] })}</script>`;
 }

@@ -10,7 +10,7 @@ Public pages return meaningful HTML before JavaScript runs. Existing interactive
 
 | Content | Search policy |
 | --- | --- |
-| Homepage, About, Contact, policies, and four discovery pages | Public HTML, distinct metadata, canonical URLs |
+| Homepage, About, Contact, policies, and nine discovery/comparison pages | Public HTML, distinct metadata, canonical URLs, visible FAQs and matching structured data |
 | `/features` | Same feature showcase as the anonymous homepage; canonical points to `/` |
 | Published book with at least one published chapter, ALL_AGES or TEEN_13 | Indexable synopsis, author, genres, tags, cover and chapter links |
 | First published chapter of eligible books | Indexable, deterministic excerpt followed by a clear sign-in gate; the complete manuscript is never placed in anonymous HTML |
@@ -28,7 +28,7 @@ The authenticated editor, saved library and private drafts do not need to be ind
 
 ## Search intent and keyword map
 
-These are relevance-based targets, not measured search-volume rankings. No Keyword Planner or Search Console account data was supplied. Current search results and primary product pages support the distinction between reading fiction, drafting a novel, publishing a serial, and organizing a fictional world: [Inkitt](https://www.inkitt.com/), [Reedsy's online writing app](https://reedsy.com/studio/write-a-book/), and [Campfire's worldbuilding tools](https://campfirewriting.com/worldbuilding-tools). Competitor copy and claims have not been copied.
+These are intent clusters observed in current public search results, not invented search-volume numbers. Exact demand, country splits, difficulty and WordWeft's present positions require Search Console and/or Keyword Planner account data. Search-result language consistently groups competitor alternatives, places to publish fiction, online novel-writing tools, and original-fiction reading. Competitor copy and claims have not been copied, and comparison pages state WordWeft's present limitations instead of manufacturing superiority.
 
 | Page | Primary searches to serve | Supporting intent |
 | --- | --- | --- |
@@ -36,12 +36,17 @@ These are relevance-based targets, not measured search-volume rankings. No Keywo
 | `/writing-tools` | online novel writing tools, story writing app, online story editor | organize chapters, manuscript import, character profiles |
 | `/publish-stories` | publish stories online, share writing online | publish a web novel, serialize a story, schedule chapters |
 | `/world-building-tools` | worldbuilding tools for writers, character profiles for writers | organize story lore, character notes, fictional world planning |
+| `/wattpad-alternatives` | Wattpad alternatives, sites like Wattpad, apps like Wattpad | Wattpad alternative for writers, where to publish stories online |
+| `/webnovel-alternatives` | Webnovel alternatives, sites like Webnovel | web novel publishing platforms, serial fiction platforms |
+| `/royal-road-alternatives` | Royal Road alternatives, sites like Royal Road | where to publish serial fiction, fiction platforms across genres |
+| `/online-fiction-platform` | online fiction writing platform, where to write and publish stories | online novel writing website, publish original fiction online |
+| `/read-original-fiction-online` | read original fiction online, online novels, serial stories online | independent writers, discover web fiction, browser reading platform |
 | `/genre/Fantasy`, other real genres | fantasy stories online, romance novels online, mystery stories | Actual eligible genres and books, created from the catalog |
 | `/tag/<tag>` | Relevant story themes and tropes | Only tags with enough published inventory become indexable |
 | `/book/<id>` and its chapters | book title, title + author, chapter title | Synopsis, tags, genre and stable chapter links |
 | `/author/<id>` | author name, author name + stories | Public portfolio and book discovery |
 
-The four acquisition pages contain useful product-specific explanations, practical steps, FAQs, internal links, and working calls to action. Do not add dozens of near-identical keyword pages or unsupported promises such as print distribution, guaranteed income, offline apps, or AI manuscript generation. Broad terms such as “writing tools” are competitive; accurate longer queries and individual story/genre searches provide more specific opportunities.
+The nine acquisition pages contain useful product-specific explanations, practical steps, FAQs, internal links, and working calls to action. The three competitor pages are decision guides, not doorway pages: each covers a distinct audience and explains what WordWeft does not promise. Do not clone them for every competitor, add dynamic years to titles, or make unsupported claims such as print distribution, guaranteed income, offline apps, or AI manuscript generation. Broad terms such as “writing tools” are competitive; accurate longer queries and individual story/genre searches provide more specific opportunities.
 
 ## Deployment order
 
@@ -60,10 +65,11 @@ The dynamic renderer has a 12-second upstream deadline. Keep the backend availab
 
 1. Open [Google Search Console](https://search.google.com/search-console) and add a **Domain property** for `wordweftstudio.com`. Add the exact TXT record it provides to your DNS provider, then verify. This requires your account/domain access; no verification token has been invented or published by this implementation.
 2. Submit `https://www.wordweftstudio.com/sitemap.xml` in Sitemaps. This is a live sitemap index: public static pages plus partitions for eligible books, chapters, authors, genres and tags. Each child holds at most 1,000 entries. New publications appear automatically; a frontend rebuild is not needed for each story.
-3. Use URL Inspection → Test Live URL for `/`, all four acquisition pages, one genre, one book and one chapter. Check the rendered text, canonical and crawl permissions. Request indexing for the key launch pages. Google chooses whether and when to index; a submitted sitemap is a discovery signal.
+3. After deploying these changes, submit the sitemap again. Use URL Inspection → Test Live URL for `/`, `/wattpad-alternatives`, `/webnovel-alternatives`, `/royal-road-alternatives`, `/online-fiction-platform`, `/read-original-fiction-online`, one genre, one book and one chapter. Check rendered text, selected canonical, indexing permission and the referring sitemap. Request indexing for the five new hubs; do not manually request every catalog URL.
 4. Check that a draft book, account/profile page and search-results page are not indexable. Test a known mature story while signed out and confirm it is absent from the public sitemap. These checks must use the correct account/content context.
 5. Add the site in [Bing Webmaster Tools](https://www.bing.com/webmasters/) and submit the same sitemap, or use its Search Console import if available to your account.
-6. After deployment, inspect the Page Indexing, Sitemaps, Search Performance and Core Web Vitals reports. Compare 28-day periods, separating brand searches (“WordWeft”) from non-brand discovery. Track impressions, clicks, click-through rate, landing pages, and signup/reading/writing activity through the existing product analytics. Inspect rich markup with [Schema.org Validator](https://validator.schema.org/); use Google's Rich Results Test only for supported result types. Book/Chapter schema does not guarantee a book carousel or rich result.
+6. After deployment, inspect Page Indexing, Sitemaps, Search Performance and Core Web Vitals weekly. Compare 28-day and 3-month periods, separating brand searches (“WordWeft”) from non-brand discovery. Build saved query groups for `alternative`, `Wattpad`, `Webnovel`, `Royal Road`, `publish stories`, `writing platform`, `read fiction`, and book/author names. Track impressions, average position, clicks, click-through rate, landing pages, and downstream signup/reading/writing activity.
+7. In Search Console's generative-AI performance reporting, review citations/visits to these guides separately from ordinary result pages. Google states that the same indexed, snippet-eligible pages and normal SEO fundamentals apply to its AI features; there is no special AI schema or extra file to submit. Validate the JSON-LD with [Schema.org Validator](https://validator.schema.org/) and use Google's Rich Results Test only for supported result types.
 
 ## Ongoing work that affects rankings
 
@@ -71,7 +77,9 @@ Authors should use original, readable synopses; accurate genre and trope tags; a
 
 Use actual Search Console queries to decide the next content work. Good candidates are a tutorial on importing and reviewing a manuscript, a guide to publishing a first serial, and a worked example of building character notes. Each should use real product examples and an identifiable author/editor, then link to its matching tool page. Update existing pages when features change. Earn relevant links through real author portfolios and useful resources; avoid paid link schemes and mass outreach spam.
 
-The existing robots exclusions for AI/data-extraction agents are retained. Some of those agents also power assistant discovery (for example ChatGPT-User and PerplexityBot), so this is not a promise of visibility in every AI assistant. Google/Bing web crawling is allowed. Any change to the creator-content/AI access policy should be an explicit product decision.
+The crawler policy now separates discovery from model training. `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`, and `Perplexity-User` may retrieve public pages but not `/api/`. `GPTBot`, `Google-Extended`, `CCBot`, and the retained training/bulk-extraction agents remain blocked. This improves the ability of assistants to cite public landing, book, and author pages without opting published manuscripts into those named training crawlers. Robots directives are crawler requests, not authentication; private drafts and restricted content remain protected by application access controls.
+
+Do not add an `llms.txt` file as an SEO shortcut. Google explicitly says its AI search features use normal crawl, index, snippet, and page-quality controls. Keep important explanations in rendered HTML, use crawlable links, and keep structured data consistent with visible text.
 
 No SEO implementation can guarantee first place, indexing every page, or appearing for every search. The implementation removes technical barriers and creates relevant acquisition pages; competitive rankings also depend on useful content, demand, reputation and search engines' choices. See Google's [SEO Starter Guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide).
 

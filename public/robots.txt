@@ -1,8 +1,22 @@
-# Block AI Model Training & Data Extraction Bots
-User-agent: GPTBot
-Disallow: /
+# Allow AI search and user-requested retrieval while keeping model-training opt-outs.
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
 
 User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /api/
+
+# Block AI model-training and bulk-extraction bots.
+User-agent: GPTBot
 Disallow: /
 
 User-agent: CCBot
@@ -18,9 +32,6 @@ User-agent: Claude-Web
 Disallow: /
 
 User-agent: Bytespider
-Disallow: /
-
-User-agent: PerplexityBot
 Disallow: /
 
 User-agent: Google-Extended

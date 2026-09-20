@@ -26,6 +26,26 @@ test('useful acquisition pages cover both reader and writer search intent', () =
     assert.ok(!titles.has(page.title)); titles.add(page.title);
   }
 });
+test('comparison and discovery hubs provide substantial, honest decision support', () => {
+  const expected = ['/wattpad-alternatives', '/webnovel-alternatives', '/royal-road-alternatives', '/online-fiction-platform', '/read-original-fiction-online'];
+  for (const path of expected) {
+    const page = landingPages[path];
+    assert.ok(page, `${path} should exist`);
+    assert.ok(page.sections.length >= 4);
+    assert.ok(page.criteria.length >= 4);
+    assert.ok(page.faqs.length >= 4);
+    assert.ok(page.related.length >= 3);
+    assert.doesNotMatch(`${page.title} ${page.description} ${page.intro}`, /guaranteed|#1|best platform/i);
+  }
+  assert.match(landingPages['/wattpad-alternatives'].sections.flat().join(' '), /does not promise an instant audience/i);
+});
+test('visible landing-page FAQs are represented in structured data', () => {
+  const meta = metadataFor(parseRoute('/wattpad-alternatives'));
+  const faq = meta.graph.find(item => item['@type'] === 'FAQPage');
+  assert.equal(faq.mainEntity.length, landingPages['/wattpad-alternatives'].faqs.length);
+  assert.equal(faq.mainEntity[0].name, landingPages['/wattpad-alternatives'].faqs[0][0]);
+  assert.match(renderHead(meta), /max-snippet:-1/);
+});
 test('book HTML contains public content, links, metadata and no unpublished chapters', async () => {
   const result = await response('/book/story?utm_source=test');
   assert.equal(result.status, 200);
@@ -122,9 +142,13 @@ test('metadata never invents ratings or a Google book-actions integration', () =
   const html = renderHead(metadataFor(parseRoute('/book/story'), book));
   assert.doesNotMatch(html, /aggregateRating|ReadAction|BorrowAction/);
 });
-test('robots lets crawlers read noindex while maintaining existing training opt-outs', () => {
+test('robots allows AI search retrieval while maintaining model-training opt-outs', () => {
   const robots = readFileSync('public/robots.txt', 'utf8');
   assert.match(robots, /User-agent: GPTBot\r?\nDisallow: \//);
+  for (const agent of ['OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'Perplexity-User']) {
+    assert.match(robots, new RegExp(`User-agent: ${agent}\\r?\\nAllow: /\\r?\\nDisallow: /api/`));
+  }
+  assert.doesNotMatch(robots, /User-agent: (?:ChatGPT-User|PerplexityBot)\r?\nDisallow: \//);
   assert.doesNotMatch(robots, /Disallow: \/(?:auth|profile|write)/);
   assert.match(robots, /Sitemap: https:\/\/www.wordweftstudio.com\/sitemap.xml/);
 });

@@ -69,14 +69,15 @@ const setup=async(options={})=>{const ctx=await browser.newContext(options);awai
 const meta=async page=>({title:await page.title(),canonical:await page.locator('link[rel=canonical]').getAttribute('href'),robots:await page.locator('meta[name=robots]').getAttribute('content')});
 try{
  const {ctx:nojs,page:n}=await setup({javaScriptEnabled:false,viewport:{width:390,height:844}});
- for(const path of ['/','/writing-tools','/read-online','/world-building-tools','/publish-stories','/book/b01','/book/b01/chapter/c01','/book/b01/chapter/c02','/author/writer?page=2','/genre/Fantasy?page=2']){
+ for(const path of ['/','/writing-tools','/read-online','/world-building-tools','/publish-stories','/wattpad-alternatives','/webnovel-alternatives','/royal-road-alternatives','/online-fiction-platform','/read-original-fiction-online','/book/b01','/book/b01/chapter/c01','/book/b01/chapter/c02','/author/writer?page=2','/genre/Fantasy?page=2']){
   const response=await n.goto(origin+path,{waitUntil:'domcontentloaded'});assert.equal(response.status(),200,path);assert.ok(await n.locator('h1').count(),path);assert.equal(await n.locator('link[rel=canonical]').count(),1);const m=await meta(n);assert.match(m.robots,/^index/);assert.equal(await n.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),true,'mobile overflow '+path);
  }
  await n.goto(origin+'/writing-tools');await n.screenshot({path:'scratch/seo/writing-tools-mobile-nojs.png',fullPage:true});
+ await n.goto(origin+'/wattpad-alternatives');await n.getByRole('heading',{name:'Looking for a Wattpad alternative? Start with what you need.'}).waitFor();await n.screenshot({path:'scratch/seo/wattpad-alternatives-mobile-nojs.png',fullPage:true});
  await n.goto(origin+'/book/b01/chapter/c01');await n.getByRole('heading',{name:'Sign in to keep reading'}).waitFor();assert.equal(await n.getByText('At sunrise, the hidden city finally answered.',{exact:true}).count(),0);await n.screenshot({path:'scratch/seo/reader-preview-mobile-nojs.png',fullPage:true});
  await n.goto(origin+'/book/b01/chapter/c02');await n.getByRole('heading',{name:'Sign in to read this chapter'}).waitFor();assert.equal(await n.getByText('Beyond the bridge, a door appeared in the mist.',{exact:true}).count(),0);await n.screenshot({path:'scratch/seo/reader-locked-mobile-nojs.png',fullPage:true});
  await nojs.close();
- console.log('PASS: 10 HTML-first public routes, both reader gates, manuscript privacy, metadata, and mobile widths with JavaScript disabled.');
+ console.log('PASS: 15 HTML-first public routes, both reader gates, manuscript privacy, metadata, and mobile widths with JavaScript disabled.');
  const {ctx,page}=await setup({viewport:{width:1440,height:1000}});
  await page.goto(origin+'/writing-tools');await page.getByRole('heading',{name:'A writing studio for the story you want to tell.'}).waitFor();
  await page.locator('a[href="/category"]').first().click();await page.waitForURL('**/category');await page.getByRole('heading',{name:'All Books',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('meta[name=robots]')?.content.startsWith('index'));
@@ -90,6 +91,8 @@ try{
  await page.goto(origin+'/genre/Fantasy?page=2');await page.getByRole('heading',{name:'The Lantern Road 25',exact:true}).waitFor();assert.match((await meta(page)).canonical,/\?page=2$/);
  await page.goto(origin+'/home');await page.waitForFunction(()=>document.querySelector('meta[name=robots]')?.content.startsWith('index'));await page.getByRole('heading',{name:'The Lantern Road 01',exact:true}).first().waitFor();
  await page.goto(origin+'/writing-tools');await page.getByRole('heading',{name:'A writing studio for the story you want to tell.'}).waitFor();await page.screenshot({path:'scratch/seo/writing-tools-desktop.png',fullPage:true});
+ await page.goto(origin+'/wattpad-alternatives');await page.getByRole('heading',{name:'Looking for a Wattpad alternative? Start with what you need.'}).waitFor();await page.screenshot({path:'scratch/seo/wattpad-alternatives-desktop.png',fullPage:true});
+ await page.goto(origin+'/writing-tools');await page.getByRole('heading',{name:'A writing studio for the story you want to tell.'}).waitFor();
  await page.getByRole('link',{name:'Open the writing studio',exact:true}).click();await page.waitForURL('**/auth');assert.match((await meta(page)).robots,/noindex/);await page.getByRole('button',{name:/sign in/i}).first().waitFor();
  await page.evaluate(()=>localStorage.setItem('ww_welcomeJourneyCompleted','true'));
  await page.getByLabel('Email Address',{exact:true}).fill('fixture@example.test');
