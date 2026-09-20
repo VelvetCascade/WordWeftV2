@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from '@tiptap/extension-image';
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from '@tiptap/react';
 import {
+    imageOffsetForAlignment,
     imageLayoutStyle,
+    normalizeImageOffset,
     normalizeImageWidth,
-    resizeImageWidth,
+    resizeImageLayout,
     type EditorImageAlignment,
     type ImageResizeDirection,
 } from '../../utils/editorImageLayout';
@@ -29,16 +31,47 @@ const resizeHandles: Array<{ direction: ImageResizeDirection; label: string }> =
 const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor }) => {
     const wrapperRef = useRef<HTMLElement | null>(null);
     const initialWidth = normalizeImageWidth(node.attrs.width);
+    const initialAlignment = (['left', 'center', 'right'].includes(node.attrs.alignment)
+        ? node.attrs.alignment
+        : 'center') as EditorImageAlignment;
+    const initialOffset = normalizeImageOffset(
+        node.attrs.offset,
+        initialWidth,
+        imageOffsetForAlignment(initialWidth, initialAlignment),
+    );
     const [previewWidth, setPreviewWidth] = useState(initialWidth);
+    const [previewOffset, setPreviewOffset] = useState(initialOffset);
     const previewWidthRef = useRef(initialWidth);
+    const previewOffsetRef = useRef(initialOffset);
     const resizeCleanupRef = useRef<() => void>(() => undefined);
+
+    const alignment = (['left', 'center', 'right'].includes(node.attrs.alignment)
+        ? node.attrs.alignment
+        : 'center') as EditorImageAlignment;
 
     useEffect(() => {
         const width = normalizeImageWidth(node.attrs.width);
+        const offset = normalizeImageOffset(
+            node.attrs.offset,
+            width,
+            imageOffsetForAlignment(width, alignment),
+        );
         previewWidthRef.current = width;
+        previewOffsetRef.current = offset;
         setPreviewWidth(width);
-    }, [node.attrs.width]);
+        setPreviewOffset(offset);
+    }, [alignment, node.attrs.offset, node.attrs.width]);
     useEffect(() => () => resizeCleanupRef.current(), []);
+
+    const applyLayout = (width: number, offset: number, nextAlignment = alignment) => {
+        const normalizedWidth = normalizeImageWidth(width);
+        const normalizedOffset = normalizeImageOffset(offset, normalizedWidth);
+        previewWidthRef.current = normalizedWidth;
+        previewOffsetRef.current = normalizedOffset;
+        setPreviewWidth(normalizedWidth);
+        setPreviewOffset(normalizedOffset);
+        updateAttributes({ width: normalizedWidth, offset: normalizedOffset, alignment: nextAlignment });
+    };
 
     const startResize = (event: React.PointerEvent<HTMLButtonElement>) => {
         if (!event.isPrimary) return;
@@ -50,14 +83,27 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
         const startX = event.clientX;
         const startY = event.clientY;
         const startWidth = previewWidthRef.current;
-        const editorWidth = wrapperRef.current?.closest('.rte-content')?.getBoundingClientRect().width || 1;
+        const editorElement = wrapperRef.current?.closest('.rte-content') as HTMLElement | null;
+        const editorRect = editorElement?.getBoundingClientRect();
+        const editorStyles = editorElement ? window.getComputedStyle(editorElement) : null;
+        const horizontalPadding = editorStyles
+            ? (Number.parseFloat(editorStyles.paddingLeft) || 0) + (Number.parseFloat(editorStyles.paddingRight) || 0)
+            : 0;
+        const editorWidth = Math.max(1, (editorElement?.clientWidth || editorRect?.width || 1) - horizontalPadding);
+        const editorLeft = (editorRect?.left || 0) + (Number.parseFloat(editorStyles?.paddingLeft || '0') || 0);
+        const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+        const measuredOffset = wrapperRect
+            ? ((wrapperRect.left - editorLeft) / editorWidth) * 100
+            : previewOffsetRef.current;
+        const startOffset = normalizeImageOffset(measuredOffset, startWidth, previewOffsetRef.current);
         const imageRect = wrapperRef.current?.querySelector('img')?.getBoundingClientRect();
         const imageAspectRatio = imageRect?.height ? imageRect.width / imageRect.height : 1;
 
         const move = (pointerEvent: PointerEvent) => {
-            const width = resizeImageWidth({
+            const layout = resizeImageLayout({
                 direction,
                 startWidth,
+                startOffset,
                 startX,
                 startY,
                 currentX: pointerEvent.clientX,
@@ -65,12 +111,17 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
                 editorWidth,
                 imageAspectRatio,
             });
-            previewWidthRef.current = width;
-            setPreviewWidth(width);
+            previewWidthRef.current = layout.width;
+            previewOffsetRef.current = layout.offset;
+            setPreviewWidth(layout.width);
+            setPreviewOffset(layout.offset);
         };
         const stop = () => {
             resizeCleanupRef.current();
-            updateAttributes({ width: previewWidthRef.current });
+            updateAttributes({
+                width: previewWidthRef.current,
+                offset: previewOffsetRef.current,
+            });
         };
         resizeCleanupRef.current = () => {
             document.removeEventListener('pointermove', move);
@@ -83,17 +134,13 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
         document.addEventListener('pointercancel', stop);
     };
 
-    const alignment = (['left', 'center', 'right'].includes(node.attrs.alignment)
-        ? node.attrs.alignment
-        : 'center') as EditorImageAlignment;
-
     return (
         <NodeViewWrapper
             as="figure"
             ref={wrapperRef as React.Ref<HTMLElement>}
             className={`rte-resizable-image ${selected ? 'is-selected' : ''}`}
             data-alignment={alignment}
-            style={imageLayoutStyle(previewWidth, alignment)}
+            style={imageLayoutStyle(previewWidth, alignment, previewOffset)}
         >
             {editor.isEditable && (
                 <div className="rte-image-controls" contentEditable={false}>
@@ -110,8 +157,8 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
                         <button
                             type="button"
                             key={item}
-                            className={alignment === item ? 'active' : ''}
-                            onClick={() => updateAttributes({ alignment: item })}
+                            className={Math.abs(previewOffset - imageOffsetForAlignment(previewWidth, item)) < 0.5 ? 'active' : ''}
+                            onClick={() => applyLayout(previewWidth, imageOffsetForAlignment(previewWidth, item), item)}
                             title={alignmentLabel[item]}
                             aria-label={alignmentLabel[item]}
                         >
@@ -119,7 +166,12 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
                         </button>
                     ))}
                     {[50, 75, 100].map(size => (
-                        <button type="button" key={size} className={previewWidth === size ? 'active' : ''} onClick={() => updateAttributes({ width: size })}>
+                        <button
+                            type="button"
+                            key={size}
+                            className={previewWidth === size ? 'active' : ''}
+                            onClick={() => applyLayout(size, imageOffsetForAlignment(size, alignment))}
+                        >
                             {size}%
                         </button>
                     ))}
@@ -159,11 +211,18 @@ export const ResizableImage = Image.extend({
                 parseHTML: element => element.getAttribute('data-align') || 'center',
                 renderHTML: attributes => ({ 'data-align': attributes.alignment || 'center' }),
             },
+            offset: {
+                default: null,
+                parseHTML: element => element.getAttribute('data-offset'),
+                renderHTML: attributes => attributes.offset === null || attributes.offset === undefined
+                    ? {}
+                    : { 'data-offset': attributes.offset },
+            },
         };
     },
     renderHTML({ HTMLAttributes }) {
         const alignment = (['left', 'center', 'right'].includes(HTMLAttributes['data-align']) ? HTMLAttributes['data-align'] : 'center') as EditorImageAlignment;
-        const layout = imageLayoutStyle(HTMLAttributes['data-width'], alignment);
+        const layout = imageLayoutStyle(HTMLAttributes['data-width'], alignment, HTMLAttributes['data-offset']);
         const style = `width:${layout.width};margin-left:${layout.marginLeft};margin-right:${layout.marginRight}`;
         return ['img', { ...HTMLAttributes, style }];
     },
