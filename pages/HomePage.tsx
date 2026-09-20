@@ -10,6 +10,8 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
+import { ResilientImage } from '../components/ResilientImage';
+import { createLatestRequestGate } from '../utils/runtimeLifecycle';
 
 
 const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
@@ -77,6 +79,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [searchError, setSearchError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestGateRef = useRef(createLatestRequestGate());
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -106,7 +109,11 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
       }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      requestGateRef.current.invalidate();
+    };
   }, []);
 
   const fetchAutocomplete = useCallback(async (q: string) => {
@@ -115,17 +122,21 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
       setAuthors([]);
       return;
     }
+    const requestId = requestGateRef.current.begin();
     setIsLoading(true);
     setSearchError('');
     try {
       const result = await api.searchAutocomplete(q);
+      if (!requestGateRef.current.isLatest(requestId)) return;
       setBooks(result.books || []);
       setAuthors(result.authors || []);
     } catch (e) {
-      console.error('Autocomplete error:', e);
-      setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
+      if (requestGateRef.current.isLatest(requestId)) {
+        console.error('Autocomplete error:', e);
+        setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
+      }
     } finally {
-      setIsLoading(false);
+      if (requestGateRef.current.isLatest(requestId)) setIsLoading(false);
     }
   }, []);
 
@@ -133,6 +144,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
     const val = e.target.value;
     setQuery(val);
     setSelectedIndex(-1);
+    requestGateRef.current.invalidate();
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchAutocomplete(val), 300);
   };
@@ -243,9 +255,11 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
                       onClick={() => navigateToBook(book.id)}
                       onMouseEnter={() => setSelectedIndex(i)}
                     >
-                      <img
-                        src={book.coverUrl || 'https://via.placeholder.com/40x56'}
+                      <ResilientImage
+                        src={book.coverUrl}
                         alt={book.title}
+                        fallbackLabel={book.title}
+                        variant="cover"
                         className="hero-search-item-cover"
                       />
                       <div className="hero-search-item-info">
@@ -289,9 +303,10 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
                         onClick={() => navigateToAuthor(author.id)}
                         onMouseEnter={() => setSelectedIndex(idx)}
                       >
-                        <img
-                          src={author.avatarUrl || 'https://via.placeholder.com/40'}
+                        <ResilientImage
+                          src={author.avatarUrl}
                           alt={author.name}
+                          fallbackLabel={author.name}
                           className="hero-search-item-avatar"
                         />
                         <div className="hero-search-item-info">

@@ -27,12 +27,24 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setIsOpen(false);
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, [isOpen]);
+
     const selectedOption = options.find(o => o.value === value);
 
     return (
         <div ref={dropdownRef} className="relative">
             <button
+                type="button"
                 onClick={() => setIsOpen(prev => !prev)}
+                aria-expanded={isOpen}
+                aria-haspopup="menu"
                 className="group flex items-center gap-2.5 font-sans text-sm font-medium pl-4 pr-3 py-2.5 rounded-xl
           bg-white dark:bg-dark-surface-alt
           border border-gray-200 dark:border-dark-border
@@ -48,19 +60,22 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
             </button>
 
             {/* Dropdown panel */}
-            <div
-                className={`absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden
+            {isOpen && <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden
           bg-white dark:bg-dark-surface-alt
           border border-gray-100 dark:border-dark-border
           shadow-xl dark:shadow-2xl
-          transition-all duration-200 ease-out origin-top-right z-30
-          ${isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-1 pointer-events-none'}`}
+          origin-top-right z-30"
             >
                 <div className="p-1.5">
                     {options.map((option) => {
                         const isSelected = option.value === value;
                         return (
                             <button
+                                type="button"
+                                role="menuitemradio"
+                                aria-checked={isSelected}
                                 key={option.value}
                                 onClick={() => { onChange(option.value); setIsOpen(false); }}
                                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-sans transition-all duration-150
@@ -77,7 +92,7 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
                         );
                     })}
                 </div>
-            </div>
+            </div>}
         </div>
     );
 };

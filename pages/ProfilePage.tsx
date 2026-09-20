@@ -8,6 +8,8 @@ import { AuthorShareModal } from '../components/AuthorShareModal';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ConnectionsModal } from '../components/ConnectionsModal';
+import { ResilientImage } from '../components/ResilientImage';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) => void, onRestart: (bookId: string) => void }> = ({ book, onRemove, onRestart }) => {
 
@@ -24,13 +26,15 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
         <div className="group" title={cardTooltip}>
             <div className="relative">
                 <div className="cursor-pointer" onClick={() => window.location.hash = `/read/book/${book.id}/chapter/0`}>
-                    <img
+                    <ResilientImage
                         src={book.coverUrl}
                         alt={book.title}
+                        fallbackLabel={book.title}
+                        variant="cover"
                         className="w-full h-auto object-cover rounded-lg shadow-soft group-hover:shadow-lifted transition-all duration-300 transform group-hover:-translate-y-1"
                     />
                     {isCompleted && (
-                        <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <CheckCircleIcon className="w-12 h-12 text-white/80" />
                         </div>
                     )}
@@ -38,7 +42,7 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
                 <div className="absolute top-1.5 right-1.5 flex flex-col gap-1.5">
                     <button
                         onClick={(e) => { e.stopPropagation(); onRemove(book.id); }}
-                        className="p-1.5 bg-black/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger backdrop-blur-sm"
+                        className="grid min-h-11 min-w-11 place-items-center bg-black/60 rounded-full text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 transition-opacity hover:bg-danger backdrop-blur-sm"
                         aria-label="Remove from library"
                     >
                         <XMarkIcon className="w-4 h-4" />
@@ -46,7 +50,7 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
                     {book.progress > 0 && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onRestart(book.id); }}
-                            className="p-1.5 bg-black/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent backdrop-blur-sm"
+                            className="grid min-h-11 min-w-11 place-items-center bg-black/60 rounded-full text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 transition-opacity hover:bg-accent backdrop-blur-sm"
                             aria-label="Restart reading progress"
                         >
                             <ArrowPathIcon className="w-4 h-4" />
@@ -75,11 +79,8 @@ const LibraryBookCard: React.FC<{ book: LibraryBook, onRemove: (bookId: string) 
     );
 };
 
-const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string, onClick?: () => void, subLabel?: string }> = ({ icon, value, label, onClick, subLabel }) => (
-    <div
-        className={`ww-profile-stat-card bg-background dark:bg-dark-surface-alt p-6 rounded-2xl flex flex-col justify-between h-full ${onClick ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors' : ''}`}
-        onClick={onClick}
-    >
+const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label: string, onClick?: () => void, subLabel?: string }> = ({ icon, value, label, onClick, subLabel }) => {
+    const content = <>
         <div>
             <div className="text-accent mb-3">{icon}</div>
             <p className="font-sans font-bold text-3xl text-text-rich dark:text-dark-text-rich tracking-tight">{value}</p>
@@ -88,8 +89,12 @@ const StatCard: React.FC<{ icon: React.ReactNode, value: string | number, label:
             <p className="text-sm font-medium text-text-body dark:text-dark-text-body">{label}</p>
             {subLabel && <p className="text-xs text-gray-400 mt-1">{subLabel}</p>}
         </div>
-    </div>
-);
+    </>;
+    const className = `ww-profile-stat-card w-full bg-background dark:bg-dark-surface-alt p-6 rounded-2xl flex flex-col justify-between h-full text-left ${onClick ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors' : ''}`;
+    return onClick
+        ? <button type="button" className={className} onClick={onClick}>{content}</button>
+        : <div className={className}>{content}</div>;
+};
 
 interface ProfilePageProps {
     user: User;
@@ -109,13 +114,42 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
     const [newShelfName, setNewShelfName] = useState('');
     const [isCreatingShelf, setIsCreatingShelf] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
+    const [profileError, setProfileError] = useState('');
+    const [profileLoadError, setProfileLoadError] = useState('');
+    const [loadAttempt, setLoadAttempt] = useState(0);
+    const [libraryAction, setLibraryAction] = useState<{ kind: 'remove' | 'restart'; bookId: string } | null>(null);
+    const [libraryActionBusy, setLibraryActionBusy] = useState(false);
 
     const [writtenBooks, setWrittenBooks] = useState<Book[]>([]);
 
     useEffect(() => {
-        api.getAllReadingProgress(user.id).then(setAllProgress);
-        api.getBooksByAuthor(user.id).then(setWrittenBooks);
-    }, [user.id]);
+        let active = true;
+        setProfileLoadError('');
+        Promise.all([api.getAllReadingProgress(user.id), api.getBooksByAuthor(user.id)])
+            .then(([progress, books]) => {
+                if (!active) return;
+                setAllProgress(progress);
+                setWrittenBooks(books);
+            })
+            .catch(() => {
+                if (active) setProfileLoadError('Some profile details could not be loaded.');
+            });
+        return () => { active = false; };
+    }, [user.id, loadAttempt]);
+
+    useEffect(() => {
+        if (!isCreateShelfModalOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && !isCreatingShelf) setIsCreateShelfModalOpen(false);
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [isCreateShelfModalOpen, isCreatingShelf]);
 
     const isMatureAllowed = useMemo(() => {
         if (!user.allowMatureContent) return false;
@@ -193,6 +227,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
 
     const handleCreateShelf = async () => {
         if (!newShelfName.trim()) return;
+        setProfileError('');
         setIsCreatingShelf(true);
         try {
             const updatedUser = await api.createShelf(user.id, newShelfName);
@@ -200,26 +235,37 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
             setIsCreateShelfModalOpen(false);
             setNewShelfName('');
         } catch (error) {
-            console.error("Failed to create shelf", error);
-            // Optionally set error state
+            setProfileError('The shelf could not be created. Please try again.');
         } finally {
             setIsCreatingShelf(false);
         }
     };
 
-    const handleRemoveBook = async (bookId: string) => {
-        const updatedUser = await api.removeBookFromLibrary(user.id, bookId);
-        onUserUpdate(updatedUser);
-        const newProgress = { ...allProgress };
-        delete newProgress[bookId];
-        setAllProgress(newProgress);
-    };
-
-    const handleRestartBook = async (bookId: string) => {
-        await api.clearReadingProgress(user.id, bookId);
-        const newProgress = { ...allProgress };
-        delete newProgress[bookId];
-        setAllProgress(newProgress);
+    const handleLibraryAction = async () => {
+        if (!libraryAction || libraryActionBusy) return;
+        setLibraryActionBusy(true);
+        setProfileError('');
+        try {
+            if (libraryAction.kind === 'remove') {
+                const updatedUser = await api.removeBookFromLibrary(user.id, libraryAction.bookId);
+                onUserUpdate(updatedUser);
+            } else {
+                await api.clearReadingProgress(user.id, libraryAction.bookId);
+            }
+            setAllProgress(current => {
+                const next = { ...current };
+                delete next[libraryAction.bookId];
+                return next;
+            });
+            setLibraryAction(null);
+        } catch {
+            setProfileError(libraryAction.kind === 'remove'
+                ? 'The book could not be removed from your library.'
+                : 'Your reading progress could not be restarted.');
+            setLibraryAction(null);
+        } finally {
+            setLibraryActionBusy(false);
+        }
     };
 
 
@@ -237,7 +283,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                 <div className="ww-profile-hero-inner container mx-auto px-6 py-12 relative z-10">
                     <div className="ww-profile-identity flex flex-col md:flex-row items-start gap-8">
                         <div className="ww-profile-avatar relative group">
-                            <img src={user.avatarUrl} alt={user.name} className="w-32 h-32 rounded-3xl object-cover shadow-lifted border-4 border-white dark:border-dark-surface" />
+                            <ResilientImage src={user.avatarUrl} alt={user.name} fallbackLabel={user.name} className="w-32 h-32 rounded-3xl object-cover shadow-lifted border-4 border-white dark:border-dark-surface" />
                             <div className="absolute -bottom-3 -right-3 bg-white dark:bg-dark-surface p-1.5 rounded-xl shadow-md">
                                 <span className="block px-2 py-0.5 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 text-xs font-bold rounded-lg uppercase tracking-wider">
                                     {user.stats?.readerLevel || "Novice"}
@@ -264,17 +310,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                     {/* Socials & Genres */}
                                     <div className="flex flex-wrap items-center gap-4 mt-6">
                                         {user.socials?.twitter && (
-                                            <a href={user.socials.twitter} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 dark:bg-dark-surface-alt rounded-lg hover:bg-[#1DA1F2] hover:text-white transition-all">
+                                            <a href={user.socials.twitter} target="_blank" rel="noreferrer" aria-label="Open Twitter profile" className="p-2 bg-gray-100 dark:bg-dark-surface-alt rounded-lg hover:bg-[#1DA1F2] hover:text-white transition-all">
                                                 <TwitterIcon className="w-5 h-5" />
                                             </a>
                                         )}
                                         {user.socials?.instagram && (
-                                            <a href={user.socials.instagram} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 dark:bg-dark-surface-alt rounded-lg hover:bg-gradient-to-tr hover:from-yellow-400 hover:via-red-500 hover:to-purple-500 hover:text-white transition-all">
+                                            <a href={user.socials.instagram} target="_blank" rel="noreferrer" aria-label="Open Instagram profile" className="p-2 bg-gray-100 dark:bg-dark-surface-alt rounded-lg hover:bg-gradient-to-tr hover:from-yellow-400 hover:via-red-500 hover:to-purple-500 hover:text-white transition-all">
                                                 <InstagramIcon className="w-5 h-5" />
                                             </a>
                                         )}
                                         {user.socials?.threads && (
-                                            <a href={user.socials.threads} target="_blank" rel="noreferrer" className="p-2 bg-gray-100 dark:bg-dark-surface-alt rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
+                                            <a href={user.socials.threads} target="_blank" rel="noreferrer" aria-label="Open Threads profile" className="p-2 bg-gray-100 dark:bg-dark-surface-alt rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
                                                 <ThreadsIcon className="w-5 h-5" />
                                             </a>
                                         )}
@@ -344,6 +390,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                 </div>
             </div>
 
+            {(profileLoadError || profileError) && (
+                <div role="alert" className="container mx-auto mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/5 px-5 py-3 text-sm text-danger">
+                    <span>{profileLoadError || profileError}</span>
+                    {profileLoadError ? (
+                        <button type="button" className="font-bold underline" onClick={() => setLoadAttempt(attempt => attempt + 1)}>Retry</button>
+                    ) : (
+                        <button type="button" className="font-bold underline" onClick={() => setProfileError('')}>Dismiss</button>
+                    )}
+                </div>
+            )}
+
             <div className="container mx-auto px-6 py-12">
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
                     {/* Sidebar Navigation */}
@@ -385,7 +442,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                                         {activeShelfId === 'published' ? (
                                             <BookCard book={book as Book} onClick={() => window.location.hash = `/book/${book.id}`} />
                                         ) : (
-                                            <LibraryBookCard book={book as LibraryBook} onRemove={handleRemoveBook} onRestart={handleRestartBook} />
+                                            <LibraryBookCard
+                                                book={book as LibraryBook}
+                                                onRemove={(bookId) => setLibraryAction({ kind: 'remove', bookId })}
+                                                onRestart={(bookId) => setLibraryAction({ kind: 'restart', bookId })}
+                                            />
                                         )}
                                     </div>
                                 ))}
@@ -411,11 +472,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
 
             {/* Create Shelf Modal */}
             {isCreateShelfModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200" onMouseDown={(event) => { if (event.target === event.currentTarget && !isCreatingShelf) setIsCreateShelfModalOpen(false); }}>
+                    <div role="dialog" aria-modal="true" aria-labelledby="create-shelf-title" className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Create New Shelf</h3>
-                            <button onClick={() => setIsCreateShelfModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                            <h3 id="create-shelf-title" className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Create New Shelf</h3>
+                            <button type="button" aria-label="Close create shelf dialog" onClick={() => setIsCreateShelfModalOpen(false)} className="grid min-h-11 min-w-11 place-items-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                                 <XMarkIcon className="w-6 h-6" />
                             </button>
                         </div>
@@ -452,6 +513,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate }) 
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={!!libraryAction}
+                title={libraryAction?.kind === 'remove' ? 'Remove this book?' : 'Restart this book?'}
+                message={libraryAction?.kind === 'remove'
+                    ? 'This removes the book from your library. You can add it again later.'
+                    : 'Your saved reading progress for this book will return to the beginning.'}
+                confirmLabel={libraryAction?.kind === 'remove' ? 'Remove book' : 'Restart progress'}
+                processingLabel={libraryAction?.kind === 'remove' ? 'Removing…' : 'Restarting…'}
+                isProcessing={libraryActionBusy}
+                tone={libraryAction?.kind === 'remove' ? 'danger' : 'warning'}
+                onCancel={() => { if (!libraryActionBusy) setLibraryAction(null); }}
+                onConfirm={handleLibraryAction}
+            />
 
             <Footer />
 

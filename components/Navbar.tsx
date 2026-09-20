@@ -132,33 +132,39 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
   const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') === true;
 
   const desktopNavLinks = isAuthenticated ? [
-    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; } },
-    { label: 'Hook Feed', route: 'hooks', action: () => { window.location.hash = '/hooks'; } },
-    { label: 'Events', route: 'events', action: () => { window.location.hash = '/events'; } },
-    { label: 'Genres', route: 'genres', action: () => { window.location.hash = '/category'; } },
-    { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; } },
-    { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; } },
-    { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; } },
-    ...(isAdmin ? [{ label: 'Applications', route: 'founding-applications', action: () => { window.location.hash = '/admin/founding-writers'; } }] : []),
+    { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; } },
+    { label: 'Hook Feed', route: 'hooks', href: '/hooks', action: () => { window.location.hash = '/hooks'; } },
+    { label: 'Events', route: 'events', href: '/events', action: () => { window.location.hash = '/events'; } },
+    { label: 'Genres', route: 'genres', href: '/category', action: () => { window.location.hash = '/category'; } },
+    { label: 'Community', route: 'community', href: '/community', action: () => { window.location.hash = '/community'; } },
+    { label: 'Library', route: 'library', href: '/profile', action: () => { window.location.hash = '/profile'; } },
+    { label: 'Write', route: 'write', href: '/write', action: () => { window.location.hash = '/write'; } },
+    ...(isAdmin ? [{ label: 'Applications', route: 'founding-applications', href: '/admin/founding-writers', action: () => { window.location.hash = '/admin/founding-writers'; } }] : []),
   ] : [
-    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; } },
-    { label: 'Features', route: 'features', action: () => { window.location.hash = '/features'; } },
-    { label: 'About', route: 'about', action: () => { window.location.hash = '/about'; } },
-    { label: 'Founding Writers', route: 'founding-writers', action: () => { window.location.hash = '/founding-writers'; } },
+    { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; } },
+    { label: 'Features', route: 'features', href: '/features', action: () => { window.location.hash = '/features'; } },
+    { label: 'About', route: 'about', href: '/about', action: () => { window.location.hash = '/about'; } },
+    { label: 'Founding Writers', route: 'founding-writers', href: '/founding-writers', action: () => { window.location.hash = '/founding-writers'; } },
   ];
 
   const mobileNavLinks = isAuthenticated ? [
-    { label: 'Home', route: 'home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
-    { label: 'Hooks', route: 'hooks', action: () => { window.location.hash = '/hooks'; }, icon: SparklesIcon },
-    { label: 'Community', route: 'community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
-    { label: 'Library', route: 'library', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
-    { label: 'Write', route: 'write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
+    { label: 'Home', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
+    { label: 'Hooks', route: 'hooks', href: '/hooks', action: () => { window.location.hash = '/hooks'; }, icon: SparklesIcon },
+    { label: 'Community', route: 'community', href: '/community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
+    { label: 'Library', route: 'library', href: '/profile', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
+    { label: 'Write', route: 'write', href: '/write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
   ] : [
-    { label: 'Discover', route: 'home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
-    { label: 'Features', route: 'features', action: () => { window.location.hash = '/features'; }, icon: Squares2X2Icon },
-    { label: 'About', route: 'about', action: () => { window.location.hash = '/about'; }, icon: UserCircleIcon },
-    { label: 'Founding Writers', route: 'founding-writers', action: () => { window.location.hash = '/founding-writers'; }, icon: Feather },
+    { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
+    { label: 'Features', route: 'features', href: '/features', action: () => { window.location.hash = '/features'; }, icon: Squares2X2Icon },
+    { label: 'About', route: 'about', href: '/about', action: () => { window.location.hash = '/about'; }, icon: UserCircleIcon },
+    { label: 'Founding Writers', route: 'founding-writers', href: '/founding-writers', action: () => { window.location.hash = '/founding-writers'; }, icon: Feather },
   ];
+
+  const handleInternalLink = (event: React.MouseEvent<HTMLAnchorElement>, action: () => void) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    action();
+  };
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -214,8 +220,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
             {desktopNavLinks.map((link) => (
               <a
                 key={link.label}
-                href="#"
-                onClick={(e) => { e.preventDefault(); link.action(); }}
+                href={link.href}
+                onClick={(event) => handleInternalLink(event, link.action)}
                 className={`ww-desktop-nav-link ${activeRoute === link.route ? 'ww-desktop-nav-link-active' : ''}`}
                 aria-current={activeRoute === link.route ? 'page' : undefined}
               >
@@ -296,14 +302,16 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
       <div className="ww-mobile-bottom-nav xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
         <nav className="h-full flex justify-around items-center">
           {mobileNavLinks.map((link) => (
-            <button
+            <a
               key={link.label}
-              onClick={() => link.action()}
+              href={link.href}
+              onClick={(event) => handleInternalLink(event, link.action)}
               className={`mobile-nav-tab ${activeRoute === link.route ? 'mobile-nav-tab-active' : ''}`}
+              aria-current={activeRoute === link.route ? 'page' : undefined}
             >
               <link.icon className="w-6 h-6" />
               <span>{link.label}</span>
-            </button>
+            </a>
           ))}
           {/* More Tab */}
           <button

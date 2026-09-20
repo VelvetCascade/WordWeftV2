@@ -33,7 +33,6 @@ const ReadingGrowthPage = lazy(() => import('./pages/ReadingGrowthPage').then(mo
 const FeaturesPage = lazy(() => import('./pages/FeaturesPage').then(module => ({ default: module.FeaturesPage })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(module => ({ default: module.AboutPage })));
-const FeatureDevelopmentPage = lazy(() => import('./pages/FeatureDevelopmentPage').then(module => ({ default: module.FeatureDevelopmentPage })));
 const FoundingWritersPage = lazy(() => import('./pages/FoundingWritersPage').then(module => ({ default: module.FoundingWritersPage })));
 const FoundingWriterAdminPage = lazy(() => import('./pages/FoundingWriterAdminPage').then(module => ({ default: module.FoundingWriterAdminPage })));
 import { FeedbackToast } from './components/FeedbackToast';
@@ -133,7 +132,7 @@ const App: React.FC = () => {
       case 'writer-manage-book': window.location.hash = `/write/book/${encodeURIComponent(target.bookId)}/manage`; break;
       case 'writer-edit-chapter': window.location.hash = `/write/book/${encodeURIComponent(target.bookId)}/chapter/${encodeURIComponent(target.chapterId)}/edit`; break;
       case 'writer-analytics': window.location.hash = '/write/analytics'; break;
-      case 'writer-settings': window.location.hash = '/write/settings'; break;
+      case 'writer-settings': window.location.hash = '/edit-profile'; break;
       case 'discovery-landing': case 'public-catalog': window.location.hash = target.path; break;
       case 'genre-page': window.location.hash = `/genre/${encodeURIComponent(target.genre)}`; break;
       case 'author': window.location.hash = `/author/${target.authorId}`; break;
@@ -346,7 +345,9 @@ const App: React.FC = () => {
       } else if (hash.startsWith('write/analytics')) {
         targetPage = { name: 'writer-analytics' };
       } else if (hash.startsWith('write/settings')) {
-        targetPage = { name: 'writer-settings' };
+        // Preserve old bookmarks without sending writers to a dead-end placeholder.
+        window.location.hash = '/edit-profile';
+        return;
       } else if (hash.startsWith('write')) {
         targetPage = { name: 'writer-dashboard' };
       } else if (hash.startsWith('category')) {
@@ -503,7 +504,7 @@ const App: React.FC = () => {
       case 'writer-analytics':
         return <WriterAnalyticsPage />;
       case 'writer-settings':
-        return <FeatureDevelopmentPage featureName="Writer Settings" description="Fine-grained controls for your stories and pen name are coming here. You'll be able to manage your publishing preferences and writer profile." />;
+        return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'hook-feed':
         return <HookFeedPage currentUser={currentUser} onUserUpdate={setCurrentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'reading-growth':
@@ -542,6 +543,8 @@ const App: React.FC = () => {
           hasMore={notif.hasMore}
           onLoadMore={notif.loadMore}
           isLoading={notif.isLoading}
+          error={notif.error}
+          onRetry={notif.refresh}
         />;
       case 'genre-page':
         return <GenrePage genre={page.genre} />;

@@ -8,6 +8,7 @@ interface UseNotificationsReturn {
     notifications: AppNotification[];
     unreadCount: number;
     isLoading: boolean;
+    error: string;
     hasMore: boolean;
     toastNotification: AppNotification | null;
     loadMore: () => void;
@@ -21,11 +22,13 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(0);
     const [toastNotification, setToastNotification] = useState<AppNotification | null>(null);
     const eventSourceRef = useRef<EventSource | null>(null);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const notificationsRequestRef = useRef(false);
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
@@ -34,14 +37,16 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             const count = await api.getUnreadNotificationCount();
             setUnreadCount(count);
         } catch (e) {
-            // Silently fail
+            setError('Notifications could not be refreshed.');
         }
     }, [isLoggedIn]);
 
     // Fetch notifications
     const fetchNotifications = useCallback(async (pageNum: number, append = false) => {
-        if (!isLoggedIn) return;
+        if (!isLoggedIn || notificationsRequestRef.current) return;
+        notificationsRequestRef.current = true;
         setIsLoading(true);
+        setError('');
         try {
             const data = await api.getNotifications(pageNum, 20);
             if (append) {
@@ -51,8 +56,9 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             }
             setHasMore(data.hasNext);
         } catch (e) {
-            // Silently fail
+            setError('Notifications could not be loaded. Please try again.');
         } finally {
+            notificationsRequestRef.current = false;
             setIsLoading(false);
         }
     }, [isLoggedIn]);
@@ -65,6 +71,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
         } else {
             setNotifications([]);
             setUnreadCount(0);
+            setError('');
         }
     }, [isLoggedIn, fetchUnreadCount, fetchNotifications]);
 
@@ -135,7 +142,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
     }, [isLoggedIn, fetchUnreadCount]);
 
     const loadMore = useCallback(() => {
-        if (!isLoading && hasMore) {
+        if (!notificationsRequestRef.current && !isLoading && hasMore) {
             const nextPage = page + 1;
             setPage(nextPage);
             fetchNotifications(nextPage, true);
@@ -148,7 +155,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (e) {
-            // Silently fail
+            setError('That notification could not be marked as read.');
         }
     }, []);
 
@@ -158,7 +165,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
             setUnreadCount(0);
         } catch (e) {
-            // Silently fail
+            setError('Notifications could not be marked as read.');
         }
     }, []);
 
@@ -168,6 +175,8 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
     }, []);
 
     const refresh = useCallback(() => {
+        if (notificationsRequestRef.current) return;
+        setError('');
         setPage(0);
         fetchNotifications(0);
         fetchUnreadCount();
@@ -177,6 +186,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
         notifications,
         unreadCount,
         isLoading,
+        error,
         hasMore,
         toastNotification,
         loadMore,

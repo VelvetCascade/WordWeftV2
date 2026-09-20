@@ -4,6 +4,7 @@ import type { Page } from '../App';
 import { communityNotificationPostId } from '../utils/community';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { ResilientImage } from '../components/ResilientImage';
 
 interface NotificationsPageProps {
     currentUser: User | null;
@@ -16,6 +17,8 @@ interface NotificationsPageProps {
     hasMore: boolean;
     onLoadMore: () => void;
     isLoading: boolean;
+    error: string;
+    onRetry: () => void;
 }
 
 const FILTER_TABS = [
@@ -83,7 +86,7 @@ const getNotificationTarget = (n: AppNotification): Page | null => {
 
 export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     currentUser, navigateTo, onLogout, notifications, onMarkRead,
-    onMarkAllRead, unreadCount, hasMore, onLoadMore, isLoading,
+    onMarkAllRead, unreadCount, hasMore, onLoadMore, isLoading, error, onRetry,
 }) => {
     const [activeFilter, setActiveFilter] = useState('ALL');
     const { trackEvent } = useAnalytics();
@@ -92,6 +95,8 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     const [preferences, setPreferences] = useState<NotificationPreferences>({
         follows: true, comments: true, storyUpdates: true, systemAnnouncements: true,
     });
+    const [pendingPreference, setPendingPreference] = useState<keyof NotificationPreferences | null>(null);
+    const [preferenceError, setPreferenceError] = useState('');
 
     // Load preferences from user
     useEffect(() => {
@@ -104,13 +109,19 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     }, [currentUser]);
 
     const handlePreferenceChange = async (key: keyof NotificationPreferences) => {
+        if (pendingPreference) return;
         const newPrefs = { ...preferences, [key]: !preferences[key] };
+        setPendingPreference(key);
+        setPreferenceError('');
         setPreferences(newPrefs);
         try {
             await api.updateNotificationPreferences(newPrefs);
         } catch (e) {
             // Revert on error
             setPreferences(preferences);
+            setPreferenceError('That preference could not be saved. Please try again.');
+        } finally {
+            setPendingPreference(null);
         }
     };
 
@@ -150,6 +161,8 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         )}
                         <button
                             onClick={() => setShowSettings(!showSettings)}
+                            aria-expanded={showSettings}
+                            aria-controls="notification-preferences"
                             className="px-3.5 py-2 text-[13px] font-sans font-semibold bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-text-body dark:text-dark-text-body rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors shadow-sm"
                         >
                             ⚙ Settings
@@ -159,10 +172,11 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
 
                 {/* Settings Panel */}
                 {showSettings && (
-                    <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-5 mb-5 animate-fade-in">
+                    <div id="notification-preferences" className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-5 mb-5 animate-fade-in">
                         <h3 className="font-sans m-0 mb-4 text-[15px] font-bold text-text-rich dark:text-dark-text-rich">
                             Notification Preferences
                         </h3>
+                        {preferenceError && <p role="alert" className="mb-3 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{preferenceError}</p>}
                         {[
                             { key: 'follows' as const, label: 'Follows', desc: 'When someone follows you' },
                             { key: 'comments' as const, label: 'Comments', desc: 'Comments on your chapters and replies' },
@@ -180,7 +194,12 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                 </div>
                                 <button
                                     onClick={() => handlePreferenceChange(key)}
-                                    className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${preferences[key] ? 'bg-accent' : 'bg-gray-200 dark:bg-gray-700'}`}
+                                    role="switch"
+                                    aria-checked={preferences[key]}
+                                    aria-label={`${label} notifications`}
+                                    aria-busy={pendingPreference === key}
+                                    disabled={pendingPreference !== null}
+                                    className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60 ${preferences[key] ? 'bg-accent' : 'bg-gray-200 dark:bg-gray-700'}`}
                                 >
                                     <span
                                         className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full shadow transition-transform duration-200 transform ${preferences[key] ? 'translate-x-5' : 'translate-x-0'}`}
@@ -188,6 +207,13 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                 </button>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {error && (
+                    <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+                        <span>{error}</span>
+                        <button type="button" onClick={onRetry} className="font-bold underline">Try again</button>
                     </div>
                 )}
 
@@ -211,6 +237,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search notifications..."
+                        aria-label="Search notifications"
                         className="w-full px-4 py-2.5 font-sans text-sm bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-xl text-text-body dark:text-dark-text-body outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-sm"
                     />
                 </div>
@@ -240,7 +267,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                             >
                                 {/* Icon / Avatar */}
                                 {n.metadata?.actorAvatar ? (
-                                    <img src={n.metadata.actorAvatar} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-sm" />
+                                    <ResilientImage src={n.metadata.actorAvatar} alt={n.metadata.actorName || 'Notification sender'} fallbackLabel={n.metadata.actorName} className="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-sm" />
                                 ) : (
                                     <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-surface-alt flex items-center justify-center flex-shrink-0 text-xl shadow-inner text-gray-700 dark:text-gray-300">
                                         {getNotificationIcon(n.type)}
@@ -256,7 +283,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                         {n.message}
                                     </p>
                                     {n.metadata?.bookTitle && (
-                                        <p className="font-sans m-0 mt-1 text-xs font-semibold text-indigo-500 dark:text-indigo-400">
+                                        <p className="font-sans m-0 mt-1 text-xs font-semibold text-accent">
                                             📖 {n.metadata.bookTitle}
                                         </p>
                                     )}

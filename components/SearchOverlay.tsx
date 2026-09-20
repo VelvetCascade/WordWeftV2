@@ -4,6 +4,7 @@ import type { SearchBookResult, SearchAuthorResult } from '../types';
 import * as api from '../api/client';
 import { StarIcon } from './icons/Icons';
 import { createLatestRequestGate } from '../utils/runtimeLifecycle';
+import { ResilientImage } from './ResilientImage';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -206,9 +207,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                         onClick={() => navigateToBook(book.id)}
                                         onMouseEnter={() => setSelectedIndex(i)}
                                     >
-                                        <img
-                                            src={book.coverUrl || 'https://via.placeholder.com/40x56'}
+                                        <ResilientImage
+                                            src={book.coverUrl}
                                             alt={book.title}
+                                            fallbackLabel={book.title}
+                                            variant="cover"
                                             className="search-overlay-book-cover"
                                         />
                                         <div className="search-overlay-item-text">
@@ -257,9 +260,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                             onClick={() => navigateToAuthor(author.id)}
                                             onMouseEnter={() => setSelectedIndex(idx)}
                                         >
-                                            <img
-                                                src={author.avatarUrl || 'https://via.placeholder.com/40'}
+                                            <ResilientImage
+                                                src={author.avatarUrl}
                                                 alt={author.name}
+                                                fallbackLabel={author.name}
                                                 className="search-overlay-avatar"
                                             />
                                             <div className="search-overlay-item-text">

@@ -3,6 +3,7 @@ import type { Book } from '../types';
 import { StarIcon, EyeIcon } from './icons/Icons';
 import { AIBadge } from './AIBadge';
 import { AgeRatingBadge } from './AgeRatingBadge';
+import { ResilientImage } from './ResilientImage';
 
 interface BookCardProps {
   book: Book;
@@ -19,9 +20,11 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       aria-label={`Open ${book.title} by ${book.author.name}`}
     >
       <div className="ww-book-cover-wrap">
-        <a href={`/book/${encodeURIComponent(book.id)}`} aria-label={`Read about ${book.title}`}><img
+        <a href={`/book/${encodeURIComponent(book.id)}`} aria-label={`Read about ${book.title}`}><ResilientImage
           src={book.coverUrl}
           alt={`Cover of ${book.title}`}
+          fallbackLabel={book.title}
+          variant="cover"
           className="ww-book-cover"
           loading="lazy"
           width={200}

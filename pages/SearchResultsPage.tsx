@@ -5,6 +5,8 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { StarIcon } from '../components/icons/Icons';
 import AdUnit from '../components/AdUnit';
+import { ResilientImage } from '../components/ResilientImage';
+import { createLatestRequestGate } from '../utils/runtimeLifecycle';
 
 type SearchTab = 'all' | 'books' | 'authors';
 
@@ -17,15 +19,21 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     const [currentPage, setCurrentPage] = useState(0);
     const [inputValue, setInputValue] = useState('');
     const [searchError, setSearchError] = useState('');
+    const requestGateRef = React.useRef(createLatestRequestGate());
+    const loadingRef = React.useRef(false);
 
     useEffect(() => { setQuery(searchQuery); setInputValue(searchQuery); }, [searchQuery]);
 
     const fetchResults = useCallback(async (q: string, tab: SearchTab, page: number) => {
         if (q.trim().length < 2) return;
+        if (loadingRef.current && page > 0) return;
+        const requestId = requestGateRef.current.begin();
+        loadingRef.current = true;
         setIsLoading(true);
         setSearchError('');
         try {
             const data = await api.searchFull(q, tab, page, 12);
+            if (!requestGateRef.current.isLatest(requestId)) return;
             if (page === 0) {
                 setResults(data);
             } else {
@@ -42,12 +50,19 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                 }));
             }
         } catch (e) {
-            console.error('Search error:', e);
-            setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
+            if (requestGateRef.current.isLatest(requestId)) {
+                console.error('Search error:', e);
+                setSearchError(e instanceof Error ? e.message : 'Search is unavailable. Please try again.');
+            }
         } finally {
-            setIsLoading(false);
+            if (requestGateRef.current.isLatest(requestId)) {
+                loadingRef.current = false;
+                setIsLoading(false);
+            }
         }
     }, []);
+
+    useEffect(() => () => requestGateRef.current.invalidate(), []);
 
     useEffect(() => {
         if (query) {
@@ -95,6 +110,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                     </svg>
                     <input
                         type="text"
+                        aria-label="Search books and users"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder="Search books, users, genres..."
@@ -108,6 +124,8 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                     {tabs.map((tab) => (
                         <button
                             key={tab.key}
+                            type="button"
+                            aria-pressed={activeTab === tab.key}
                             className={`search-results-tab ${activeTab === tab.key ? 'search-results-tab-active' : ''}`}
                             onClick={() => { setActiveTab(tab.key); setCurrentPage(0); }}
                         >
@@ -216,9 +234,11 @@ const BookResultCard: React.FC<{ book: SearchBookResult; index: number }> = ({ b
         aria-label={`Open ${book.title}${book.author ? ` by ${book.author.name}` : ''}`}
     >
         <div className="search-book-card-cover-wrapper">
-            <img
-                src={book.coverUrl || 'https://via.placeholder.com/200x280'}
+            <ResilientImage
+                src={book.coverUrl}
                 alt={book.title}
+                fallbackLabel={book.title}
+                variant="cover"
                 className="search-book-card-cover"
             />
             <div className="search-book-card-cover-overlay">
@@ -270,9 +290,11 @@ const AuthorResultCard: React.FC<{ author: SearchAuthorResult; index: number }> 
         style={{ animationDelay: `${index * 80}ms` }}
         onClick={() => { window.location.hash = `/author/${author.id}`; }}
     >
-        <img
-            src={author.avatarUrl || 'https://via.placeholder.com/80'}
+        <ResilientImage
+            src={author.avatarUrl}
             alt={author.name}
+            fallbackLabel={author.name}
+            variant="avatar"
             className="search-author-card-avatar"
         />
         <div className="search-author-card-info">

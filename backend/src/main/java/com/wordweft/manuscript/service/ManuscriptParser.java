@@ -57,7 +57,13 @@ public class ManuscriptParser {
         public ImageUploadException(String message) { super(message); }
         public ImageUploadException(String message, Throwable cause) { super(message, cause); }
     }
-    private record Paragraph(String htmlContent, String plainText, boolean heading) {}
+    private record Paragraph(
+            String htmlContent,
+            String plainText,
+            boolean heading,
+            int headingLevel,
+            boolean richContent,
+            boolean separator) {}
 
     public List<ImportedChapter> parse(String filename, byte[] bytes) {
         return parse(filename, bytes, null);
@@ -111,10 +117,10 @@ public class ManuscriptParser {
                 if (heading) {
                     if (currentPara.length() > 0) {
                         String paraText = currentPara.toString();
-                        result.add(new Paragraph("<p>" + escapeHtml(paraText) + "</p>", paraText, false));
+                        result.add(new Paragraph("<p>" + escapeHtml(paraText) + "</p>", paraText, false, 0, false, false));
                         currentPara.setLength(0);
                     }
-                    result.add(new Paragraph(null, text, true));
+                    result.add(new Paragraph(null, text, true, 1, false, false));
                 } else {
                     if (currentPara.length() > 0) {
                         currentPara.append(' ');
@@ -125,7 +131,7 @@ public class ManuscriptParser {
 
             if (currentPara.length() > 0) {
                 String paraText = currentPara.toString();
-                result.add(new Paragraph("<p>" + escapeHtml(paraText) + "</p>", paraText, false));
+                result.add(new Paragraph("<p>" + escapeHtml(paraText) + "</p>", paraText, false, 0, false, false));
             }
         }
         return result;
@@ -212,35 +218,261 @@ public class ManuscriptParser {
             int[] imageCounts) throws Exception {
 
         Document document = createSecureDocumentBuilder().parse(new InputSource(new ByteArrayInputStream(xml)));
-        NodeList paragraphNodes = document.getElementsByTagNameNS("*", "p");
         List<Paragraph> paragraphs = new ArrayList<>();
+        NodeList bodies = document.getElementsByTagNameNS("*", "body");
+        if (bodies.getLength() == 0) return paragraphs;
 
-        for (int index = 0; index < paragraphNodes.getLength(); index++) {
-            Element paragraph = (Element) paragraphNodes.item(index);
-            String plainText = wordText(paragraph).trim();
-            List<String> imageUrls = extractParagraphImages(paragraph, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+        appendDocumentBlocks(
+                bodies.item(0), paragraphs, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+        return paragraphs;
+    }
 
-            if (plainText.isEmpty() && imageUrls.isEmpty()) continue;
+    private void appendDocumentBlocks(
+            Node container,
+            List<Paragraph> blocks,
+            Map<String, String> relIdToMediaPath,
+            Map<String, byte[]> mediaFiles,
+            ImageUploader imageUploader,
+            int[] imageCounts) {
 
-            String style = paragraphStyle(paragraph).toLowerCase(Locale.ROOT);
-            boolean heading = style.startsWith("heading") || style.equals("title") || isConventionalHeading(plainText);
-
-            if (heading && imageUrls.isEmpty()) {
-                paragraphs.add(new Paragraph(null, plainText, true));
-            } else {
-                StringBuilder html = new StringBuilder();
-                if (!plainText.isEmpty()) {
-                    html.append("<p>").append(escapeHtml(plainText)).append("</p>");
-                }
-                for (String imgUrl : imageUrls) {
-                    html.append("<p class=\"chapter-image-container\"><img src=\"")
-                            .append(escapeHtml(imgUrl))
-                            .append("\" alt=\"Chapter illustration\" class=\"chapter-image\" loading=\"lazy\" /></p>");
-                }
-                paragraphs.add(new Paragraph(html.toString(), plainText, false));
+        NodeList children = container.getChildNodes();
+        for (int index = 0; index < children.getLength(); index++) {
+            Node child = children.item(index);
+            if (child.getNodeType() != Node.ELEMENT_NODE) continue;
+            String tag = localName(child);
+            if ("p".equals(tag)) {
+                Paragraph parsed = parseDocxParagraph(
+                        (Element) child, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+                if (parsed != null) blocks.add(parsed);
+            } else if ("tbl".equals(tag)) {
+                Paragraph table = parseDocxTable(
+                        (Element) child, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+                if (table != null) blocks.add(table);
+            } else if ("sdt".equals(tag) || "sdtcontent".equals(tag) || "customxml".equals(tag)) {
+                appendDocumentBlocks(child, blocks, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
             }
         }
-        return paragraphs;
+    }
+
+    private Paragraph parseDocxParagraph(
+            Element paragraph,
+            Map<String, String> relIdToMediaPath,
+            Map<String, byte[]> mediaFiles,
+            ImageUploader imageUploader,
+            int[] imageCounts) {
+
+        String plainText = wordText(paragraph).trim();
+        List<String> imageUrls = extractParagraphImages(
+                paragraph, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+
+        if (plainText.isEmpty() && imageUrls.isEmpty() && !isHorizontalRule(paragraph)) return null;
+
+        String style = paragraphStyle(paragraph).toLowerCase(Locale.ROOT);
+        int headingLevel = headingLevel(style);
+        boolean heading = headingLevel > 0 || style.equals("title") || isConventionalHeading(plainText);
+        if (heading && imageUrls.isEmpty()) {
+            return new Paragraph(null, plainText, true, headingLevel == 0 ? 1 : headingLevel, false, false);
+        }
+
+        if (isHorizontalRule(paragraph)) {
+            return new Paragraph("<hr>", plainText, false, 0, false, true);
+        }
+
+        String inlineHtml = formattedParagraphText(paragraph);
+        StringBuilder html = new StringBuilder();
+        if (!inlineHtml.isBlank()) {
+            if (style.contains("quote")) {
+                html.append("<blockquote><p>").append(inlineHtml).append("</p></blockquote>");
+            } else if (isListParagraph(paragraph, style)) {
+                String listTag = style.contains("number") ? "ol" : "ul";
+                html.append('<').append(listTag).append("><li><p>")
+                        .append(inlineHtml).append("</p></li></").append(listTag).append('>');
+            } else {
+                html.append("<p>").append(inlineHtml).append("</p>");
+            }
+        }
+        for (String imgUrl : imageUrls) {
+            html.append(chapterImageHtml(imgUrl));
+        }
+        return new Paragraph(html.toString(), plainText, false, 0, !imageUrls.isEmpty(), false);
+    }
+
+    private Paragraph parseDocxTable(
+            Element table,
+            Map<String, String> relIdToMediaPath,
+            Map<String, byte[]> mediaFiles,
+            ImageUploader imageUploader,
+            int[] imageCounts) {
+
+        List<Element> rows = directChildren(table, "tr");
+        if (rows.isEmpty()) return null;
+        boolean headerRow = rows.size() > 1 && isLikelyHeaderRow(rows.get(0));
+        StringBuilder html = new StringBuilder("<table><tbody>");
+        StringBuilder plainText = new StringBuilder();
+
+        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+            html.append("<tr>");
+            List<Element> cells = directChildren(rows.get(rowIndex), "tc");
+            for (Element cell : cells) {
+                String cellTag = headerRow && rowIndex == 0 ? "th" : "td";
+                html.append('<').append(cellTag).append('>');
+                List<Element> cellParagraphs = directChildren(cell, "p");
+                if (cellParagraphs.isEmpty()) {
+                    html.append("<p></p>");
+                } else {
+                    for (Element cellParagraph : cellParagraphs) {
+                        String cellText = wordText(cellParagraph).trim();
+                        String cellInline = formattedParagraphText(cellParagraph);
+                        List<String> imageUrls = extractParagraphImages(
+                                cellParagraph, relIdToMediaPath, mediaFiles, imageUploader, imageCounts);
+                        if (!cellInline.isBlank()) html.append("<p>").append(cellInline).append("</p>");
+                        for (String imageUrl : imageUrls) html.append(chapterImageHtml(imageUrl));
+                        if (!cellText.isBlank()) {
+                            if (plainText.length() > 0) plainText.append(' ');
+                            plainText.append(cellText);
+                        }
+                    }
+                }
+                html.append("</").append(cellTag).append('>');
+            }
+            html.append("</tr>");
+        }
+        html.append("</tbody></table>");
+        return new Paragraph(html.toString(), plainText.toString(), false, 0, true, false);
+    }
+
+    private boolean isLikelyHeaderRow(Element row) {
+        if (hasDescendant(row, "tblHeader") || hasDescendant(row, "shd")) return true;
+        List<Element> cells = directChildren(row, "tc");
+        if (cells.isEmpty()) return false;
+        boolean everyCellIsBrief = true;
+        boolean hasBoldText = false;
+        for (Element cell : cells) {
+            String text = wordText(cell).trim();
+            everyCellIsBrief &= !text.isBlank() && text.length() <= 80;
+            hasBoldText |= hasDescendant(cell, "b");
+        }
+        return everyCellIsBrief && hasBoldText;
+    }
+
+    private String formattedParagraphText(Element paragraph) {
+        StringBuilder html = new StringBuilder();
+        appendFormattedRuns(paragraph, html);
+        return html.toString().trim();
+    }
+
+    private void appendFormattedRuns(Node container, StringBuilder html) {
+        NodeList children = container.getChildNodes();
+        for (int index = 0; index < children.getLength(); index++) {
+            Node child = children.item(index);
+            if (child.getNodeType() != Node.ELEMENT_NODE) continue;
+            String tag = localName(child);
+            if ("r".equals(tag)) {
+                appendFormattedRun((Element) child, html);
+            } else if ("hyperlink".equals(tag) || "smarttag".equals(tag) || "sdt".equals(tag)
+                    || "sdtcontent".equals(tag) || "ins".equals(tag)) {
+                appendFormattedRuns(child, html);
+            }
+        }
+    }
+
+    private void appendFormattedRun(Element run, StringBuilder html) {
+        StringBuilder content = new StringBuilder();
+        NodeList children = run.getChildNodes();
+        for (int index = 0; index < children.getLength(); index++) {
+            Node child = children.item(index);
+            if (child.getNodeType() != Node.ELEMENT_NODE) continue;
+            switch (localName(child)) {
+                case "t", "deltext" -> content.append(escapeHtml(child.getTextContent()));
+                case "tab" -> content.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+                case "br", "cr" -> content.append("<br>");
+                default -> { }
+            }
+        }
+        if (content.isEmpty()) return;
+
+        Element properties = firstDirectChild(run, "rPr");
+        String value = content.toString();
+        if (properties != null) {
+            if (enabledProperty(properties, "b")) value = "<strong>" + value + "</strong>";
+            if (enabledProperty(properties, "i")) value = "<em>" + value + "</em>";
+            if (enabledProperty(properties, "u")) value = "<u>" + value + "</u>";
+            if (enabledProperty(properties, "strike") || enabledProperty(properties, "dstrike")) {
+                value = "<s>" + value + "</s>";
+            }
+        }
+        html.append(value);
+    }
+
+    private boolean enabledProperty(Element properties, String localName) {
+        Element property = firstDirectChild(properties, localName);
+        if (property == null) return false;
+        String value = wordAttribute(property, "val").toLowerCase(Locale.ROOT);
+        return !Set.of("false", "0", "none", "off").contains(value);
+    }
+
+    private boolean isListParagraph(Element paragraph, String style) {
+        return style.contains("list") || hasDescendant(paragraph, "numPr");
+    }
+
+    private boolean isHorizontalRule(Element paragraph) {
+        String text = wordText(paragraph).trim();
+        if (text.matches("(?:-{3,}|_{3,}|\\*{3,})")) return true;
+        return hasDescendant(paragraph, "pBdr");
+    }
+
+    private int headingLevel(String style) {
+        if (!style.startsWith("heading")) return 0;
+        String suffix = style.substring("heading".length()).replaceAll("[^0-9]", "");
+        if (suffix.isBlank()) return 1;
+        try {
+            return Math.max(1, Math.min(6, Integer.parseInt(suffix)));
+        } catch (NumberFormatException ignored) {
+            return 1;
+        }
+    }
+
+    private String chapterImageHtml(String imageUrl) {
+        return "<p class=\"chapter-image-container\"><img src=\"" + escapeHtml(imageUrl)
+                + "\" alt=\"Chapter illustration\" class=\"chapter-image\" loading=\"lazy\" /></p>";
+    }
+
+    private List<Element> directChildren(Element parent, String wantedLocalName) {
+        List<Element> result = new ArrayList<>();
+        String wanted = wantedLocalName.toLowerCase(Locale.ROOT);
+        NodeList children = parent.getChildNodes();
+        for (int index = 0; index < children.getLength(); index++) {
+            Node child = children.item(index);
+            if (child.getNodeType() == Node.ELEMENT_NODE && wanted.equals(localName(child))) {
+                result.add((Element) child);
+            }
+        }
+        return result;
+    }
+
+    private Element firstDirectChild(Element parent, String wantedLocalName) {
+        List<Element> children = directChildren(parent, wantedLocalName);
+        return children.isEmpty() ? null : children.get(0);
+    }
+
+    private boolean hasDescendant(Element parent, String wantedLocalName) {
+        NodeList nodes = parent.getElementsByTagNameNS("*", wantedLocalName);
+        if (nodes.getLength() > 0) return true;
+        return parent.getElementsByTagName("w:" + wantedLocalName).getLength() > 0;
+    }
+
+    private String localName(Node node) {
+        String name = node.getLocalName();
+        if (name != null) return name.toLowerCase(Locale.ROOT);
+        String fallback = node.getNodeName();
+        int colon = fallback.indexOf(':');
+        return (colon >= 0 ? fallback.substring(colon + 1) : fallback).toLowerCase(Locale.ROOT);
+    }
+
+    private String wordAttribute(Element element, String name) {
+        String value = element.getAttributeNS(
+                "http://schemas.openxmlformats.org/wordprocessingml/2006/main", name);
+        return value.isBlank() ? element.getAttribute("w:" + name) : value;
     }
 
     private List<String> extractParagraphImages(
@@ -374,39 +606,64 @@ public class ManuscriptParser {
         boolean hasHeadings = paragraphs.stream().anyMatch(Paragraph::heading);
 
         String currentTitle = null;
-        List<String> content = new ArrayList<>();
+        List<Paragraph> content = new ArrayList<>();
 
         for (Paragraph paragraph : paragraphs) {
             if (paragraph.heading()) {
-                flush(chapters, currentTitle, content, hasHeadings);
+                boolean precededBySeparator = !content.isEmpty() && content.get(content.size() - 1).separator();
+                boolean startsChapter = currentTitle == null
+                        || paragraph.headingLevel() <= 1
+                        || isConventionalHeading(paragraph.plainText())
+                        || precededBySeparator;
+                if (!startsChapter) {
+                    int level = Math.max(2, Math.min(3, paragraph.headingLevel()));
+                    content.add(new Paragraph(
+                            "<h" + level + ">" + escapeHtml(paragraph.plainText()) + "</h" + level + ">",
+                            paragraph.plainText(), false, 0, false, false));
+                    continue;
+                }
+                if (currentTitle == null && chapters.isEmpty() && hasHeadings && isBriefFrontMatter(content)) {
+                    // Covers and other rich blocks immediately before the first chapter heading belong to
+                    // that chapter. Plain title/copyright front matter is still omitted.
+                    content = new ArrayList<>(content.stream().filter(Paragraph::richContent).toList());
+                } else {
+                    trimTrailingSeparators(content);
+                    flush(chapters, currentTitle, content);
+                    content = new ArrayList<>();
+                }
                 currentTitle = safeTitle(paragraph.plainText());
-                content = new ArrayList<>();
             } else {
-                content.add(paragraph.htmlContent());
+                content.add(paragraph);
             }
         }
-        flush(chapters, currentTitle, content, hasHeadings);
+        trimTrailingSeparators(content);
+        flush(chapters, currentTitle, content);
         return chapters;
     }
 
-    private void flush(List<ImportedChapter> chapters, String title, List<String> paragraphs, boolean hasHeadings) {
-        if (paragraphs.isEmpty()) return;
+    private boolean isBriefFrontMatter(List<Paragraph> paragraphs) {
+        String combinedText = paragraphs.stream()
+                .map(Paragraph::plainText)
+                .filter(value -> value != null && !value.isBlank())
+                .reduce("", (left, right) -> left + " " + right)
+                .trim();
+        int wordCount = combinedText.isEmpty() ? 0 : combinedText.split("\\s+").length;
+        return wordCount < 200;
+    }
 
-        // Front matter check: if there is text before the first heading and there ARE headings in the manuscript,
-        // check whether it's brief front matter (< 200 words). If so, discard so it doesn't create a fake "Chapter 1"
-        // that shifts all real chapters.
-        if (title == null && hasHeadings) {
-            String combinedText = String.join(" ", paragraphs).replaceAll("<[^>]*>", " ").trim();
-            int wordCount = combinedText.isEmpty() ? 0 : combinedText.split("\\s+").length;
-            if (wordCount < 200) {
-                return;
-            }
+    private void trimTrailingSeparators(List<Paragraph> paragraphs) {
+        while (!paragraphs.isEmpty() && paragraphs.get(paragraphs.size() - 1).separator()) {
+            paragraphs.remove(paragraphs.size() - 1);
         }
+    }
+
+    private void flush(List<ImportedChapter> chapters, String title, List<Paragraph> paragraphs) {
+        if (paragraphs.isEmpty()) return;
 
         String finalTitle = title == null || title.isBlank()
                 ? "Imported chapter " + (chapters.size() + 1)
                 : title;
-        String html = String.join("", paragraphs);
+        String html = paragraphs.stream().map(Paragraph::htmlContent).reduce("", String::concat);
         chapters.add(new ImportedChapter(finalTitle, html));
     }
 

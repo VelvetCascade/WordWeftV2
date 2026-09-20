@@ -151,6 +151,115 @@ class ManuscriptParserTest {
     }
 
     @Test
+    void imageBeforeFirstHeadingIsKeptInTheFirstImportedChapter() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><w:body>
+                  <w:p><w:r><w:drawing><a:blip r:embed="rId5"/></w:drawing></w:r></w:p>
+                  <w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>And she cried</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>The opening paragraph.</w:t></w:r></w:p>
+                </w:body></w:document>
+                """;
+        String rels = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.jpeg"/>
+                </Relationships>
+                """;
+        byte[] jpeg = new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+        ManuscriptParser.ParseResult result = parser.parseDetailed(
+                "sample.docx",
+                docx(document, rels, "word/media/image1.jpeg", jpeg),
+                (bytes, filename) -> "https://cdn.wordweft.test/chapter-images/book/image1.jpg");
+
+        assertEquals(1, result.chapters().size());
+        assertEquals("And she cried", result.chapters().get(0).title());
+        assertTrue(result.chapters().get(0).content().startsWith("<p class=\"chapter-image-container\">"));
+        assertTrue(result.chapters().get(0).content().contains("image1.jpg"));
+        assertEquals(1, result.embeddedImages());
+        assertEquals(1, result.uploadedImages());
+    }
+
+    @Test
+    void docxTablesQuotesAndInlineFormattingArePreservedAsEditorHtml() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+                  <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 1</w:t></w:r></w:p>
+                  <w:p><w:pPr><w:pStyle w:val="Quote"/></w:pPr><w:r><w:rPr><w:i/></w:rPr><w:t>Words worth keeping.</w:t></w:r></w:p>
+                  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Bold</w:t></w:r><w:r><w:t> and </w:t></w:r><w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>underlined</w:t></w:r></w:p>
+                  <w:tbl>
+                    <w:tr>
+                      <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Name</w:t></w:r></w:p></w:tc>
+                      <w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Role</w:t></w:r></w:p></w:tc>
+                    </w:tr>
+                    <w:tr>
+                      <w:tc><w:p><w:r><w:t>Mira</w:t></w:r></w:p></w:tc>
+                      <w:tc><w:p><w:r><w:t>Navigator</w:t></w:r></w:p></w:tc>
+                    </w:tr>
+                  </w:tbl>
+                </w:body></w:document>
+                """;
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse(
+                "rich.docx", docx(document, null, null, null));
+
+        assertEquals(1, chapters.size());
+        String html = chapters.get(0).content();
+        assertTrue(html.contains("<blockquote><p><em>Words worth keeping.</em></p></blockquote>"), html);
+        assertTrue(html.contains("<strong>Bold</strong> and <u>underlined</u>"), html);
+        assertTrue(html.contains("<table><tbody><tr><th><p><strong>Name</strong></p></th>"), html);
+        assertTrue(html.contains("<td><p>Mira</p></td>"), html);
+    }
+
+    @Test
+    void decorativeRuleIsPreservedButTrailingChapterSeparatorIsNot() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+                  <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 1</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>Opening.</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>---</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>Same chapter.</w:t></w:r></w:p>
+                  <w:p><w:pPr><w:pBdr><w:bottom w:val="single"/></w:pBdr></w:pPr></w:p>
+                  <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 2</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>Next chapter.</w:t></w:r></w:p>
+                </w:body></w:document>
+                """;
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse(
+                "rules.docx", docx(document, null, null, null));
+
+        assertEquals(2, chapters.size());
+        assertTrue(chapters.get(0).content().contains("<hr><p>Same chapter.</p>"));
+        assertFalse(chapters.get(0).content().endsWith("<hr>"));
+    }
+
+    @Test
+    void secondaryHeadingInsideAChapterIsPreservedWithoutSplittingTheChapter() throws Exception {
+        String document = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+                  <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Chapter 1</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>Opening paragraph.</w:t></w:r></w:p>
+                  <w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>A change of scene</w:t></w:r></w:p>
+                  <w:p><w:r><w:t>The story continues.</w:t></w:r></w:p>
+                </w:body></w:document>
+                """;
+
+        List<ManuscriptParser.ImportedChapter> chapters = parser.parse(
+                "subheading.docx", docx(document, null, null, null));
+
+        assertEquals(1, chapters.size());
+        assertEquals("Chapter 1", chapters.get(0).title());
+        assertTrue(chapters.get(0).content().contains("<h2>A change of scene</h2>"));
+        assertTrue(chapters.get(0).content().contains("<p>The story continues.</p>"));
+    }
+
+    @Test
     void embeddedImageUploadFailureRejectsTheImportInsteadOfDroppingTheImage() throws Exception {
         ManuscriptParser.ImageUploadException error = assertThrows(ManuscriptParser.ImageUploadException.class, () -> parser.parse(
                 "story.docx",
@@ -305,6 +414,26 @@ class ManuscriptParserTest {
             zip.putNextEntry(new ZipEntry("word/media/map.png"));
             zip.write(png);
             zip.closeEntry();
+        }
+        return bytes.toByteArray();
+    }
+
+    private static byte[] docx(String document, String rels, String mediaPath, byte[] media) throws Exception {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(bytes)) {
+            zip.putNextEntry(new ZipEntry("word/document.xml"));
+            zip.write(document.getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+            if (rels != null) {
+                zip.putNextEntry(new ZipEntry("word/_rels/document.xml.rels"));
+                zip.write(rels.getBytes(StandardCharsets.UTF_8));
+                zip.closeEntry();
+            }
+            if (mediaPath != null && media != null) {
+                zip.putNextEntry(new ZipEntry(mediaPath));
+                zip.write(media);
+                zip.closeEntry();
+            }
         }
         return bytes.toByteArray();
     }

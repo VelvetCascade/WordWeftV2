@@ -10,7 +10,7 @@ interface WriterLayoutProps {
 const writerTabs = [
   { id: 'books', label: 'My Books', icon: BookOpenIcon, hash: '#/write' },
   { id: 'analytics', label: 'Analytics', icon: ChartPieIcon, hash: '#/write/analytics' },
-  { id: 'settings', label: 'Settings', icon: Cog6ToothIcon, hash: '#/write/settings' },
+  { id: 'settings', label: 'Profile', icon: Cog6ToothIcon, hash: '#/edit-profile' },
 ];
 
 type PageContext = {
@@ -37,9 +37,6 @@ const getPageContext = (hash: string): PageContext => {
   // Main pages
   if (hash.startsWith('#/write/analytics')) {
     return { activeTab: 'analytics', isChapterEditor: false, isSubPage: false, backLabel: 'Home', backHash: '/' };
-  }
-  if (hash.startsWith('#/write/settings')) {
-    return { activeTab: 'settings', isChapterEditor: false, isSubPage: false, backLabel: 'Home', backHash: '/' };
   }
   // Default: dashboard
   return { activeTab: 'books', isChapterEditor: false, isSubPage: false, backLabel: 'Home', backHash: '/' };

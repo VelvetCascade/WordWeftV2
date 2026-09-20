@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, BookmarkIco
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
 import { discussLink } from '../utils/community';
+import { ResilientImage } from '../components/ResilientImage';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
@@ -248,6 +249,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
     const [bookmarkSaving, setBookmarkSaving] = useState(false);
+    const [chapterLikeSaving, setChapterLikeSaving] = useState(false);
+    const [readerActionError, setReaderActionError] = useState('');
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -533,6 +536,13 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         return () => window.removeEventListener('keydown', handleReaderShortcuts);
     }, []);
 
+    useEffect(() => {
+        if (!isTocVisible && !isSettingsPanelVisible && !isCommentDrawerOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = previousOverflow; };
+    }, [isTocVisible, isSettingsPanelVisible, isCommentDrawerOpen]);
+
 
     const goToChapter = (index: number) => {
         if (!book || (index < 0 || index >= book.chapters.length)) return;
@@ -599,6 +609,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             if (!currentUser) window.location.hash = '/auth';
             return;
         }
+        if (chapterLikeSaving) return;
 
         const prevIsLiked = chapter.isLiked;
         const prevLikes = chapter.likesCount;
@@ -611,6 +622,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
         const likeDiff = prevIsLiked ? -1 : 1;
 
+        setReaderActionError('');
+        setChapterLikeSaving(true);
         setBook({
             ...book,
             chapters: updatedChapters,
@@ -621,11 +634,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             await api.toggleChapterLike(book.id, chapter.id);
         } catch (e) {
             console.error(e);
-            setBook({
-                ...book,
-                chapters: book.chapters,
-                likesCount: book.likesCount
-            });
+            setBook(book);
+            setReaderActionError(e instanceof Error ? e.message : 'Your chapter like could not be updated.');
+        } finally {
+            setChapterLikeSaving(false);
         }
     };
 
@@ -636,6 +648,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         }
         if (bookmarkSaving) return;
         const nextState = !isBookmarked;
+        setReaderActionError('');
         setOptimisticBookmarked(nextState);
         setBookmarkSaving(true);
         try {
@@ -645,6 +658,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         } catch (error) {
             console.error('Unable to update bookmark', error);
             setOptimisticBookmarked(null);
+            setReaderActionError(error instanceof Error ? error.message : 'Your library could not be updated.');
         } finally {
             setBookmarkSaving(false);
         }
@@ -654,17 +668,20 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         if (!book) return null;
         return (
             <div
-                className={`reader-toc-overlay fixed inset-0 z-40 transition-opacity duration-300 ${isTocVisible ? 'reader-toc-overlay-open' : 'pointer-events-none opacity-0'}`}
+                className="reader-toc-overlay reader-toc-overlay-open fixed inset-0 z-40"
                 onClick={() => setIsTocVisible(false)}
             >
                 <div
-                    className={`reader-toc-panel absolute top-0 left-0 bottom-0 transform transition-transform duration-300 ${isTocVisible ? 'translate-x-0' : '-translate-x-full'}`}
+                    className="reader-toc-panel absolute top-0 left-0 bottom-0 translate-x-0"
                     onClick={e => e.stopPropagation()}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="reader-toc-title"
                 >
                     <div className="reader-toc-header">
                         <div>
                             <span>Contents</span>
-                            <h3>{book.title}</h3>
+                            <h3 id="reader-toc-title">{book.title}</h3>
                             <p>{book.chapters.length} chapters · Chapter {currentChapterIndex + 1} now</p>
                         </div>
                         <button onClick={() => setIsTocVisible(false)} aria-label="Close contents"><XMarkIcon className="w-5 h-5" /></button>
@@ -812,7 +829,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             {/* Mood Atmosphere — page-level immersive overlay */}
             <MoodAtmosphere contentRef={moodContentRef} active={chapterContent.access !== 'AUTH_REQUIRED'} />
 
-            <TableOfContents />
+            {isTocVisible && <TableOfContents />}
+
+            {readerActionError && <div className="reader-action-error" role="alert">{readerActionError}<button type="button" onClick={() => setReaderActionError('')} aria-label="Dismiss message"><XMarkIcon className="w-4 h-4" /></button></div>}
 
             <div className="reader-progress-track" aria-hidden="true"><span style={{ width: `${scrollProgress}%` }} /></div>
 
@@ -908,7 +927,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                         )}
                     </div>
                     <div className="reader-end-secondary-actions">
-                        <button onClick={handleToggleLike} className={chapter.isLiked ? 'active' : ''}>
+                        <button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-busy={chapterLikeSaving} className={chapter.isLiked ? 'active' : ''}>
                             {chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}
                             <span>{chapter.isLiked ? 'Liked' : 'Like chapter'}</span><small>{chapter.likesCount}</small>
                         </button>
@@ -946,9 +965,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                                     onClick={() => openCommentDrawer(comment.paragraphIndex)}
                                 >
                                     <div className="flex items-start gap-4">
-                                        <img
+                                        <ResilientImage
                                             src={comment.user.avatarUrl}
                                             alt={comment.user.name}
+                                            fallbackLabel={comment.user.name}
                                             className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer"
                                             onClick={(e) => { e.stopPropagation(); window.location.hash = `/author/${comment.user.id}`; }}
                                         />
@@ -1004,8 +1024,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             </section> : null}
 
             {/* Reader Settings Sheet */}
-            <div className={`reader-settings-backdrop ${isSettingsPanelVisible ? 'reader-settings-backdrop-open' : ''}`} onClick={() => setIsSettingsPanelVisible(false)} />
-            <section className={`reader-settings-panel ${isSettingsPanelVisible ? 'reader-settings-panel-open' : ''}`} aria-label="Reading preferences">
+            {isSettingsPanelVisible && <><div className="reader-settings-backdrop reader-settings-backdrop-open" onClick={() => setIsSettingsPanelVisible(false)} />
+            <section className="reader-settings-panel reader-settings-panel-open" role="dialog" aria-modal="true" aria-label="Reading preferences">
                 <div className="reader-settings-heading">
                     <div><span>Reading preferences</span><p>Saved automatically on this device</p></div>
                     <button onClick={() => setIsSettingsPanelVisible(false)} aria-label="Close preferences"><XMarkIcon className="w-5 h-5" /></button>
@@ -1037,7 +1057,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     </div>
                 </div>
                 <div className="reader-shortcuts"><span><kbd>F</kbd> Focus</span><span><kbd>[</kbd><kbd>]</kbd> Text size</span><span><kbd>Esc</kbd> Close panels</span></div>
-            </section>
+            </section></>}
 
             {/* Keep the primary authentication actions unobstructed on a locked chapter. */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
