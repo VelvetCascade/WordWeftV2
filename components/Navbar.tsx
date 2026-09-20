@@ -61,7 +61,8 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
     if (hash.startsWith('features')) return 'features';
     if (hash.startsWith('about')) return 'about';
     if (hash.startsWith('category') || hash.startsWith('genre')) return 'genres';
-    if (hash.startsWith('profile') || hash.startsWith('edit-profile')) return 'library';
+    if (hash.startsWith('library')) return 'library';
+    if (hash.startsWith('profile') || hash.startsWith('edit-profile')) return 'profile';
     if (hash.startsWith('write')) return 'write';
     if (hash.startsWith('community')) return 'community';
     if (hash.startsWith('hooks')) return 'hooks';
@@ -137,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
     { label: 'Events', route: 'events', href: '/events', action: () => { window.location.hash = '/events'; } },
     { label: 'Genres', route: 'genres', href: '/category', action: () => { window.location.hash = '/category'; } },
     { label: 'Community', route: 'community', href: '/community', action: () => { window.location.hash = '/community'; } },
-    { label: 'Library', route: 'library', href: '/profile', action: () => { window.location.hash = '/profile'; } },
+    { label: 'Library', route: 'library', href: '/library', action: () => { window.location.hash = '/library'; } },
     { label: 'Write', route: 'write', href: '/write', action: () => { window.location.hash = '/write'; } },
     ...(isAdmin ? [{ label: 'Applications', route: 'founding-applications', href: '/admin/founding-writers', action: () => { window.location.hash = '/admin/founding-writers'; } }] : []),
   ] : [
@@ -151,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
     { label: 'Home', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
     { label: 'Hooks', route: 'hooks', href: '/hooks', action: () => { window.location.hash = '/hooks'; }, icon: SparklesIcon },
     { label: 'Community', route: 'community', href: '/community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
-    { label: 'Library', route: 'library', href: '/profile', action: () => { window.location.hash = '/profile'; }, icon: BookOpenIcon },
+    { label: 'Library', route: 'library', href: '/library', action: () => { window.location.hash = '/library'; }, icon: BookOpenIcon },
     { label: 'Write', route: 'write', href: '/write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
   ] : [
     { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },

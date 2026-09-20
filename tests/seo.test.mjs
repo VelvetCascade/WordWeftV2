@@ -72,7 +72,7 @@ test('server errors remain retryable, rather than becoming missing content', asy
   assert.equal(result.status, 503); assert.equal(result.headers['Retry-After'], '60');
 });
 test('account pages are noindex without exposing query tokens', async () => {
-  for (const path of ['/auth', '/write/book/private/manage', '/profile', '/edit-profile', '/notifications', '/search?q=secret', '/reset-password?token=PRIVATE_TOKEN']) {
+  for (const path of ['/auth', '/write/book/private/manage', '/profile', '/library', '/edit-profile', '/notifications', '/search?q=secret', '/reset-password?token=PRIVATE_TOKEN']) {
     const result = await response(path);
     assert.equal(result.status, 200); assert.match(result.headers['X-Robots-Tag'], /noindex/);
     assert.doesNotMatch(result.body, /PRIVATE_TOKEN/);

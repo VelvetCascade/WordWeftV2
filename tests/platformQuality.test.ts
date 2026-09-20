@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { manuscriptProgress } from '../utils/readerProgress.ts';
 import { authorShareUrl, storyShareUrl } from '../utils/shareLinks.ts';
 import { uploadErrorMessage } from '../utils/uploadDiagnostics.ts';
-import { imageLayoutStyle, normalizeImageWidth } from '../utils/editorImageLayout.ts';
+import { imageLayoutStyle, normalizeImageWidth, resizeImageWidth } from '../utils/editorImageLayout.ts';
 
 test('share URLs use crawler-visible routes instead of hash fragments', () => {
     assert.equal(storyShareUrl('book 1', 'https://example.com/'), 'https://example.com/book/book%201');
@@ -122,9 +122,37 @@ test('chapter image layout stays bounded and portable between editor and reader'
         marginLeft: 'auto',
         marginRight: '0',
     });
+    assert.equal(resizeImageWidth({ direction: 'e', startWidth: 50, startX: 100, startY: 100, currentX: 200, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }), 60);
+    assert.equal(resizeImageWidth({ direction: 'w', startWidth: 50, startX: 100, startY: 100, currentX: 0, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }), 60);
+    assert.equal(resizeImageWidth({ direction: 'n', startWidth: 50, startX: 100, startY: 100, currentX: 100, currentY: 0, editorWidth: 1000, imageAspectRatio: 1 }), 60);
+    assert.equal(resizeImageWidth({ direction: 'se', startWidth: 50, startX: 100, startY: 100, currentX: 0, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }), 40);
     assert.match(extension, /draggable: true/);
     assert.match(extension, /data-width/);
     assert.match(extension, /data-align/);
     assert.match(extension, /data-drag-handle/);
     assert.match(extension, /onPointerDown=\{startResize\}/);
+});
+
+test('chapter images resize from every edge and corner and expose a real document drag handle', () => {
+    const extension = readFileSync(new URL('../components/extensions/ResizableImageExtension.tsx', import.meta.url), 'utf8');
+    for (const direction of ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']) {
+        assert.match(extension, new RegExp(`direction: '${direction}'`));
+    }
+    assert.match(extension, /className="rte-image-drag-handle"/);
+    assert.match(extension, /data-drag-handle/);
+    assert.doesNotMatch(extension, /data-drag-handle draggable="true"/);
+});
+
+test('reading library and personal profile are separate destinations', () => {
+    const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+    const navbar = readFileSync(new URL('../components/Navbar.tsx', import.meta.url), 'utf8');
+    const profile = readFileSync(new URL('../pages/ProfilePage.tsx', import.meta.url), 'utf8');
+    const library = readFileSync(new URL('../pages/LibraryPage.tsx', import.meta.url), 'utf8');
+
+    assert.match(app, /name: 'library'/);
+    assert.match(app, /<LibraryPage user=\{currentUser!\}/);
+    assert.match(navbar, /label: 'Library'[\s\S]*?href: '\/library'/);
+    assert.doesNotMatch(profile, /profileSection|Reading library|ww-library-shelf-nav/);
+    assert.match(library, /Your library/);
+    assert.doesNotMatch(library, /user\.avatarUrl|ww-profile-hero/);
 });
