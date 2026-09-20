@@ -15,6 +15,7 @@ const ManageChaptersPage = lazy(() => import('./pages/ManageChaptersPage').then(
 const ChapterEditorPage = lazy(() => import('./pages/ChapterEditorPage').then(module => ({ default: module.ChapterEditorPage })));
 const WriterAnalyticsPage = lazy(() => import('./pages/WriterAnalyticsPage').then(module => ({ default: module.WriterAnalyticsPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const LibraryPage = lazy(() => import('./pages/LibraryPage').then(module => ({ default: module.LibraryPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
 const AuthorPage = lazy(() => import('./pages/AuthorPage').then(module => ({ default: module.AuthorPage })));
 const CommunityPage = lazy(() => import('./pages/CommunityPage').then(module => ({ default: module.CommunityPage })));
@@ -76,6 +77,7 @@ export type Page =
   | { name: 'hook-feed' }
   | { name: 'reading-growth' }
   | { name: 'profile' }
+  | { name: 'library' }
   | { name: 'auth' }
   | { name: 'author'; authorId: string }
   | { name: 'community'; circleSlug?: string; query?: string }
@@ -139,6 +141,7 @@ const App: React.FC = () => {
       case 'community': window.location.hash = `/community${target.circleSlug ? `/circle/${encodeURIComponent(target.circleSlug)}` : ''}${target.query ? `?${target.query}` : ''}`; break;
       case 'community-post': window.location.hash = `/community/post/${encodeURIComponent(target.postId)}`; break;
       case 'profile': window.location.hash = '/profile'; break;
+      case 'library': window.location.hash = '/library'; break;
       case 'auth': window.location.hash = '/auth'; break;
       case 'edit-profile': window.location.hash = '/edit-profile'; break;
       case 'notifications': window.location.hash = '/notifications'; break;
@@ -356,6 +359,8 @@ const App: React.FC = () => {
         targetPage = { name: 'hook-feed' };
       } else if (hash.startsWith('events') || hash.startsWith('challenges')) {
         targetPage = { name: 'reading-growth' };
+      } else if (hash.startsWith('library')) {
+        targetPage = { name: 'library' };
       } else if (hash.startsWith('profile')) {
         targetPage = { name: 'profile' };
       } else if (hash.startsWith('edit-profile')) {
@@ -395,7 +400,7 @@ const App: React.FC = () => {
         targetPage = isAuthenticated ? { name: 'home' } : { name: 'features' };
       }
 
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'edit-profile', 'notifications', 'admin-founding-writers'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'library', 'edit-profile', 'notifications', 'admin-founding-writers'];
 
       if (protectedRoutes.includes(targetPage.name) && !sessionAuthenticated.current) {
         setIntendedPage(targetPage);
@@ -454,7 +459,7 @@ const App: React.FC = () => {
       );
     }
 
-    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'edit-profile')) {
+    if (!currentUser && (page.name.startsWith('writer-') || page.name === 'profile' || page.name === 'library' || page.name === 'edit-profile')) {
       return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-background dark:bg-dark-background">
           <div className="max-w-md w-full text-center">
@@ -510,7 +515,9 @@ const App: React.FC = () => {
       case 'reading-growth':
         return <ReadingGrowthPage currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'profile':
-        return <ProfilePage user={currentUser!} onUserUpdate={setCurrentUser} />;
+        return <ProfilePage user={currentUser!} />;
+      case 'library':
+        return <LibraryPage user={currentUser!} onUserUpdate={setCurrentUser} />;
       case 'edit-profile':
         return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'auth':

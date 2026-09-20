@@ -718,8 +718,7 @@ export const createShelf = async (userId: string, name: string, visibility: 'PUB
         headers: getHeaders(),
         body: JSON.stringify({ name, visibility }),
     });
-    if (!response.ok) throw new Error('Failed to create shelf');
-    return response.json();
+    return mapBackendUserToFrontend(await handleResponse(response));
 };
 
 export const toggleShelfVisibility = async (shelfId: string, visibility: 'PUBLIC' | 'PRIVATE'): Promise<User> => {
@@ -728,8 +727,7 @@ export const toggleShelfVisibility = async (shelfId: string, visibility: 'PUBLIC
         headers: getHeaders(),
         body: JSON.stringify({ visibility }),
     });
-    if (!response.ok) throw new Error('Failed to update shelf visibility');
-    return response.json();
+    return mapBackendUserToFrontend(await handleResponse(response));
 };
 
 export const deleteShelf = async (shelfId: string): Promise<User> => {

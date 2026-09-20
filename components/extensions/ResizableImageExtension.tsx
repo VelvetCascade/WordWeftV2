@@ -1,13 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from '@tiptap/extension-image';
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from '@tiptap/react';
-import { imageLayoutStyle, normalizeImageWidth, type EditorImageAlignment } from '../../utils/editorImageLayout';
+import {
+    imageLayoutStyle,
+    normalizeImageWidth,
+    resizeImageWidth,
+    type EditorImageAlignment,
+    type ImageResizeDirection,
+} from '../../utils/editorImageLayout';
 
 const alignmentLabel: Record<EditorImageAlignment, string> = {
     left: 'Align left',
     center: 'Align center',
     right: 'Align right',
 };
+
+const resizeHandles: Array<{ direction: ImageResizeDirection; label: string }> = [
+    { direction: 'nw', label: 'Resize from top left' },
+    { direction: 'n', label: 'Resize from top' },
+    { direction: 'ne', label: 'Resize from top right' },
+    { direction: 'e', label: 'Resize from right' },
+    { direction: 'se', label: 'Resize from bottom right' },
+    { direction: 's', label: 'Resize from bottom' },
+    { direction: 'sw', label: 'Resize from bottom left' },
+    { direction: 'w', label: 'Resize from left' },
+];
 
 const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor }) => {
     const wrapperRef = useRef<HTMLElement | null>(null);
@@ -25,16 +42,29 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
 
     const startResize = (event: React.PointerEvent<HTMLButtonElement>) => {
         if (!event.isPrimary) return;
+        const direction = event.currentTarget.dataset.direction as ImageResizeDirection | undefined;
+        if (!direction || !resizeHandles.some(handle => handle.direction === direction)) return;
         event.preventDefault();
         event.stopPropagation();
         resizeCleanupRef.current();
         const startX = event.clientX;
+        const startY = event.clientY;
         const startWidth = previewWidthRef.current;
         const editorWidth = wrapperRef.current?.closest('.rte-content')?.getBoundingClientRect().width || 1;
+        const imageRect = wrapperRef.current?.querySelector('img')?.getBoundingClientRect();
+        const imageAspectRatio = imageRect?.height ? imageRect.width / imageRect.height : 1;
 
         const move = (pointerEvent: PointerEvent) => {
-            const deltaPercent = ((pointerEvent.clientX - startX) / editorWidth) * 100;
-            const width = normalizeImageWidth(startWidth + deltaPercent);
+            const width = resizeImageWidth({
+                direction,
+                startWidth,
+                startX,
+                startY,
+                currentX: pointerEvent.clientX,
+                currentY: pointerEvent.clientY,
+                editorWidth,
+                imageAspectRatio,
+            });
             previewWidthRef.current = width;
             setPreviewWidth(width);
         };
@@ -67,7 +97,15 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
         >
             {editor.isEditable && (
                 <div className="rte-image-controls" contentEditable={false}>
-                    <button type="button" data-drag-handle draggable="true" title="Drag image to another paragraph" aria-label="Move image">↕</button>
+                    <button
+                        type="button"
+                        className="rte-image-drag-handle"
+                        data-drag-handle
+                        title="Drag image between paragraphs"
+                        aria-label="Move image between paragraphs"
+                    >
+                        <span aria-hidden="true">⠿</span>
+                    </button>
                     {(['left', 'center', 'right'] as EditorImageAlignment[]).map(item => (
                         <button
                             type="button"
@@ -87,18 +125,21 @@ const ResizableImageView: React.FC<NodeViewProps> = ({ node, updateAttributes, s
                     ))}
                 </div>
             )}
-            <img src={node.attrs.src} alt={node.attrs.alt || ''} title={node.attrs.title || undefined} draggable={false} />
-            {editor.isEditable && (
-                <button
-                    type="button"
-                    className="rte-image-resize-handle"
-                    contentEditable={false}
-                    onPointerDown={startResize}
-                    aria-label="Resize image"
-                    title="Drag to resize"
-                />
-            )}
-            {editor.isEditable && <figcaption contentEditable={false}>Drag the corner to resize · use ↕ to move</figcaption>}
+            <div className="rte-image-frame" contentEditable={false}>
+                <img src={node.attrs.src} alt={node.attrs.alt || ''} title={node.attrs.title || undefined} draggable={false} />
+                {editor.isEditable && resizeHandles.map(handle => (
+                    <button
+                        type="button"
+                        key={handle.direction}
+                        className={`rte-image-resize-handle rte-image-resize-${handle.direction}`}
+                        data-direction={handle.direction}
+                        onPointerDown={startResize}
+                        aria-label={handle.label}
+                        title={handle.label}
+                    />
+                ))}
+            </div>
+            {editor.isEditable && <figcaption contentEditable={false}>Drag the grip to move between paragraphs · drag any handle to resize</figcaption>}
         </NodeViewWrapper>
     );
 };

@@ -27,7 +27,7 @@ export function parseRoute(input) {
     if (parts.length === 2 && parts[0] === 'author') return { kind: 'author', path, id: parts[1], page };
     if (parts.length === 2 && ['genre', 'tag'].includes(parts[0])) return { kind: 'catalog', path, filter: parts[0], value: parts[1], page };
     if (path === '/category' || path === '/home') return { kind: 'catalog', path, page };
-    if (/^\/(auth|reset-password|profile|edit-profile|notifications|search|feedback|hooks|events|challenges|community|admin)(\/|$)/.test(path) || /^\/write(?:\/|$)/.test(path)) return { kind: 'private', path };
+    if (/^\/(auth|reset-password|profile|library|edit-profile|notifications|search|feedback|hooks|events|challenges|community|admin)(\/|$)/.test(path) || /^\/write(?:\/|$)/.test(path)) return { kind: 'private', path };
     return { kind: 'missing', path };
   } catch { return { kind: 'missing', path: '/' }; }
 }
