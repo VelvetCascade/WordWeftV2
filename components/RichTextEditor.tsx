@@ -71,13 +71,19 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ onClick, isActive, disabl
         onClick={onClick}
         disabled={disabled}
         title={title}
+        aria-label={title}
+        aria-pressed={isActive === undefined ? undefined : isActive}
         className={`rte-toolbar-btn ${isActive ? 'rte-toolbar-btn-active' : ''}`}
     >
         {children}
     </button>
 );
 
-const Divider = () => <div className="rte-toolbar-divider" />;
+const ToolbarGroup: React.FC<{ label: string; primary?: boolean; children: React.ReactNode }> = ({ label, primary, children }) => (
+    <div className={`rte-toolbar-group ${primary ? 'rte-toolbar-group-primary' : ''}`} role="group" aria-label={label}>
+        {children}
+    </div>
+);
 
 // ─── Mood Picker — Immersive Grid ──────────────────────────────────
 const MOOD_OPTIONS = [
@@ -139,6 +145,7 @@ const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
 
 // ─── Menu Bar ──────────────────────────────────────────────────────
 const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; addImage: () => void; imageUploading: boolean }) => {
+    const [showShortcuts, setShowShortcuts] = useState(false);
     if (!editor) return null;
 
     const setLink = () => {
@@ -152,108 +159,151 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
     };
 
+    const currentBlockStyle = editor.isActive('heading', { level: 1 })
+        ? 'heading-1'
+        : editor.isActive('heading', { level: 2 })
+            ? 'heading-2'
+            : editor.isActive('heading', { level: 3 })
+                ? 'heading-3'
+                : 'paragraph';
+
+    const setBlockStyle = (style: string) => {
+        const chain = editor.chain().focus();
+        if (style === 'heading-1') chain.setHeading({ level: 1 }).run();
+        else if (style === 'heading-2') chain.setHeading({ level: 2 }).run();
+        else if (style === 'heading-3') chain.setHeading({ level: 3 }).run();
+        else chain.setParagraph().run();
+    };
+
     return (
-        <div className="rte-toolbar">
-            {/* Text Formatting */}
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold (Ctrl+B)">
-                <BoldIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title="Italic (Ctrl+I)">
-                <ItalicIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline (Ctrl+U)">
-                <UnderlineIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title="Strikethrough">
-                <StrikethroughIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline Code">
-                <CodeIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleSpoiler().run()} isActive={editor.isActive('spoiler')} title="Hidden/Spoiler Text">
-                <SpoilerIcon />
-            </ToolbarButton>
+        <div className="rte-toolbar" role="toolbar" aria-label="Chapter formatting">
+            <div className="rte-toolbar-scroll">
+                <ToolbarGroup label="Text formatting" primary>
+                    <label className="rte-block-style-label">
+                        <span className="sr-only">Text style</span>
+                        <select value={currentBlockStyle} onChange={(event) => setBlockStyle(event.target.value)} aria-label="Text style">
+                            <option value="paragraph">Paragraph</option>
+                            <option value="heading-1">Heading 1</option>
+                            <option value="heading-2">Heading 2</option>
+                            <option value="heading-3">Heading 3</option>
+                        </select>
+                    </label>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold (Ctrl+B)">
+                        <BoldIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title="Italic (Ctrl+I)">
+                        <ItalicIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline (Ctrl+U)">
+                        <UnderlineIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title="Strikethrough">
+                        <StrikethroughIcon />
+                    </ToolbarButton>
+                </ToolbarGroup>
 
-            <Divider />
+                <ToolbarGroup label="More text options">
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline code">
+                        <CodeIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => (editor.chain().focus() as any).toggleSpoiler().run()} isActive={editor.isActive('spoiler')} title="Hidden or spoiler text">
+                        <SpoilerIcon />
+                    </ToolbarButton>
+                </ToolbarGroup>
 
-            {/* Headings */}
-            <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive('heading', { level: 1 })} title="Heading 1">
-                <Heading1Icon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive('heading', { level: 2 })} title="Heading 2">
-                <Heading2Icon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} isActive={editor.isActive('heading', { level: 3 })} title="Heading 3">
-                <Heading3Icon />
-            </ToolbarButton>
+                <ToolbarGroup label="Lists">
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Bullet list">
+                        <ListBulletIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Numbered list">
+                        <ListOrderedIcon />
+                    </ToolbarButton>
+                </ToolbarGroup>
 
-            <Divider />
+                <ToolbarGroup label="Story blocks">
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Blockquote">
+                        <QuoteIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editor.isActive('codeBlock')} title="Code block">
+                        <CodeBlockIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Scene break">
+                        <HorizontalRuleIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => (editor.chain().focus() as any).setDetails().run()} isActive={editor.isActive('details')} title="Collapsible section">
+                        <DetailsIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => (editor.chain().focus() as any).insertPullQuote().run()} isActive={editor.isActive('pullQuote')} title="Pull quote or epigraph">
+                        <PullQuoteIcon />
+                    </ToolbarButton>
+                    <MoodPicker editor={editor} />
+                </ToolbarGroup>
 
-            {/* Lists */}
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Bullet List">
-                <ListBulletIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Ordered List">
-                <ListOrderedIcon />
-            </ToolbarButton>
+                <ToolbarGroup label="Insert">
+                    <ToolbarButton onClick={setLink} isActive={editor.isActive('link')} title="Add link">
+                        <LinkIconSvg />
+                    </ToolbarButton>
+                    {editor.isActive('link') && (
+                        <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} title="Remove link">
+                            <UnlinkIcon />
+                        </ToolbarButton>
+                    )}
+                    <ToolbarButton onClick={addImage} disabled={imageUploading} title={imageUploading ? 'Image upload in progress' : 'Insert image'}>
+                        <ImageIconSvg />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Insert table">
+                        <TableIconSvg />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => {
+                        const note = window.prompt('Enter footnote / author\'s note:');
+                        if (note) (editor.chain().focus() as any).insertFootnote({ note }).run();
+                    }} title="Add footnote">
+                        <FootnoteIcon />
+                    </ToolbarButton>
+                </ToolbarGroup>
 
-            <Divider />
+                <ToolbarGroup label="History and help">
+                    <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl+Z)">
+                        <UndoIcon />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Shift+Z)">
+                        <RedoIcon />
+                    </ToolbarButton>
+                    <button
+                        type="button"
+                        className={`rte-toolbar-help ${showShortcuts ? 'active' : ''}`}
+                        onClick={() => setShowShortcuts((visible) => !visible)}
+                        aria-expanded={showShortcuts}
+                        aria-controls="rte-shortcuts-panel"
+                        title="Formatting shortcuts"
+                    >
+                        <span aria-hidden="true">?</span>
+                        <span>Shortcuts</span>
+                    </button>
+                </ToolbarGroup>
+            </div>
 
-            {/* Block Elements */}
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Blockquote">
-                <QuoteIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editor.isActive('codeBlock')} title="Code Block">
-                <CodeBlockIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule">
-                <HorizontalRuleIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => (editor.chain().focus() as any).setDetails().run()} isActive={editor.isActive('details')} title="Collapsible Block">
-                <DetailsIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => (editor.chain().focus() as any).insertPullQuote().run()} isActive={editor.isActive('pullQuote')} title="Pull Quote / Epigraph">
-                <PullQuoteIcon />
-            </ToolbarButton>
-
-            <Divider />
-
-            {/* Mood Atmosphere — Immersive Picker */}
-            <MoodPicker editor={editor} />
-
-            <Divider />
-
-            {/* Inserts */}
-            <ToolbarButton onClick={setLink} isActive={editor.isActive('link')} title="Add Link">
-                <LinkIconSvg />
-            </ToolbarButton>
-            {editor.isActive('link') && (
-                <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} title="Remove Link">
-                    <UnlinkIcon />
-                </ToolbarButton>
+            {editor.isActive('table') && (
+                <div className="rte-table-toolbar" role="toolbar" aria-label="Table editing">
+                    <strong>Table</strong>
+                    <button type="button" onClick={() => (editor.chain().focus() as any).addRowAfter().run()}>Row below</button>
+                    <button type="button" onClick={() => (editor.chain().focus() as any).addColumnAfter().run()}>Column right</button>
+                    <button type="button" onClick={() => (editor.chain().focus() as any).toggleHeaderRow().run()}>Header row</button>
+                    <button type="button" onClick={() => (editor.chain().focus() as any).deleteRow().run()}>Delete row</button>
+                    <button type="button" onClick={() => (editor.chain().focus() as any).deleteColumn().run()}>Delete column</button>
+                    <button type="button" className="danger" onClick={() => (editor.chain().focus() as any).deleteTable().run()}>Delete table</button>
+                </div>
             )}
-            <ToolbarButton onClick={addImage} disabled={imageUploading} title={imageUploading ? 'Image upload in progress' : 'Insert Image'}>
-                <ImageIconSvg />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Insert Table">
-                <TableIconSvg />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => {
-                const note = window.prompt('Enter footnote / author\'s note:');
-                if (note) (editor.chain().focus() as any).insertFootnote({ note }).run();
-            }} title="Add Footnote">
-                <FootnoteIcon />
-            </ToolbarButton>
 
-            <Divider />
-
-            {/* History */}
-            <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl+Z)">
-                <UndoIcon />
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Shift+Z)">
-                <RedoIcon />
-            </ToolbarButton>
+            {showShortcuts && (
+                <div id="rte-shortcuts-panel" className="rte-shortcuts-panel" role="status">
+                    <span><kbd>Ctrl</kbd> + <kbd>B</kbd> Bold</span>
+                    <span><kbd>Ctrl</kbd> + <kbd>I</kbd> Italic</span>
+                    <span><kbd>Ctrl</kbd> + <kbd>U</kbd> Underline</span>
+                    <span><kbd>Ctrl</kbd> + <kbd>Z</kbd> Undo</span>
+                    <span>Select text for quick formatting</span>
+                </div>
+            )}
         </div>
     );
 };
@@ -375,6 +425,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         extensions: [
             StarterKit.configure({
                 heading: { levels: [1, 2, 3] },
+                link: false,
+                underline: false,
             }),
             Underline,
             ResizableImage,
@@ -416,6 +468,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         editorProps: {
             attributes: {
                 class: 'rte-content',
+                'aria-label': 'Chapter manuscript',
+                spellcheck: 'true',
+                autocapitalize: 'sentences',
             },
             handlePaste: (view, event) => {
                 if (onLargePaste) {

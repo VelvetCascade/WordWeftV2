@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { manuscriptProgress } from '../utils/readerProgress.ts';
 import { authorShareUrl, storyShareUrl } from '../utils/shareLinks.ts';
 import { uploadErrorMessage } from '../utils/uploadDiagnostics.ts';
-import { imageLayoutStyle, normalizeImageWidth, resizeImageWidth } from '../utils/editorImageLayout.ts';
+import { imageLayoutStyle, normalizeImageOffset, normalizeImageWidth, resizeImageLayout, resizeImageWidth } from '../utils/editorImageLayout.ts';
 
 test('share URLs use crawler-visible routes instead of hash fragments', () => {
     assert.equal(storyShareUrl('book 1', 'https://example.com/'), 'https://example.com/book/book%201');
@@ -117,20 +117,58 @@ test('chapter image layout stays bounded and portable between editor and reader'
     assert.equal(normalizeImageWidth(8), 25);
     assert.equal(normalizeImageWidth(63.4), 63);
     assert.equal(normalizeImageWidth(140), 100);
+    assert.equal(normalizeImageOffset(null, 50, 25), 25);
     assert.deepEqual(imageLayoutStyle(60, 'right'), {
         width: '60%',
         marginLeft: 'auto',
         marginRight: '0',
     });
+    assert.deepEqual(imageLayoutStyle(60, 'center', 20), {
+        width: '60%',
+        marginLeft: '20%',
+        marginRight: 'auto',
+    });
     assert.equal(resizeImageWidth({ direction: 'e', startWidth: 50, startX: 100, startY: 100, currentX: 200, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }), 60);
     assert.equal(resizeImageWidth({ direction: 'w', startWidth: 50, startX: 100, startY: 100, currentX: 0, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }), 60);
     assert.equal(resizeImageWidth({ direction: 'n', startWidth: 50, startX: 100, startY: 100, currentX: 100, currentY: 0, editorWidth: 1000, imageAspectRatio: 1 }), 60);
     assert.equal(resizeImageWidth({ direction: 'se', startWidth: 50, startX: 100, startY: 100, currentX: 0, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }), 40);
+    assert.deepEqual(
+        resizeImageLayout({ direction: 'e', startWidth: 50, startOffset: 20, startX: 100, startY: 100, currentX: 200, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }),
+        { width: 60, offset: 20 },
+    );
+    assert.deepEqual(
+        resizeImageLayout({ direction: 'w', startWidth: 50, startOffset: 20, startX: 100, startY: 100, currentX: 0, currentY: 100, editorWidth: 1000, imageAspectRatio: 1 }),
+        { width: 60, offset: 10 },
+    );
+    assert.deepEqual(
+        resizeImageLayout({ direction: 'n', startWidth: 50, startOffset: 20, startX: 100, startY: 100, currentX: 100, currentY: 0, editorWidth: 1000, imageAspectRatio: 1 }),
+        { width: 60, offset: 15 },
+    );
     assert.match(extension, /draggable: true/);
     assert.match(extension, /data-width/);
     assert.match(extension, /data-align/);
+    assert.match(extension, /data-offset/);
     assert.match(extension, /data-drag-handle/);
     assert.match(extension, /onPointerDown=\{startResize\}/);
+});
+
+test('chapter editor keeps essential writing tools sticky and makes table editing explicit', () => {
+    const editor = readFileSync(new URL('../components/RichTextEditor.tsx', import.meta.url), 'utf8');
+    const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
+
+    assert.match(editor, /role="toolbar" aria-label="Chapter formatting"/);
+    assert.match(editor, /rte-toolbar-group-primary/);
+    assert.match(editor, /Italic \(Ctrl\+I\)/);
+    assert.match(editor, /aria-label="Table editing"/);
+    assert.match(editor, /addRowAfter/);
+    assert.match(editor, /addColumnAfter/);
+    assert.match(editor, /deleteTable/);
+    assert.match(editor, /spellcheck: 'true'/);
+    assert.match(editor, /link: false/);
+    assert.match(editor, /underline: false/);
+    assert.match(css, /\.ww-editor-paper \{[^}]*overflow: visible;/);
+    assert.match(css, /\.ww-editor-paper \.rte-toolbar \{[^}]*z-index: 30;/);
+    assert.match(css, /\.ww-editor-paper \.rte-toolbar-group-primary \{[^}]*position: sticky;/);
 });
 
 test('chapter images resize from every edge and corner and expose a real document drag handle', () => {
