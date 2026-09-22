@@ -75,6 +75,9 @@ public class SharePreviewController {
         String safeDescription = html(description);
         String safeImage = html(image);
         String safeCanonical = html(canonical);
+        String imageDimensions = DEFAULT_IMAGE.equals(image)
+                ? "<meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\">"
+                : "";
         String body = """
                 <!doctype html><html lang="en"><head><meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -82,14 +85,14 @@ public class SharePreviewController {
                 <link rel="canonical" href="%s"><meta property="og:site_name" content="WordWeft">
                 <meta property="og:type" content="%s"><meta property="og:title" content="%s">
                 <meta property="og:description" content="%s"><meta property="og:url" content="%s">
-                <meta property="og:image" content="%s"><meta name="twitter:card" content="summary_large_image">
+                <meta property="og:image" content="%s">%s<meta name="twitter:card" content="summary_large_image">
                 <meta name="twitter:title" content="%s"><meta name="twitter:description" content="%s">
                 <meta name="twitter:image" content="%s"></head><body>
                 <p>Opening <a href="%s">%s on WordWeft</a>…</p>
                 <script>location.replace(document.querySelector('link[rel=canonical]').href)</script>
                 </body></html>
                 """.formatted(safeTitle, safeDescription, safeCanonical, html(type), safeTitle,
-                safeDescription, safeCanonical, safeImage, safeTitle, safeDescription, safeImage,
+                safeDescription, safeCanonical, safeImage, imageDimensions, safeTitle, safeDescription, safeImage,
                 safeCanonical, safeTitle);
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_HTML)

@@ -69,6 +69,8 @@ class SharePreviewControllerTest {
         var response = new SharePreviewController(books, users).author("author");
         assertEquals(200, response.getStatusCode().value());
         assertTrue(!response.getBody().contains("restricted.jpg"));
+        assertTrue(response.getBody().contains("og:image:width\" content=\"1200"));
+        assertTrue(response.getBody().contains("og:image:height\" content=\"630"));
         assertEquals("no-store", response.getHeaders().getCacheControl());
         assertEquals("noindex, follow", response.getHeaders().getFirst("X-Robots-Tag"));
     }

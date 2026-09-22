@@ -464,3 +464,185 @@
 @media (prefers-reduced-motion: reduce) {
   .fw-page *, .fw-admin-page * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
+
+/* Public application page: intentionally plain, document-led and form-first. */
+.fw-content-shell {
+  width: min(880px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.fw-page-header {
+  padding: 64px 0 54px;
+  border-bottom: 1px solid var(--ww-line);
+  background: var(--ww-paper-strong);
+}
+
+.fw-status {
+  margin: 0 0 12px;
+  color: var(--ww-brand-strong);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.fw-page-header h1,
+.fw-program-section h2,
+.fw-program-block h3,
+.fw-contact-section h2 {
+  color: var(--ww-ink);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.fw-page-header h1 {
+  max-width: 720px;
+  margin: 0;
+  font-size: clamp(2.35rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.06;
+}
+
+.fw-page-intro {
+  max-width: 760px;
+  margin: 22px 0 0;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.fw-key-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 34px 0 28px;
+  border-top: 1px solid var(--ww-line);
+}
+
+.fw-key-facts > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ww-line);
+}
+
+.fw-key-facts > div:nth-child(odd) { padding-right: 24px; }
+.fw-key-facts > div:nth-child(even) { padding-left: 24px; border-left: 1px solid var(--ww-line); }
+.fw-key-facts dt { color: var(--ww-muted); font-size: 0.78rem; font-weight: 600; }
+.fw-key-facts dd { margin: 0; color: var(--ww-ink); font-size: 0.84rem; font-weight: 650; }
+
+.fw-page .fw-primary-button,
+.fw-page .fw-secondary-button {
+  min-height: 46px;
+  padding-inline: 18px;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.fw-page .fw-primary-button {
+  border-color: var(--ww-brand-strong);
+  background: var(--ww-brand-strong);
+}
+
+.fw-page .fw-primary-button:hover:not(:disabled),
+.fw-page .fw-secondary-button:hover { transform: none; box-shadow: none; }
+
+.fw-program-section { padding: 64px 0; background: var(--ww-canvas); }
+.fw-program-section > .fw-content-shell > h2 { margin: 0 0 24px; font-size: 1.7rem; font-weight: 800; }
+
+.fw-program-block {
+  padding: 28px 0;
+  border-top: 1px solid var(--ww-line);
+}
+
+.fw-program-block:last-child { border-bottom: 1px solid var(--ww-line); }
+.fw-program-block h3 { margin: 0 0 12px; font-size: 1.05rem; font-weight: 750; }
+.fw-program-block p { margin: 0; font-size: 0.94rem; line-height: 1.75; }
+.fw-program-block p + p { margin-top: 12px; }
+.fw-program-block ul { margin: 0 0 15px; padding-left: 21px; }
+.fw-program-block li { margin: 7px 0; padding-left: 4px; font-size: 0.92rem; line-height: 1.65; }
+.fw-program-block a,
+.fw-contact-section a { color: var(--ww-brand-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+.fw-table-wrap { margin: 18px 0; overflow-x: auto; border: 1px solid var(--ww-line); }
+.fw-commission-table { width: 100%; min-width: 680px; border-collapse: collapse; background: var(--ww-paper-strong); font-size: 0.82rem; line-height: 1.55; }
+.fw-commission-table th,
+.fw-commission-table td { padding: 13px 15px; border-right: 1px solid var(--ww-line); border-bottom: 1px solid var(--ww-line); text-align: left; vertical-align: top; }
+.fw-commission-table th:last-child,
+.fw-commission-table td:last-child { border-right: 0; }
+.fw-commission-table tbody tr:last-child td { border-bottom: 0; }
+.fw-commission-table th { color: var(--ww-ink); background: var(--ww-paper); font-weight: 750; }
+.fw-commission-table td:nth-child(2) { color: var(--ww-ink); font-weight: 800; }
+
+.fw-page .fw-application-section {
+  padding: 64px 0 76px;
+  border-top: 1px solid var(--ww-line);
+  background: var(--ww-paper-strong);
+}
+
+.fw-page .fw-form-heading {
+  width: min(800px, 100%);
+  margin: 0 auto 24px;
+  text-align: left;
+}
+
+.fw-page .fw-form-heading h2 { margin-bottom: 8px; color: var(--ww-ink); font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+.fw-page .fw-form-heading > p:last-child { margin: 0; }
+.fw-page .fw-form { gap: 0; }
+
+.fw-page .fw-form fieldset {
+  padding: 30px 0;
+  border: 0;
+  border-top: 1px solid var(--ww-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.fw-page .fw-form legend {
+  margin-bottom: 23px;
+  padding: 0;
+  border: 0;
+  color: var(--ww-ink);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.fw-page .fw-field input,
+.fw-page .fw-field select,
+.fw-page .fw-field textarea {
+  border-radius: 6px;
+  background: var(--ww-paper);
+}
+
+.fw-page .fw-sample-group { border-radius: 6px; background: var(--ww-canvas); }
+.fw-page .fw-confirmations label { border-radius: 6px; background: var(--ww-paper); }
+.fw-page .fw-confirmations label.is-checked { background: color-mix(in srgb, var(--ww-brand-soft) 28%, var(--ww-paper)); }
+.fw-page .fw-submit-row { padding-top: 24px; border-top: 1px solid var(--ww-line); }
+
+.fw-page .fw-success {
+  padding: 40px;
+  border-radius: 6px;
+  box-shadow: none;
+  text-align: left;
+}
+
+.fw-page .fw-success-icon { width: 48px; height: 48px; margin: 0 0 20px; box-shadow: none; }
+.fw-page .fw-success h3 { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 800; line-height: 1.2; }
+.fw-page .fw-success > p:not(.fw-eyebrow) { margin: 14px 0 0; font-family: 'Inter', sans-serif; font-size: 0.92rem; }
+.fw-page .fw-success-actions { justify-content: flex-start; margin-top: 25px; }
+
+.fw-contact-section { padding: 42px 0; border-top: 1px solid var(--ww-line); background: var(--ww-canvas); }
+.fw-contact-section h2 { margin: 0 0 9px; font-size: 1.08rem; font-weight: 800; }
+.fw-contact-section p { max-width: 760px; margin: 0; font-size: 0.9rem; line-height: 1.7; }
+
+@media (max-width: 720px) {
+  .fw-content-shell { width: min(100% - 28px, 880px); }
+  .fw-page-header { padding: 44px 0 40px; }
+  .fw-key-facts { grid-template-columns: 1fr; }
+  .fw-key-facts > div:nth-child(odd),
+  .fw-key-facts > div:nth-child(even) { padding-inline: 0; border-left: 0; }
+  .fw-program-section,
+  .fw-page .fw-application-section { padding-block: 44px; }
+  .fw-page .fw-form fieldset { padding-inline: 0; }
+  .fw-page .fw-success { padding: 28px 22px; }
+}

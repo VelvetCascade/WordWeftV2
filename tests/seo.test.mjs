@@ -164,8 +164,8 @@ test('pagination schema and canonical identify the same individual page', () => 
 test('missing images use a real fallback with truthful dimensions', () => {
   for (const value of [undefined, null, '', '   ', 'javascript:alert(1)']) assert.equal(safeImage(value), 'https://www.wordweftstudio.com/og-banner.jpg');
   const head = renderHead(metadataFor(parseRoute('/')));
-  assert.match(head, /property="og:image:width" content="1024"/);
-  assert.match(head, /property="og:image:height" content="1024"/);
+  assert.match(head, /property="og:image:width" content="1200"/);
+  assert.match(head, /property="og:image:height" content="630"/);
 });
 
 test('only deployment noindex persists across client navigation', async () => {

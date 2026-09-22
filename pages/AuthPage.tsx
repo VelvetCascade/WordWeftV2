@@ -6,6 +6,7 @@ import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { GoogleProfileCompletion } from '../components/GoogleProfileCompletion';
 import { ModernBirthdaySelector } from '../components/ModernBirthdaySelector';
+import { LegalTermsContent, TERMS_EFFECTIVE_DATE } from '../components/LegalTermsContent';
 import type { ReaderAuthView } from '../utils/readerAuthIntent';
 
 
@@ -420,55 +421,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     };
 
     const showTerms = () => setModalContent({
-        title: "Terms and Conditions",
+        title: 'Terms of Service',
         content: (
-            <div className="space-y-6 text-sm">
-                <p className="text-xs text-gray-500">Last Updated: February 15, 2026</p>
-                {/* Shortened terms content for brevity in file editing */}
-                <div><h4 className="font-bold mb-1">1. Eligibility</h4>
-                    <p>You must be at least 13 years old, 18+ to publish mature content, provide accurate account information, and not create accounts on behalf of banned users. We may suspend accounts that impersonate, automate, or misrepresent identity.</p></div>
-                <div><h4 className="font-bold mb-1">2. Account Responsibility</h4>
-                    <p>You are responsible for all activity under your account, maintaining password security, and any content posted through your account. WordWeft is not liable for loss caused by unauthorized access. We may terminate accounts without prior notice if a security risk is suspected.</p></div>
-                <div><h4 className="font-bold mb-1">3. Ownership of Content</h4>
-                    <p>You retain ownership of your writing. However, by uploading content you grant WordWeft a worldwide, non-exclusive, royalty-free license to host, store, display, reproduce, distribute, and promote your content for platform operation. This license ends when content is deleted except for backups, legal compliance, and cached data.</p></div>
-                <div><h4 className="font-bold mb-1">4. Content Storage & Removal</h4>
-                    <p>We may compress media, reformat text, cache chapters, and create previews/snippets. We may remove content without notice if it violates rules, law, or platform stability. We are not a permanent storage service — always keep backups.</p></div>
-                <div><h4 className="font-bold mb-1">5. Prohibited Content</h4>
-                    <p><strong>Illegal:</strong> Copyrighted content you don't own, pirated books/translations/scraped works, real private documents, deepfake impersonations.</p>
-                    <p><strong>Harmful:</strong> Terrorism promotion, real-world violence instructions, self-harm encouragement, exploitative sexual content involving minors (zero tolerance).</p>
-                    <p><strong>Abuse:</strong> Spam chapters, SEO stuffing, fake engagement farming, bot-generated bulk posting, manipulated ranking attempts.</p></div>
-                <div><h4 className="font-bold mb-1">6. Mature / NSFW Content</h4>
-                    <p>Allowed only if properly tagged, fictional, consensual (unless clearly fictional narrative context), and no minors involved. We may restrict visibility based on reader filters or legal requirements and reserve the right to geo-restrict content.</p></div>
-                <div><h4 className="font-bold mb-1">7. Anti-Spam & Manipulation Policy</h4>
-                    <p>You may not artificially inflate reads, use scripts/refresh bots/engagement exchanges, create multiple accounts to boost rankings, or offer rewards for fake engagement. Violations may result in ranking removal, monetization ban, permanent account deletion, and payment forfeiture.</p></div>
-                <div><h4 className="font-bold mb-1">8. Comments & Community Conduct</h4>
-                    <p>You may not harass or threaten users, post promotional spam, links to malware/scams, or hate speech. We may remove comments or restrict features at our discretion.</p></div>
-                <div><h4 className="font-bold mb-1">9. Monetization Rules (Future Feature)</h4>
-                    <p>When enabled: earnings may be withheld for fraud investigation, chargebacks may deduct balance, abuse of paywalls leads to permanent ban, we may impose minimum payout thresholds, and taxes are user responsibility. We are not liable for third-party payment processor decisions.</p></div>
-                <div><h4 className="font-bold mb-1">10. Algorithm & Discovery</h4>
-                    <p>WordWeft uses discovery systems (search, tags, trending). You may not attempt to manipulate visibility through keyword flooding, misleading tagging, or mass coordinated traffic. We may manually adjust discoverability.</p></div>
-                <div><h4 className="font-bold mb-1">11. AI Usage Policy</h4>
-                    <p>Unless explicitly permitted: fully AI-generated books must be labeled, AI spam publishing is prohibited, AI impersonation of real authors is prohibited, and AI covers may be restricted. We may request proof of authorship.</p></div>
-                <div><h4 className="font-bold mb-1">12. Intellectual Property Complaints (DMCA-style)</h4>
-                    <p>To report infringement send: proof of ownership, link to content, and identity verification. We may remove content immediately during investigation. False claims may result in account suspension.</p></div>
-                <div><h4 className="font-bold mb-1">13. Privacy & Data</h4>
-                    <p>We collect usage analytics, reading behavior, and device data. We do NOT sell personal data. We may share data when required by law.</p></div>
-                <div><h4 className="font-bold mb-1">14. Service Availability</h4>
-                    <p>We may modify features, remove features, suspend service, or perform maintenance. We are not liable for lost drafts or interruptions.</p></div>
-                <div><h4 className="font-bold mb-1">15. Termination</h4>
-                    <p>We may suspend or terminate accounts for rule violations, legal risk, abuse of systems, or harm to community. No refunds for banned accounts.</p></div>
-                <div><h4 className="font-bold mb-1">16. Limitation of Liability</h4>
-                    <p>WordWeft is provided "as is". We are not liable for lost income, deleted content, reader reactions, or third-party payment failures. Maximum liability limited to amount paid to WordWeft in last 3 months (if any).</p></div>
-                <div><h4 className="font-bold mb-1">17. Indemnification</h4>
-                    <p>You agree to indemnify WordWeft against claims arising from your content, copyright violations, or unlawful usage.</p></div>
-                <div><h4 className="font-bold mb-1">18. Jurisdiction</h4>
-                    <p>These terms are governed under the laws of India.</p></div>
-                <div><h4 className="font-bold mb-1">19. Changes to Terms</h4>
-                    <p>We may update Terms anytime. Continued use constitutes acceptance.</p></div>
-                <div><h4 className="font-bold mb-1">20. Contact</h4>
-                    <p>For legal issues: <a href="mailto:wordweftstudio@gmail.com" className="text-accent hover:underline">wordweftstudio@gmail.com</a></p></div>
+            <div className="text-sm">
+                <p className="mb-6 text-xs text-gray-500">Effective {TERMS_EFFECTIVE_DATE}</p>
+                <LegalTermsContent compact />
             </div>
-        )
+        ),
     });
 
     const showPrivacy = () => setModalContent({
