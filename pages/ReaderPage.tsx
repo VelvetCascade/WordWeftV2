@@ -1,7 +1,7 @@
 import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, chapterPath } from '../seo/metadata.mjs';
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Flag } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from 'react';
+import { Flag, MoreHorizontal } from 'lucide-react';
 import type { User, Book, BookProgress, ChapterContentResult, Comment, Character  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, BookmarkIconSolid, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -25,6 +25,8 @@ import { manuscriptProgress } from '../utils/readerProgress';
 import { ReaderSignInGate } from '../components/ReaderSignInGate';
 import { consumeReaderResumeIntent, readerChapterPath, saveReaderAuthIntent, type ReaderAuthView } from '../utils/readerAuthIntent';
 import { ensureCipherFontLoaded, preloadCipherFonts } from '../utils/cipherFont';
+import { useDialog } from '../hooks/useDialog';
+import '../styles/reader-v2.css';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -48,6 +50,7 @@ const CommentItem: React.FC<{
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [replyError, setReplyError] = useState('');
 
     const replies = allComments.filter(c => c.parentId === comment.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
@@ -55,10 +58,14 @@ const CommentItem: React.FC<{
         e.preventDefault();
         if (!replyContent.trim()) return;
         setIsSubmitting(true);
-        await onReply(comment.id, replyContent);
-        setReplyContent('');
-        setIsReplying(false);
-        setIsSubmitting(false);
+        setReplyError('');
+        try {
+            await onReply(comment.id, replyContent);
+            setReplyContent('');
+            setIsReplying(false);
+        } catch (error) {
+            setReplyError(error instanceof Error ? error.message : 'Your reply could not be posted. Please try again.');
+        } finally { setIsSubmitting(false); }
     };
 
     return (
@@ -69,9 +76,10 @@ const CommentItem: React.FC<{
 
             <div className={`bg-gray-50 dark:bg-dark-surface-alt p-3 rounded-xl border border-transparent ${isReplying ? 'border-accent/50' : ''}`}>
                 <div className="flex items-start gap-2 mb-1">
-                    <img
+                    <ResilientImage
                         src={comment.user.avatarUrl}
                         alt={comment.user.name}
+                        fallbackLabel={comment.user.name}
                         className="w-6 h-6 rounded-full flex-shrink-0 cursor-pointer"
                         onClick={() => window.location.hash = `/author/${comment.user.id}`}
                     />
@@ -101,7 +109,10 @@ const CommentItem: React.FC<{
 
                 {isReplying && (
                     <form onSubmit={handleSubmitReply} className="mt-3 animate-slide-in-bottom">
+                        {replyError && <p role="alert" className="reader-thread-error">{replyError}</p>}
+                        <label className="sr-only" htmlFor={`reply-${comment.id}`}>Reply to {comment.user.name}</label>
                         <textarea
+                            id={`reply-${comment.id}`}
                             value={replyContent}
                             onChange={e => setReplyContent(e.target.value)}
                             placeholder={`Replying to ${comment.user.name}...`}
@@ -150,6 +161,8 @@ const CommentDrawer: React.FC<{
 }> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment, onReportComment }) => {
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+    const dialogRef = useDialog(isOpen, onClose);
 
     if (!isOpen) return null;
 
@@ -159,23 +172,28 @@ const CommentDrawer: React.FC<{
         e.preventDefault();
         if (!newComment.trim()) return;
         setIsSubmitting(true);
-        await onAddComment(newComment, null);
-        setNewComment('');
-        setIsSubmitting(false);
+        setSubmitError('');
+        try {
+            await onAddComment(newComment, null);
+            setNewComment('');
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : 'Your comment could not be posted. Please try again.');
+        } finally { setIsSubmitting(false); }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+        <div className="reader-thread-overlay fixed inset-0 z-50 flex justify-end" onClick={onClose}>
             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
             <div
-                className="relative w-full max-w-md bg-white dark:bg-dark-surface h-full shadow-2xl flex flex-col animate-slide-in-right"
+                className="reader-thread-panel relative w-full max-w-md h-full flex flex-col"
+                ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="reader-thread-title"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="p-4 border-b border-gray-200 dark:border-dark-border flex justify-between items-center bg-gray-50 dark:bg-dark-surface-alt">
-                    <h3 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">
+                    <h3 id="reader-thread-title" className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">
                         {paragraphIndex !== null ? `Paragraph #${paragraphIndex + 1}` : 'Chapter Comments'}
                     </h3>
-                    <button onClick={onClose}><XMarkIcon className="w-6 h-6" /></button>
+                    <button onClick={onClose} aria-label="Close discussion"><XMarkIcon className="w-6 h-6" /></button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
@@ -203,7 +221,10 @@ const CommentDrawer: React.FC<{
 
                 <div className="p-4 border-t border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-surface-alt">
                     <form onSubmit={handleSubmit}>
+                        {submitError && <p role="alert" className="reader-thread-error">{submitError}</p>}
+                        <label className="reader-thread-input-label" htmlFor="reader-new-comment">Your comment</label>
                         <textarea
+                            id="reader-new-comment"
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
                             placeholder="Start a new discussion..."
@@ -228,7 +249,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const { theme: globalTheme } = useTheme();
     const [initialReaderPreferences] = useState(() => {
         try {
-            return readReaderPreferences(localStorage.getItem('ww_reader_preferences'), globalTheme);
+            const stored = localStorage.getItem('ww_reader_preferences');
+            const preferences = readReaderPreferences(stored, globalTheme);
+            if (!stored && window.matchMedia('(min-width: 721px)').matches) preferences.fontSize = 19;
+            return preferences;
         } catch {
             return readReaderPreferences(null, globalTheme);
         }
@@ -246,6 +270,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [readerWidth, setReaderWidth] = useState<ReaderWidth>(initialReaderPreferences.readerWidth);
     const [lineHeight, setLineHeight] = useState(initialReaderPreferences.lineHeight);
     const [scrollProgress, setScrollProgress] = useState(0);
+    const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
+    const [progressSaveState, setProgressSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
@@ -255,6 +281,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [isSettingsPanelVisible, setIsSettingsPanelVisible] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isReaderMoreOpen, setIsReaderMoreOpen] = useState(false);
     const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
     const [reportTarget, setReportTarget] = useState<{ type: 'CHAPTER' | 'COMMENT'; id: string; title: string } | null>(null);
 
@@ -280,6 +307,22 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const lastSaveTimeRef = useRef<number>(0);
     const maxPercentageRef = useRef<number>(0);
     const trackedAccessEventsRef = useRef(new Set<string>());
+    const appearanceAnchorRef = useRef<{ element: HTMLElement; top: number } | null>(null);
+    const changeAppearance = useCallback((update: () => void) => {
+        const blocks = Array.from(moodContentRef.current?.querySelectorAll<HTMLElement>('.reader-comment-block') ?? []);
+        const element = blocks.find(block => block.getBoundingClientRect().bottom > 100);
+        appearanceAnchorRef.current = element ? { element, top: element.getBoundingClientRect().top } : null;
+        update();
+    }, []);
+    useLayoutEffect(() => {
+        const anchor = appearanceAnchorRef.current;
+        if (!anchor?.element.isConnected) return;
+        window.scrollBy({ top: anchor.element.getBoundingClientRect().top - anchor.top, behavior: 'instant' });
+        appearanceAnchorRef.current = null;
+    }, [fontSize, readerFont, readerWidth, lineHeight, contentTheme]);
+    const moreDialogRef = useDialog(isReaderMoreOpen, () => setIsReaderMoreOpen(false));
+    const contentsDialogRef = useDialog(isTocVisible, () => setIsTocVisible(false));
+    const preferencesDialogRef = useDialog(isSettingsPanelVisible, () => setIsSettingsPanelVisible(false));
 
     const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
     const { trackEvent } = useAnalytics();
@@ -411,7 +454,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight]);
 
     const calculateProgress = useCallback(() => {
-        const manuscript = contentRef.current;
+        const manuscript = moodContentRef.current || contentRef.current;
         if (!manuscript) return 0;
         const rect = manuscript.getBoundingClientRect();
         return manuscriptProgress({
@@ -438,13 +481,24 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             maxPercentageRef.current = percentage;
         }
 
+        setProgressSaveState('saving');
         void api.saveReadingProgress(
             currentUser.id,
             book,
             currentChapterIndex,
             scrollTop,
             maxPercentageRef.current
-        ).catch(error => console.warn('Reading progress could not be saved', error));
+        ).then(() => {
+            setProgressSaveState('saved');
+            setReadingProgress(previous => previous ? {
+                ...previous,
+                lastReadChapterIndex: currentChapterIndex,
+                chapters: { ...previous.chapters, [chapter.id]: { progress: maxPercentageRef.current, scrollPosition: scrollTop } },
+            } : previous);
+        }).catch(error => {
+            setProgressSaveState('error');
+            console.warn('Reading progress could not be saved', error);
+        });
     }, [currentUser, book, currentChapterIndex, chapter, chapterContent?.access, calculateProgress]);
 
     useEffect(() => {
@@ -457,6 +511,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 const savedProgress = await api.getReadingProgressForBook(currentUser.id, bookId);
                 if (cancelled) return;
 
+                setReadingProgress(savedProgress);
                 maxPercentageRef.current = 0;
                 const savedChapterProgress = savedProgress?.chapters?.[chapter.id];
                 if (savedChapterProgress) {
@@ -485,7 +540,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             cancelled = true;
             window.clearTimeout(timerId);
         };
-    }, [bookId, chapter, currentUser, chapterContent?.access, resumedChapterId]);
+    }, [bookId, chapter?.id, currentUser?.id, chapterContent?.access, resumedChapterId]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -530,22 +585,22 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 setIsSettingsPanelVisible(false);
                 setIsTocVisible(false);
             } else if (event.key === '[') {
-                setFontSize(size => Math.max(12, size - 1));
+                changeAppearance(() => setFontSize(size => Math.max(12, size - 1)));
             } else if (event.key === ']') {
-                setFontSize(size => Math.min(32, size + 1));
+                changeAppearance(() => setFontSize(size => Math.min(32, size + 1)));
             }
         };
 
         window.addEventListener('keydown', handleReaderShortcuts);
         return () => window.removeEventListener('keydown', handleReaderShortcuts);
-    }, []);
+    }, [changeAppearance]);
 
     useEffect(() => {
-        if (!isTocVisible && !isSettingsPanelVisible && !isCommentDrawerOpen) return;
-        const previousOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = previousOverflow; };
-    }, [isTocVisible, isSettingsPanelVisible, isCommentDrawerOpen]);
+        if (!isTocVisible || !currentUser) return;
+        let active = true;
+        api.getReadingProgressForBook(currentUser.id, bookId).then(progress => { if (active) setReadingProgress(progress); }).catch(() => {});
+        return () => { active = false; };
+    }, [isTocVisible, currentUser?.id, bookId]);
 
 
     const goToChapter = (index: number) => {
@@ -668,7 +723,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         }
     };
 
-    const TableOfContents: React.FC = () => {
+    const renderTableOfContents = () => {
         if (!book) return null;
         return (
             <div
@@ -676,7 +731,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 onClick={() => setIsTocVisible(false)}
             >
                 <div
-                    className="reader-toc-panel absolute top-0 left-0 bottom-0 translate-x-0"
+                    className="reader-toc-panel"
+                    ref={contentsDialogRef}
+                    tabIndex={-1}
                     onClick={e => e.stopPropagation()}
                     role="dialog"
                     aria-modal="true"
@@ -684,31 +741,33 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 >
                     <div className="reader-toc-header">
                         <div>
-                            <span>Contents</span>
-                            <h3 id="reader-toc-title">{book.title}</h3>
-                            <p>{book.chapters.length} chapters · Chapter {currentChapterIndex + 1} now</p>
+                            <span>{book.title}</span>
+                            <h3 id="reader-toc-title">Chapters</h3>
+                            <p>{Object.values(readingProgress?.chapters ?? {}).filter(chapter => chapter.progress >= 90).length} finished · Chapter {currentChapterIndex + 1} now</p>
                         </div>
                         <button onClick={() => setIsTocVisible(false)} aria-label="Close contents"><XMarkIcon className="w-5 h-5" /></button>
                     </div>
-                    <div className="reader-toc-overall"><span style={{ width: `${((currentChapterIndex + scrollProgress / 100) / Math.max(1, book.chapters.length)) * 100}%` }} /></div>
+                    <div className="reader-toc-overall"><span style={{ width: `${readingProgress?.overallProgress ?? 0}%` }} /></div>
                     <ul className="reader-toc-list">
-                        {book.chapters.map((chap, index) => (
-                            <li key={chap.id}>
+                        {book.chapters.map((chap, index) => {
+                            const completed = (readingProgress?.chapters?.[chap.id]?.progress ?? 0) >= 90;
+                            return <li key={chap.id}>
                                 <button
                                     onClick={() => {
                                         goToChapter(index);
                                         setIsTocVisible(false);
                                     }}
-                                    className={`reader-toc-item ${index === currentChapterIndex ? 'reader-toc-item-active' : ''} ${chap.status !== 'published' || chap.accessLabel === 'SIGN_IN' ? 'reader-toc-item-locked' : ''}`}
+                                    className={`reader-toc-item ${index === currentChapterIndex ? 'reader-toc-item-active' : ''} ${completed ? 'reader-toc-item-completed' : ''} ${chap.status !== 'published' || chap.accessLabel === 'SIGN_IN' ? 'reader-toc-item-locked' : ''}`}
                                     disabled={chap.status !== 'published'}
                                 >
-                                    <span className="reader-toc-number">{String(index + 1).padStart(2, '0')}</span>
-                                    <span className="reader-toc-title"><strong>{chap.title}</strong><small>{chap.status !== 'published' ? 'Not released' : chap.accessLabel === 'SIGN_IN' ? 'Sign in to read' : chap.accessLabel === 'PREVIEW' ? 'Preview' : index === currentChapterIndex ? `${Math.round(scrollProgress)}% read` : index < currentChapterIndex ? 'Completed' : 'Ready to read'}</small></span>
+                                    <span className="reader-toc-number" aria-hidden="true">{completed ? '✓' : index === currentChapterIndex ? '•' : index + 1}</span>
+                                    <span className="reader-toc-title"><span className="reader-toc-kicker">Chapter {String(index + 1).padStart(2, '0')}</span><strong>{chap.title}</strong><small>{chap.status !== 'published' ? 'Not released' : chap.accessLabel === 'SIGN_IN' ? 'Sign in to read' : chap.accessLabel === 'PREVIEW' ? 'Preview' : index === currentChapterIndex ? `Continue here · ${Math.round(scrollProgress)}% read` : completed ? 'Finished' : 'Unread'} · {chap.likesCount} likes{chap.wordCount ? ` · ${Math.max(1, Math.ceil(chap.wordCount / 230))} min` : ''}</small></span>
                                     <ChevronRightIcon className="w-4 h-4" />
                                 </button>
-                            </li>
-                        ))}
+                            </li>;
+                        })}
                     </ul>
+                    <button className="reader-toc-return" onClick={() => setIsTocVisible(false)}>Return to chapter {currentChapterIndex + 1}</button>
                 </div>
             </div>
         );
@@ -785,7 +844,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <div
                         key={index}
                         id={`paragraph-${index}`}
-                        className={`reader-comment-block group relative mb-6 rounded-lg transition-colors ${revealedCommentIndex === index ? 'is-comment-revealed' : ''}`}
+                        className={`reader-comment-block group relative mb-6 rounded-lg transition-colors ${revealedCommentIndex === index ? 'is-comment-revealed' : ''} ${isCommentDrawerOpen && activeParagraphIndex === index ? 'is-thread-active' : ''}`}
                         onClick={() => setRevealedCommentIndex(current => current === index ? null : index)}
                     >
                         {React.createElement(
@@ -801,7 +860,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                                 aria-label={count > 0 ? `Open ${count} paragraph comments` : 'Comment on this paragraph'}
                             >
                                 <div className="relative">
-                                    <PlusIcon className="w-5 h-5" />
+                                    <ChatBubbleLeftIcon className="w-4 h-4" />
                                     {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
                                 </div>
                             </button>
@@ -823,7 +882,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     blockIndex = 0;
 
     return (
-        <div className={`reader-experience transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''}`}>
+        <div className={`reader-experience reader-v2 transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''}`}>
             <div className="sr-only" role="status" aria-live="polite">{resumeAnnouncement}</div>
             {/* Contextual Reader Onboarding */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? (
@@ -836,21 +895,21 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             {/* Mood Atmosphere — page-level immersive overlay */}
             <MoodAtmosphere contentRef={moodContentRef} active={chapterContent.access !== 'AUTH_REQUIRED'} />
 
-            {isTocVisible && <TableOfContents />}
+            {isTocVisible && renderTableOfContents()}
 
             {readerActionError && <div className="reader-action-error" role="alert">{readerActionError}<button type="button" onClick={() => setReaderActionError('')} aria-label="Dismiss message"><XMarkIcon className="w-4 h-4" /></button></div>}
 
             <div className="reader-progress-track" aria-hidden="true"><span style={{ width: `${scrollProgress}%` }} /></div>
 
             {/* Header */}
-            <header className={`reader-header fixed top-0 left-0 right-0 z-20 ${isToolbarVisible ? 'reader-header-visible' : 'reader-header-hidden'}`}>
+            <header className="reader-header reader-header-visible fixed top-0 left-0 right-0 z-20">
                 <div className="reader-header-inner">
-                    <button onClick={handleReturnToStory} className="reader-back-button" aria-label={`Back to ${book.title}`}>
+                    <div className="reader-context-left"><a className="reader-brand-v2" href="/"><img src="/design-v2/assets/brand-mark.jpg" alt="" />WordWeft</a><button onClick={handleReturnToStory} className="reader-back-button" aria-label={`Back to ${book.title}`}>
                         <ChevronLeftIcon className="w-5 h-5" />
                         <span><small>Back to story</small><strong>{book.title}</strong></span>
-                    </button>
+                    </button></div>
                     <div className="reader-header-chapter">
-                        <span>{String(currentChapterIndex + 1).padStart(2, '0')} / {String(book.chapters.length).padStart(2, '0')}</span>
+                        <span>Chapter {currentChapterIndex + 1} of {book.chapters.length}</span>
                         <strong>{chapter.title}</strong>
                     </div>
                     <div className="reader-header-actions">
@@ -858,12 +917,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             {isBookmarked ? <BookmarkIconSolid className="w-5 h-5 text-accent" /> : <BookmarkIcon className="w-5 h-5" />}
                         </button>
                         <button onClick={() => setIsSettingsPanelVisible(true)} className={isSettingsPanelVisible ? 'reader-action-active reader-appearance-button' : 'reader-appearance-button'} aria-label="Reading appearance and themes"><span className="reader-aa">Aa</span></button>
+                        <button onClick={() => setIsFocusMode(true)} aria-label="Enter focus mode"><EyeIcon className="w-5 h-5" /></button>
                         <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
                         <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button"><Flag className="w-4 h-4" /></button>
                         <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>
+                        <button className="reader-more-button" onClick={() => setIsReaderMoreOpen(true)} aria-label="More reader actions"><MoreHorizontal className="w-5 h-5" /></button>
                     </div>
                 </div>
             </header>
+
+            {isReaderMoreOpen && <div className="reader-more-overlay" onClick={event => { if (event.target === event.currentTarget) setIsReaderMoreOpen(false); }}><div className="reader-more-panel" ref={moreDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="reader-more-title"><div><h2 id="reader-more-title">Reader actions</h2><button aria-label="Close reader actions" onClick={() => setIsReaderMoreOpen(false)}><XMarkIcon className="w-5 h-5" /></button></div><button onClick={() => { setIsReaderMoreOpen(false); void handleToggleBookmark(); }} disabled={bookmarkSaving}><BookmarkIcon className="w-5 h-5" />{isBookmarked ? 'Remove from library' : 'Save to library'}</button><button onClick={() => { setIsReaderMoreOpen(false); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" />Share chapter</button><button onClick={() => { setIsReaderMoreOpen(false); setIsFocusMode(true); }}><EyeIcon className="w-5 h-5" />Focus mode</button><button onClick={() => { setIsReaderMoreOpen(false); if (currentUser) setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }); else window.location.hash = '/auth'; }}><Flag className="w-5 h-5" />Report chapter</button></div></div>}
 
             {isFocusMode && (
                 <button className="reader-focus-exit" onClick={() => setIsFocusMode(false)}>
@@ -892,7 +955,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 }}
             >
                 <div className="reader-chapter-intro">
-                    <span>Chapter {String(currentChapterIndex + 1).padStart(2, '0')}</span>
+                    <span>{book.genres[0] && `${book.genres[0]} · `}Chapter {currentChapterIndex + 1}{chapterContent.access !== 'AUTH_REQUIRED' && ` · ${readingMinutes} min read`}</span>
                     <h1>{chapter.title}</h1>
                     {chapterContent.access === 'AUTH_REQUIRED' ? (
                         <div className="reader-chapter-meta"><span>Sign in to read</span></div>
@@ -929,7 +992,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 {chapterContent.access === 'FULL' ? <section className="reader-chapter-end">
                     <span className="reader-end-kicker">{currentChapterIndex < book.chapters.length - 1 ? 'End of chapter' : 'Story complete'}</span>
                     <h2>{currentChapterIndex < book.chapters.length - 1 ? book.chapters[currentChapterIndex + 1].title : `You finished ${book.title}`}</h2>
-                    <p>{currentChapterIndex < book.chapters.length - 1 ? 'Ready when you are. Your place in this chapter has been saved.' : `You reached the final page of ${book.author.name}'s story.`}</p>
+                    <p>{currentChapterIndex < book.chapters.length - 1 ? 'The next chapter is ready when you are.' : `You reached the final page of ${book.author.name}'s story.`}</p>
                     <div className="reader-end-primary-actions">
                         {currentChapterIndex < book.chapters.length - 1 ? (
                             <button onClick={() => goToChapter(currentChapterIndex + 1)}>Read next chapter <ChevronRightIcon className="w-5 h-5" /></button>
@@ -948,7 +1011,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <p className="reader-copyright">&copy; {new Date().getFullYear()} {book.author.name}. All rights reserved. Protected from unauthorized distribution and model training.</p>
                     <a href={discussLink(book.id, chapter.id, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
                 </section> : null}
+                {chapterContent.access === 'FULL' && <div className="reader-save-status" role="status"><span>{!currentUser ? 'Sign in to save your reading place' : progressSaveState === 'saving' ? 'Saving your place…' : progressSaveState === 'saved' ? '✓ Your place is saved' : progressSaveState === 'error' ? 'Your place could not be saved' : 'Your reading place syncs as you read'}</span><span>{Math.max(0, Math.ceil(readingMinutes * (1 - scrollProgress / 100)))} min left in this chapter</span></div>}
             </main>
+            {chapterContent.access === 'FULL' && <aside className="reader-conversation-rail"><span className="ww-page-eyebrow">Chapter conversation</span><h2>A thought to share?</h2><p>Open a paragraph thread, or join the conversation at the end.</p><button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-pressed={chapter.isLiked}>{chapter.isLiked ? 'Liked' : 'Like chapter'}{chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}</button><button className="reader-conversation-count" onClick={() => openCommentDrawer(null)}>{comments.filter(comment => comment.paragraphIndex === null).length} chapter comments</button></aside>}
+            <aside className="reader-margin-progress" aria-label="Chapter progress"><span>{Math.round(scrollProgress)}%</span><i><span style={{ height: `${scrollProgress}%` }} /></i><small>{readingMinutes} min</small></aside>
 
             {/* Discussion Section (Bottom) */}
             {chapterContent.access === 'FULL' ? <section className="reader-discussion max-w-4xl mx-auto w-full px-6 py-12 border-t border-gray-200 dark:border-dark-border bg-black/5 dark:bg-white/5 rounded-t-3xl">
@@ -1036,7 +1102,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
             {/* Reader Settings Sheet */}
             {isSettingsPanelVisible && <><div className="reader-settings-backdrop reader-settings-backdrop-open" onClick={() => setIsSettingsPanelVisible(false)} />
-            <section className="reader-settings-panel reader-settings-panel-open" role="dialog" aria-modal="true" aria-label="Reading preferences">
+            <div ref={preferencesDialogRef} tabIndex={-1} className="reader-settings-panel reader-settings-panel-open" role="dialog" aria-modal="true" aria-label="Reading preferences">
                 <div className="reader-settings-heading">
                     <div><span>Reading preferences</span><p>Saved automatically on this device</p></div>
                     <button onClick={() => setIsSettingsPanelVisible(false)} aria-label="Close preferences"><XMarkIcon className="w-5 h-5" /></button>
@@ -1045,30 +1111,30 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <div className="reader-setting-group">
                         <label>Theme</label>
                         <div className="reader-theme-options">
-                            <button onClick={() => setContentTheme('light')} className={contentTheme === 'light' ? 'active' : ''}><i className="reader-swatch-light" /><span>Paper</span></button>
-                            <button onClick={() => setContentTheme('sepia')} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
-                            <button onClick={() => setContentTheme('dark')} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
+                            <button onClick={() => changeAppearance(() => setContentTheme('light'))} aria-pressed={contentTheme === 'light'} className={contentTheme === 'light' ? 'active' : ''}><i className="reader-swatch-light" /><span>Paper</span></button>
+                            <button onClick={() => changeAppearance(() => setContentTheme('sepia'))} aria-pressed={contentTheme === 'sepia'} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
+                            <button onClick={() => changeAppearance(() => setContentTheme('dark'))} aria-pressed={contentTheme === 'dark'} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
                         </div>
                     </div>
                     <div className="reader-setting-group">
                         <label>Type size</label>
-                        <div className="reader-stepper"><button onClick={() => setFontSize(size => Math.max(12, size - 1))}>A−</button><strong>{fontSize}px</strong><button onClick={() => setFontSize(size => Math.min(32, size + 1))}>A+</button></div>
+                        <div className="reader-stepper"><button onClick={() => changeAppearance(() => setFontSize(size => Math.max(12, size - 1)))}>A−</button><strong>{fontSize}px</strong><button onClick={() => changeAppearance(() => setFontSize(size => Math.min(32, size + 1)))}>A+</button></div>
                     </div>
                     <div className="reader-setting-group">
                         <label>Typeface</label>
-                        <div className="reader-segmented"><button onClick={() => setReaderFont('literary')} className={readerFont === 'literary' ? 'active' : ''}>Literary</button><button onClick={() => setReaderFont('modern')} className={readerFont === 'modern' ? 'active' : ''}>Modern</button></div>
+                        <div className="reader-segmented"><button onClick={() => changeAppearance(() => setReaderFont('literary'))} aria-pressed={readerFont === 'literary'} className={readerFont === 'literary' ? 'active' : ''}>Literary</button><button onClick={() => changeAppearance(() => setReaderFont('modern'))} aria-pressed={readerFont === 'modern'} className={readerFont === 'modern' ? 'active' : ''}>Modern</button></div>
                     </div>
                     <div className="reader-setting-group">
                         <label>Page width</label>
-                        <div className="reader-segmented reader-width-options"><button onClick={() => setReaderWidth('narrow')} className={readerWidth === 'narrow' ? 'active' : ''}>Narrow</button><button onClick={() => setReaderWidth('standard')} className={readerWidth === 'standard' ? 'active' : ''}>Standard</button><button onClick={() => setReaderWidth('wide')} className={readerWidth === 'wide' ? 'active' : ''}>Wide</button></div>
+                        <div className="reader-segmented reader-width-options"><button onClick={() => changeAppearance(() => setReaderWidth('narrow'))} aria-pressed={readerWidth === 'narrow'} className={readerWidth === 'narrow' ? 'active' : ''}>Narrow</button><button onClick={() => changeAppearance(() => setReaderWidth('standard'))} aria-pressed={readerWidth === 'standard'} className={readerWidth === 'standard' ? 'active' : ''}>Standard</button><button onClick={() => changeAppearance(() => setReaderWidth('wide'))} aria-pressed={readerWidth === 'wide'} className={readerWidth === 'wide' ? 'active' : ''}>Wide</button></div>
                     </div>
                     <div className="reader-setting-group reader-setting-group-wide">
                         <label>Line spacing</label>
-                        <div className="reader-segmented"><button onClick={() => setLineHeight(1.65)} className={lineHeight === 1.65 ? 'active' : ''}>Compact</button><button onClick={() => setLineHeight(1.85)} className={lineHeight === 1.85 ? 'active' : ''}>Comfortable</button><button onClick={() => setLineHeight(2.05)} className={lineHeight === 2.05 ? 'active' : ''}>Airy</button></div>
+                        <div className="reader-segmented"><button onClick={() => changeAppearance(() => setLineHeight(1.65))} aria-pressed={lineHeight === 1.65} className={lineHeight === 1.65 ? 'active' : ''}>Compact</button><button onClick={() => changeAppearance(() => setLineHeight(1.85))} aria-pressed={lineHeight === 1.85} className={lineHeight === 1.85 ? 'active' : ''}>Comfortable</button><button onClick={() => changeAppearance(() => setLineHeight(2.05))} aria-pressed={lineHeight === 2.05} className={lineHeight === 2.05 ? 'active' : ''}>Airy</button></div>
                     </div>
                 </div>
                 <div className="reader-shortcuts"><span><kbd>F</kbd> Focus</span><span><kbd>[</kbd><kbd>]</kbd> Text size</span><span><kbd>Esc</kbd> Close panels</span></div>
-            </section></>}
+            </div></>}
 
             {/* Keep the primary authentication actions unobstructed on a locked chapter. */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">
@@ -1088,7 +1154,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 onClose={() => setIsCommentDrawerOpen(false)}
                 comments={activeParagraphIndex !== null ? paragraphComments(activeParagraphIndex) : comments.filter(c => c.paragraphIndex === null)}
                 paragraphIndex={activeParagraphIndex}
-                paragraphText={activeParagraphIndex !== null && chapter.content ? 'Paragraph ' + (activeParagraphIndex + 1) : undefined}
+                paragraphText={activeParagraphIndex !== null && !chapterContent.obfuscated ? document.getElementById(`paragraph-${activeParagraphIndex}`)?.querySelector('p,h1,h2,h3,h4,h5,h6,blockquote,ul,ol,pre')?.textContent ?? undefined : undefined}
                 onAddComment={handleAddComment}
                 onReportComment={(comment) => currentUser ? setReportTarget({ type: 'COMMENT', id: comment.id, title: `Comment by ${comment.user.name}` }) : window.location.hash = '/auth'}
             /> : null}

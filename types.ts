@@ -186,6 +186,7 @@ export interface User {
   library: Shelf[];
   writtenBooks?: Book[];
   hasSeenWritingDemo?: boolean;
+  notificationPreferences?: NotificationPreferences;
   dateOfBirth?: string;
   allowMatureContent?: boolean;
   roles?: string[];

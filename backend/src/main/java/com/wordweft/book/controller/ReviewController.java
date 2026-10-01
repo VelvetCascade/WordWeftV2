@@ -40,12 +40,17 @@ public class ReviewController {
     public ResponseEntity<?> addReview(@PathVariable String bookId, @Valid @RequestBody Review review) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
-        review.setUserId(userDetails.getId());
-        review.setBookId(bookId);
-        review.setDate(LocalDate.now());
-        review.setSentiment("positive"); // Mock sentiment analysis
-        
-        reviewRepository.save(review);
+        // The same form creates and edits a reader's review. Resolve the record
+        // from the authenticated account, never from a client supplied ID.
+        Review savedReview = reviewRepository.findByBookId(bookId).stream()
+                .filter(item -> userDetails.getId().equals(item.getUserId()))
+                .findFirst().orElseGet(Review::new);
+        savedReview.setUserId(userDetails.getId());
+        savedReview.setBookId(bookId);
+        savedReview.setRating(review.getRating());
+        savedReview.setComment(review.getComment());
+        if (savedReview.getDate() == null) savedReview.setDate(LocalDate.now());
+        reviewRepository.save(savedReview);
         updateBookStats(bookId);
         
         return getReviews(bookId);

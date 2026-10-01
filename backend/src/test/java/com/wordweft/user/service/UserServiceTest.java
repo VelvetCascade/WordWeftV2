@@ -37,6 +37,7 @@ class UserServiceTest {
         assertFalse(profile.containsKey("library"));
         assertFalse(profile.containsKey("dateOfBirth"));
         assertFalse(profile.containsKey("following"));
+        assertFalse(profile.containsKey("notificationPreferences"));
         verifyNoInteractions(service.bookService, service.bookRepository, service.libraryRepository,
                 service.shelfRepository, service.readingProgressRepository);
     }
@@ -80,6 +81,7 @@ class UserServiceTest {
 
         assertNotNull(enriched);
         assertEquals("youngreader", enriched.get("username"));
+        assertEquals(user.getNotificationPreferences(), enriched.get("notificationPreferences"));
         assertNotNull(enriched.get("library"));
         List<?> libraryShelves = (List<?>) enriched.get("library");
         assertFalse(libraryShelves.isEmpty());

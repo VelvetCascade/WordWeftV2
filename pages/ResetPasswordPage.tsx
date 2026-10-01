@@ -1,3 +1,4 @@
+import '../styles/account-v2.css';
 
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon } from '../components/icons/Icons';
@@ -63,15 +64,17 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
-            <div className="w-full max-w-md">
-                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="flex justify-center mb-6">
-                    <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
+        <div className="account-v2-auth ww-auth-page">
+            <div className="ww-auth-layout">
+                <aside className="ww-auth-artstrip" aria-hidden="true"><img src="/design-v2/assets/met-53681.jpg" alt="" /><img src="/design-v2/assets/met-45294.jpg" alt="" /><img src="/design-v2/assets/met-55020.jpg" alt="" /></aside>
+            <div className="ww-auth-form-shell">
+                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-account-brand">
+                    <img src="/design-v2/assets/brand-mark.jpg" alt="" /><span>WordWeft</span>
                 </a>
-                <div className="bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8">
+                <div className="ww-auth-card">
                     <button
                         onClick={() => window.location.hash = '/auth'}
-                        className="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors mb-4"
+                        aria-label="Back to sign in" className="ww-reset-back p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors mb-4"
                     >
                         <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -81,9 +84,9 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                             <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CheckCircleIcon className="w-8 h-8 text-success" />
                             </div>
-                            <h2 className="text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-2 font-sans">
-                                Password Reset!
-                            </h2>
+                            <h1 className="text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-2 font-sans">
+                                Password updated
+                            </h1>
                             <p className="text-text-body dark:text-dark-text-body mb-6">
                                 Your password has been updated successfully. You can now sign in with your new password.
                             </p>
@@ -96,9 +99,9 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                         </div>
                     ) : (
                         <>
-                            <h2 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
-                                Create New Password
-                            </h2>
+                            <h1 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
+                                Create a new password
+                            </h1>
                             <p className="text-center text-text-body dark:text-dark-text-body mb-8">
                                 Enter your new password below.
                             </p>
@@ -132,6 +135,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                                     <div className="relative">
                                         <input
                                             type={showNewPassword ? "text" : "password"}
+                                            autoComplete="new-password"
                                             id="newPassword"
                                             placeholder="Create a new password"
                                             className="w-full h-11 px-4 pr-11 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
@@ -145,7 +149,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                                             type="button"
                                             onClick={() => setShowNewPassword(!showNewPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                            tabIndex={-1}
+                                            aria-label={showNewPassword ? "Hide password" : "Show password"}
                                         >
                                             {showNewPassword ? (
                                                 <EyeSlashIcon className="w-5 h-5" />
@@ -163,6 +167,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                                     <div className="relative">
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
+                                            autoComplete="new-password"
                                             id="confirmPassword"
                                             placeholder="Re-enter your new password"
                                             className="w-full h-11 px-4 pr-11 rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
@@ -174,7 +179,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                            tabIndex={-1}
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                                         >
                                             {showConfirmPassword ? (
                                                 <EyeSlashIcon className="w-5 h-5" />
@@ -185,7 +190,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                                     </div>
                                 </div>
 
-                                {error && <p className="text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
+                                {error && <p role="alert" className="text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
 
                                 <button
                                     type="submit"
@@ -198,6 +203,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                         </>
                     )}
                 </div>
+            </div>
             </div>
         </div>
     );

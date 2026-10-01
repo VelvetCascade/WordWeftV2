@@ -12,10 +12,8 @@
     <!-- AdSense script is loaded per-page by the React AdUnit component, NOT globally.
          This prevents ads from appearing on empty/thin/auth pages which violates AdSense policy. -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Literata:opsz,wght@7..72,400;500;600;700&family=Newsreader:opsz,wght@6..72,500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
+    <link rel="preload" href="/design-v2/assets/Rubik-400.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/design-v2/assets/WordWeftSerif-400.ttf" as="font" type="font/ttf" crossorigin>
     <style>
       .bg-animated-gradient {
         background: linear-gradient(-45deg, #5D4037, #795548, #8D6E63, #5D4037);
@@ -27,10 +25,10 @@
     </style>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-background dark:bg-dark-background font-serif text-text-body dark:text-dark-text-body">
+  <body class="bg-background dark:bg-dark-background font-sans text-text-body dark:text-dark-text-body">
     <div id="root"><!--SEO_BODY--></div>
     <noscript>
-      <div style="padding:20px;text-align:center;font-family:Inter,sans-serif;color:#795548;background:#FBF9F6">
+      <div style="padding:20px;text-align:center;font-family:Rubik,sans-serif;color:#795548;background:#FBF9F6">
         WordWeft requires JavaScript for the full interactive experience. Please enable JavaScript in your browser.
       </div>
     </noscript>

@@ -3,6 +3,8 @@ import * as api from '../api/client';
 import type { ChapterRevision, User } from '../types';
 import { revisionReasonLabel } from '../utils/chapterRevisions';
 import { ConfirmDialog } from './ConfirmDialog';
+import { useDialog } from '../hooks/useDialog';
+import { X } from 'lucide-react';
 
 interface ChapterVersionHistoryDialogProps {
     isOpen: boolean;
@@ -24,6 +26,7 @@ export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogPr
     const [restoringId, setRestoringId] = useState('');
     const [error, setError] = useState('');
     const [restoreTarget, setRestoreTarget] = useState<ChapterRevision | null>(null);
+    const dialogRef = useDialog(isOpen, onClose, !restoringId && !restoreTarget);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -56,8 +59,8 @@ export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogPr
 
     return (
         <div className="ww-version-backdrop" role="presentation" onMouseDown={event => event.target === event.currentTarget && !restoringId && onClose()}>
-            <section className="ww-version-dialog" role="dialog" aria-modal="true" aria-labelledby="version-history-title">
-                <header><div><span>Recovery</span><h2 id="version-history-title">Version history</h2></div><button onClick={onClose} aria-label="Close version history">×</button></header>
+            <div ref={dialogRef} tabIndex={-1} className="ww-version-dialog" role="dialog" aria-modal="true" aria-labelledby="version-history-title">
+                <header><div><span>Recovery</span><h2 id="version-history-title">Version history</h2></div><button onClick={onClose} disabled={Boolean(restoringId)} aria-label="Close version history"><X size={20} /></button></header>
                 <p>WordWeft keeps up to 50 recent recovery points. Restoring always returns the chapter to draft.</p>
                 {error && <div className="ww-version-error" role="alert">{error}</div>}
                 {isLoading ? <div className="ww-version-empty">Loading recovery points…</div> : revisions.length ? (
@@ -72,7 +75,7 @@ export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogPr
                         ))}
                     </div>
                 ) : <div className="ww-version-empty">Recovery points appear as you continue editing and publishing.</div>}
-            </section>
+            </div>
             <ConfirmDialog
                 isOpen={!!restoreTarget}
                 title="Restore this version?"

@@ -1,5 +1,12 @@
 import { chapterPath } from '../seo/metadata.mjs';
 let navigationLock: { url: string; message: string } | null = null;
+let pendingScroll: { x: number; y: number } | null = null;
+export const consumeNavigationScroll = () => {
+    const value = pendingScroll;
+    pendingScroll = null;
+    return value;
+};
+const saveScroll = () => window.history.replaceState({ ...window.history.state, wordWeftScroll: { x: window.scrollX, y: window.scrollY } }, '');
 
 const currentUrl = () => window.location.pathname + window.location.search + window.location.hash;
 
@@ -37,11 +44,27 @@ export const navigatePath = (path: string, replace = false) => {
     if (target.origin !== window.location.origin) return;
     const next = target.pathname + target.search + target.hash;
     if (next === routePath() + window.location.hash) return;
+    saveScroll();
+    pendingScroll = null;
     window.history[replace ? 'replaceState' : 'pushState'](replace ? window.history.state : null, '', next);
     window.dispatchEvent(new Event('wordweft:navigate'));
 };
 /** Preserve old shared #/ links and editor actions while exposing crawlable URLs. */
 export const installNavigation = () => {
+    window.history.scrollRestoration = 'manual';
+    const restoreScroll = (event: PopStateEvent) => {
+        const position = event.state?.wordWeftScroll;
+        pendingScroll = position && Number.isFinite(position.x) && Number.isFinite(position.y) ? position : { x: 0, y: 0 };
+    };
+    // A legacy hash action creates its history entry before hashchange fires.
+    // Capture the outgoing place while scrolling, so browser Back still resumes it.
+    let scrollFrame = 0;
+    const recordScroll = () => {
+        cancelAnimationFrame(scrollFrame);
+        scrollFrame = requestAnimationFrame(saveScroll);
+    };
+    window.addEventListener('scroll', recordScroll, { passive: true });
+    window.addEventListener('popstate', restoreScroll);
     const migrateHash = () => {
         if (window.location.hash.startsWith('#/')) {
             const target = window.location.hash.slice(1);
@@ -62,7 +85,11 @@ export const installNavigation = () => {
         event.preventDefault(); navigatePath(target.pathname + target.search + target.hash);
     };
     document.addEventListener('click', click);
-    return () => { document.removeEventListener('click', click); window.removeEventListener('hashchange', migrateHash); };
+    return () => {
+        cancelAnimationFrame(scrollFrame);
+        document.removeEventListener('click', click); window.removeEventListener('hashchange', migrateHash);
+        window.removeEventListener('scroll', recordScroll); window.removeEventListener('popstate', restoreScroll);
+    };
 };
 export const goBackOrReplace = (fallbackPath: string) => {
     if (window.history.length > 1) { window.history.back(); return; }

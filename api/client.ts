@@ -1170,6 +1170,7 @@ function mapBackendUserToFrontend(backendData: any): User {
         })),
         writtenBooks: (backendData.writtenBooks || []).map(mapBackendBookToFrontend),
         hasSeenWritingDemo: backendData.hasSeenWritingDemo ?? false,
+        notificationPreferences: backendData.notificationPreferences,
         dateOfBirth: backendData.dateOfBirth,
         allowMatureContent: backendData.allowMatureContent ?? false,
         roles: backendData.roles || []
@@ -1292,8 +1293,8 @@ export const markAllNotificationsRead = async (): Promise<void> => {
 };
 
 export const updateNotificationPreferences = async (prefs: NotificationPreferences): Promise<NotificationPreferences> => {
-    const response = await fetch(`${API_BASE_URL}/users/me/notification-preferences`, {
-        method: 'PATCH',
+    const response = await fetch(`${API_BASE_URL}/users/preferences`, {
+        method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(prefs),
     });

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Heart, Bookmark, MessageCircle, MoreHorizontal, Pin, LockKeyhole, BookOpen, ArrowUpRight, ShieldAlert } from 'lucide-react';
+import { Heart, Bookmark, MessageCircle, MoreHorizontal, Pin, LockKeyhole, BookOpen, ArrowUpRight, ShieldAlert, Share2, Check } from 'lucide-react';
 import * as api from '../../api/community';
 import type { CommunityPost, PostModerationAction } from '../../types/community';
 import { canShowCommunityContent, communityError, optimisticReaction, POST_LABELS, WARNING_LABELS } from '../../utils/community';
 import { ReportModal } from '../ReportModal';
 import { CommunityAuthor, CommunityModal, useCommunitySession } from './CommunityShared';
 import { CommunityComposer } from './CommunityComposer';
+import { ResilientImage } from '../ResilientImage';
 
 export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post: CommunityPost) => void; onDelete: (id: string) => void; detail?: boolean; onWarningRevealChange?: (revealed: boolean) => void }> = ({ post, onUpdate, onDelete, detail = false, onWarningRevealChange }) => {
   const { user, requireAuth } = useCommunitySession();
@@ -17,6 +18,7 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
   const [action, setAction] = useState<'DELETE' | PostModerationAction | null>(null);
   const [reason, setReason] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shared, setShared] = useState(false);
   const href = `#/community/post/${encodeURIComponent(post.id)}`;
   const own = post.author.id === user?.id;
   const showResults = !!post.votedOptionId || post.canEdit;
@@ -34,6 +36,13 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
     if (!requireAuth() || pending) return;
     setPending(true); setError('');
     try { onUpdate(await api.vote(post.id, optionId)); } catch (err) { setError(communityError(err)); } finally { setPending(false); }
+  };
+  const share = async () => {
+    const url = `${window.location.origin}/community/post/${encodeURIComponent(post.id)}`;
+    try {
+      if (navigator.share) await navigator.share({ title: post.title || `Conversation by ${post.author.name}`, url });
+      else { await navigator.clipboard.writeText(url); setShared(true); window.setTimeout(() => setShared(false), 2500); }
+    } catch (failure) { if (!(failure instanceof DOMException && failure.name === 'AbortError')) setError('This link could not be shared. Open the discussion to copy its address.'); }
   };
   const confirmAction = async (event: React.FormEvent) => {
     event.preventDefault(); if (!action || pending) return;
@@ -58,16 +67,17 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
         {post.contentWarnings.length > 0 && <button className="community-text-button community-warning-toggle" onClick={() => setWarningRevealed(false)} aria-expanded={true}>Hide content · {post.contentWarnings.map(warning => WARNING_LABELS[warning] || warning).join(', ')}</button>}
         {post.title && (detail ? <h1 className="community-post-title">{post.title}</h1> : <h2 className="community-post-title"><a href={href}>{post.title}</a></h2>)}
         <p className="community-post-body">{post.body}</p>
+        {post.type === 'WORKSHOP' && <p className="community-workshop-context">Workshop · Be generous and specific with your feedback.</p>}
         {post.attachment && <a className="community-book-attachment" href={post.attachment.chapterId && post.attachment.chapterIndex !== null ? `#/read/book/${encodeURIComponent(post.attachment.bookId)}/chapter/${post.attachment.chapterIndex}` : `#/book/${encodeURIComponent(post.attachment.bookId)}`}>
-          {post.attachment.coverUrl ? <img src={post.attachment.coverUrl} alt="" loading="lazy" /> : <span className="community-book-placeholder"><BookOpen size={24} /></span>}
-          <span><small>{post.attachment.chapterTitle ? 'Chapter conversation' : 'On the bookshelf'} · {post.attachment.ageRating.replaceAll('_', ' ')}</small><strong>{post.attachment.title}</strong><span>{post.attachment.chapterTitle || `by ${post.attachment.authorName}`}</span></span><ArrowUpRight size={18} aria-hidden="true" />
+          <ResilientImage src={post.attachment.coverUrl} alt="" fallbackLabel={post.attachment.title} variant="cover" className="community-book-placeholder" />
+          <span><small>{post.type === 'RELEASE' ? 'New release' : post.type === 'RECOMMENDATION' ? 'Recommended reading' : post.attachment.chapterTitle ? 'Chapter conversation' : 'On the bookshelf'} · {post.attachment.ageRating.replaceAll('_', ' ')}</small><strong>{post.attachment.title}</strong><span>{post.attachment.chapterTitle || `by ${post.attachment.authorName}`}</span></span><ArrowUpRight size={18} aria-hidden="true" />
         </a>}
         {post.type === 'POLL' && <div className="community-poll" role="group" aria-label={post.title || 'Community poll'}>{post.pollOptions.map(option => {
           const percentage = post.voteCount ? Math.round(option.voteCount / post.voteCount * 100) : 0;
-          return showResults ? <div key={option.id} className={`community-poll-result ${post.votedOptionId === option.id ? 'selected' : ''}`}><span className="community-poll-bar" style={{ width: `${percentage}%` }} /><span>{option.text}{post.votedOptionId === option.id ? ' ✓' : ''}</span><strong>{percentage}% <small>({option.voteCount})</small></strong></div> : <button key={option.id} className="community-poll-option" disabled={pending || own || post.locked} onClick={() => vote(option.id)}>{option.text}</button>;
-        })}<small>{showResults ? `${post.voteCount} ${post.voteCount === 1 ? 'vote' : 'votes'} · Results` : post.locked ? 'Voting is closed.' : 'Vote to see results. Your vote cannot be changed.'}</small></div>}
+          return showResults ? <div key={option.id} className={`community-poll-result ${post.votedOptionId === option.id ? 'selected' : ''}`}><span className="community-poll-bar" style={{ width: `${percentage}%` }} /><span>{option.text}{post.votedOptionId === option.id && <Check size={15} aria-label="Your vote" />}</span><strong>{percentage}% <small>({option.voteCount})</small></strong></div> : <button key={option.id} className="community-poll-option" disabled={pending || own || post.locked} onClick={() => vote(option.id)}>{option.text}</button>;
+        })}<small>{showResults ? `${post.voteCount} ${post.voteCount === 1 ? 'vote' : 'votes'}${post.votedOptionId ? ` · Your vote: ${post.pollOptions.find(option => option.id === post.votedOptionId)?.text || 'Recorded'}` : ' · Results'}` : post.locked ? 'Voting is closed.' : 'Vote to see results. Your vote cannot be changed.'}</small></div>}
       </div>}
-      {active && <footer className="community-post-actions"><button aria-label={post.liked ? 'Unlike post' : 'Like post'} aria-pressed={post.liked} disabled={pending || own} onClick={() => react('like')} title={own ? 'You cannot like your own post' : undefined}><Heart size={17} fill={post.liked ? 'currentColor' : 'none'} /><span>{post.likeCount}</span></button><a href={href}><MessageCircle size={17} /><span>{post.commentCount} <span className="community-action-word">replies</span></span></a><button className="community-save" aria-pressed={post.saved} disabled={pending} onClick={() => react('save')}><Bookmark size={17} fill={post.saved ? 'currentColor' : 'none'} /><span>{post.saved ? 'Saved' : 'Save'}</span></button></footer>}
+      {active && <footer className="community-post-actions"><button aria-label={post.liked ? 'Unlike post' : 'Like post'} aria-pressed={post.liked} disabled={pending || own} onClick={() => react('like')} title={own ? 'You cannot like your own post' : undefined}><Heart size={17} fill={post.liked ? 'currentColor' : 'none'} /><span>{post.likeCount}</span></button><a href={href}><MessageCircle size={17} /><span>{post.commentCount} <span className="community-action-word">replies</span></span></a><button className="community-save" aria-pressed={post.saved} disabled={pending} onClick={() => react('save')}><Bookmark size={17} fill={post.saved ? 'currentColor' : 'none'} /><span>{post.saved ? 'Saved' : 'Save'}</span></button><button onClick={share} aria-label={shared ? 'Link copied' : 'Share discussion'}><Share2 size={17} /><span>{shared ? 'Copied' : 'Share'}</span></button></footer>}
     </>}
     {error && !action && <p className="community-error" role="alert">{error}</p>}
     {editing && <CommunityComposer circles={[post.circle]} editing={post} onClose={() => setEditing(false)} onSaved={onUpdate} />}

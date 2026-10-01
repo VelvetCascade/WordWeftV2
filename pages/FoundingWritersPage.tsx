@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Upload } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { submitFoundingWriterApplication } from '../api/client';
 import { analytics } from '../utils/analyticsService';
 import type { FoundingWriterApplicationSubmission, FoundingWriterCompletionPeriod } from '../types';
 import '../styles/founding-writers.css';
+import '../styles/support-v2.css';
 
 const benefits = [
   'A permanent Founding Writer badge on your profile',
@@ -73,7 +74,7 @@ export const FoundingWritersPage: React.FC = () => {
     if (error) setError('');
   };
 
-  const scrollToForm = () => formSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToForm = () => formSection.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 
   useEffect(() => {
     analytics.trackEvent('founding_writers', 'page_view', 'Founding Writers Application Page');
@@ -122,28 +123,25 @@ export const FoundingWritersPage: React.FC = () => {
   };
 
   return (
-    <div className="fw-page">
-      <main>
+    <div className="fw-page wv-support">
+      <main className="fw-main">
         <header className="fw-page-header">
           <div className="fw-content-shell">
-            <p className="fw-status">Applications are open</p>
-            <h1>Founding Writer application</h1>
-            <p className="fw-page-intro">
-              WordWeft is an early-stage platform for publishing stories chapter by chapter, connecting with readers and helping shape the tools writers use. This page contains the full programme details and application.
-            </p>
-            <dl className="fw-key-facts">
-              <div><dt>Eligibility</dt><dd>Writers aged 18 or older</dd></div>
-              <div><dt>Submission</dt><dd>At least three chapters, under 5 MB</dd></div>
-              <div><dt>Review time</dt><dd>Approximately 3–4 business days</dd></div>
-              <div><dt>Publishing model</dt><dd>Non-exclusive</dd></div>
-            </dl>
-            <button className="fw-primary-button" type="button" onClick={scrollToForm}>Go to application</button>
+            <p className="fw-eyebrow">Founding writers · Applications are open</p>
+            <h1>Help shape a new<br />home for stories.</h1>
+            <p className="fw-page-intro">We are inviting original storytellers to help build WordWeft with us.</p>
+            <div className="fw-intro-point"><h2>Your story stays yours.</h2><p>Publishing is non-exclusive. You keep ownership of your work and can publish elsewhere.</p></div>
+            <div className="fw-intro-point"><h2>Start with three chapters.</h2><p>Send us a sample, tell us what you are writing, and share honest feedback as the platform grows.</p></div>
+            <p className="fw-intro-note">Stories are free to read at this stage. Paid publishing has not launched and readers or earnings are not guaranteed.</p>
+            <img className="fw-founder-art" src="/design-v2/assets/met-45294.jpg" alt="A Japanese woodblock print of boats beneath a bridge at sunset" />
+            <button className="fw-secondary-button fw-mobile-apply" type="button" onClick={scrollToForm}>Go to application <ArrowRight size={17} /></button>
           </div>
         </header>
 
         <section className="fw-program-section" aria-labelledby="founding-program-details">
           <div className="fw-content-shell">
-            <h2 id="founding-program-details">Read before applying</h2>
+            <details className="fw-program-details">
+            <summary id="founding-program-details">Read before applying <ChevronDown size={18} /></summary>
 
             <section className="fw-program-block">
               <h3>What WordWeft is building</h3>
@@ -194,13 +192,14 @@ export const FoundingWritersPage: React.FC = () => {
               <h3>Promotion of accepted stories</h3>
               <p>WordWeft may feature selected books, excerpts, story descriptions or covers on the platform and WordWeft social channels to introduce writers and stories to readers. The writer keeps ownership. If you have a concern about a particular promotional use, contact us so we can discuss it.</p>
             </section>
+            </details>
           </div>
         </section>
 
         <section className="fw-application-section" ref={formSection} aria-labelledby="founding-application-heading">
           <div className="fw-content-shell">
             <div className="fw-section-heading fw-form-heading">
-              <h2 id="founding-application-heading">Application</h2>
+              <h2 id="founding-application-heading">Share your story with us.</h2>
               <p>Complete the form below. Fields marked <span aria-hidden="true">*</span><span className="sr-only">with an asterisk</span> are required.</p>
             </div>
 
@@ -215,7 +214,7 @@ export const FoundingWritersPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form className="fw-form" onSubmit={handleSubmit}>
+              <form className="fw-form" onSubmit={handleSubmit} aria-busy={submitting}>
                 <fieldset>
                   <legend>Personal information</legend>
                   <div className="fw-field-grid">
@@ -234,7 +233,7 @@ export const FoundingWritersPage: React.FC = () => {
                     <label className="fw-field">Story title <b>*</b><input required maxLength={200} value={form.storyTitle} onChange={event => setField('storyTitle', event.target.value)} /></label>
                     <label className="fw-field fw-field-wide">Synopsis <b>*</b><textarea required rows={5} maxLength={1000} value={form.storyDescription} onChange={event => setField('storyDescription', event.target.value)} /><em>{form.storyDescription.length}/1,000</em></label>
                     <div className="fw-sample-group fw-field-wide">
-                      <div><strong>First three chapters <b>*</b></strong><p>Upload one PDF, DOCX or TXT file under 5 MB. Clearly label each chapter. The file is private and used only to review this application.</p></div>
+                      <div><strong><Upload size={17} aria-hidden="true" /> First three chapters <b>*</b></strong><p>Upload one PDF, DOCX or TXT file under 5 MB. Clearly label each chapter. The file is private and used only to review this application.</p></div>
                       <label className="fw-field">Chapter file <b>*</b><input id="fw-chapter-file" required type="file" accept=".pdf,.docx,.txt" aria-describedby="fw-upload-help" onChange={event => { setChapterFile(event.target.files?.[0] || null); setError(''); }} /></label>
                       <p id="fw-upload-help" role="status">{chapterFile ? `${chapterFile.name} · ${(chapterFile.size / 1024 / 1024).toFixed(2)} MB selected. Uploaded when you submit.` : 'Choose one file containing at least three chapters.'}</p>
                       <div className="fw-confirmations"><label><input required type="checkbox" checked={form.chaptersConfirmed} onChange={event => setField('chaptersConfirmed', event.target.checked)} /><span>I confirm that this file contains at least three chapters.</span></label></div>
@@ -274,7 +273,7 @@ export const FoundingWritersPage: React.FC = () => {
                 ) : (
                   <div className="fw-submit-row">
                     <p>We use this information only to review and respond to your application.</p>
-                    <button className="fw-primary-button" type="submit">Submit application</button>
+                    <button className="fw-primary-button" type="submit">Send application <ArrowRight size={17} /></button>
                   </div>
                 )}
               </form>

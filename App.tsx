@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { Navbar } from './components/Navbar';
 import { WriterLayout } from './components/WriterLayout';
+import { PageErrorBoundary, RouteSurface } from './components/RouteSurface';
 const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
 const CategoryPage = lazy(() => import('./pages/CategoryPage').then(module => ({ default: module.CategoryPage })));
 const BookDetailsPage = lazy(() => import('./pages/BookDetailsPage').then(module => ({ default: module.BookDetailsPage })));
@@ -328,14 +329,14 @@ const App: React.FC = () => {
         const authorId = publicRoute.id;
         targetPage = authorId ? { name: 'author', authorId } : { name: 'home' };
       } else if (hash.startsWith('read/book/')) {
-        const parts = hash.split('/');
+        const parts = hash.split('?')[0].split('/');
         const bookId = parts[2];
         const chapterIndex = parseInt(parts[4], 10) || 0;
         targetPage = bookId ? { name: 'reader', bookId, chapterIndex: chapterIndex } : { name: 'home' };
       } else if (hash.startsWith('write/book/create')) {
         targetPage = { name: 'writer-create-book' };
       } else if (hash.startsWith('write/book/')) {
-        const parts = hash.split('/');
+        const parts = hash.split('?')[0].split('/');
         const bookId = parts[2];
         if (parts[3] === 'manage') {
           targetPage = { name: 'writer-manage-book', bookId };
@@ -396,8 +397,7 @@ const App: React.FC = () => {
       } else if (hash.startsWith('home')) {
         targetPage = { name: 'home' };
       } else {
-        // Root landing: unauthenticated visitors land on Features page by default, while HomePage remains 100% public
-        targetPage = isAuthenticated ? { name: 'home' } : { name: 'features' };
+        targetPage = { name: 'home' };
       }
 
       const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'library', 'edit-profile', 'notifications', 'admin-founding-writers'];
@@ -423,7 +423,6 @@ const App: React.FC = () => {
         setShowWelcomeJourney(true);
       }
 
-      window.scrollTo(0, 0);
       setPage(targetPage);
       updateRouteMetadata();
     };
@@ -505,7 +504,7 @@ const App: React.FC = () => {
       case 'writer-manage-book':
         return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUserUpdate={setCurrentUser} />;
       case 'writer-edit-chapter':
-        return <ChapterEditorPage currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
+        return <ChapterEditorPage key={`${page.bookId}:${page.chapterId}`} currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
       case 'writer-analytics':
         return <WriterAnalyticsPage />;
       case 'writer-settings':
@@ -541,6 +540,7 @@ const App: React.FC = () => {
       case 'notifications':
         return <NotificationsPage
           currentUser={currentUser}
+          onPreferencesChange={preferences => setCurrentUser(user => user ? { ...user, notificationPreferences: preferences } : user)}
           navigateTo={navigateTo}
           onLogout={handleLogout}
           notifications={notif.notifications}
@@ -573,7 +573,7 @@ const App: React.FC = () => {
   };
 
   const isWriterPage = page.name.startsWith('writer-');
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'edit-profile' && page.name !== 'reset-password' && !isWriterPage;
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'reset-password' && !isWriterPage;
 
   const feedbackCtx = {
     triggerFeedback: feedback.triggerFeedback,
@@ -584,6 +584,7 @@ const App: React.FC = () => {
   return (
     <AnalyticsProvider>
     <FeedbackContext.Provider value={feedbackCtx}>
+      <a className="v2-skip-link" href="#main-content">Skip to content</a>
       <div className={`ww-app ww-route-${page.name} min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20`}>
         {showNavbar && <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} isLoggingOut={isLoggingOut}
           notificationBell={
@@ -606,12 +607,12 @@ const App: React.FC = () => {
         />}
 
         {isWriterPage ? (
-          <WriterLayout>
-            <Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense>
+          <WriterLayout currentUser={currentUser ?? undefined}>
+            <PageErrorBoundary route={JSON.stringify(page)}><Suspense fallback={<PageLoadingFallback />}><RouteSurface key={window.location.pathname + window.location.search}>{renderPage()}</RouteSurface></Suspense></PageErrorBoundary>
           </WriterLayout>
         ) : (
-          <main className={`ww-app-main ww-page-${page.name} ${showNavbar ? `ww-app-main-with-nav pb-24 xl:pb-0 ${page.name === 'home' || page.name === 'features' ? '' : 'xl:pt-20'}` : ""}`}>
-            <Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense>
+          <main id="main-content" tabIndex={-1} className={`ww-app-main ww-page-${page.name} ${showNavbar ? 'ww-app-main-with-nav pb-24 xl:pb-0' : ''}`}>
+            <PageErrorBoundary route={JSON.stringify(page)}><Suspense fallback={<PageLoadingFallback />}><RouteSurface key={window.location.pathname + window.location.search} reader={page.name === 'reader'}>{renderPage()}</RouteSurface></Suspense></PageErrorBoundary>
           </main>
         )}
 

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { Character, Scene, Note } from '../types';
 import * as api from '../api/client';
 import { CharacterAvatar } from './CharacterAvatar';
+import { X, LockKeyhole } from 'lucide-react';
+import { useDialog } from '../hooks/useDialog';
 
 interface WorldBuildingSidebarProps {
     bookId: string;
@@ -18,6 +20,8 @@ export const WorldBuildingSidebar: React.FC<WorldBuildingSidebarProps> = ({ book
     const [scenes, setScenes] = useState<Scene[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const dialogRef = useDialog(isOpen, onClose);
 
     useEffect(() => {
         if (isOpen) {
@@ -27,6 +31,8 @@ export const WorldBuildingSidebar: React.FC<WorldBuildingSidebarProps> = ({ book
 
     const loadData = async () => {
         setLoading(true);
+        setError('');
+        try {
         if (activeTab === 'characters' && characters.length === 0) {
             const data = await api.getCharactersByBookId(bookId);
             setCharacters(data);
@@ -40,19 +46,20 @@ export const WorldBuildingSidebar: React.FC<WorldBuildingSidebarProps> = ({ book
                 chapterNotes = await api.getNotesByChapterId(chapterId);
             }
             // Merge and dedup if needed, or just show all. For now simple concat
-            setNotes([...bookNotes, ...chapterNotes]); // Logic might need refinement to avoid dupes if API overlaps
+            setNotes(Array.from(new Map([...bookNotes, ...chapterNotes].map(note => [note.id, note])).values()));
         }
-        setLoading(false);
+        } catch (failure) { setError(failure instanceof Error ? failure.message : 'The story guide could not load.'); }
+        finally { setLoading(false); }
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-y-0 right-0 w-80 bg-white dark:bg-dark-surface border-l dark:border-dark-border shadow-2xl z-40 flex flex-col transform transition-transform duration-300 ease-in-out">
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Story guide" tabIndex={-1} className="ww-editor-world-guide fixed inset-y-0 right-0 w-80 bg-white dark:bg-dark-surface border-l dark:border-dark-border shadow-2xl z-40 flex flex-col transform transition-transform duration-300 ease-in-out">
             <div className="p-4 border-b dark:border-dark-border flex justify-between items-center bg-gray-50 dark:bg-dark-surface-alt">
-                <h3 className="font-bold text-text-header dark:text-dark-text-header">World Building</h3>
-                <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                    ✕
+                <h3 className="font-bold text-text-header dark:text-dark-text-header">Story guide</h3>
+                <button onClick={onClose} aria-label="Close story guide" className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <X size={20} />
                 </button>
             </div>
 
@@ -72,6 +79,8 @@ export const WorldBuildingSidebar: React.FC<WorldBuildingSidebarProps> = ({ book
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
+                {error && <div className="ww-studio-alert" role="alert">{error}<button onClick={loadData}>Try again</button></div>}
+                {activeTab === 'notes' && <p className="ww-editor-note-privacy"><LockKeyhole size={16} />Private notes · only visible to you</p>}
                 {loading ? (
                     <div className="text-center py-8 text-sm text-gray-500">Loading...</div>
                 ) : (
@@ -119,7 +128,7 @@ export const WorldBuildingSidebar: React.FC<WorldBuildingSidebarProps> = ({ book
                 )}
             </div>
             <div className="p-4 border-t dark:border-dark-border bg-gray-50 dark:bg-dark-surface-alt text-center">
-                <p className="text-xs text-gray-500">Manage these in Book Settings</p>
+                <a href={`/write/book/${bookId}/manage?tab=${activeTab}`} className="ww-studio-text-link">Manage your story guide</a>
             </div>
         </div>
     );

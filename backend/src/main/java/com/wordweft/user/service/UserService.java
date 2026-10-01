@@ -100,6 +100,7 @@ public class UserService {
         if (user.getId().equals(currentViewerId)) {
             map.put("dateOfBirth", user.getDateOfBirth());
             map.put("allowMatureContent", user.isAllowMatureContent());
+            map.put("notificationPreferences", user.getNotificationPreferences());
         }
 
         // Stats Logic

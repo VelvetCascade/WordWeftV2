@@ -1,6 +1,8 @@
+import { useDialog } from '../hooks/useDialog';
+import '../styles/account-v2.css';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { User } from '../types';
-import { GoogleIcon, XMarkIcon, CheckCircleIcon, ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '../components/icons/Icons';
+import { XMarkIcon, CheckCircleIcon, ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
@@ -69,7 +71,7 @@ const InputField: React.FC<{
     isPasswordVisible?: boolean;
     onToggleVisibility?: () => void;
 }> = ({ id, label, type, placeholder, value, onChange, required = true, min, max, helpText, onFocus, onBlur, children, showToggle, isPasswordVisible, onToggleVisibility }) => (
-    <div className="relative">
+    <div className="ww-account-field relative">
         <label htmlFor={id} className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
             {label}
         </label>
@@ -81,6 +83,10 @@ const InputField: React.FC<{
                 placeholder={placeholder}
                 className={`w-full h-11 px-4 ${showToggle ? 'pr-11' : ''} rounded-xl font-sans text-base border-gray-300 shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich`}
                 required={required}
+                minLength={id === 'username' ? 3 : undefined}
+                maxLength={id === 'username' ? 20 : id === 'email' ? 50 : id === 'otp' ? 6 : id.toLowerCase().includes('password') ? 64 : undefined}
+                autoComplete={id === 'email' ? 'email' : id === 'username' ? 'username' : id === 'otp' ? 'one-time-code' : id === 'confirmPassword' ? 'new-password' : undefined}
+                inputMode={id === 'otp' ? 'numeric' : undefined}
                 value={value}
                 onChange={onChange}
                 min={min}
@@ -93,7 +99,7 @@ const InputField: React.FC<{
                     type="button"
                     onClick={onToggleVisibility}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    tabIndex={-1}
+
                     aria-label={isPasswordVisible ? "Hide password" : "Show password"}
                 >
                     {isPasswordVisible ? (
@@ -109,13 +115,14 @@ const InputField: React.FC<{
 );
 
 const LegalModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: React.ReactNode }> = ({ isOpen, onClose, title, content }) => {
+    const dialogRef = useDialog(isOpen, onClose);
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-surface dark:bg-dark-surface w-full max-w-2xl max-h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="account-v2-dialog fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="account-legal-title" className="bg-surface dark:bg-dark-surface w-full max-w-2xl max-h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
                 <div className="p-6 border-b border-gray-100 dark:border-dark-border flex justify-between items-center">
-                    <h3 className="text-xl font-sans font-bold text-text-rich dark:text-dark-text-rich">{title}</h3>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
+                    <h3 id="account-legal-title" className="text-xl font-sans font-bold text-text-rich dark:text-dark-text-rich">{title}</h3>
+                    <button type="button" onClick={onClose} aria-label="Close legal terms" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
                 </div>
@@ -153,6 +160,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     const [pendingGoogleUser, setPendingGoogleUser] = useState<User | null>(null);
 
     const googleButtonRef = useRef<HTMLDivElement>(null);
+    const [googleButtonReady, setGoogleButtonReady] = useState(false);
 
     // --- Stable refs for Google GIS callback (avoids stale closure) ---
     const googleCallbackRef = useRef<(response: any) => void>(() => {});
@@ -250,6 +258,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     // --- Effect 2: Render the Google button (separate from initialization) ---
     // This runs whenever `view` changes so the button text updates (signin_with vs signup_with)
     useEffect(() => {
+        setGoogleButtonReady(false);
         if (view === 'otp' || view === 'forgot') return; // No Google button on these views
 
         const renderBtn = () => {
@@ -265,8 +274,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                 text: view === 'signup' ? 'signup_with' : 'signin_with',
                 shape: 'rectangular',
                 logo_alignment: 'left',
-                width: Math.max(googleButtonRef.current.offsetWidth, 250),
+                width: Math.min(Math.max(googleButtonRef.current.offsetWidth, 250), 400),
             });
+            setGoogleButtonReady(true);
         };
 
         // Defer to next animation frame so the DOM has painted and offsetWidth is accurate
@@ -492,26 +502,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     };
 
     return (
-        <div className="ww-auth-page min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
+        <div className="account-v2-auth ww-auth-page min-h-screen flex items-center justify-center bg-background dark:bg-dark-background p-4 animate-slide-in-bottom">
             <div className="ww-auth-layout">
-            <aside className="ww-auth-story">
-                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-story-brand">
-                    <span><WordWeftLogo className="w-9 h-9" /></span><strong>WordWeft</strong>
-                </a>
-                <div className="ww-auth-story-copy">
-                    <span>A place for the story-minded</span>
-                    <h1>Read deeply.<br />Write bravely.</h1>
-                    <p>Keep your library, reading progress, drafts, characters, and worlds together in one considered space.</p>
-                </div>
-                <div className="ww-auth-story-points">
-                    <div><strong>01</strong><span>Build a library that remembers where you left off.</span></div>
-                    <div><strong>02</strong><span>Write beside your characters, scenes, and story notes.</span></div>
-                    <div><strong>03</strong><span>Publish into a reader designed for long-form fiction.</span></div>
-                </div>
+            <aside className="ww-auth-artstrip" aria-hidden="true">
+                <img src="/design-v2/assets/met-53681.jpg" alt="" />
+                <img src="/design-v2/assets/met-45294.jpg" alt="" />
+                <img src="/design-v2/assets/met-55020.jpg" alt="" />
             </aside>
             <div className="ww-auth-form-shell w-full max-w-md">
-                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-auth-mobile-logo flex justify-center mb-6" aria-label="WordWeft home">
-                    <WordWeftLogo className="w-20 h-20 md:w-24 md:h-24" />
+                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-account-brand" aria-label="WordWeft home">
+                    <img src="/design-v2/assets/brand-mark.jpg" alt="" /><span>WordWeft</span>
                 </a>
                 <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
                     {isLoading && (
@@ -536,29 +536,30 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                         </button>
                     )}
 
-                    <h2 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
-                        {view === 'login' && 'Welcome Back'}
-                        {view === 'signup' && 'Create Account'}
-                        {view === 'forgot' && 'Reset Password'}
-                        {view === 'otp' && 'Verify Email'}
-                    </h2>
+                    <h1 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
+                        {view === 'login' && 'Welcome back'}
+                        {view === 'signup' && 'Create an account'}
+                        {view === 'forgot' && 'Reset your password'}
+                        {view === 'otp' && 'Check your inbox'}
+                    </h1>
                     <p className="text-center text-text-body dark:text-dark-text-body mb-8">
-                        {view === 'login' && "Sign in to continue your journey."}
-                        {view === 'signup' && "Join our community of readers and writers."}
+                        {view === 'login' && "Pick up where you left off."}
+                        {view === 'signup' && "Read stories. Write your own."}
                         {view === 'forgot' && "Enter your email to receive a reset link."}
-                        {view === 'otp' && "We've sent a 6-digit code to your email."}
+                        {view === 'otp' && "Enter the 6-digit code sent to your email to verify your account."}
                     </p>
 
                     {(view === 'login' || view === 'signup') && (
                         <>
                             {/* Google Sign-in Button Container */}
-                            <div className={`w-full flex justify-center h-11 mb-2 ${isLoading ? 'pointer-events-none opacity-50' : ''}`} aria-disabled={isLoading}>
-                                <div ref={googleButtonRef} className="w-full overflow-hidden rounded-xl"></div>
+                            <div className={`ww-google-signin w-full flex justify-center mb-2 ${isLoading ? 'pointer-events-none opacity-50' : ''}`} aria-disabled={isLoading}>
+                                <div ref={googleButtonRef} className={`w-full overflow-hidden rounded-xl ${googleButtonReady ? '' : 'absolute opacity-0 pointer-events-none'}`}></div>
+                                {!googleButtonReady && <button type="button" className="ww-google-fallback" disabled={isLoading} onClick={() => setError(import.meta.env.VITE_GOOGLE_CLIENT_ID ? 'Google sign-in is still loading. Please try again, or continue with email.' : 'Google sign-in is unavailable in this environment. You can continue with email.')}><img src="/design-v2/assets/google-mark.png" alt="" width={20} height={20} /> Continue with Google</button>}
                             </div>
 
                             <div className="flex items-center my-6">
                                 <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
-                                <span className="flex-shrink mx-4 text-xs text-gray-500 dark:text-gray-400 font-sans uppercase">Or continue with Email</span>
+                                <span className="flex-shrink mx-4 text-xs text-gray-500 dark:text-gray-400 font-sans uppercase">or use email</span>
                                 <div className="flex-grow border-t border-gray-200 dark:border-dark-border"></div>
                             </div>
                         </>
@@ -567,8 +568,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                     <form onSubmit={handleAuthAction} className={`space-y-4 ${isLoading ? 'pointer-events-none opacity-60' : ''}`} aria-busy={isLoading}>
                         {view === 'signup' && (
                             <>
-                                <InputField id="username" label="Username" type="text" placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
-                                <ModernBirthdaySelector 
+                                <InputField id="username" label="Username" type="text" helpText="3–20 characters. This name appears on your public profile." placeholder="e.g., JaneDoe" value={username} onChange={e => setUsername(e.target.value)} />
+                                <ModernBirthdaySelector
                                     value={birthday}
                                     onChange={(newVal: string) => setBirthday(newVal)}
                                 />
@@ -595,8 +596,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                                         required={true}
                                     />
                                 </div>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     disabled={otpResendCooldown > 0 || isLoading}
                                     onClick={handleResendOtp}
                                     className={`text-sm font-semibold transition-colors ${otpResendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-accent hover:underline'}`}
@@ -628,7 +629,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                         {view === 'login' && (
                             <div className="flex justify-end">
                                 <button type="button" onClick={() => resetForm('forgot')} className="text-xs font-semibold text-accent hover:underline">
-                                    Forgot Password?
+                                    Forgot password?
                                 </button>
                             </div>
                         )}
@@ -676,32 +677,34 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                             </>
                         )}
 
-                        {error && <p className="text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
-                        {successMsg && <p className="text-center text-xs text-success font-sans pt-2 leading-tight font-semibold">{successMsg}</p>}
+                        {error && <p role="alert" className="ww-account-message error text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
+                        {successMsg && <p role="status" className="ww-account-message success text-center text-xs text-success font-sans pt-2 leading-tight font-semibold">{successMsg}</p>}
 
                         <button type="submit" disabled={isLoading || (view === 'otp' && otp.length !== 6)} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
                             {isLoading ? 'Processing...' : (
                                 view === 'login' ? 'Sign In' :
-                                    view === 'signup' ? 'Create Account' :
+                                    view === 'signup' ? 'Create an account' :
                                         view === 'otp' ? 'Verify' :
                                         'Send Reset Link'
                             )}
                         </button>
                     </form>
+                    {view === 'otp' && <p className="ww-account-private-note">Sent to {email}. Your email stays private.</p>}
 
                     {(view === 'login' || view === 'signup') && (
                         <p className="text-center text-sm text-text-body dark:text-dark-text-body mt-8">
-                            {view === 'login' ? "Don't have an account?" : "Already have an account?"}
+                            {view === 'login' ? "New to WordWeft?" : "Already have an account?"}
                             <button
                                 type="button"
                                 disabled={isLoading}
                                 onClick={() => resetForm(view === 'login' ? 'signup' : 'login')}
                                 className="font-semibold text-accent hover:underline ml-1"
                             >
-                                {view === 'login' ? 'Sign Up' : 'Sign In'}
+                                {view === 'login' ? 'Create an account' : 'Sign in'}
                             </button>
                         </p>
                     )}
+                    <p className="ww-account-private-note">Your reading and writing are waiting for you.</p>
                 </div>
             </div>
             </div>

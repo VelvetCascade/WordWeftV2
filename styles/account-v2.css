@@ -1,0 +1,161 @@
+/* Paper, artwork, and typography from WordWeft revision 02. */
+.account-v2-auth,.account-v2-settings,.account-v2-profile,.account-v2-author,.account-v2-notifications,.account-v2-dialog,.account-v2-welcome{--account-paper:#fbfaf7;--account-ink:#191c1c;--account-copy:#70726e;--account-line:#e4dfd6;--account-umber:#6b432f;--account-teal:#28675e;--account-soft:#eaf1ed;color:var(--account-ink);font-family:'Rubik',sans-serif!important}
+.account-v2-auth *,.account-v2-settings *,.account-v2-notifications *,.account-v2-dialog *{font-family:inherit}
+.account-v2-auth :focus-visible,.account-v2-settings :focus-visible,.account-v2-profile :focus-visible,.account-v2-author :focus-visible,.account-v2-notifications :focus-visible,.account-v2-dialog :focus-visible{outline:2px solid var(--account-teal);outline-offset:4px}
+.account-v2-auth.ww-auth-page{display:block!important;padding:0!important;min-height:100dvh;background:var(--account-paper)!important;animation:none}
+.account-v2-auth.ww-auth-page::before,.account-v2-auth.ww-auth-page::after{display:none!important}
+.account-v2-auth .ww-auth-layout{display:grid!important;grid-template-columns:30% minmax(0,1fr)!important;width:100%!important;min-height:100dvh;overflow:visible!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:var(--account-paper)!important}
+.ww-auth-artstrip{position:sticky;top:0;align-self:start;display:grid;grid-template-rows:40% 30% 30%;gap:9px;height:100dvh;overflow:hidden;background:#efe6d2}
+.ww-auth-artstrip img{width:100%;height:100%;min-height:0;object-fit:cover}
+.ww-auth-artstrip img:first-child{object-position:48% 50%}.ww-auth-artstrip img:last-child{object-position:45% 55%}
+.account-v2-auth .ww-auth-form-shell{position:relative;display:flex!important;width:min(100%,640px);max-width:640px!important;margin:0 auto;padding:72px 54px!important;min-height:100dvh;justify-content:center;background:transparent!important}
+.ww-account-brand{display:flex;align-items:center;gap:11px;width:fit-content;margin:0 0 52px;color:#332d29;font:400 32px/1 'WordWeft Serif',Georgia,serif!important}
+.ww-account-brand img{width:28px;height:35px;object-fit:contain;mix-blend-mode:multiply}.ww-account-brand span{font-family:'WordWeft Serif',Georgia,serif!important}
+.account-v2-auth .ww-auth-form-shell .ww-auth-card{position:static;width:100%;max-height:none!important;overflow:visible!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;border-radius:0!important}
+.account-v2-auth .ww-auth-card :is(h1,h2){padding:0!important;text-align:left!important;color:var(--account-ink)!important;font:750 clamp(32px,3.8vw,48px)/1.1 'Rubik',sans-serif!important;letter-spacing:-.045em;margin:0 0 20px!important}
+.account-v2-auth .ww-auth-card>p{padding:0!important;text-align:left!important;color:var(--account-copy)!important;font-size:17px;line-height:1.6;margin-bottom:38px}
+.account-v2-auth .ww-auth-card>p:last-of-type:not(.ww-account-private-note){text-align:center!important;font-size:14px;margin:30px 0 0}
+.account-v2-auth .ww-auth-card>p button{color:var(--account-umber)!important;text-decoration:underline}
+.account-v2-auth .ww-auth-close{top:22px!important;right:22px!important;min-width:44px;min-height:44px}
+.account-v2-auth .ww-auth-back{top:22px!important;left:22px!important;min-width:44px;min-height:44px}
+.account-v2-auth .ww-reset-back{position:absolute;top:22px;left:22px;min-width:44px;min-height:44px}
+.account-v2-auth .ww-auth-card form{display:grid;gap:21px}.account-v2-auth .ww-auth-card form>*{margin-top:0!important}
+.account-v2-auth label,.account-v2-settings label,.account-v2-dialog label{color:var(--account-ink)!important;font-size:13px;font-weight:600;margin-bottom:9px}
+.account-v2-auth input:not([type='checkbox']):not([type='hidden']),.account-v2-auth select,.account-v2-settings input:not([type='checkbox']),.account-v2-settings textarea,.account-v2-dialog input:not([type='checkbox']),.account-v2-dialog select,.account-v2-dialog textarea{min-height:50px;border:1px solid var(--account-line)!important;border-radius:5px!important;background:#fff!important;color:var(--account-ink)!important;box-shadow:none!important;font-size:15px;line-height:1.5}
+.account-v2-auth input:not([type='checkbox']):not([type='hidden']){background:transparent!important}
+.account-v2-auth input::placeholder,.account-v2-settings input::placeholder,.account-v2-dialog input::placeholder,.account-v2-dialog textarea::placeholder{color:#9e9c96;opacity:1}
+.account-v2-auth input:focus,.account-v2-settings input:focus,.account-v2-settings textarea:focus{border-color:var(--account-teal)!important;outline:2px solid #28675e18;outline-offset:1px}
+.account-v2-auth input[type='checkbox'],.account-v2-settings input[type='checkbox']{color:var(--account-teal);accent-color:var(--account-teal)}
+.account-v2-auth .ww-auth-card button[type='submit']{min-height:52px;border-radius:10px!important;color:#fff!important;background:var(--account-umber)!important;transform:none!important;box-shadow:0 2px 4px #191c1c12!important;font-size:15px}
+.account-v2-auth .ww-auth-card button[type='submit']:hover{background:#523221!important}.account-v2-auth button:disabled{cursor:not-allowed;opacity:.55}
+.account-v2-auth .ww-auth-card button[aria-label*='password'],.account-v2-settings button[aria-label*='password']{right:6px;width:44px;height:44px;display:grid;place-items:center}
+.account-v2-auth .ww-auth-card button.text-accent{color:var(--account-umber)!important;min-height:32px}
+.account-v2-auth .ww-account-private-note{color:var(--account-copy)!important;text-align:center!important;font-size:12px!important;margin:32px 0 0!important}
+.ww-account-message{padding:12px 14px;text-align:left!important;border-radius:5px;font-size:13px!important}.ww-account-message.error{color:#a5403b;background:#f7eae7}.ww-account-message.success{color:var(--account-teal);background:var(--account-soft)}
+.account-v2-auth .ww-birthday{gap:8px}.account-v2-auth .ww-birthday button{min-height:48px;border-radius:5px!important;box-shadow:none!important}
+.account-v2-settings.ww-profile-settings{background:var(--account-paper)!important;padding:45px 0 80px}.account-v2-settings>.container{max-width:1120px!important;padding:0 32px!important}
+.account-v2-settings .ww-page-eyebrow{color:var(--account-teal)!important;font:650 11px/1.4 'Rubik',sans-serif;letter-spacing:.13em;text-transform:uppercase;margin-bottom:16px}
+.account-v2-settings h1{font:750 clamp(32px,4vw,46px)/1.15 'Rubik',sans-serif!important;letter-spacing:-.04em}
+.account-v2-settings>.container>.flex{margin-bottom:22px}.account-v2-settings>.container>.flex>button{margin-left:-50px}.account-v2-settings>.container>p{margin:0 0 38px!important;font-size:16px;color:var(--account-copy)!important}
+.account-v2-settings .ww-settings-layout{grid-template-columns:220px minmax(0,1fr);gap:52px}
+.account-v2-settings .ww-settings-nav{position:sticky;top:112px;gap:3px;padding:10px;border:1px solid var(--account-line);background:#fff;border-radius:10px}
+.account-v2-settings .ww-settings-nav button,.account-v2-settings .ww-settings-nav>a{display:block;padding:15px 12px;color:var(--account-copy);border-radius:5px;min-height:46px;text-align:left;font-size:13px}
+.account-v2-settings .ww-settings-nav button strong{font:500 13px/1.4 'Rubik',sans-serif}.account-v2-settings .ww-settings-nav button span{display:none}
+.account-v2-settings .ww-settings-nav button.active{background:var(--account-soft)!important;color:var(--account-teal)!important}.account-v2-settings .ww-settings-nav button.active strong{font-weight:650}
+.account-v2-settings .ww-settings-panel{padding:0;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.account-v2-settings .ww-settings-panel-head{padding:0 0 20px;border-bottom:1px solid var(--account-line)}.account-v2-settings .ww-settings-panel-head h2{font:600 19px/1.4 'Rubik',sans-serif}
+.account-v2-settings .ww-settings-panel-head p{color:var(--account-copy);font:400 13px/1.6 'Rubik',sans-serif}.account-v2-settings .ww-settings-panel-head>span{color:var(--account-umber);background:#f3ecdf;border-radius:4px;font:500 11px/1.4 'Rubik',sans-serif}
+.account-v2-settings .ww-settings-panel textarea{resize:vertical;min-height:135px}.account-v2-settings input:disabled{background:#f1f0eb!important}
+.account-v2-settings .ww-settings-savebar{position:static;padding:15px 0 0;margin:0;border:0;border-radius:0;background:transparent!important;box-shadow:none;backdrop-filter:none;gap:12px;flex-wrap:wrap}
+.account-v2-settings button[type='submit']{background:var(--account-teal)!important;color:white!important;min-height:46px;border-radius:8px!important;box-shadow:0 2px 4px #191c1c12!important}
+.account-v2-settings .ww-settings-savebar button[type='button']{background:#fff!important;color:var(--account-copy)!important;border:1px solid var(--account-line);border-radius:8px;min-height:46px}
+.ww-account-security-note{font-size:13px;color:var(--account-copy);line-height:1.8;padding:18px;background:var(--account-soft);border-radius:5px}.ww-account-security-note a{color:var(--account-teal);text-decoration:underline}
+.account-v2-settings .bg-primary{background:var(--account-teal)!important}.account-v2-settings .rounded-full{border-radius:6px}.account-v2-settings section{border-color:var(--account-line)!important;border-radius:8px!important;background:#f4f4ee!important}
+.account-v2-profile,.account-v2-author{background:var(--account-paper)}.account-v2-profile .container,.account-v2-author .container{max-width:1240px!important}
+.account-v2-profile .ww-profile-hero,.account-v2-author .ww-author-hero{padding-top:36px;background:transparent!important;border:0!important;overflow:visible}
+.ww-account-profile-banner{max-width:1192px;height:195px;margin:0 auto;overflow:hidden;border-radius:10px;background:#ece8db}.ww-account-profile-banner img{width:100%;height:100%;object-fit:cover;object-position:50% 54%}
+.account-v2-profile .ww-profile-hero-inner,.account-v2-author .ww-author-hero-inner{padding-top:0!important;padding-bottom:30px!important}
+.account-v2-profile .ww-profile-hero-inner>.ww-page-eyebrow{display:block;margin:22px 0 0 154px;color:var(--account-umber);font-size:10px}
+.account-v2-profile .ww-profile-identity,.account-v2-author .ww-author-identity{display:flex;align-items:flex-start!important;margin-top:0!important;gap:28px!important}
+.account-v2-profile .ww-profile-avatar,.account-v2-author .ww-author-avatar{margin-top:-39px}
+.account-v2-profile .ww-profile-avatar>img,.account-v2-profile .ww-profile-avatar>div:first-child,.account-v2-author .ww-author-avatar>img,.account-v2-author .ww-author-avatar>div:first-child{width:120px!important;height:120px!important;border-radius:50%!important;border:6px solid var(--account-paper)!important;box-shadow:none!important;transform:none!important}
+.account-v2-profile .ww-profile-avatar>div:last-child:not(:first-child),.account-v2-author .ww-author-avatar>div:last-child:not(:first-child){box-shadow:none!important;font-size:10px;border-radius:5px}
+.account-v2-profile .ww-profile-info,.account-v2-author .ww-author-info{padding-top:24px;text-align:left!important}
+.account-v2-author .ww-author-eyebrow{font:600 10px/1.3 'Rubik',sans-serif!important;color:var(--account-umber);margin-bottom:8px;letter-spacing:.1em}
+.account-v2-profile h1,.account-v2-author h1{font:750 36px/1.15 'Rubik',sans-serif!important;letter-spacing:-.045em}
+.account-v2-profile .ww-profile-info p.text-lg,.account-v2-author .ww-author-info>p.text-lg{font:400 15px/1.9 'Rubik',sans-serif!important;color:var(--account-copy)!important;max-width:700px}
+.account-v2-profile .ww-profile-actions button,.account-v2-author .ww-author-action{min-height:44px!important;border-radius:8px!important;box-shadow:0 2px 4px #191c1c12!important;transform:none!important;font:600 13px/1.4 'Rubik',sans-serif!important}
+.account-v2-profile .ww-profile-actions button:last-child,.account-v2-author .ww-author-action:not(.bg-gray-100){background:var(--account-umber)!important;color:#fff}
+.account-v2-author .ww-author-share-action{display:inline-flex;align-items:center;gap:8px;min-height:44px;border-radius:8px!important;font:500 13px/1.4 'Rubik',sans-serif;background:#fff}
+.account-v2-profile .ww-profile-stats,.account-v2-author .ww-author-stats{display:flex!important;flex-wrap:wrap;overflow:visible;gap:20px!important;margin:26px 0 0 148px!important;padding:0}
+.account-v2-profile .ww-profile-stat-card,.account-v2-author .ww-author-stats>div{display:flex;align-items:center;gap:9px;min-height:44px!important;min-width:0;width:auto!important;flex:0 1 auto!important;padding:0 12px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.account-v2-profile .ww-profile-stat-card>div:first-child{display:flex;align-items:center;gap:8px}.account-v2-profile .ww-profile-stat-card>div:first-child>div,.account-v2-author .ww-author-stats>div>div:first-child{display:none}
+.account-v2-profile .ww-profile-stat-card p.text-3xl,.account-v2-author .ww-author-stats span.font-sans{font:650 15px/1.5 'Rubik',sans-serif!important}
+.account-v2-profile .ww-profile-stat-card p.text-sm,.account-v2-author .ww-author-stats span:last-child{font:400 12px/1.5 'Rubik',sans-serif!important;color:var(--account-copy);letter-spacing:0;text-transform:none;margin:0}
+.account-v2-profile .ww-profile-stat-card p.text-xs{display:none}.account-v2-author .ww-author-stats>div{flex-direction:row}
+.account-v2-author .ww-author-tabs{position:static!important;border-color:var(--account-line);background:transparent!important;box-shadow:none;backdrop-filter:none}
+.account-v2-author .ww-author-tabs button{font:500 14px/1.4 'Rubik',sans-serif!important;min-height:52px;padding:0 20px!important}.account-v2-author .ww-author-tabs button:first-child{padding-left:0!important}
+.account-v2-author .ww-author-content{padding-top:30px!important}
+.account-v2-author .ww-account-story-grid,.account-v2-profile .ww-account-story-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:36px 26px}
+.account-v2-author .ww-account-story-grid .ww-book-cover-wrap,.account-v2-profile .ww-account-story-grid .ww-book-cover-wrap{aspect-ratio:1.55!important;height:auto!important;border-radius:8px!important}
+.account-v2-author .ww-account-story-grid .ww-book-cover,.account-v2-profile .ww-account-story-grid .ww-book-cover{object-fit:cover;width:100%;height:100%}
+.account-v2-author .ww-account-story-grid .ww-book-info h3,.account-v2-profile .ww-account-story-grid .ww-book-info h3{font:500 23px/1.3 'WordWeft Serif',Georgia,serif!important}
+.account-v2-author .ww-account-story-grid .ww-book-meta,.account-v2-profile .ww-account-story-grid .ww-book-meta{font-size:12px}
+.account-v2-profile .ww-profile-section-head h2{font:650 26px/1.3 'Rubik',sans-serif}.account-v2-profile .ww-profile-empty{background:transparent;border-radius:8px;min-height:270px}
+.account-v2-profile .ww-profile-section-head>button,.account-v2-profile .ww-profile-empty button{background:var(--account-umber);border-radius:8px;font-family:'Rubik',sans-serif;min-height:44px}
+.account-v2-profile .ww-profile-empty h3{color:var(--account-ink);font:650 22px/1.4 'Rubik',sans-serif}.account-v2-author .ww-author-content .rounded-2xl{border-radius:8px;box-shadow:none}
+.account-v2-notifications{background:var(--account-paper)!important;padding-top:44px}.account-v2-notifications main{max-width:940px!important;padding:0 28px 72px}
+.ww-notifications-header{padding-bottom:24px}.ww-notifications-header h1{font:750 40px/1.15 'Rubik',sans-serif!important;letter-spacing:-.04em}
+.ww-notifications-header .ww-page-eyebrow{color:var(--account-teal);font-size:10px;font-weight:650;letter-spacing:.12em;margin-bottom:16px;text-transform:uppercase}
+.ww-notifications-header button{display:flex;align-items:center;gap:8px;min-height:44px;border-radius:7px;font-size:12px;box-shadow:0 2px 4px #191c1c0a}
+.ww-notification-tabs{background:transparent!important;border:0!important;border-bottom:1px solid var(--account-line)!important;border-radius:0!important;box-shadow:none!important;padding:0!important;gap:20px!important}
+.ww-notification-tabs button{flex:0 0 auto!important;border-bottom:2px solid transparent;border-radius:0!important;padding:13px 2px!important;min-height:48px;background:transparent!important;color:var(--account-copy)!important;box-shadow:none!important}
+.ww-notification-tabs button[aria-selected='true']{color:var(--account-ink)!important;border-bottom-color:var(--account-ink)}
+.ww-notification-list{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;display:grid;gap:10px}
+.ww-notification-row{border:1px solid var(--account-line)!important;border-radius:7px!important;background:#fff!important;padding:20px!important}.ww-notification-row.unread{background:var(--account-soft)!important;border-color:#d7e3dc!important}
+.ww-notification-symbol{background:#e7eee7!important;color:var(--account-teal)!important;box-shadow:none!important}.ww-notification-row .text-accent{color:var(--account-teal)!important}.ww-notification-row .bg-accent{background:var(--account-teal)!important}
+.ww-notification-book{display:flex;align-items:center;gap:6px}.ww-notification-preferences{border-color:var(--account-line)!important;border-radius:8px!important;box-shadow:none!important}
+.account-v2-dialog{background:#191c1c70!important;backdrop-filter:blur(2px)}.account-v2-dialog>div{background:var(--account-paper)!important;border:1px solid var(--account-line)!important;border-radius:12px!important;max-height:calc(100dvh - 48px);box-shadow:0 16px 60px #191c1c26}
+.account-v2-dialog h2,.account-v2-dialog h3{color:var(--account-ink)!important;font-family:'Rubik',sans-serif!important}.account-v2-dialog button{min-height:44px}
+.account-v2-dialog .bg-primary,.account-v2-dialog .bg-accent{background:var(--account-umber)!important;color:#fff!important}
+.account-v2-dialog .ww-connection-row{padding:16px 12px;border-bottom:1px solid var(--account-line);border-radius:0}.account-v2-dialog .ww-connection-profile{min-width:0;display:flex;gap:12px;align-items:center;text-align:left}.account-v2-dialog .ww-connection-row button:last-child{min-width:85px}
+.account-v2-welcome.wj-overlay{background:#191c1c70!important;backdrop-filter:blur(3px)!important}.account-v2-welcome .wj-container{color:var(--account-ink);background:var(--account-paper)!important;border:1px solid var(--account-line);border-radius:14px;box-shadow:0 20px 70px #191c1c22}
+.account-v2-welcome .wj-particles,.account-v2-welcome .wj-welcome-glow{display:none}
+.account-v2-welcome .wj-welcome-title,.account-v2-welcome h2,.account-v2-welcome h3{color:var(--account-ink)!important;background:none!important;-webkit-text-fill-color:currentColor;font-family:'Rubik',sans-serif!important}
+.account-v2-welcome .wj-welcome-brand{color:var(--account-umber)!important;background:none!important;-webkit-text-fill-color:currentColor}.account-v2-welcome .wj-welcome-name,.account-v2-welcome .wj-welcome-sub,.account-v2-welcome .wj-role-sub{color:var(--account-copy)!important}
+.account-v2-welcome .wj-role-card,.account-v2-welcome .wj-feature-card{background:#fff!important;border:1px solid var(--account-line)!important;border-radius:8px!important;box-shadow:none!important}
+.account-v2-welcome .wj-role-card::before,.account-v2-welcome .wj-feature-card::before{display:none}.account-v2-welcome .wj-role-card-icon,.account-v2-welcome .wj-welcome-logo,.account-v2-welcome .wj-feature-icon{color:var(--account-teal);background:var(--account-soft)!important;border-radius:8px;display:grid;place-items:center}
+.account-v2-welcome .wj-role-card-cta{color:var(--account-umber)}.account-v2-welcome .wj-nav{border-top-color:var(--account-line);background:var(--account-paper)}
+.account-v2-welcome .wj-nav-next{color:white;background:var(--account-umber)!important;border-radius:8px;box-shadow:0 2px 4px #191c1c12}.account-v2-welcome .wj-nav-skip,.account-v2-welcome .wj-nav-back{color:var(--account-copy)}.account-v2-welcome .wj-nav-dot-active{background:var(--account-teal);box-shadow:none}
+@media(max-width:1100px){.account-v2-settings>.container>.flex>button{margin-left:0}.account-v2-settings .ww-settings-layout{gap:28px;grid-template-columns:190px minmax(0,1fr)}.ww-account-profile-banner{margin-inline:24px}.account-v2-auth .ww-auth-form-shell{padding:64px 40px!important}}
+@media(max-width:767px){
+.account-v2-auth .ww-auth-layout{display:block!important}.account-v2-auth .ww-auth-artstrip{display:none}.account-v2-auth .ww-auth-form-shell{min-height:100dvh;padding:70px 24px 40px!important;justify-content:flex-start;max-width:520px!important}
+.ww-account-brand{font-size:29px!important;margin-bottom:40px}.account-v2-auth .ww-auth-card :is(h1,h2){font-size:35px!important;margin-bottom:14px!important}.account-v2-auth .ww-auth-card>p{font-size:15px;margin-bottom:28px}.account-v2-auth .ww-auth-card form{gap:19px}
+.account-v2-auth .ww-auth-close{top:13px!important;right:13px!important}.account-v2-auth .ww-auth-back,.account-v2-auth .ww-reset-back{top:13px!important;left:13px!important}
+.account-v2-auth input:not([type='checkbox']):not([type='hidden']),.account-v2-settings input:not([type='checkbox']),.account-v2-settings textarea{font-size:16px}
+.account-v2-settings.ww-profile-settings{padding-top:28px}.account-v2-settings>.container{padding:0 20px!important}.account-v2-settings h1{font-size:31px!important}.account-v2-settings>.container>p{font-size:14px;margin-bottom:24px!important}.account-v2-settings .ww-settings-layout{display:block}
+.account-v2-settings .ww-settings-nav{position:static;display:flex;gap:8px;overflow-x:auto;margin:0 0 28px;padding:6px;border-radius:8px;background:#fff!important;backdrop-filter:none}.account-v2-settings .ww-settings-nav button,.account-v2-settings .ww-settings-nav>a{flex:0 0 auto;width:auto;white-space:nowrap;padding:10px 12px;min-height:44px}.account-v2-settings .ww-settings-panel{padding:0!important}.account-v2-settings .ww-settings-savebar{gap:12px}.account-v2-settings .ww-settings-savebar>div:last-child{width:100%;justify-content:flex-start}.account-v2-settings .ww-settings-panel-head{gap:10px}
+.account-v2-profile .ww-profile-hero,.account-v2-author .ww-author-hero{padding-top:20px}.ww-account-profile-banner{height:145px;margin-inline:20px;border-radius:7px}.account-v2-profile .ww-profile-identity,.account-v2-author .ww-author-identity{flex-direction:column;align-items:flex-start!important;gap:8px!important}.account-v2-profile .ww-profile-hero-inner,.account-v2-author .ww-author-hero-inner{padding-inline:24px!important}.account-v2-profile .ww-profile-avatar,.account-v2-author .ww-author-avatar{margin-top:-32px}
+.account-v2-profile .ww-profile-avatar>img,.account-v2-profile .ww-profile-avatar>div:first-child,.account-v2-author .ww-author-avatar>img,.account-v2-author .ww-author-avatar>div:first-child{width:94px!important;height:94px!important}.account-v2-profile .ww-profile-hero-inner>.ww-page-eyebrow{margin:18px 0 10px}.account-v2-profile .ww-profile-info,.account-v2-author .ww-author-info{padding-top:12px;text-align:left!important}.account-v2-profile h1,.account-v2-author h1{font-size:31px!important;text-align:left!important}.account-v2-author .ww-author-title-row{justify-content:flex-start}
+.account-v2-profile .ww-profile-info .flex.flex-wrap,.account-v2-profile .ww-profile-actions,.account-v2-profile .ww-profile-genres{justify-content:flex-start}.account-v2-profile .ww-profile-actions{width:auto;flex-direction:row;flex-wrap:wrap}.account-v2-profile .ww-profile-actions button{width:auto}.account-v2-profile .ww-profile-stats,.account-v2-author .ww-author-stats{margin:20px 0 0!important;gap:10px 18px!important}.account-v2-profile .ww-profile-stat-card,.account-v2-author .ww-author-stats>div{min-height:36px!important}
+.account-v2-author .ww-account-story-grid,.account-v2-profile .ww-account-story-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:26px 16px!important}.account-v2-author .ww-account-story-grid .ww-book-cover-wrap,.account-v2-profile .ww-account-story-grid .ww-book-cover-wrap{aspect-ratio:1.1!important}.account-v2-author .ww-account-story-grid .ww-book-info h3,.account-v2-profile .ww-account-story-grid .ww-book-info h3{font-size:19px!important}
+.account-v2-notifications{padding-top:30px}.account-v2-notifications main{padding-inline:20px}.ww-notifications-header h1{font-size:33px!important}.ww-notifications-header{align-items:flex-start!important}.ww-notification-row{padding:16px 14px!important;gap:12px}.ww-notification-tabs{gap:18px!important}
+.account-v2-dialog{align-items:flex-end!important;padding:0!important}.account-v2-dialog>div{border-radius:14px 14px 0 0!important;max-height:calc(100dvh - 32px);max-width:100%!important;padding-bottom:env(safe-area-inset-bottom)}
+}
+@media(prefers-reduced-motion:reduce){.account-v2-auth *,.account-v2-welcome *{animation:none!important;transition:none!important}}
+
+.ww-settings-photo{position:relative;min-height:96px}.ww-settings-photo-initials{position:absolute;left:0;top:0;z-index:1;width:96px;height:96px;display:grid;place-items:center;border-radius:50%;background:#e8efea;color:#28675e;font:500 30px/1 'WordWeft Serif',Georgia,serif;pointer-events:none}.ww-settings-photo.no-photo .ww-settings-upload img{opacity:0}.ww-settings-upload>div{align-items:center}.ww-settings-upload label{min-height:44px;margin:0}.ww-google-completion{overflow-y:auto}.account-v2-dialog input[type='checkbox']{width:16px;height:16px;min-height:16px;accent-color:#28675e}.account-v2-dialog select{min-height:44px}.account-v2-welcome .wj-features-desc,.account-v2-welcome .wj-role-card p,.account-v2-welcome .wj-ready-sub,.account-v2-welcome .wj-ready-hint{color:var(--account-copy)!important}.account-v2-welcome .wj-ready-glow{display:none}.account-v2-welcome .wj-nav-arrows button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px}.account-v2-welcome .wj-features-badge{background:#eaf1ed;color:#28675e}.account-v2-welcome .wj-features-tab{background:#fff;border-color:var(--account-line);color:var(--account-copy);min-height:44px}.account-v2-welcome .wj-features-tab-active{color:#28675e;background:#eaf1ed;border-color:#28675e}.account-v2-welcome .wj-ready-icon{color:#28675e;display:grid;place-items:center}.account-v2-auth .ww-account-brand img{border-radius:0!important}
+
+.ww-google-signin{position:relative;min-height:50px;align-items:center}.ww-google-fallback{display:flex;align-items:center;justify-content:center;gap:16px;border:1px solid var(--account-line);border-radius:10px;background:#fff;font:550 15px/1.5 'Rubik',sans-serif;min-height:50px;width:100%;box-shadow:0 2px 4px #191c1c08}.account-v2-settings .ww-settings-panel-head h2{font:600 19px/1.4 'Rubik',sans-serif!important}.account-v2-settings .ww-settings-panel h3{font-family:'Rubik',sans-serif!important}.account-v2-profile .ww-profile-section-head h2{font:650 26px/1.3 'Rubik',sans-serif!important}
+
+.account-v2-settings .ww-settings-panel h3{color:#636b63!important}.account-v2-settings h1,.account-v2-profile h1,.account-v2-author h1{color:var(--account-ink)!important}
+
+.account-v2-notifications .ww-notification-row .text-gray-400{color:#5c635f!important}
+
+@media(max-width:760px){.account-v2-auth .ww-auth-artstrip{display:flex;position:static;height:98px;gap:5px}.account-v2-auth .ww-auth-artstrip img{width:calc((100% - 10px)/3);min-width:0;flex:1 1 0;height:98px}.account-v2-auth .ww-auth-form-shell{min-height:calc(100dvh - 98px);padding:32px 27px 42px!important}.account-v2-auth .ww-account-brand{font-size:25px;margin-bottom:31px}.account-v2-auth .ww-auth-close{top:8px!important;right:8px!important}.account-v2-auth .ww-auth-close,.account-v2-auth .ww-auth-back,.account-v2-auth .ww-reset-back{position:fixed;z-index:2;background:var(--account-paper);border-radius:50%}}
+
+.account-v2-auth .ww-auth-card .ww-google-fallback{min-height:50px}
+.account-v2-settings .ww-settings-profile-form>.ww-settings-panel-head h2,.account-v2-settings .ww-settings-profile-form>.ww-settings-panel-head p{display:none}
+.account-v2-settings .ww-settings-profile-form>.ww-settings-panel-head{padding:0;border:0;justify-content:flex-end}
+.account-v2-settings .ww-settings-profile-form>.ww-settings-panel-head:not(:has(>span)){display:none}
+.account-v2-settings .ww-settings-profile-form>.ww-settings-panel-head+div{margin-top:0!important}
+@media(max-width:767px){.account-v2-settings>.container>.flex{position:relative;gap:0}.account-v2-settings>.container>.flex>button{position:absolute;right:0;top:-8px;margin:0;min-width:44px;min-height:44px}.account-v2-settings h1{font-size:33px!important}.account-v2-settings .ww-settings-nav{padding:0;gap:20px;border:0;border-bottom:1px solid var(--account-line);background:transparent!important;border-radius:0}.account-v2-settings .ww-settings-nav button,.account-v2-settings .ww-settings-nav>a{padding:10px 0;border-radius:0;border-bottom:2px solid transparent;font-size:11px}.account-v2-settings .ww-settings-nav button strong{font-size:11px}.account-v2-settings .ww-settings-nav button.active{background:transparent!important;border-bottom-color:var(--account-teal)}.account-v2-auth .ww-account-brand{font-size:25px!important}.account-v2-auth .ww-auth-card :is(h1,h2){font-size:33px!important}}
+
+/* Account surfaces share the saved site appearance. */
+.dark :is(.account-v2-auth,.account-v2-settings,.account-v2-profile,.account-v2-author,.account-v2-notifications,.account-v2-dialog,.account-v2-welcome){--account-paper:#1e2422;--account-ink:#f2efe7;--account-copy:#b7beb5;--account-line:#414942;--account-umber:#e2bb95;--account-teal:#9ccabb;--account-soft:#283931}
+.dark .account-v2-auth .ww-account-brand{color:var(--account-ink)}
+.dark :is(.account-v2-auth,.account-v2-settings,.account-v2-notifications) :is(.text-gray-400,.text-gray-500){color:var(--account-copy)!important}
+.dark .account-v2-auth .ww-google-fallback,.dark .account-v2-settings .ww-settings-nav,.dark .account-v2-settings .ww-settings-savebar button[type='button']{background:#27302a!important;color:var(--account-ink)!important}
+.dark .account-v2-settings :is(input:not([type='checkbox']),textarea),.dark .account-v2-dialog :is(input:not([type='checkbox']),select,textarea){background:#27302a!important;color:var(--account-ink)!important}
+.dark .account-v2-settings section{background:#28332b!important}
+.dark .account-v2-settings .ww-settings-upload label{background:#2b3830!important;color:var(--account-ink)!important;border-color:var(--account-line)}
+.dark .account-v2-settings button[type='submit'],.dark .account-v2-auth .ww-auth-card button[type='submit']{background:#28675e!important;color:#fff!important}
+.dark .account-v2-notifications h1,.dark .account-v2-notifications .ww-notification-row p{color:var(--account-ink)!important}
+.dark .account-v2-notifications .ww-notification-row{background:#252d27!important}
+.dark .account-v2-notifications .ww-notification-row.unread{background:var(--account-soft)!important;border-color:var(--account-line)!important}
+.dark .account-v2-notifications .ww-notification-symbol{background:#34473c!important}
+.dark .account-v2-notifications .ww-notification-row .text-gray-400{color:var(--account-copy)!important}
+.dark .account-v2-profile .ww-profile-actions button:last-child,.dark .account-v2-profile .ww-profile-section-head>button,.dark .account-v2-profile .ww-profile-empty button,.dark .account-v2-author .ww-author-action:not(.bg-gray-100),.dark .account-v2-dialog :is(.bg-primary,.bg-accent),.dark .account-v2-welcome .wj-nav-next{background:#6b432f!important;color:#fff!important}
+.dark .account-v2-notifications .text-accent{color:var(--account-teal)!important}
+.dark .account-v2-author .text-accent{color:var(--account-umber)!important}
+.dark .account-v2-author .ww-author-share-action{background:#27302a;color:var(--account-ink)!important}

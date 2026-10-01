@@ -24,21 +24,28 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [attempt, setAttempt] = useState(0);
+    const request = React.useRef(0);
 
     const fetchBooks = (sort: SortOption, pageNum: number, append: boolean) => {
+        const sequence = ++request.current;
+        setError('');
         setIsLoading(true);
         api.getBooksByGenre(genre, { sort, page: pageNum, size: 12 }).then(res => {
+            if (sequence !== request.current) return;
             setBooks(prev => append ? [...prev, ...res.content] : res.content);
             setHasMore(res.hasMore);
             setIsLoading(false);
-        });
+        }).catch(reason => { if (sequence === request.current) { setError(reason instanceof Error ? reason.message : 'Stories could not be loaded.'); setIsLoading(false); } });
     };
 
     useEffect(() => {
         setPage(0);
         setBooks([]);
         fetchBooks(sortOption, 0, false);
-    }, [genre, sortOption]);
+        return () => { request.current++; };
+    }, [genre, sortOption, attempt]);
 
     const handleLoadMore = () => {
         const nextPage = page + 1;
@@ -54,7 +61,7 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
                     {decodeURIComponent(genre)}
                 </h1>
                 <p className="text-lg text-text-body dark:text-dark-text-body max-w-2xl mb-8">
-                    Explore books in the {decodeURIComponent(genre)} genre, sorted transparently by your chosen metric.
+                    Find your next {decodeURIComponent(genre).toLowerCase()} story. Explore new voices and worlds worth getting lost in.
                 </p>
 
                 {/* Sort Bar */}
@@ -70,7 +77,7 @@ export const GenrePage: React.FC<{ genre: string }> = ({ genre }) => {
                 </div>
 
                 {/* Book Grid */}
-                {isLoading && books.length === 0 ? (
+                {error ? <div className="v2-load-state" role="alert"><h2>The shelf could not be loaded.</h2><p>{error}</p><button className="v2-button secondary" onClick={() => setAttempt(value => value + 1)}>Try again</button></div> : isLoading && books.length === 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className="animate-pulse">

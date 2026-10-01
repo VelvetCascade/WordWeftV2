@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, Heart, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import type { HookCard, User } from '../types';
 import * as api from '../api/client';
 import { appendSeenStory, toggleTasteGenre } from '../utils/hookFeed';
+import { Footer } from '../components/Footer';
+import { ResilientImage } from '../components/ResilientImage';
+import '../styles/support-v2.css';
 
 const SEEN_KEY = 'ww_hook_feed_seen';
 
@@ -34,6 +37,9 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
     const [error, setError] = useState('');
     const [liked, setLiked] = useState<Set<string>>(new Set());
     const [likingChapterId, setLikingChapterId] = useState<string | null>(null);
+
+    const tasteDialog = useRef<HTMLDialogElement>(null);
+    const tasteTrigger = useRef<HTMLButtonElement>(null);
 
     const current = cards[index];
     const remaining = cards.length - index;
@@ -69,7 +75,7 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
     const rememberSeen = useCallback((bookId: string) => {
         setSeen(previous => {
             const next = appendSeenStory(previous, bookId);
-            localStorage.setItem(SEEN_KEY, JSON.stringify(next));
+            try { localStorage.setItem(SEEN_KEY, JSON.stringify(next)); } catch { /* Continue without persistent history when browser storage is unavailable. */ }
             return next;
         });
     }, []);
@@ -95,7 +101,7 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
         const handleKey = (event: KeyboardEvent) => {
             if (editingTaste || !current) return;
             const target = event.target as HTMLElement | null;
-            if (target?.matches('input, textarea, select, button')) return;
+            if (target?.closest('input, textarea, select, button, a') || target?.isContentEditable) return;
             if (event.key === 'ArrowLeft') { event.preventDefault(); advance(); }
             if (event.key === 'ArrowRight' || event.key === 'Enter') { event.preventDefault(); openStory(); }
         };
@@ -154,67 +160,52 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
         }
     };
 
-    const catalog = useMemo(() => genres.slice(0, 24), [genres]);
+    const catalog = useMemo(() => genres, [genres]);
+
+    useEffect(() => {
+        if (!editingTaste || !tasteDialog.current) return;
+        const dialog = tasteDialog.current;
+        dialog.showModal();
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { dialog.close(); document.body.style.overflow = previousOverflow; tasteTrigger.current?.focus(); };
+    }, [editingTaste]);
+
+    const reshuffle = () => {
+        try { localStorage.removeItem(SEEN_KEY); } catch { /* History still resets in this session. */ }
+        setSeen([]);
+        void loadFeed([], selectedTaste);
+    };
 
     return (
-        <div className="hook-feed-page min-h-[calc(100vh-5rem)] px-4 py-4 sm:py-10">
-            <div className="mx-auto max-w-5xl">
-                <header className="mb-4 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-                    <div>
-                        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent">Hook Feed</p>
-                        <h1 className="font-serif text-3xl font-bold text-text-rich dark:text-dark-text-rich sm:text-5xl">Find your next read.</h1>
-                        <p className="mt-2 max-w-2xl text-sm text-text-body dark:text-dark-text-body sm:text-base">Read a short opening, then open the story or move to the next one.</p>
-                    </div>
-                    <button onClick={() => { setTaste(currentUser?.favoriteGenres || taste); setEditingTaste(true); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-surface px-4 py-2.5 text-sm font-semibold text-text-rich transition hover:border-accent dark:bg-dark-surface dark:text-dark-text-rich">
-                        <SlidersHorizontal className="h-4 w-4" /> Tune my feed
-                    </button>
+        <div className="wv-support wv-hooks">
+            <main className="wv-support-shell">
+                <header className="wv-hook-header wv-pagehead">
+                    <div><p className="wv-eyebrow">Hook Feed</p><h1>Find your next read.</h1><p className="wv-lead">Read a short opening, then open the story or move to the next one.</p></div>
+                    <button type="button" ref={tasteTrigger} onClick={() => { setTaste(currentUser?.favoriteGenres || taste); setEditingTaste(true); }} className="wv-button"><SlidersHorizontal size={17} /> Tune my feed</button>
                 </header>
-
-                {editingTaste && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setEditingTaste(false)}>
-                    <section className="w-full max-w-2xl rounded-t-3xl border border-accent/20 bg-surface p-5 shadow-2xl dark:bg-dark-surface sm:rounded-3xl sm:p-7" aria-labelledby="taste-heading" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}>
-                        <div className="flex items-start justify-between gap-4">
-                            <div><h2 id="taste-heading" className="font-serif text-2xl font-bold text-text-rich dark:text-dark-text-rich">Choose genres</h2><p className="mt-1 text-sm text-text-body dark:text-dark-text-body">Pick up to eight. You can change these any time.</p></div>
-                            <button onClick={() => setEditingTaste(false)} aria-label="Close taste settings" className="rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10"><X className="h-5 w-5" /></button>
+                {editingTaste && <dialog ref={tasteDialog} className="wv-taste-dialog" aria-labelledby="taste-heading" role="dialog" aria-modal="true" onCancel={event => { event.preventDefault(); setEditingTaste(false); }} onClick={event => { if (event.target === event.currentTarget) setEditingTaste(false); }}>
+                    <section className="wv-taste-panel">
+                        <div className="wv-taste-header"><div><p className="wv-eyebrow">Your reading taste</p><h2 id="taste-heading">Choose genres</h2><p>Pick up to eight. You can change these any time.</p></div><button type="button" onClick={() => setEditingTaste(false)} aria-label="Close taste settings" className="wv-icon-button"><X size={21} /></button></div>
+                        <div className="wv-taste-genres">{catalog.map(genre => { const selected = taste.some(value => value.toLowerCase() === genre.toLowerCase()); return <button type="button" key={genre} onClick={() => setTaste(previous => toggleTasteGenre(previous, genre))} aria-pressed={selected}>{genre}</button>; })}</div>
+                        <div className="wv-taste-footer"><span>{taste.length}/8 selected</span><button type="button" disabled={!taste.length || savingTaste} onClick={() => void saveTaste()} className="wv-button wv-button-primary">{savingTaste ? 'Saving…' : currentUser ? 'Save my taste' : 'Use these genres'}</button></div>
+                        {error && <p className="wv-error" role="alert">{error}</p>}
+                    </section>
+                </dialog>}
+                {error && <div role="alert" className="wv-error wv-hook-error">{error}<button type="button" className="wv-button" onClick={() => void loadFeed()}>Try again</button></div>}
+                {loading ? <section className="wv-hook-loading" role="status"><p>Loading openings…</p><div className="wv-hook-loading-lines" aria-hidden="true"><span /><span /><span /></div></section> : current ? <article className="wv-hook-card">
+                    <div className="wv-hook-art">{current.coverUrl ? <ResilientImage src={current.coverUrl} alt={`Cover of ${current.title}`} fallbackLabel={current.title} variant="cover" className="wv-hook-cover" loading="eager" /> : <div className="wv-hook-art-empty"><BookOpen size={44} aria-hidden="true" /><span>Cover unavailable</span></div>}</div>
+                    <div className="wv-hook-reading">
+                        <div className="wv-hook-meta"><span>{current.chapterTitle}</span><span>{current.readingMinutes} min chapter</span></div>
+                        <h2>{current.title}</h2><a className="wv-hook-author" href={`/author/${current.authorId}`}>by {current.authorName}</a>
+                        {current.matchedGenres.length > 0 && <p className="wv-hook-match">Matched to {current.matchedGenres.join(' + ')}</p>}
+                        <blockquote className="hook-feed-excerpt">“{current.excerpt}”</blockquote>
+                        <div className="wv-hook-bottom"><div className="wv-hook-tags"><div>{current.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}</div><button type="button" disabled={likingChapterId === current.chapterId} onClick={() => void toggleLike()} className={`wv-hook-like ${liked.has(current.chapterId) ? 'is-liked' : ''}`} aria-pressed={liked.has(current.chapterId)} aria-label={liked.has(current.chapterId) ? 'Unlike this opening' : 'Like this opening'}><Heart size={17} fill={liked.has(current.chapterId) ? 'currentColor' : 'none'} /> {current.likesCount}</button></div>
+                            <div className="wv-hook-actions"><button type="button" onClick={advance} className="wv-button"><X size={16} /> Not for me</button><button type="button" onClick={openStory} className="wv-button wv-button-primary">Open story <ArrowRight size={18} /></button></div><p className="wv-hook-keyboard">Keyboard: ← skip · → open</p>
                         </div>
-                        <div className="mt-5 flex flex-wrap gap-2">
-                            {catalog.map(genre => {
-                                const selected = taste.some(value => value.toLowerCase() === genre.toLowerCase());
-                                return <button key={genre} onClick={() => setTaste(previous => toggleTasteGenre(previous, genre))} aria-pressed={selected} className={`rounded-full border px-3.5 py-2 text-sm font-medium transition ${selected ? 'border-accent bg-accent text-white' : 'border-gray-200 bg-background text-text-body hover:border-accent/60 dark:border-dark-border dark:bg-dark-background dark:text-dark-text-body'}`}>{genre}</button>;
-                            })}
-                        </div>
-                        <div className="mt-5 flex items-center justify-between gap-3"><span className="text-xs text-text-body dark:text-dark-text-body">{taste.length}/8 selected</span><button disabled={!taste.length || savingTaste} onClick={() => void saveTaste()} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50">{savingTaste ? 'Saving…' : currentUser ? 'Save my taste' : 'Use these genres'}</button></div>
-                    </section></div>
-                )}
-
-                {error && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">{error}</div>}
-
-                {loading ? (
-                    <div className="flex min-h-[360px] items-center justify-center rounded-[2rem] border border-gray-200 bg-surface dark:border-dark-border dark:bg-dark-surface" role="status"><div className="text-text-body dark:text-dark-text-body">Loading openings…</div></div>
-                ) : current ? (
-                    <article className="overflow-hidden rounded-[2rem] border border-gray-200 bg-surface shadow-xl shadow-black/5 dark:border-dark-border dark:bg-dark-surface md:grid md:grid-cols-[280px_1fr]">
-                        <div className="relative h-36 bg-gradient-to-br from-primary via-accent to-amber-700 md:h-auto md:min-h-[480px]">
-                            {current.coverUrl && <img src={current.coverUrl} alt={`Cover of ${current.title}`} className="absolute inset-0 h-full w-full object-cover" />}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-                            <div className="absolute bottom-0 p-4 text-white sm:p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">{current.chapterTitle}</p><h2 className="mt-1 font-serif text-2xl font-bold leading-tight sm:mt-2 sm:text-3xl">{current.title}</h2><p className="mt-1 text-xs text-white/80 sm:mt-2 sm:text-sm">by {current.authorName}</p></div>
-                        </div>
-                        <div className="flex flex-col p-4 sm:min-h-[480px] sm:p-9">
-                            <div className="flex flex-wrap gap-2">
-                                {current.matchedGenres.length > 0 && <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">Matched: {current.matchedGenres.join(' + ')}</span>}
-                                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-text-body dark:bg-white/10 dark:text-dark-text-body">{current.readingMinutes} min chapter</span>
-                            </div>
-                            <blockquote className="hook-feed-excerpt my-4 font-serif text-lg leading-relaxed text-text-rich dark:text-dark-text-rich sm:my-auto sm:py-8 sm:text-[1.72rem]">“{current.excerpt}”</blockquote>
-                            <div className="border-t border-gray-100 pt-5 dark:border-dark-border">
-                                <div className="mb-4 flex items-center justify-between"><div className="flex flex-wrap gap-1.5">{current.genres.slice(0, 3).map(genre => <span key={genre} className="text-xs text-text-body dark:text-dark-text-body">#{genre.replace(/\s+/g, '')}</span>)}</div><button disabled={likingChapterId === current.chapterId} onClick={() => void toggleLike()} className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition disabled:opacity-60 ${liked.has(current.chapterId) ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/30' : 'hover:bg-gray-100 dark:hover:bg-white/10'}`} aria-label={liked.has(current.chapterId) ? 'Unlike this opening' : 'Like this opening'}><Heart className={`h-4 w-4 ${liked.has(current.chapterId) ? 'fill-current' : ''}`} /> {current.likesCount}</button></div>
-                                <div className="grid grid-cols-2 gap-3"><button onClick={advance} className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-text-body transition hover:border-accent hover:text-accent dark:border-dark-border dark:text-dark-text-body"><X className="h-4 w-4" /> Not for me</button><button onClick={openStory} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold text-white transition hover:bg-accent"><BookOpen className="h-4 w-4" /> Open story <ArrowRight className="h-4 w-4" /></button></div>
-                                <p className="mt-3 hidden text-center text-[11px] text-text-body/60 dark:text-dark-text-body/60 sm:block">Keyboard: ← skip · → open</p>
-                            </div>
-                        </div>
-                    </article>
-                ) : (
-                    <div className="rounded-[2rem] border border-gray-200 bg-surface px-6 py-20 text-center dark:border-dark-border dark:bg-dark-surface"><RotateCcw className="mx-auto h-9 w-9 text-accent" /><h2 className="mt-4 font-serif text-2xl font-bold text-text-rich dark:text-dark-text-rich">You caught every opening in this stack.</h2><p className="mx-auto mt-2 max-w-md text-text-body dark:text-dark-text-body">Reset your recent history to reshuffle the feed, or tune your genres for a different shelf.</p><button onClick={() => { localStorage.removeItem(SEEN_KEY); setSeen([]); void loadFeed([], selectedTaste); }} className="mt-6 rounded-xl bg-primary px-5 py-3 font-bold text-white hover:bg-accent">Reshuffle openings</button></div>
-                )}
-            </div>
+                    </div>
+                </article> : !error ? <section className="wv-empty wv-hook-empty"><RotateCcw size={30} aria-hidden="true" /><h2>No more openings for now.</h2><p>Reset your recent history to reshuffle the feed, or choose different genres.</p><div className="wv-actions"><button type="button" onClick={reshuffle} className="wv-button wv-button-primary">Reshuffle openings <RotateCcw size={16} /></button><a href="/category" className="wv-button">Browse stories</a></div></section> : null}
+            </main><Footer />
         </div>
     );
 };

@@ -348,6 +348,8 @@ interface RichTextEditorProps {
     readOnly?: boolean;
     onLargePaste?: (text: string) => void;
     bookId?: string;
+    manuscriptHeader?: React.ReactNode;
+    manuscriptFooter?: React.ReactNode;
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -358,6 +360,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     readOnly = false,
     onLargePaste,
     bookId,
+    manuscriptHeader,
+    manuscriptFooter,
 }) => {
     const bubbleMenuRef = useRef<HTMLDivElement>(null);
     const [rteCropFile, setRteCropFile] = useState<File | null>(null);
@@ -615,8 +619,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </div>
             )}
 
-            <div className="rte-editor-area">
-                <EditorContent editor={editor} />
+            <div className="rte-document">
+                {manuscriptHeader}
+                <div className="rte-editor-area">
+                    <EditorContent editor={editor} />
+                </div>
+                {manuscriptFooter}
             </div>
         </div>
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Check, RefreshCw, ShieldAlert } from 'lucide-react';
+import { Check, ChevronDown, RefreshCw, ShieldAlert } from 'lucide-react';
 import { downloadFoundingWriterChapters, getFoundingWriterApplications, updateFoundingWriterApplication } from '../api/client';
 import type { FoundingWriterApplication, FoundingWriterApplicationStatus } from '../types';
 import '../styles/founding-writers.css';
+import '../styles/support-v2.css';
 
 const statusLabels: Record<FoundingWriterApplicationStatus, string> = {
   PENDING: 'Pending', ACCEPTED: 'Accepted', REJECTED: 'Rejected',
@@ -65,6 +66,7 @@ const ReviewCard: React.FC<{
           <p>{application.fullName}{application.penName ? ` · writing as ${application.penName}` : ''} · {application.email}</p>
         </div>
         <span className={`fw-admin-status ${application.status.toLowerCase()}`}>{statusLabels[application.status]}</span>
+        <ChevronDown className="fw-admin-expand" size={18} aria-hidden="true" />
       </summary>
       <div className="fw-admin-body">
         <dl className="fw-admin-details">
@@ -115,15 +117,15 @@ export const FoundingWriterAdminPage: React.FC<{ isAdmin: boolean }> = ({ isAdmi
   }, [filter, isAdmin, reload]);
 
   if (!isAdmin) {
-    return <section className="fw-admin-page"><div className="fw-shell fw-admin-message"><ShieldAlert size={34} /><h2>Administrator access required</h2><p>This review desk is only available to WordWeft administrators.</p></div></section>;
+    return <section className="fw-admin-page wv-support"><div className="fw-shell fw-admin-message"><ShieldAlert size={34} /><h2>Administrator access required</h2><p>This review desk is only available to WordWeft administrators.</p></div></section>;
   }
 
   return (
-    <section className="fw-admin-page">
+    <section className="fw-admin-page wv-support">
       <div className="fw-shell">
         <header className="fw-admin-header">
           <div><p className="fw-eyebrow">WordWeft administration</p><h1>Founding Writer applications</h1><p>Review each story proposal, keep private notes and move the application to Pending, Accepted or Rejected.</p></div>
-          <button className="fw-secondary-button" type="button" onClick={() => setReload(value => value + 1)}><RefreshCw size={16} /> Refresh</button>
+          <button className="fw-secondary-button" type="button" disabled={loading} onClick={() => setReload(value => value + 1)}><RefreshCw size={16} /> Refresh</button>
         </header>
         <nav className="fw-admin-filters" aria-label="Filter applications by status">
           {(['ALL', 'PENDING', 'ACCEPTED', 'REJECTED'] as const).map(value => <button type="button" className={filter === value ? 'active' : ''} aria-pressed={filter === value} onClick={() => setFilter(value)} key={value}>{value === 'ALL' ? 'All applications' : statusLabels[value]}</button>)}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ReportCategory, ReportTargetType } from '../types';
 import { XMarkIcon, CheckCircleIcon } from './icons/Icons';
 import * as api from '../api/client';
+import { useDialog } from '../hooks/useDialog';
 
 const CATEGORIES: { value: ReportCategory; label: string; help: string }[] = [
     { value: 'SPAM', label: 'Spam or scam', help: 'Repeated promotion, fraud, or deceptive links.' },
@@ -21,6 +22,7 @@ export const ReportModal: React.FC<{ isOpen: boolean; onClose: () => void; targe
     const [error, setError] = useState('');
     const [ticket, setTicket] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const dialogRef = useDialog(isOpen, onClose, !submitting);
 
     useEffect(() => { if (isOpen) { setCategory(''); setDescription(''); setError(''); setTicket(''); } }, [isOpen, targetId]);
     if (!isOpen) return null;
@@ -39,7 +41,7 @@ export const ReportModal: React.FC<{ isOpen: boolean; onClose: () => void; targe
 
     return (
         <div className="report-modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}>
-            <section className="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-title">
+            <section className="report-modal" ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title">
                 <button type="button" className="report-modal-close" onClick={onClose} aria-label="Close report form"><XMarkIcon className="w-5 h-5" /></button>
                 {ticket ? <div className="report-success">
                     <CheckCircleIcon className="w-12 h-12" />

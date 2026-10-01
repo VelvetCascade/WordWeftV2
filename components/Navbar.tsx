@@ -1,525 +1,68 @@
-
-import React, { useState, useEffect } from 'react';
-import { HomeIcon, BookOpenIcon, PencilSquareIcon, UserCircleIcon, Squares2X2Icon, MoonIcon, SunIcon, ArrowRightOnRectangleIcon, ChevronRightIcon, HeartIcon } from './icons/Icons';
-import { WordWeftLogo } from './icons/WordWeftLogo';
-import { ClipboardList, Feather, MessageCircle, Trophy } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useEffect, useState } from 'react';
+import { ArrowRight, BookOpen, Search, PenLine, MessageCircle, Library, Menu, X, Sun, Moon, LogOut, UserRound, Settings, Sparkles, Compass, Trophy, Feather, Info, ShieldCheck, Heart } from 'lucide-react';
 import { SearchOverlay } from './SearchOverlay';
+import { ResilientImage } from './ResilientImage';
+import { useTheme } from '../contexts/ThemeContext';
+import { useDialog } from '../hooks/useDialog';
 import type { User } from '../types';
 
-// ── Inline Icons ──
-const EllipsisIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="5" cy="12" r="2" />
-    <circle cx="12" cy="12" r="2" />
-    <circle cx="19" cy="12" r="2" />
-  </svg>
-);
-
-const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-  </svg>
-);
-
-const SparklesIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-  </svg>
-);
-
-const SearchIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.35-4.35" />
-  </svg>
-);
-
 interface NavbarProps {
-  isAuthenticated: boolean;
-  onLogout: () => Promise<void> | void;
-  isLoggingOut?: boolean;
-  notificationBell?: React.ReactNode;
-  onForYouClick?: () => void;
-  unreadCount?: number;
-  currentUser?: User | null;
+  isAuthenticated: boolean; onLogout: () => Promise<void> | void; isLoggingOut?: boolean;
+  notificationBell?: React.ReactNode; onForYouClick?: () => void; unreadCount?: number; currentUser?: User | null;
 }
-
-export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLoggingOut = false, notificationBell, onForYouClick, unreadCount = 0, currentUser }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
+const route = () => window.location.pathname;
+export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLoggingOut, notificationBell, onForYouClick, currentUser }) => {
+  const [path, setPath] = useState(route);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [heroSearchVisible, setHeroSearchVisible] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Determine active route for bottom nav highlighting
-  const getActiveRoute = (): string => {
-    const hash = window.location.hash.replace('#/', '') || window.location.pathname.replace(/^\//, '');
-    if (hash === '' || hash === '/') return 'home';
-    if (hash.startsWith('home')) return 'home';
-    if (hash.startsWith('features')) return 'features';
-    if (hash.startsWith('about')) return 'about';
-    if (hash.startsWith('category') || hash.startsWith('genre')) return 'genres';
-    if (hash.startsWith('library')) return 'library';
-    if (hash.startsWith('profile') || hash.startsWith('edit-profile')) return 'profile';
-    if (hash.startsWith('write')) return 'write';
-    if (hash.startsWith('community')) return 'community';
-    if (hash.startsWith('hooks')) return 'hooks';
-    if (hash.startsWith('events') || hash.startsWith('challenges')) return 'events';
-    if (hash.startsWith('founding-writers')) return 'founding-writers';
-    if (hash.startsWith('admin/founding-writers')) return 'founding-applications';
-    return '';
-  };
-
-  const [activeRoute, setActiveRoute] = useState(getActiveRoute());
-
-  // True only when on the homepage AND not yet scrolled — drives hero-overlay styling
-  const isOnHero = activeRoute === 'home' && !isScrolled;
-
+  const menuRef = useDialog(menuOpen, () => setMenuOpen(false));
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+    const update = () => { setPath(route()); setMenuOpen(false); setSearchOpen(false); };
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setSearchOpen(open => !open); }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Track active route on hash change
-  useEffect(() => {
-    const handleHashChange = () => setActiveRoute(getActiveRoute());
-    window.addEventListener('hashchange', handleHashChange);
-    window.addEventListener('popstate', handleHashChange);
-    window.addEventListener('wordweft:navigate', handleHashChange);
+    window.addEventListener('wordweft:navigate', update); window.addEventListener('popstate', update);
+    window.addEventListener('hashchange', update); window.addEventListener('keydown', shortcut);
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-      window.removeEventListener('popstate', handleHashChange);
-      window.removeEventListener('wordweft:navigate', handleHashChange);
+      window.removeEventListener('wordweft:navigate', update); window.removeEventListener('popstate', update);
+      window.removeEventListener('hashchange', update); window.removeEventListener('keydown', shortcut);
     };
   }, []);
-
-  // Keyboard shortcut: Ctrl+K or Cmd+K to open search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Listen for hero search scroll visibility from HomePage
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      setHeroSearchVisible(detail?.visible ?? true);
-    };
-    window.addEventListener('heroSearchVisibility', handler);
-    return () => window.removeEventListener('heroSearchVisibility', handler);
-  }, []);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isMobileMenuOpen]);
-
-  const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN') === true;
-
-  const desktopNavLinks = isAuthenticated ? [
-    { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; } },
-    { label: 'Hook Feed', route: 'hooks', href: '/hooks', action: () => { window.location.hash = '/hooks'; } },
-    { label: 'Events', route: 'events', href: '/events', action: () => { window.location.hash = '/events'; } },
-    { label: 'Genres', route: 'genres', href: '/category', action: () => { window.location.hash = '/category'; } },
-    { label: 'Community', route: 'community', href: '/community', action: () => { window.location.hash = '/community'; } },
-    { label: 'Library', route: 'library', href: '/library', action: () => { window.location.hash = '/library'; } },
-    { label: 'Write', route: 'write', href: '/write', action: () => { window.location.hash = '/write'; } },
-    ...(isAdmin ? [{ label: 'Applications', route: 'founding-applications', href: '/admin/founding-writers', action: () => { window.location.hash = '/admin/founding-writers'; } }] : []),
-  ] : [
-    { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; } },
-    { label: 'Features', route: 'features', href: '/features', action: () => { window.location.hash = '/features'; } },
-    { label: 'About', route: 'about', href: '/about', action: () => { window.location.hash = '/about'; } },
-    { label: 'Founding Writers', route: 'founding-writers', href: '/founding-writers', action: () => { window.location.hash = '/founding-writers'; } },
-  ];
-
-  const mobileNavLinks = isAuthenticated ? [
-    { label: 'Home', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
-    { label: 'Hooks', route: 'hooks', href: '/hooks', action: () => { window.location.hash = '/hooks'; }, icon: SparklesIcon },
-    { label: 'Community', route: 'community', href: '/community', action: () => { window.location.hash = '/community'; }, icon: MessageCircle },
-    { label: 'Library', route: 'library', href: '/library', action: () => { window.location.hash = '/library'; }, icon: BookOpenIcon },
-    { label: 'Write', route: 'write', href: '/write', action: () => { window.location.hash = '/write'; }, icon: PencilSquareIcon },
-  ] : [
-    { label: 'Discover', route: 'home', href: '/home', action: () => { window.location.hash = '/home'; }, icon: HomeIcon },
-    { label: 'Features', route: 'features', href: '/features', action: () => { window.location.hash = '/features'; }, icon: Squares2X2Icon },
-    { label: 'About', route: 'about', href: '/about', action: () => { window.location.hash = '/about'; }, icon: UserCircleIcon },
-    { label: 'Founding Writers', route: 'founding-writers', href: '/founding-writers', action: () => { window.location.hash = '/founding-writers'; }, icon: Feather },
-  ];
-
-  const handleInternalLink = (event: React.MouseEvent<HTMLAnchorElement>, action: () => void) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    action();
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-    setTouchOffsetY(0);
-  };
-
-  const handleMobileNav = (action: () => void) => {
-    closeMobileMenu();
-    action();
-  };
-
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
-  const [touchOffsetY, setTouchOffsetY] = useState(0);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    const drawer = target.closest('.mobile-more-drawer') as HTMLElement;
-    if (drawer && drawer.scrollTop > 5) return; // Allow normal scroll if already scrolled down
-    setTouchStartY(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY === null) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - touchStartY;
-    if (diff > 0) {
-      setTouchOffsetY(diff);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartY === null) return;
-    if (touchOffsetY > 100) {
-      closeMobileMenu();
-    } else {
-      setTouchOffsetY(0);
-    }
-    setTouchStartY(null);
-  };
-
-  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : '?';
-
-  return (
-    <>
-      {/* Desktop Navbar */}
-      <header className={`ww-site-header fixed top-0 left-0 right-0 z-50 hidden xl:block ${isOnHero ? 'ww-site-header-hero' : 'ww-site-header-solid'}`}>
-        <div className="ww-site-header-inner container mx-auto px-6 flex justify-between items-center">
-          <a className="ww-brand-lockup" href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
-            <span className="ww-brand-mark"><WordWeftLogo className="w-9 h-9" /></span>
-            <span className="ww-brand-name">Word<span>Weft</span></span>
-          </a>
-          <nav className="ww-desktop-nav" aria-label="Primary navigation">
-            {desktopNavLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={(event) => handleInternalLink(event, link.action)}
-                className={`ww-desktop-nav-link ${activeRoute === link.route ? 'ww-desktop-nav-link-active' : ''}`}
-                aria-current={activeRoute === link.route ? 'page' : undefined}
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-          <div className="ww-header-actions flex items-center">
-            {/* Search Button */}
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className={`search-navbar-btn ${!heroSearchVisible ? 'search-navbar-btn-morph' : ''}`}
-              title="Search (Ctrl+K)"
-              aria-label="Search books and authors"
-            >
-              <SearchIcon />
-              <span className="search-navbar-label">Search</span>
-              <kbd className="search-navbar-kbd">⌘K</kbd>
-            </button>
-
-            {/* Support Button */}
-            <a 
-              href="https://ko-fi.com/wordweftstudio" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="ww-icon-button group hidden sm:flex"
-              title="Support WordWeft on Ko-fi"
-            >
-              <HeartIcon className="w-5 h-5" />
-            </a>
-
-            <button onClick={toggleTheme} className="ww-icon-button" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-              {theme === 'light'
-                ? <MoonIcon className="w-5 h-5" />
-                : <SunIcon className="w-5 h-5" />}
-            </button>
-            {isAuthenticated ? (
-              <>
-                {notificationBell}
-                <button onClick={() => { window.location.hash = '/profile'; }} className="ww-icon-button" aria-label="Open profile">
-                  <UserCircleIcon className="w-5 h-5" />
-                </button>
-                <button onClick={onLogout} disabled={isLoggingOut} title="Logout" className="ww-icon-button disabled:cursor-wait disabled:opacity-60" aria-label={isLoggingOut ? 'Logging out' : 'Log out'} aria-busy={isLoggingOut}>
-                  <ArrowRightOnRectangleIcon className={`w-5 h-5 ${isLoggingOut ? 'animate-pulse' : ''}`} />
-                </button>
-              </>
-            ) : (
-              <button onClick={() => { window.location.hash = '/auth'; }} className="ww-header-cta">
-                Join WordWeft
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Top Bar */}
-      <header className="ww-mobile-topbar xl:hidden">
-        <a className="ww-mobile-brand" href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} aria-label="WordWeft home">
-          <WordWeftLogo className="w-7 h-7" />
-          <span>Word<span>Weft</span></span>
-        </a>
-        <div className="ww-mobile-actions">
-          <button onClick={() => setIsSearchOpen(true)} className="ww-icon-button" aria-label="Search books and authors"><SearchIcon /></button>
-          <button onClick={toggleTheme} className="ww-icon-button" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-            {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5" />}
+  const primary = [{ label: 'Read', href: '/category', icon: Compass, active: ['/', '/home', '/category'].includes(path) || path.startsWith('/genre') || path.startsWith('/book') },
+    { label: 'Write', href: '/write', icon: PenLine, active: path.startsWith('/write') },
+    { label: 'Community', href: '/community', icon: MessageCircle, active: path.startsWith('/community') }];
+  const more = [{ label: 'Hook feed', href: '/hooks', icon: Sparkles }, { label: 'Events & challenges', href: '/events', icon: Trophy },
+    { label: 'Platform features', href: '/features', icon: BookOpen }, { label: 'Founding Writers', href: '/founding-writers', icon: Feather },
+    { label: 'About WordWeft', href: '/about', icon: Info }, { label: 'Help & contact', href: '/contact', icon: MessageCircle }, { label: 'Support WordWeft', href: 'https://ko-fi.com/wordweftstudio', icon: Heart }];
+  return <>
+    <header className="v2-nav-wrap">
+      <nav className="v2-nav" aria-label="Main navigation">
+        <a className="v2-brand" href="/" aria-label="WordWeft home"><img src="/design-v2/assets/brand-mark.jpg" width="28" height="36" alt="" /><span>WordWeft</span></a>
+        <div className="v2-nav-primary">{primary.map(item => <a key={item.label} href={item.href} className={item.active ? 'active' : ''} aria-current={item.active ? 'page' : undefined}>{item.label}</a>)}<a href="/about" className={path === '/about' ? 'active' : ''}>About</a></div>
+        <div className="v2-nav-actions">
+          {isAuthenticated && <a href="/library" className={`v2-library-link ${path === '/library' ? 'active' : ''}`}><Library size={18} />Your library</a>}
+          <button className="v2-icon-button" onClick={() => setSearchOpen(true)} aria-label="Search WordWeft" title="Search (Ctrl / ⌘ K)"><Search size={20} /></button>
+          {isAuthenticated && notificationBell}
+          {!isAuthenticated && <a href="/auth" className="v2-signin">Sign in</a>}
+          {!isAuthenticated && <a href="/category" className="v2-button v2-start">Start reading <ArrowRight size={17} /></a>}
+          <button className={`v2-icon-button ${isAuthenticated ? 'v2-account-trigger' : ''}`} aria-label={isAuthenticated ? 'Open account and navigation' : 'More navigation'} aria-haspopup="dialog" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
+            {isAuthenticated ? <ResilientImage src={currentUser?.avatarUrl} alt="Your account" fallbackLabel={currentUser?.name || 'Reader'} className="v2-nav-avatar" /> : <Menu size={20} />}
           </button>
-          {isAuthenticated && currentUser ? (
-            <button className="ww-mobile-avatar" onClick={() => { window.location.hash = '/profile'; }} aria-label="Open profile">
-              {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} alt="" /> : <span>{userInitial}</span>}
-            </button>
-          ) : (
-            <button className="ww-mobile-join" onClick={() => { window.location.hash = '/auth'; }}>Join</button>
-          )}
         </div>
-      </header>
-
-      {/* Mobile Bottom Navbar */}
-      <div className="ww-mobile-bottom-nav xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/80 dark:border-dark-border z-50">
-        <nav className="h-full flex justify-around items-center">
-          {mobileNavLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              onClick={(event) => handleInternalLink(event, link.action)}
-              className={`mobile-nav-tab ${activeRoute === link.route ? 'mobile-nav-tab-active' : ''}`}
-              aria-current={activeRoute === link.route ? 'page' : undefined}
-            >
-              <link.icon className="w-6 h-6" />
-              <span>{link.label}</span>
-            </a>
-          ))}
-          {/* More Tab */}
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className={`mobile-nav-tab ${isMobileMenuOpen ? 'mobile-nav-tab-active' : ''}`}
-          >
-            <span style={{ position: 'relative', display: 'inline-flex' }}>
-              <EllipsisIcon className="w-6 h-6" />
-              {unreadCount > 0 && (
-                <span className="mobile-nav-badge">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </span>
-            <span>More</span>
-          </button>
-        </nav>
+      </nav>
+    </header>
+    <nav className="v2-bottom-nav" aria-label="Mobile navigation">
+      {[primary[0], { label: 'Library', href: '/library', icon: Library, active: path === '/library' }, primary[2], primary[1]].map(item => <a key={item.label} href={item.href} aria-current={item.active ? 'page' : undefined} className={item.active ? 'active' : ''}><item.icon size={20} /><span>{item.label === 'Read' ? 'Explore' : item.label}</span></a>)}
+    </nav>
+    {menuOpen && <div className="v2-menu-scrim" onMouseDown={event => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+      <div className="v2-account-menu" ref={menuRef} role="dialog" aria-modal="true" aria-labelledby="navigation-title" tabIndex={-1}>
+        <div className="v2-menu-heading"><div><small>{isAuthenticated ? 'YOUR ACCOUNT' : 'FIND YOUR NEXT CHAPTER'}</small><h2 id="navigation-title">{currentUser?.name || 'Explore WordWeft'}</h2></div><button className="v2-icon-button" onClick={() => setMenuOpen(false)} aria-label="Close navigation"><X size={20} /></button></div>
+        {isAuthenticated && <div className="v2-menu-group"><a href="/profile"><UserRound size={18} />Your profile</a><a href="/edit-profile"><Settings size={18} />Account settings</a><a href="/library"><Library size={18} />Your library</a></div>}
+        <div className="v2-menu-group">{more.map(item => <a href={item.href} key={item.href} target={item.href.startsWith('https://') ? '_blank' : undefined} rel={item.href.startsWith('https://') ? 'noopener noreferrer' : undefined}><item.icon size={18} />{item.label}</a>)}{currentUser?.roles?.includes('ROLE_ADMIN') && <a href="/admin/founding-writers"><ShieldCheck size={18} />Writer applications</a>}{onForYouClick && <button onClick={() => { setMenuOpen(false); onForYouClick(); }}><Compass size={18} />Personalized discovery</button>}</div>
+        <div className="v2-menu-group"><button onClick={toggleTheme}>{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}{theme === 'light' ? 'Use dark appearance' : 'Use light appearance'}</button>{isAuthenticated ? <button disabled={isLoggingOut} onClick={() => void onLogout()}><LogOut size={18} />{isLoggingOut ? 'Signing out…' : 'Sign out'}</button> : <a href="/auth"><UserRound size={18} />Sign in or create an account</a>}</div>
       </div>
-
-      {/* Mobile More Drawer */}
-      {isMobileMenuOpen && (
-        <>
-          <div className="mobile-more-backdrop xl:hidden" onClick={closeMobileMenu} />
-          <div 
-            className="mobile-more-drawer xl:hidden"
-            style={{ 
-              transform: touchOffsetY > 0 ? `translateY(${touchOffsetY}px)` : undefined, 
-              transition: touchStartY === null ? 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' : 'none' 
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div className="mobile-more-handle" />
-
-            {isAuthenticated && currentUser ? (
-              <>
-                {/* User Profile Card */}
-                <div
-                  className="mobile-more-user"
-                  onClick={() => handleMobileNav(() => { window.location.hash = '/profile'; })}
-                >
-                  {currentUser.avatarUrl ? (
-                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="mobile-more-avatar" />
-                  ) : (
-                    <div className="mobile-more-avatar-placeholder">{userInitial}</div>
-                  )}
-                  <div className="mobile-more-user-info">
-                    <p className="mobile-more-user-name">{currentUser.name}</p>
-                    <p className="mobile-more-user-sub">View your profile</p>
-                  </div>
-                  <ChevronRightIcon className="mobile-more-user-arrow" />
-                </div>
-
-                <div className="mobile-more-divider" />
-
-                {/* Notifications */}
-                <button
-                  className="mobile-more-item"
-                  onClick={() => handleMobileNav(() => { window.location.hash = '/notifications'; })}
-                >
-                  <BellIcon className="mobile-more-item-icon" />
-                  <span className="mobile-more-item-label">Notifications</span>
-                  {unreadCount > 0 && (
-                    <span className="mobile-more-notif-badge">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* For You */}
-                <button
-                  className="mobile-more-item"
-                  onClick={() => { closeMobileMenu(); if (onForYouClick) onForYouClick(); }}
-                >
-                  <SparklesIcon className="mobile-more-item-icon" />
-                  <span className="mobile-more-item-label">For You</span>
-                </button>
-
-                <button
-                  className="mobile-more-item"
-                  onClick={() => handleMobileNav(() => { window.location.hash = '/events'; })}
-                >
-                  <Trophy className="mobile-more-item-icon" />
-                  <span className="mobile-more-item-label">Challenges & Events</span>
-                </button>
-
-                {isAdmin && (
-                  <button
-                    className="mobile-more-item"
-                    onClick={() => handleMobileNav(() => { window.location.hash = '/admin/founding-writers'; })}
-                  >
-                    <ClipboardList className="mobile-more-item-icon" />
-                    <span className="mobile-more-item-label">Founding Writer applications</span>
-                  </button>
-                )}
-
-                <div className="mobile-more-divider" />
-
-                {/* Support WordWeft Premium Banner */}
-                <div className="px-4 py-2">
-                  <a
-                    href="https://ko-fi.com/wordweftstudio"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-[rgba(141,110,99,0.15)] dark:to-[rgba(141,110,99,0.05)] border border-red-100 dark:border-accent/20 rounded-2xl shadow-sm hover:shadow-md transition-all group"
-                    onClick={closeMobileMenu}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white dark:bg-dark-surface p-2 rounded-full shadow-sm group-hover:scale-110 group-hover:bg-red-50 dark:group-hover:bg-accent/20 transition-all duration-300">
-                        <HeartIcon className="w-5 h-5 text-red-500 dark:text-accent" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich">Support WordWeft</span>
-                        <span className="text-xs text-text-body dark:text-dark-text-body opacity-80">Buy us a coffee ☕</span>
-                      </div>
-                    </div>
-                    <ChevronRightIcon className="w-5 h-5 text-red-400 dark:text-accent/60 group-hover:text-red-500 dark:group-hover:text-accent transition-colors" />
-                  </a>
-                </div>
-
-                <div className="mobile-more-divider" />
-
-                {/* Dark Mode Toggle */}
-                <div className="mobile-more-toggle-row">
-                  {theme === 'light' ? (
-                    <MoonIcon className="mobile-more-item-icon" />
-                  ) : (
-                    <SunIcon className="mobile-more-item-icon" />
-                  )}
-                  <span className="mobile-more-item-label" style={{ fontSize: '15px', fontWeight: 500, color: 'inherit' }}>
-                    Dark Mode
-                  </span>
-                  <button className="mobile-more-toggle" onClick={toggleTheme} aria-label="Toggle dark mode" />
-                </div>
-
-                <div className="mobile-more-divider" />
-
-                {/* Logout */}
-                <button
-                  className="mobile-more-item mobile-more-item-danger"
-                  onClick={() => handleMobileNav(onLogout)}
-                  disabled={isLoggingOut}
-                  aria-busy={isLoggingOut}
-                >
-                  <ArrowRightOnRectangleIcon className="mobile-more-item-icon" />
-                  <span className="mobile-more-item-label">{isLoggingOut ? 'Logging out…' : 'Log Out'}</span>
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Non-authenticated state */}
-                <div className="mobile-more-login-card">
-                  <p>Sign in to access all features</p>
-                  <button
-                    className="mobile-more-login-btn"
-                    onClick={() => handleMobileNav(() => { window.location.hash = '/auth'; })}
-                  >
-                    Login / Sign Up
-                  </button>
-                </div>
-
-                {/* Support WordWeft Premium Banner */}
-                <div className="px-4 py-2">
-                  <a
-                    href="https://ko-fi.com/wordweftstudio"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-[rgba(141,110,99,0.15)] dark:to-[rgba(141,110,99,0.05)] border border-red-100 dark:border-accent/20 rounded-2xl shadow-sm hover:shadow-md transition-all group"
-                    onClick={closeMobileMenu}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white dark:bg-dark-surface p-2 rounded-full shadow-sm group-hover:scale-110 group-hover:bg-red-50 dark:group-hover:bg-accent/20 transition-all duration-300">
-                        <HeartIcon className="w-5 h-5 text-red-500 dark:text-accent" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-sans font-bold text-sm text-text-rich dark:text-dark-text-rich">Support WordWeft</span>
-                        <span className="text-xs text-text-body dark:text-dark-text-body opacity-80">Buy us a coffee ☕</span>
-                      </div>
-                    </div>
-                    <ChevronRightIcon className="w-5 h-5 text-red-400 dark:text-accent/60 group-hover:text-red-500 dark:group-hover:text-accent transition-colors" />
-                  </a>
-                </div>
-
-                <div className="mobile-more-divider" />
-
-                {/* Dark Mode Toggle (always available) */}
-                <div className="mobile-more-toggle-row">
-                  {theme === 'light' ? (
-                    <MoonIcon className="mobile-more-item-icon" />
-                  ) : (
-                    <SunIcon className="mobile-more-item-icon" />
-                  )}
-                  <span className="mobile-more-item-label" style={{ fontSize: '15px', fontWeight: 500, color: 'inherit' }}>
-                    Dark Mode
-                  </span>
-                  <button className="mobile-more-toggle" onClick={toggleTheme} aria-label="Toggle dark mode" />
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Search Overlay */}
-      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-    </>
-  );
+    </div>}
+    <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+  </>;
 };
-

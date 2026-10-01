@@ -10,7 +10,8 @@ import { ImageUpload } from '../components/ImageUpload';
 import { ShareModal } from '../components/ShareModal';
 import { validateManuscriptFile } from '../utils/manuscriptImport';
 import { importProgressCopy, type ImportProgressPhase } from '../utils/importProgress';
-import { lockNavigation } from '../utils/navigation';
+import { lockNavigation, navigatePath } from '../utils/navigation';
+import { ArrowRight, ExternalLink, MoreHorizontal, Plus, Upload } from 'lucide-react';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -419,7 +420,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
         <div className="ww-manage-chapter-main flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
             <div className="ww-manage-chapter-copy">
-                <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{chapter.title}</h4>
+                <a href={`/write/book/${bookId}/chapter/${chapter.id}/edit`}><h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich">{chapter.title || `Chapter ${index + 1}`}</h4></a>
                 <div className="ww-manage-chapter-meta flex items-center gap-2 mt-1">
                     <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-sm flex-shrink-0 ${chapter.status === 'published' ? 'bg-green-100 text-green-800' : chapter.status === 'scheduled' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 dark:bg-dark-surface-alt dark:text-gray-400'}`}>
                         {chapter.status}
@@ -432,7 +433,8 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
                 </div>
             </div>
         </div>
-        <div className="ww-manage-chapter-actions flex items-center gap-2 flex-wrap sm:opacity-0 group-hover:opacity-100 transition-opacity pl-10 sm:pl-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 dark:border-dark-border">
+        <span className="ww-manage-chapter-reads">{chapter.status === 'published' ? `${chapter.viewCount.toLocaleString()} reads` : 'Private'}</span>
+        <details className="ww-studio-story-menu ww-manage-chapter-menu"><summary aria-label={`Actions for ${chapter.title || `Chapter ${index + 1}`}`}><MoreHorizontal size={21} /></summary><div className="ww-manage-chapter-actions">
             <button
                 onClick={() => window.location.hash = `/write/book/${bookId}/chapter/${chapter.id}/edit`}
                 className="flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-text-body dark:text-dark-text-body"
@@ -463,7 +465,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             >
                 <TrashIcon className="w-4 h-4" />
             </button>
-        </div>
+        </div></details>
     </div>
 );
 
@@ -472,7 +474,9 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const { trackEvent } = useAnalytics();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<Tab>('chapters');
+    const readTab = (): Tab => { const value = new URLSearchParams(window.location.search).get('tab'); return value === 'characters' || value === 'scenes' || value === 'notes' ? value : 'chapters'; };
+    const [activeTab, setActiveTab] = useState<Tab>(readTab);
+    useEffect(() => { const sync = () => setActiveTab(readTab()); window.addEventListener('wordweft:navigate', sync); window.addEventListener('popstate', sync); return () => { window.removeEventListener('wordweft:navigate', sync); window.removeEventListener('popstate', sync); }; }, [bookId]);
     const [deleteChapterTarget, setDeleteChapterTarget] = useState<{ id: string; title: string } | null>(null);
     const [showDeleteBookConfirm, setShowDeleteBookConfirm] = useState(false);
     // W4: Chapter share state
@@ -714,71 +718,26 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
 
     return (
         <div className="ww-manage-book-page">
-            <section className="ww-manage-hero">
-                <div className="ww-manage-hero-inner">
-                    <div className="ww-manage-cover group">
-                        <img src={book.coverUrl} alt={book.title} />
-                        <button onClick={() => setIsEditModalOpen(true)}>Change cover</button>
-                    </div>
-
-                    <div className="ww-manage-copy">
-                        <div className="ww-manage-status-row">
-                            <span className={`ww-manage-status ${isBookPublished ? 'published' : 'draft'}`}>
-                                {isBookPublished ? <CheckCircleIcon className="w-4 h-4" /> : <i />}
-                                {isBookPublished ? 'Published' : 'Private draft'}
-                            </span>
-                            <span className="ww-manage-category">{book.readingStatus}</span>
-                            {book.category && <span className="ww-manage-category">{book.category}</span>}
-                        </div>
-                        <h1>{book.title}</h1>
-                        <p>{book.description || 'Add a short description to give this story a clear direction.'}</p>
-                        <div className="ww-manage-genres">
-                            {book.genres.map(g => <button type="button" key={g} onClick={() => window.location.hash = `/genre/${encodeURIComponent(g)}`}>{g}</button>)}
-                        </div>
-                        <div className="ww-manage-stats">
-                            <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
-                            <div><strong>{totalWords.toLocaleString()}</strong><span>Words</span></div>
-                            <div><strong>{publishedChapterCount}</strong><span>Live</span></div>
-                            <div><strong>{book.viewCount?.toLocaleString() || 0}</strong><span>Reads</span></div>
-                        </div>
-                    </div>
-
-                    <div className="ww-manage-actions">
-                        <button className="ww-manage-primary" onClick={handleNewChapterClick} disabled={isNavigatingNewChapter}>
-                            <PlusIcon className="w-4 h-4" /> New chapter
-                        </button>
-                        <button onClick={() => importInputRef.current?.click()} disabled={isImporting}>
-                            {isImporting ? 'Importing…' : 'Import manuscript'}
-                        </button>
-                        <input
-                            ref={importInputRef}
-                            className="sr-only"
-                            type="file"
-                            accept=".txt,.md,.markdown,.docx"
-                            disabled={isImporting}
-                            onChange={event => handleManuscriptImport(event.target.files?.[0])}
-                        />
-                        <button className="ww-manage-publish" onClick={handleBookPublishToggle} disabled={pendingAction !== null}>
-                            {pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}
-                        </button>
-                        <button onClick={() => setIsEditModalOpen(true)}><Cog6ToothIcon className="w-4 h-4" /> Story details</button>
-                        <button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}><TrashIcon className="w-4 h-4" /> Delete story</button>
-                    </div>
-                </div>
-                {errorMsg && <div className="ww-manage-error">{errorMsg}</div>}
-                {importNotice && <div className="ww-manage-import-notice" role="status">{importNotice}</div>}
-            </section>
+            <header className="ww-studio-pagehead ww-manage-heading">
+                <span className="ww-studio-eyebrow">{activeTab === 'chapters' ? 'Your story' : book.title}</span>
+                <div><div><h1>{activeTab === 'chapters' ? book.title : 'Your story guide'}</h1><p>{activeTab === 'chapters' ? `${publishedChapterCount} published chapters · ${book.chapters.filter(chapter => chapter.status !== 'published').length} private drafts · ${totalWords.toLocaleString()} words` : 'Keep track of your world, characters, and private writing notes.'}</p></div><button className="ww-studio-primary" onClick={handleNewChapterClick} disabled={isNavigatingNewChapter}>New chapter <Plus size={19} /></button></div>
+            </header>
+            {errorMsg && <div className="ww-manage-error" role="alert">{errorMsg}</div>}
+            {importNotice && <div className="ww-manage-import-notice" role="status">{importNotice}</div>}
 
             <div className="ww-manage-workspace">
                 <nav className="ww-manage-tabs" aria-label="Story workspace">
                     {(['chapters', 'characters', 'scenes', 'notes'] as Tab[]).map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={activeTab === tab ? 'active' : ''}>
-                            <span>{tab}</span>
+                        <button key={tab} onClick={() => { setActiveTab(tab); navigatePath(`/write/book/${bookId}/manage${tab === 'chapters' ? '' : `?tab=${tab}`}`); }} className={activeTab === tab ? 'active' : ''}>
+                            <span>{tab === 'notes' ? 'Private notes' : tab}</span>
                             {tab === 'chapters' && <small>{book.chapters.length}</small>}
                         </button>
                     ))}
+                    <button onClick={() => setIsEditModalOpen(true)}>Story details</button>
+                    <button onClick={() => navigatePath(`/write/analytics?book=${bookId}`)}>Statistics</button>
                 </nav>
-
+                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span>{isBookPublished && <a className="ww-studio-text-link" href={`/book/${book.id}`}>Preview story <ExternalLink size={16} /></a>}<details className="ww-studio-story-menu"><summary aria-label="Story actions"><MoreHorizontal size={21} /></summary><div><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></div></details><input ref={importInputRef} className="sr-only" type="file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => handleManuscriptImport(event.target.files?.[0])} /></div>
+                {activeTab !== 'chapters' && <div className="ww-manage-guide-note">Private notes stay visible only to you. Character details linked in your manuscript appear in the reader’s story guide.</div>}
                 {activeTab === 'chapters' && (
                     <section className="ww-manage-chapters">
                         <div className="ww-manage-section-head">

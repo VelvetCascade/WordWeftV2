@@ -1,3 +1,6 @@
+import '../styles/account-v2.css';
+import { BookOpen, Feather, Library, Palette, EyeOff, Users, Drama, Map, CheckCircle, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useDialog } from '../hooks/useDialog';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -7,26 +10,6 @@ interface WelcomeJourneyProps {
 }
 
 const STORAGE_KEY = 'ww_welcomeJourneyCompleted';
-
-// ─── Animated Particles ────────────────────────────────────────
-const FloatingParticles: React.FC = () => (
-    <div className="wj-particles">
-        {Array.from({ length: 20 }).map((_, i) => (
-            <div
-                key={i}
-                className="wj-particle"
-                style={{
-                    '--i': i,
-                    '--x': `${Math.random() * 100}%`,
-                    '--y': `${Math.random() * 100}%`,
-                    '--size': `${Math.random() * 6 + 2}px`,
-                    '--duration': `${Math.random() * 8 + 6}s`,
-                    '--delay': `${Math.random() * 4}s`,
-                } as React.CSSProperties}
-            />
-        ))}
-    </div>
-);
 
 // ─── Step 1: Welcome Screen ────────────────────────────────────
 const WelcomeScreen: React.FC<{ userName: string }> = ({ userName }) => (
@@ -45,16 +28,16 @@ const WelcomeScreen: React.FC<{ userName: string }> = ({ userName }) => (
             className="wj-welcome-content"
         >
             <div className="wj-welcome-logo">
-                <span className="wj-welcome-logo-emoji">📖</span>
+                <BookOpen size={36} strokeWidth={1.5} />
             </div>
             <h1 className="wj-welcome-title">
                 Welcome to <span className="wj-welcome-brand">WordWeft</span>
             </h1>
             <p className="wj-welcome-name">
-                Hi, <strong>{userName}</strong>! We're thrilled to have you.
+                Hi, <strong>{userName}</strong>! Make yourself at home.
             </p>
             <p className="wj-welcome-sub">
-                Let us show you the powerful tools that make storytelling magical on WordWeft.
+                Keep your stories, characters, and reading together. A quick tour will help you find your way.
             </p>
         </motion.div>
     </motion.div>
@@ -74,11 +57,11 @@ const RoleSelection: React.FC<{ onSelect: (role: 'reader' | 'writer' | 'both') =
         <div className="wj-role-cards">
             <motion.button
                 className="wj-role-card"
-                whileHover={{ scale: 1.04, y: -4 }}
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect('reader')}
             >
-                <div className="wj-role-card-icon">📖</div>
+                <div className="wj-role-card-icon"><BookOpen size={28} strokeWidth={1.5} /></div>
                 <h3>I'm a Reader</h3>
                 <p>Discover immersive stories with mood atmospheres, character profiles, and more.</p>
                 <span className="wj-role-card-cta">Explore Reading →</span>
@@ -86,11 +69,11 @@ const RoleSelection: React.FC<{ onSelect: (role: 'reader' | 'writer' | 'both') =
 
             <motion.button
                 className="wj-role-card"
-                whileHover={{ scale: 1.04, y: -4 }}
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect('writer')}
             >
-                <div className="wj-role-card-icon">✍️</div>
+                <div className="wj-role-card-icon"><Feather size={28} strokeWidth={1.5} /></div>
                 <h3>I'm a Writer</h3>
                 <p>Powerful tools: @mentions, mood engine, world building, spoilers & more.</p>
                 <span className="wj-role-card-cta">Start Writing →</span>
@@ -98,11 +81,11 @@ const RoleSelection: React.FC<{ onSelect: (role: 'reader' | 'writer' | 'both') =
 
             <motion.button
                 className="wj-role-card wj-role-card-both"
-                whileHover={{ scale: 1.04, y: -4 }}
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect('both')}
             >
-                <div className="wj-role-card-icon">🌟</div>
+                <div className="wj-role-card-icon"><Library size={28} strokeWidth={1.5} /></div>
                 <h3>Both!</h3>
                 <p>I read and write — show me everything!</p>
                 <span className="wj-role-card-cta">Show Me All →</span>
@@ -116,19 +99,19 @@ const WriterFeatures: React.FC = () => {
     const [activeFeature, setActiveFeature] = useState(0);
     const features = [
         {
-            icon: '📝',
+            icon: <Users size={22} strokeWidth={1.5} />,
             title: '@Character Mentions',
             desc: 'Type @ in the editor to mention characters. They become clickable links with preview cards that show bios and portraits.',
             demo: 'writer-mentions',
         },
         {
-            icon: '🎭',
+            icon: <Drama size={22} strokeWidth={1.5} />,
             title: 'Mood Atmospheres',
             desc: 'Tag sections with moods — romantic, tense, eerie — and readers experience immersive color shifts matching the narrative emotion.',
             demo: 'writer-moods',
         },
         {
-            icon: '🗺️',
+            icon: <Map size={22} strokeWidth={1.5} />,
             title: 'World Building Sidebar',
             desc: 'Access your characters, scenes, and lore notes in a slide-out sidebar without leaving the editor.',
             demo: 'writer-worldbuilding',
@@ -149,7 +132,7 @@ const WriterFeatures: React.FC = () => {
             transition={{ duration: 0.5 }}
         >
             <span className="wj-features-badge">Writer Tools</span>
-            <h2 className="wj-features-title">Your Writing Superpowers</h2>
+            <h2 className="wj-features-title">A place for your writing</h2>
 
             <div className="wj-features-showcase">
                 <div className="wj-features-tabs">
@@ -192,19 +175,19 @@ const ReaderFeatures: React.FC = () => {
     const [activeFeature, setActiveFeature] = useState(0);
     const features = [
         {
-            icon: '🎨',
+            icon: <Palette size={22} strokeWidth={1.5} />,
             title: 'Reading Themes',
             desc: 'Switch between Light, Sepia, and Dark modes, adjust font sizes, and enjoy a distraction-free reading experience.',
             demo: 'reader-themes',
         },
         {
-            icon: '🔮',
+            icon: <EyeOff size={22} strokeWidth={1.5} />,
             title: 'Spoiler Reveals',
             desc: 'Authors can blur plot-sensitive text. Click to reveal spoilers with a satisfying animation — no accidental reveals!',
             demo: 'reader-spoilers',
         },
         {
-            icon: '✨',
+            icon: <Users size={22} strokeWidth={1.5} />,
             title: 'Character Profiles',
             desc: 'Tap highlighted character names to see their portrait, role, and bio in a beautiful preview card.',
             demo: 'reader-characters',
@@ -225,7 +208,7 @@ const ReaderFeatures: React.FC = () => {
             transition={{ duration: 0.5 }}
         >
             <span className="wj-features-badge wj-features-badge-reader">Reader Experience</span>
-            <h2 className="wj-features-title">Immersive Reading</h2>
+            <h2 className="wj-features-title">Make the story your own</h2>
 
             <div className="wj-features-showcase">
                 <div className="wj-features-tabs">
@@ -279,17 +262,17 @@ const ReadyScreen: React.FC<{ role: string }> = ({ role }) => (
             transition={{ delay: 0.3 }}
             className="wj-ready-content"
         >
-            <div className="wj-ready-icon">🎉</div>
+            <div className="wj-ready-icon"><CheckCircle size={48} strokeWidth={1.5} /></div>
             <h2 className="wj-ready-title">You're Ready!</h2>
             <p className="wj-ready-sub">
                 {role === 'reader'
-                    ? 'Dive into thousands of stories with immersive features.'
+                    ? 'Find a story to settle into and make the reader your own.'
                     : role === 'writer'
-                    ? 'Your toolkit is ready. Create something amazing.'
+                    ? 'Your writing space is ready for its first story.'
                     : 'Read, write, and explore everything WordWeft has to offer.'}
             </p>
             <p className="wj-ready-hint">
-                💡 Look for <span className="wj-ready-sparkle-demo">✨ sparkle indicators</span> around the platform — they'll guide you to hidden features!
+                Explore at your own pace. You can switch between reading and writing any time.
             </p>
         </motion.div>
     </motion.div>
@@ -486,7 +469,6 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
         }
     }, []);
 
-    if (!isVisible) return null;
 
     const handleRoleSelect = (selectedRole: 'reader' | 'writer' | 'both') => {
         setRole(selectedRole);
@@ -499,6 +481,9 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
         setIsVisible(false);
         onComplete(role);
     };
+
+    const dialogRef = useDialog(isVisible, handleComplete);
+    if (!isVisible) return null;
 
     // Determine total steps based on role
     const getSteps = () => {
@@ -527,9 +512,8 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
     };
 
     return (
-        <div className="wj-overlay">
-            <FloatingParticles />
-            <div className="wj-container">
+        <div className="account-v2-welcome wj-overlay">
+            <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Welcome to WordWeft" className="wj-container">
                 {/* Content */}
                 <div className="wj-content">
                     <AnimatePresence mode="wait">
@@ -560,12 +544,12 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
                         <div className="wj-nav-arrows">
                             {!isFirst && step !== 1 && (
                                 <button className="wj-nav-back" onClick={goBack}>
-                                    ← Back
+                                    <ArrowLeft size={16} /> Back
                                 </button>
                             )}
                             {step !== 1 && (
                                 <button className="wj-nav-next" onClick={goNext}>
-                                    {isLast ? "Let's Go! 🚀" : 'Next →'}
+                                    {isLast ? 'Start exploring' : 'Next'} <ArrowRight size={16} />
                                 </button>
                             )}
                         </div>

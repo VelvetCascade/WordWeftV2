@@ -1,6 +1,6 @@
 import type { AttachmentChoice, AuthorSummary, Badge, Circle, CommunityComment, CommunityMe, CommunityPost, CreatePostInput, CursorPage, FeedQuery, Interest, ModerationReport, PostModerationAction } from '../types/community';
 
-const BASE = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'}/community`;
+const BASE = `${(import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')}/community`;
 async function request<T>(path: string, method = 'GET', body?: unknown, signal?: AbortSignal): Promise<T> {
   const token = localStorage.getItem('wordweft_jwt');
   const response = await fetch(`${BASE}${path}`, { method, signal, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });

@@ -9,6 +9,8 @@ import { useAnalytics } from '../contexts/AnalyticsContext';
 import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
 import { ResilientImage } from '../components/ResilientImage';
+import { useDialog } from '../hooks/useDialog';
+import '../styles/discovery-v2.css';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
@@ -21,7 +23,7 @@ const SORT_OPTIONS: Array<[SortOption, string]> = [
 ];
 
 const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onClick }) => (
-  <div onClick={onClick} className="flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
+  <div className="v2-story-list-item flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
     <ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
@@ -36,7 +38,7 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
         <span>{book.reviewsCount.toLocaleString()} reviews</span>
       </div>
       <p className="text-sm text-text-body dark:text-dark-text-body line-clamp-2 mb-4">{book.summary}</p>
-      <button className="font-sans font-semibold text-sm text-accent hover:underline">Open Book</button>
+      <button onClick={onClick} className="font-sans font-semibold text-sm text-accent hover:underline">Open story →</button>
     </div>
   </div>
 );
@@ -67,6 +69,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const requestSequenceRef = useRef(0);
+  const filterRef = useDialog(isFilterOpen, () => setIsFilterOpen(false));
 
   const toggleGenre = (g: string) => {
     setSelectedGenres(prev => prev.includes(g) ? [] : [g]);
@@ -95,10 +98,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
       setIsSortOpen(false);
     };
     window.addEventListener('keydown', handleEscape);
-    if (isFilterOpen) document.body.style.overflow = 'hidden';
+
     return () => {
       window.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
+
     };
   }, [isFilterOpen]);
 
@@ -178,7 +181,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   const FilterDrawer: React.FC = () => (
     <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setIsFilterOpen(false)}>
-      <div className="absolute bottom-0 left-0 right-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="mobile-filter-heading">
+      <div className="absolute bottom-0 left-0 right-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={e => e.stopPropagation()} ref={filterRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="mobile-filter-heading">
         <div className="flex justify-between items-center mb-4">
           <h3 id="mobile-filter-heading" className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
           <button type="button" aria-label="Close filters" onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body" /></button>
@@ -209,12 +212,12 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   return (
     <div className="ww-library-page min-h-screen">
       <div className="ww-library-container container mx-auto px-4 sm:px-6 py-8">
-        <span className="ww-page-eyebrow">The WordWeft library</span>
+        <span className="ww-page-eyebrow">Find your next chapter</span>
         <h1 className="font-sans text-4xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4">
-          {genre || 'All Books'}
+          {genre || 'Browse stories'}
         </h1>
         <p className="text-lg text-text-body dark:text-dark-text-body max-w-2xl mb-8">
-          Browse our curated collection of books. Filter by genre and sort to find your next great read.
+          A new world, an unexpected voice, a story that stays. Find something that feels like you.
         </p>
         <div className="ww-library-discovery">
           <form onSubmit={handleLibrarySearch} className="ww-library-search">
@@ -230,6 +233,13 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           )}
         </div>
 
+        <div className="v2-browse-layout">
+          <aside className="v2-browse-filters" aria-label="Story filters">
+            <fieldset><legend>Genre</legend><label><input type="radio" name="browse-genre" checked={!selectedGenres.length} onChange={() => setSelectedGenres([])} />All stories</label>{allGenres.map(item => <label key={item}><input type="radio" name="browse-genre" checked={selectedGenres.includes(item)} onChange={() => setSelectedGenres([item])} />{item}</label>)}</fieldset>
+            <fieldset><legend>Sort stories</legend>{SORT_OPTIONS.map(([value,label]) => <label key={value}><input type="radio" name="browse-sort" checked={sortOption === value} onChange={() => setSortOption(value)} />{label}</label>)}</fieldset>
+            {selectedGenres.length > 0 && <button type="button" onClick={() => setSelectedGenres([])}>Clear filters</button>}
+          </aside>
+          <div className="v2-browse-results">
         {/* Sticky Filter Bar */}
         <div className="ww-library-filter sticky top-[72px] z-30 bg-background/80 dark:bg-dark-background/80 backdrop-blur-md -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-8 border-b border-gray-200 dark:border-dark-border">
           <div className="flex justify-between items-center">
@@ -340,6 +350,8 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           </div>
         )}
 
+          </div>
+        </div>
       </div>
       {genresError && !loadError && <div className="sr-only" role="status">Genre filters are temporarily unavailable.</div>}
       {isFilterOpen && <FilterDrawer />}

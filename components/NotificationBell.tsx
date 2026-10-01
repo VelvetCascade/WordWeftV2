@@ -186,13 +186,12 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                 {unreadCount > 0 && (
                     <span style={{
                         position: 'absolute', top: '2px', right: '2px',
-                        background: '#ef4444', color: 'white',
+                        background: '#a5403b', color: 'white',
                         fontSize: '10px', fontWeight: 700,
                         minWidth: '16px', height: '16px',
                         borderRadius: '10px', display: 'flex',
                         alignItems: 'center', justifyContent: 'center',
                         padding: '0 4px', lineHeight: 1,
-                        animation: 'notifBadgePulse 2s ease-in-out infinite',
                     }}>
                         {unreadCount > 99 ? '99+' : unreadCount}
                     </span>

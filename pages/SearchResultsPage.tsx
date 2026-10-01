@@ -5,6 +5,8 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { StarIcon } from '../components/icons/Icons';
 import AdUnit from '../components/AdUnit';
+import { Footer } from '../components/Footer';
+import { Search, ArrowRight } from 'lucide-react';
 import { ResilientImage } from '../components/ResilientImage';
 import { createLatestRequestGate } from '../utils/runtimeLifecycle';
 
@@ -25,7 +27,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     useEffect(() => { setQuery(searchQuery); setInputValue(searchQuery); }, [searchQuery]);
 
     const fetchResults = useCallback(async (q: string, tab: SearchTab, page: number) => {
-        if (q.trim().length < 2) return;
+        if (q.trim().length < 2) { requestGateRef.current.invalidate(); setResults({}); setIsLoading(false); loadingRef.current = false; return; }
         if (loadingRef.current && page > 0) return;
         const requestId = requestGateRef.current.begin();
         loadingRef.current = true;
@@ -65,10 +67,8 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     useEffect(() => () => requestGateRef.current.invalidate(), []);
 
     useEffect(() => {
-        if (query) {
-            setCurrentPage(0);
-            fetchResults(query, activeTab, 0);
-        }
+        setCurrentPage(0);
+        fetchResults(query, activeTab, 0);
     }, [query, activeTab, fetchResults]);
 
     const handleSearch = (e: React.FormEvent) => {
@@ -102,6 +102,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     return (
         <div className="search-results-page">
             <div className="container mx-auto px-4 md:px-6 py-8">
+                <div className="v2-search-heading"><p className="ww-page-eyebrow">Follow your curiosity</p><h1>Find your next story.</h1><p>Search by title, writer, or something you love.</p></div>
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="search-results-bar">
                     <svg className="search-results-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -119,6 +120,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                     <button type="submit" className="search-results-bar-btn">Search</button>
                 </form>
 
+                {!query && <section className="v2-search-start"><Search size={28} /><h2>Every good story starts somewhere.</h2><p>Enter at least two characters to find stories and people. Or explore a shelf to see where it takes you.</p><a className="v2-button secondary" href="/category">Browse stories <ArrowRight size={16} /></a></section>}
                 {/* Tabs */}
                 <div className="search-results-tabs">
                     {tabs.map((tab) => (
@@ -219,6 +221,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
 
                 <AdUnit format="horizontal" />
             </div>
+            <Footer />
         </div>
     );
 };

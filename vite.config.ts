@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from 'url';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      optimizeDeps: { entries: ['index.html'] },
       server: {
         port: 3000,
         host: '0.0.0.0',
