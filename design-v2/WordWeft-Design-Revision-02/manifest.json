@@ -1,0 +1,362 @@
+[
+  {
+    "slug": "01-home",
+    "title": "Landing page",
+    "group": "Discovery",
+    "notes": "Your supplied hero art, dark Stories treatment, hand-drawn underline and asymmetric story discovery are restored. Mobile preserves the composition and reflows discovery into one lead story and two smaller stories. Covers and catalogue content remain illustrative."
+  },
+  {
+    "slug": "02-browse",
+    "title": "Browse stories",
+    "group": "Discovery",
+    "notes": "Preserves the supplied editorial browse order: introduction, featured, genres, catalogue, collections. Saved controls live on each cover. Mobile offers a dedicated filter sheet and two readable feature columns."
+  },
+  {
+    "slug": "03-genre",
+    "title": "Genre page",
+    "group": "Discovery",
+    "notes": "A genre-specific editorial introduction helps readers choose. The story grid and filters reuse the discovery language; mobile keeps the genre context above results."
+  },
+  {
+    "slug": "04-collection",
+    "title": "Curated collection",
+    "group": "Discovery",
+    "notes": "The collection has a clear editorial premise, duration cue and suggested first read. The art colour informs its olive-paper introduction. Mobile places the introduction before art and the reading list."
+  },
+  {
+    "slug": "05-search-empty",
+    "title": "Search initial state",
+    "group": "Discovery",
+    "notes": "Restores your supplied search-cover assets around the central search task. Mobile keeps a short artwork row below the main choices rather than surrounding the input. Suggestions remain selectable and keyboard access is specified."
+  },
+  {
+    "slug": "06-search-results",
+    "title": "Search results",
+    "group": "Discovery",
+    "notes": "Retains the supplied search hierarchy and distinguishes story and writer matches. Related items are separate from results. Query, scope counts and clear control remain visible; all counts are sample data."
+  },
+  {
+    "slug": "07-search-no-results",
+    "title": "No search results",
+    "group": "Discovery",
+    "notes": "The query is preserved and can be edited. Clear search and browse are separate recovery paths; no invented zero-result recommendations based on the query."
+  },
+  {
+    "slug": "08-story-new",
+    "title": "Story details for a new reader",
+    "group": "Reading",
+    "notes": "Restores your three-column story detail composition, author identity, serif title, artwork quote and connected contents timeline. New readers start at Chapter 1. Mobile retains the artwork and quote, then the synopsis and contents."
+  },
+  {
+    "slug": "09-story-returning",
+    "title": "Story details with reading progress",
+    "group": "Reading",
+    "notes": "Restores the coloured completion timeline: gold completed markers, a gold-ring current chapter and neutral unread markers. Six chapters are finished, Chapter 7 is current, overall reading progress is 29%. Continue reading opens the saved paragraph."
+  },
+  {
+    "slug": "10-reader-paper",
+    "title": "Reader in paper theme",
+    "group": "Reading",
+    "notes": "Reading uses a generous literary column, unobtrusive paragraph markers and visible saved-position feedback. The default reading surface keeps progress at the margin and chapter controls within reach."
+  },
+  {
+    "slug": "11-reader-thread",
+    "title": "Paragraph discussion",
+    "group": "Reading",
+    "notes": "Reading uses a generous literary column, unobtrusive paragraph markers and visible saved-position feedback. The paragraph stays anchored when its discussion opens; mobile uses a contextual bottom sheet."
+  },
+  {
+    "slug": "12-reader-night",
+    "title": "Night reading preferences",
+    "group": "Reading",
+    "notes": "Reading uses a generous literary column, unobtrusive paragraph markers and visible saved-position feedback. Theme controls include Paper, Sepia and Night, with type size, width and spacing; mobile keeps them in a sheet."
+  },
+  {
+    "slug": "13-reader-end",
+    "title": "Chapter end and discussion",
+    "group": "Reading",
+    "notes": "Reading uses a generous literary column, unobtrusive paragraph markers and visible saved-position feedback. Chapter completion offers one clear next-chapter action, then the discussion."
+  },
+  {
+    "slug": "14-library",
+    "title": "Personal library",
+    "group": "Reader account",
+    "notes": "The first reading item becomes a clear resume panel with actual chapter context and saved progress. Reading, Saved and Finished remain separate. Mobile uses a compact cover and full-width resume action; only started books show progress."
+  },
+  {
+    "slug": "15-library-empty",
+    "title": "Empty personal library",
+    "group": "Reader account",
+    "notes": "A real artwork makes the first-use reading space welcoming. The empty shelf explains what will appear and offers one direct path to discovery. No invented activity or statistics."
+  },
+  {
+    "slug": "16-writer-profile",
+    "title": "Public writer profile",
+    "group": "Reader account",
+    "notes": "A bridge artwork gives the public writer profile its own identity. Follow stays beside the name; biography, cadence and published stories are easy to scan. Mobile retains the banner, profile and labeled story tabs."
+  },
+  {
+    "slug": "17-my-profile",
+    "title": "Your public profile",
+    "group": "Reader account",
+    "notes": "Owner profile keeps Edit profile separate from public content. Personal library and drafts stay private; the empty published-story area leads directly to the studio."
+  },
+  {
+    "slug": "18-followers",
+    "title": "Followers and following",
+    "group": "Reader account",
+    "notes": "Followers and following reuse profile identity; no additional social graph. Follow controls have a stable, labeled state."
+  },
+  {
+    "slug": "19-notifications",
+    "title": "Notifications",
+    "group": "Reader account",
+    "notes": "Unread notices have a subtle dot and tint. Notification preferences can limit story updates and replies. Dates are anchored to 1 October 2026 India time; times are mock content."
+  },
+  {
+    "slug": "20-reviews",
+    "title": "Ratings and reviews",
+    "group": "Reading",
+    "notes": "Rating summaries and review rows stay readable. Spoilers are deliberate disclosures, never blurred text. Write-review uses a separate focused dialog."
+  },
+  {
+    "slug": "21-sign-in",
+    "title": "Sign in",
+    "group": "Account access",
+    "notes": "Preserves the supplied 30% artwork strip, Rubik headings and open form composition. Google uses the supplied identity asset. Mobile keeps a short artwork header, permanent field labels and comfortable full-width controls."
+  },
+  {
+    "slug": "22-sign-up",
+    "title": "Create account",
+    "group": "Account access",
+    "notes": "Preserves the supplied 30% artwork strip, Rubik headings and open form composition. Google uses the supplied identity asset. Mobile keeps a short artwork header, permanent field labels and comfortable full-width controls."
+  },
+  {
+    "slug": "23-reset-password",
+    "title": "Password reset",
+    "group": "Account access",
+    "notes": "Preserves the supplied 30% artwork strip, Rubik headings and open form composition. Google uses the supplied identity asset. Mobile keeps a short artwork header, permanent field labels and comfortable full-width controls."
+  },
+  {
+    "slug": "24-email-verification",
+    "title": "Email verification",
+    "group": "Account access",
+    "notes": "Preserves the supplied 30% artwork strip, Rubik headings and open form composition. Google uses the supplied identity asset. Mobile keeps a short artwork header, permanent field labels and comfortable full-width controls."
+  },
+  {
+    "slug": "25-onboarding",
+    "title": "Reader onboarding",
+    "group": "Account access",
+    "notes": "Optional interest selection uses your genre artwork so choices feel tangible. Read, Write and Both steer the next destination; skipping opens discovery immediately. Preference choices can always be edited."
+  },
+  {
+    "slug": "26-community",
+    "title": "Community feed",
+    "group": "Community",
+    "notes": "Community gets a distinct but restrained plum accent; Release, Poll and Workshop tags carry context. Desktop circles are always visible; mobile exposes Explore circles above the feed. Saved posts and follow actions remain secondary."
+  },
+  {
+    "slug": "27-circle",
+    "title": "Community circle",
+    "group": "Community",
+    "notes": "Circle identity, membership and composition are adjacent. Rules are readable alongside discussion. Mobile keeps Joined and Write a post in the circle introduction."
+  },
+  {
+    "slug": "28-community-post",
+    "title": "Community post and replies",
+    "group": "Community",
+    "notes": "Post detail keeps the same identity and attachment as the feed. Author replies are nested once with a visible relationship. Reply and spoiler handling remain contextual."
+  },
+  {
+    "slug": "29-community-compose",
+    "title": "Create a community post",
+    "group": "Community",
+    "notes": "Post format and circle remain explicit. Release attaches an owned story or chapter; Poll exposes options; Workshop has excerpt and feedback context. Mobile uses a full editing sheet with visible Cancel and Publish actions."
+  },
+  {
+    "slug": "30-writer-dashboard",
+    "title": "Writer studio overview",
+    "group": "Writer studio",
+    "notes": "The studio leads with the actual next draft, not an analytics dashboard. A blue work surface distinguishes creation, and green confirms saved work. Statistics are secondary; reader replies sit alongside the manuscript shelf."
+  },
+  {
+    "slug": "31-writer-stories",
+    "title": "My stories in the writer studio",
+    "group": "Writer studio",
+    "notes": "A clear story inventory separates published and draft states. Search and recency help retrieve work. Mobile retains artwork, title, status and menu; it does not shrink a five-column table."
+  },
+  {
+    "slug": "32-create-story",
+    "title": "Create or edit a story",
+    "group": "Writer studio",
+    "notes": "Title, synopsis, genre, language, format, status, tags and content rating are required design fields. Artwork is a genuine upload control. Mature content requires the correct tag and content warnings."
+  },
+  {
+    "slug": "33-story-workspace",
+    "title": "Story workspace and chapters",
+    "group": "Writer studio",
+    "notes": "The workspace distinguishes 24 published chapters from the new private Chapter 25. Current work appears in a clear chapter list with word counts, status and overflow actions. Drag reordering needs keyboard alternatives in implementation."
+  },
+  {
+    "slug": "34-chapter-editor",
+    "title": "Chapter editor",
+    "group": "Writer studio",
+    "notes": "An actual writing surface: chapter navigation at left, a stable manuscript in the middle, private notes and metadata at right. Saved status is always visible. Mobile keeps the manuscript full width with Chapters, Notes and Details in a reachable toolbar."
+  },
+  {
+    "slug": "35-story-guide",
+    "title": "Writer story guide",
+    "group": "Writer studio",
+    "notes": "Characters, scenes and author notes distinguish private planning from published reader-facing details. Reveal-after chapter settings protect spoilers."
+  },
+  {
+    "slug": "36-publish-chapter",
+    "title": "Publish chapter review",
+    "group": "Writer studio",
+    "notes": "Publishing is a separate review with content checks, a reader preview and explicit notification options. Private notes are omitted from the preview. Publish now is the only release mode in this proposal."
+  },
+  {
+    "slug": "37-writer-statistics",
+    "title": "Writer statistics",
+    "group": "Writer studio",
+    "notes": "Statistics have real numeric axes and bar values, with sample data summing to 1,969 reads in the displayed week. Blue marks data; green confirms public activity. Mobile keeps labels readable and removes only the lowest-priority table column."
+  },
+  {
+    "slug": "38-writer-comments",
+    "title": "Reader comments in the studio",
+    "group": "Writer studio",
+    "notes": "Chapter and paragraph discussions have explicit source context. Reporting is not presented as automatic removal; moderation permissions need to follow the actual backend."
+  },
+  {
+    "slug": "39-settings-profile",
+    "title": "Edit profile settings",
+    "group": "Settings",
+    "notes": "Editable fields have permanent labels. Real photo upload is optional; initials provide a deliberate fallback. Username and website validation belong inline."
+  },
+  {
+    "slug": "40-settings-preferences",
+    "title": "Reading and notification settings",
+    "group": "Settings",
+    "notes": "Notification categories follow supported events. Reduced motion is visible and accessible. Per-device reader defaults are distinct from account notification preferences."
+  },
+  {
+    "slug": "41-settings-security",
+    "title": "Privacy and security",
+    "group": "Settings",
+    "notes": "Deletion is separated from ordinary settings and never a single unlabeled tap. Reading-activity and follower visibility are proposed settings and must be matched to supported backend controls."
+  },
+  {
+    "slug": "42-founding-writers",
+    "title": "Founding writers application",
+    "group": "Information",
+    "notes": "Simple form and direct program terms preserve the agreed non-exclusive ownership position. No invented guaranteed earnings, fake scarcity metrics or unapproved commission promise."
+  },
+  {
+    "slug": "43-about",
+    "title": "About WordWeft",
+    "group": "Information",
+    "notes": "Copy is honest about the early stage. No invented team, testimonials, audience numbers, trust badges or promises."
+  },
+  {
+    "slug": "44-help-contact",
+    "title": "Help and contact",
+    "group": "Information",
+    "notes": "Help accordion and contact form are separate recovery paths. No invented support address or response-time guarantee. Uploading screenshots is not introduced without backend support."
+  },
+  {
+    "slug": "45-legal",
+    "title": "Terms and policy reading template",
+    "group": "Information",
+    "notes": "This is a layout and navigation template, not newly drafted legal terms. Privacy and community policies reuse the readable single-column layout and anchored contents. Mature content text follows the known platform direction; final policy copy must be sourced."
+  },
+  {
+    "slug": "46-report",
+    "title": "Report content dialog",
+    "group": "Community",
+    "notes": "Reporting uses a reason and optional context, then a submitted state. It never implies automatic removal. Block is a separate action."
+  },
+  {
+    "slug": "47-system-states",
+    "title": "Unavailable offline loading and success",
+    "group": "States",
+    "notes": "State board covers 404/unpublished content, editor offline, stable loading and publishing success. Offline draft persistence is a proposed contract and must be verified before shipping."
+  },
+  {
+    "slug": "48-mobile-navigation",
+    "title": "Navigation and account menu",
+    "group": "States",
+    "notes": "Mobile exposes all primary and account destinations in a labeled menu, complementing the four-destination bottom navigation. Desktop account menu is compact. Writer studio is named explicitly and is always one step away."
+  },
+  {
+    "slug": "49-filter-sheet",
+    "title": "Catalogue filter sheet",
+    "group": "States",
+    "notes": "Mobile filter sheet shows all catalogue facets without narrowing the results column. Apply and clear are visible. Desktop uses the same values in the sidebar."
+  },
+  {
+    "slug": "50-mature-gate",
+    "title": "Mature content disclosure",
+    "group": "Reading",
+    "notes": "A clear content notice is distinct from age verification. Under-age access must be blocked by actual account/access controls; the dialog is not a substitute for enforcement."
+  },
+  {
+    "slug": "51-review-compose",
+    "title": "Write a rating and review",
+    "group": "Reading",
+    "notes": "One review per account and editing depend on backend policy. Stars have labels in implementation, and spoiler marking is explicit."
+  },
+  {
+    "slug": "52-form-validation",
+    "title": "Form error and editor conflict states",
+    "group": "States",
+    "notes": "Validation uses specific guidance under the field. Concurrent editor conflict and confirmation copy are proposed product behavior and must be backed by storage/version support. Application receipt storage is optional concept scope."
+  },
+  {
+    "slug": "53-reader-chapters",
+    "title": "Reader chapter list sheet",
+    "group": "Reading",
+    "notes": "Connected completed, current and unread chapter states continue into the mobile contents sheet. The return action preserves the saved paragraph. Desktop uses the same vocabulary in its contents rail."
+  },
+  {
+    "slug": "54-editor-details",
+    "title": "Mobile editor details and tools",
+    "group": "Writer studio",
+    "notes": "Chapter metadata and private notes move out of the mobile manuscript into this sheet. Reader preview never includes private notes."
+  },
+  {
+    "slug": "55-share-story",
+    "title": "Share story and copy link",
+    "group": "Reading",
+    "notes": "Desktop share opens a copy-link dialog; mobile can invoke the native share sheet. The visual is a review of the app fallback, not a fabricated OS sheet. Production URLs must use actual story IDs."
+  },
+  {
+    "slug": "56-writer-empty",
+    "title": "Writer studio before the first story",
+    "group": "Writer studio",
+    "notes": "The first-use studio avoids fake statistics and reader activity. A single create-story path takes the user to the private draft flow."
+  },
+  {
+    "slug": "57-blocked-accounts",
+    "title": "Blocked accounts",
+    "group": "Settings",
+    "notes": "This list uses public identity and a clear unblock action. Confirmation copy must match the actual comment, follow and visibility behavior enforced by the backend."
+  },
+  {
+    "slug": "58-privacy",
+    "title": "Privacy policy page",
+    "group": "Information",
+    "notes": "A separate policy screen uses the same reading template. Text is design scaffolding and cannot be treated as a compliant privacy policy or a promise about unsupported data controls."
+  },
+  {
+    "slug": "59-unpublish-confirmation",
+    "title": "Unpublish chapter confirmation",
+    "group": "Writer studio",
+    "notes": "Unpublish is reversible and separate from deletion. Final behavior for comments, likes and reader progress must follow the production model."
+  },
+  {
+    "slug": "60-delete-account-confirmation",
+    "title": "Delete account confirmation",
+    "group": "Settings",
+    "notes": "Deletion is a separate deliberate flow. This screen deliberately does not invent deletion timelines or retention guarantees; final consequences must be sourced from the production policy."
+  }
+]
