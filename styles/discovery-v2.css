@@ -34,9 +34,9 @@ html .ww-app .v2-home-search :is(.hero-search-input,.hero-search-input-row){back
 html .ww-app .v2-home-search .hero-search-wrapper:focus-within{border-color:var(--ww-brand)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--ww-brand) 16%,transparent)!important}
 .v2-story-word{display:inline-grid;place-items:center;width:3.9em;height:1.2em;padding:0 .15em .055em;overflow:hidden;vertical-align:-.16em;line-height:1.1}
 .v2-story-word-text{display:block;will-change:transform;transition:transform .22s ease,opacity .22s ease}
-.v2-home-hero[data-transition=exit] .v2-story-word-text{transform:translateY(-45%);opacity:0}
+.v2-home-hero[data-transition=exit] .v2-story-word-text{transform:translateY(-110%);opacity:0}
 .v2-home-hero[data-transition=enter] .v2-story-word-text{animation:v2-hero-word-enter .36s cubic-bezier(.2,.7,.3,1) both}
-@keyframes v2-hero-word-enter{from{transform:translateY(45%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes v2-hero-word-enter{from{transform:translateY(110%);opacity:0}to{transform:translateY(0);opacity:1}}
 .v2-hero-showcase{min-width:0;align-self:center}
 .v2-hero-books{position:relative;width:100%;max-width:620px;height:388px;margin:0 auto;transition:opacity .22s ease,translate .22s ease}
 .v2-home-hero[data-transition=exit] .v2-hero-books{opacity:0;translate:0 -6px}
@@ -61,15 +61,10 @@ html .ww-app .v2-home-search .hero-search-wrapper:focus-within{border-color:var(
 .v2-hero-catalog-state{display:flex;height:100%;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:10px;padding:24px;color:var(--ww-muted)}
 .v2-hero-catalog-state>svg{color:var(--ww-brand);margin-bottom:6px}.v2-hero-catalog-state>p{font:500 20px/1.4 'WordWeft Serif',serif;color:var(--ww-ink)}
 .v2-hero-catalog-state>span{font-size:12px;line-height:1.6;max-width:270px}.v2-hero-catalog-state>button{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:12px;color:var(--ww-brand)}
-.v2-hero-catalog-controls{display:flex;justify-content:center;align-items:center;gap:20px;min-height:44px;margin-top:5px}
-.v2-hero-catalog-controls>div{display:flex;gap:3px}.v2-hero-catalog-controls button{min-height:44px;padding:8px 11px;font:400 11px/1.4 Rubik,sans-serif;color:var(--ww-muted);border-radius:6px;position:relative}
-.v2-hero-catalog-controls button[aria-pressed=true]{color:var(--ww-brand);font-weight:500}.v2-hero-catalog-controls button[aria-pressed=true]:after{content:"";height:2px;position:absolute;bottom:5px;left:12px;right:12px;background:var(--ww-brand);border-radius:2px}
-.v2-hero-catalog-controls button:disabled{opacity:.45;cursor:default}.v2-hero-catalog-controls button:focus-visible{outline:2px solid var(--ww-brand);outline-offset:1px}
-.v2-hero-catalog-controls .v2-hero-pause{display:inline-flex;align-items:center;gap:5px;color:var(--ww-muted);border-left:1px solid var(--ww-line);border-radius:0;padding-left:16px}
-@media(hover:hover) and (pointer:fine){.v2-hero-book:hover{z-index:5;filter:brightness(1.03);transform:rotate(0) translateY(-5px)}.v2-hero-book:hover .v2-hero-book-caption{opacity:1;transform:translateY(0)}.v2-hero-catalog-controls button:not(:disabled):hover{color:var(--ww-brand)}}
-@media(max-width:1100px){.v2-hero-books{height:335px}.v2-hero-book{width:35%}.v2-hero-book-1{top:34px}.v2-hero-book-2{top:69px}.v2-hero-book-3{top:64px}.v2-hero-catalog-controls{gap:10px}.v2-hero-catalog-controls button{padding:8px}}
+@media(hover:hover) and (pointer:fine){.v2-hero-book:hover{z-index:5;filter:brightness(1.03);transform:rotate(0) translateY(-5px)}.v2-hero-book:hover .v2-hero-book-caption{opacity:1;transform:translateY(0)}}
+@media(max-width:1100px){.v2-hero-books{height:335px}.v2-hero-book{width:35%}.v2-hero-book-1{top:34px}.v2-hero-book-2{top:69px}.v2-hero-book-3{top:64px}}
 @media(min-width:601px) and (max-width:800px){.v2-home-hero{grid-template-columns:1fr;gap:18px}.v2-hero-showcase{width:100%;max-width:470px;justify-self:center}.v2-hero-books{height:338px}.ww-app .v2-hero-copy h1{font-size:54px!important}.v2-hero-underline{margin-left:310px;margin-right:0}}
-@media(max-width:600px){.v2-home-hero{grid-template-columns:minmax(0,1fr);gap:14px}.v2-hero-books{height:clamp(238px,73vw,330px);max-width:440px}.v2-hero-book{width:35%;max-width:158px}.v2-hero-book-1{top:22px}.v2-hero-book-2{top:56px}.v2-hero-book-3{top:48px}.v2-hero-books[data-count="1"] .v2-hero-book-1{top:30px}.v2-hero-books[data-count="2"] .v2-hero-book-1{top:28px}.v2-hero-books[data-count="2"] .v2-hero-book-2{top:54px}.v2-hero-catalog-controls{margin-top:0;gap:12px}.v2-hero-catalog-controls button{font-size:11px;padding:8px 10px}.v2-hero-book-caption{padding:8px}.v2-hero-book-caption strong{font-size:10px}.v2-hero-book-caption>span{font-size:9px}.v2-hero-catalog-state{padding:16px}.v2-hero-catalog-state>p{font-size:20px}}
+@media(max-width:600px){.v2-home-hero{grid-template-columns:minmax(0,1fr);gap:14px}.v2-hero-books{height:clamp(238px,73vw,330px);max-width:440px}.v2-hero-book{width:35%;max-width:158px}.v2-hero-book-1{top:22px}.v2-hero-book-2{top:56px}.v2-hero-book-3{top:48px}.v2-hero-books[data-count="1"] .v2-hero-book-1{top:30px}.v2-hero-books[data-count="2"] .v2-hero-book-1{top:28px}.v2-hero-books[data-count="2"] .v2-hero-book-2{top:54px}.v2-hero-book-caption{padding:8px}.v2-hero-book-caption strong{font-size:10px}.v2-hero-book-caption>span{font-size:9px}.v2-hero-catalog-state{padding:16px}.v2-hero-catalog-state>p{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.v2-story-word-text,.v2-hero-books,.v2-hero-book,.v2-hero-book-caption{animation:none!important;transition:none!important}.v2-hero-book:hover,.v2-hero-book:focus-visible{transform:inherit;filter:none}.v2-genre-tile>img{transition:none!important}.v2-genre-tile:hover>img{transform:none!important}}
 .v2-home-hero[data-reduced-motion] .v2-story-word-text,.v2-home-hero[data-reduced-motion] .v2-hero-books{animation:none;transition:none}
 .v2-genre-tile-unillustrated{background:linear-gradient(145deg,#e4dcc9,#acb3a4)}.v2-genre-tile-unillustrated>i{display:block;text-align:center;font:italic 48px/1.4 'WordWeft Serif',serif;color:#5c5c49}

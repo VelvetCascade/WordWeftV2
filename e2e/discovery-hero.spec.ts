@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import AxeBuilder from '@axe-core/playwright';
 
 test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '127.22.2.11' } });
 
@@ -9,7 +10,7 @@ async function catalog(request: import('@playwright/test').APIRequestContext) {
     return { stories: content.filter(book => book.category !== 'Poetry').slice(0, 3), novels: content.filter(book => book.category === 'Novel').slice(3, 6), poems: content.filter(book => book.category === 'Poetry') };
 }
 
-test('hero uses published covers and advances the word together with the matching links', async ({ page, request }) => {
+test('hero automatically cycles the highlighted word and published covers without format controls', async ({ page, request }) => {
     const groups = await catalog(request);
     await page.route('**/api/books/hero', route => route.fulfill({ json: groups }));
     await page.clock.install();
@@ -17,23 +18,33 @@ test('hero uses published covers and advances the word together with the matchin
     const hero = page.locator('.v2-home-hero');
     await expect(hero.getByRole('heading', { level: 1, name: 'Read stories. Write your own.', exact: true })).toBeVisible();
     await expect(hero.locator('.v2-hero-book')).toHaveCount(3);
+    await expect(hero.getByRole('group', { name: 'Featured book format' })).toHaveCount(0);
+    await expect(hero.locator('button, [role="tab"]')).toHaveCount(0);
+    await page.evaluate(() => document.fonts.ready);
+    const highlight = await hero.locator('.v2-story-word').boundingBox();
     for (const book of groups.stories) {
         const link = hero.getByRole('link', { name: `Read ${book.title}`, exact: true });
         await expect(link).toHaveAttribute('href', `/book/${encodeURIComponent(book.id)}`);
         await expect(link.locator('img')).toHaveAttribute('src', book.coverUrl);
     }
-    await page.mouse.move(0, 0);
-    await page.clock.runFor(7100);
-    await expect(hero).toHaveAttribute('data-active-format', 'novels');
-    await expect(hero.locator('.v2-story-word-text')).toHaveText('novels');
-    await expect(hero.getByRole('link', { name: `Read ${groups.novels[0].title}`, exact: true })).toBeVisible();
-    await expect(hero.getByRole('heading', { level: 1, name: 'Read stories. Write your own.', exact: true })).toBeVisible();
-    await hero.getByRole('button', { name: 'Show poems', exact: true }).click();
-    await expect(hero.locator('.v2-story-word-text')).toHaveText('poems');
-    await expect(hero.locator('.v2-hero-book')).toHaveCount(groups.poems.length);
-    await hero.getByRole('link', { name: `Read ${groups.poems[0].title}`, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`/book/${groups.poems[0].id}$`));
-    await expect(page.locator('.ww-story-v2 h1')).toHaveText(groups.poems[0].title);
+    // Reading the left-hand copy must not stop the automatic presentation.
+    await hero.locator('.v2-hero-description').hover();
+    for (const format of ['novels', 'poems', 'stories'] as const) {
+        await page.clock.runFor(7100);
+        await expect(hero).toHaveAttribute('data-active-format', format);
+        await expect(hero.locator('.v2-story-word-text')).toHaveText(format);
+        await expect(hero.locator('.v2-hero-book')).toHaveCount(groups[format].length);
+        for (const book of groups[format]) {
+            const link = hero.getByRole('link', { name: `Read ${book.title}`, exact: true });
+            await expect(link).toHaveAttribute('href', `/book/${encodeURIComponent(book.id)}`);
+            await expect(link.locator('img')).toHaveAttribute('src', book.coverUrl);
+        }
+        expect(await hero.locator('.v2-story-word').boundingBox()).toEqual(highlight);
+        await expect(hero.getByRole('heading', { level: 1, name: 'Read stories. Write your own.', exact: true })).toBeVisible();
+    }
+    await hero.getByRole('link', { name: `Read ${groups.stories[0].title}`, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/book/${groups.stories[0].id}$`));
+    await expect(page.locator('.ww-story-v2 h1')).toHaveText(groups.stories[0].title);
 });
 
 test('hover and keyboard interaction keep the current cover target stable', async ({ page, request }) => {
@@ -49,12 +60,11 @@ test('hover and keyboard interaction keep the current cover target stable', asyn
     await expect(first).toBeFocused();
     await expect(first).toHaveAttribute('href', `/book/${groups.stories[0].id}`);
     await expect(hero).toHaveAttribute('data-active-format', 'stories');
-    await hero.getByRole('button', { name: 'Pause book rotation', exact: true }).click();
-    await page.locator('.v2-home-search input').focus(); await page.clock.fastForward(20000);
-    await expect(hero).toHaveAttribute('data-active-format', 'stories');
+    await page.locator('.v2-home-search input').focus(); await page.clock.runFor(7100);
+    await expect(hero).toHaveAttribute('data-active-format', 'novels');
 });
 
-test('reduced motion stays still and unavailable formats never borrow unrelated covers', async ({ page, request }) => {
+test('reduced motion keeps the headline and published covers still without manual format controls', async ({ page, request }) => {
     const groups = await catalog(request);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.route('**/api/books/hero', route => route.fulfill({ json: { ...groups, poems: [] } }));
@@ -63,10 +73,30 @@ test('reduced motion stays still and unavailable formats never borrow unrelated 
     await expect(hero.locator('.v2-hero-book')).toHaveCount(3);
     await page.clock.fastForward(20000);
     await expect(hero).toHaveAttribute('data-active-format', 'stories');
-    await expect(hero.getByRole('button', { name: 'Show poems', exact: true })).toBeDisabled();
-    await hero.getByRole('button', { name: 'Show novels', exact: true }).click();
-    await expect(hero).toHaveAttribute('data-active-format', 'novels');
+    await expect(hero.locator('.v2-story-word-text')).toHaveText('stories');
+    await expect(hero.locator('button, [role="tab"]')).toHaveCount(0);
+    await expect(hero.getByRole('link', { name: `Read ${groups.stories[0].title}`, exact: true })).toBeVisible();
     expect(await hero.locator('.v2-story-word-text').evaluate(element => getComputedStyle(element).animationName)).toBe('none');
+});
+
+test('automatic rotation skips empty formats and leaves a single populated shelf still', async ({ page, request }) => {
+    const groups = await catalog(request);
+    await page.route('**/api/books/hero', route => route.fulfill({ json: { ...groups, poems: [] } }));
+    await page.clock.install(); await page.goto('/');
+    const hero = page.locator('.v2-home-hero');
+    await expect(hero.locator('.v2-hero-book')).toHaveCount(3);
+    await page.mouse.move(0, 0);
+    await page.clock.runFor(7100);
+    await expect(hero.locator('.v2-story-word-text')).toHaveText('novels');
+    await page.clock.runFor(7100);
+    await expect(hero.locator('.v2-story-word-text')).toHaveText('stories');
+    await page.route('**/api/books/hero', route => route.fulfill({ json: { stories: [], novels: [], poems: groups.poems } }));
+    await page.reload();
+    await expect(hero.locator('.v2-story-word-text')).toHaveText('poems');
+    await page.clock.runFor(20000);
+    await expect(hero).toHaveAttribute('data-active-format', 'poems');
+    await expect(hero).toHaveAttribute('data-transition', 'idle');
+    await expect(hero.locator('.v2-hero-book')).toHaveCount(groups.poems.length);
 });
 
 test('slow, failed and empty hero data preserve the headline and reading action', async ({ page }) => {
@@ -121,3 +151,37 @@ test('tablet hero keeps the headline and interactive books in separate rows', as
     const actions = await page.locator('.v2-nav-actions').boundingBox();
     expect(brand!.x + brand!.width).toBeLessThan(actions!.x);
 });
+
+for (const { width, theme } of [
+    { width: 1440, theme: 'light' }, { width: 1440, theme: 'dark' },
+    { width: 768, theme: 'light' }, { width: 390, theme: 'dark' },
+    { width: 320, theme: 'light' },
+] as const) {
+    test(`automatic word and covers remain aligned at ${width}px in ${theme} appearance`, async ({ page, request }) => {
+        const groups = await catalog(request);
+        await page.setViewportSize({ width, height: 1000 });
+        await page.addInitScript(appearance => localStorage.setItem('theme', appearance), theme);
+        await page.route('**/api/books/hero', route => route.fulfill({ json: groups }));
+        await page.clock.install(); await page.goto('/');
+        const hero = page.locator('.v2-home-hero');
+        await expect(hero.locator('.v2-hero-book')).toHaveCount(3);
+        await page.evaluate(() => document.fonts.ready);
+        await page.mouse.move(0, 0);
+        const highlight = await hero.locator('.v2-story-word').boundingBox();
+        for (const format of ['stories', 'novels', 'poems'] as const) {
+            await expect(hero.locator('.v2-story-word-text')).toHaveText(format);
+            expect(await hero.locator('.v2-story-word').boundingBox()).toEqual(highlight);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+            expect(await hero.locator('.v2-story-word-text').evaluate(word => {
+                const text = word.getBoundingClientRect();
+                const background = word.parentElement!.getBoundingClientRect();
+                return text.left >= background.left && text.right <= background.right;
+            })).toBe(true);
+            await expect(hero.locator('.v2-hero-book')).toHaveCount(groups[format].length);
+            if (format !== 'poems') await page.clock.runFor(7100);
+        }
+        await expect(hero.locator('button, [role="tab"]')).toHaveCount(0);
+        const accessibility = await new AxeBuilder({ page }).include('.v2-home-hero').analyze();
+        expect(accessibility.violations).toEqual([]);
+    });
+}
