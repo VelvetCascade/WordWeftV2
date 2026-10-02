@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 import { LegalTermsContent, TERMS_EFFECTIVE_DATE, TERMS_SECTIONS } from '../components/LegalTermsContent';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import '../styles/support-v2.css';
@@ -14,6 +15,7 @@ export const TermsPage: React.FC = () => {
         <div className="wv-support wv-legal">
             <header className="wv-legal-header">
                 <div className="wv-support-shell wv-pagehead">
+                    <ReturnNavigation />
                     <p className="wv-eyebrow">WordWeft policies</p>
                     <h1>Terms of Service</h1>
                     <p className="wv-lead">These Terms explain the rules for reading, writing, publishing and participating on WordWeft. They include our current age-rating and mature-content policy.</p>

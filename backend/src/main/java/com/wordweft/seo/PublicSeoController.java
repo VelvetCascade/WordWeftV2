@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/public/seo")
 public class PublicSeoController {
     private final PublicSeoService service;
-    public PublicSeoController(PublicSeoService service) { this.service = service; }
+    private final com.wordweft.book.service.BookService books;
+    public PublicSeoController(PublicSeoService service, com.wordweft.book.service.BookService books) { this.service = service; this.books = books; }
 
     @GetMapping("/book/{id}") public ResponseEntity<?> book(@PathVariable String id, @RequestParam(required = false) String chapterId) { return response(service.book(id, chapterId)); }
     @GetMapping("/author/{id}") public ResponseEntity<?> author(@PathVariable String id, @RequestParam(defaultValue = "1") int page) { return response(service.author(id, page)); }
     @GetMapping("/catalog") public ResponseEntity<?> catalog(@RequestParam(required = false) String genre, @RequestParam(required = false) String tag, @RequestParam(defaultValue = "1") int page) { return response(service.catalog(genre, tag, null, page)); }
+    @GetMapping("/hero") public ResponseEntity<?> hero() { return response(books.getPublicDiscoveryHero()); }
     @GetMapping("/sitemap") public ResponseEntity<?> sitemap() { return response(service.sitemapCounts()); }
     @GetMapping("/sitemap/{kind}") public ResponseEntity<?> sitemap(@PathVariable String kind, @RequestParam(defaultValue = "1") int page) { return response(service.sitemap(kind, page)); }
 

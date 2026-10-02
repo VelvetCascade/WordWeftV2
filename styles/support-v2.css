@@ -64,7 +64,11 @@
 .wv-legal-header :where(div[class*="bg-gray-100"],div[class*="bg-red-50"]) { border-radius:7px; }
 .wv-legal-header div[class*="justify-center"] { justify-content:flex-start; }
 .wv-legal-header div[class*="max-w-xl"] { margin-left:0; }
-.wv-legal-layout { display:grid; grid-template-columns:250px minmax(0,780px); justify-content:space-between; align-items:start; gap:60px; padding-top:32px; }
+html .ww-app .wv-legal .wv-support-shell { width:calc(100% - 64px); max-width:1100px; }
+.wv-legal-layout { display:grid; grid-template-columns:250px minmax(0,1fr); align-items:start; gap:48px; padding-top:32px; }
+.ww-return-navigation { display:inline-flex; width:fit-content; min-height:44px; align-items:center; gap:8px; margin:0 0 24px; padding:9px 14px; border:1px solid var(--account-line,var(--support-line,var(--ww-line))); border-radius:8px; background:var(--account-paper,var(--support-paper,var(--ww-paper))); color:var(--account-ink,var(--support-ink,var(--ww-ink))); font:500 13px/1.5 'Rubik',sans-serif; text-align:left; }
+.ww-return-navigation:hover { background:var(--account-soft,var(--ww-paper-soft)); }
+.ww-return-navigation:focus-visible { outline:2px solid var(--account-teal,var(--ww-brand)); outline-offset:3px; }
 .wv-policy-nav { position:sticky; top:120px; padding:24px; border-left:3px solid #28675e; background:#edf2ec; border-radius:0 9px 9px 0; max-height:calc(100vh - 150px); overflow:auto; }
 .wv-policy-nav h2,.wv-policy-mobile summary { font:600 13px/1.5 'Rubik',sans-serif; margin:0 0 18px; letter-spacing:0; }
 .wv-policy-nav ol { display:grid; gap:4px; padding:0; margin:0; list-style:none; }
@@ -336,6 +340,7 @@
 .dark .wv-support p,.dark .wv-support .wv-policy-prose li,.dark .wv-support .wv-discovery-criteria dd { color:var(--ww-copy); }
 .dark .wv-support :is(.wv-eyebrow,.wv-hook-author,.wv-demo-link,.wv-character-mention) { color:var(--ww-brand); }
 .dark .wv-support :is(.wv-policy-nav a,.wv-policy-prose strong,.wv-policy-prose a,.wv-help-policies a,.wv-feedback-privacy) { color:var(--ww-brand); }
+.dark .wv-support .wv-legal-header a { color:var(--ww-brand); }
 .dark .wv-support :is(.wv-button,.wv-help-search,.wv-feedback-rating button,.wv-feedback-options label,.wv-feedback-check,.wv-demo-choices button,.wv-taste-genres button,.wv-demo-search,.wv-feedback-tag-input > input) { background:var(--ww-paper); border-color:var(--ww-line); color:var(--ww-ink); }
 .dark .wv-support :is(.wv-field input,.wv-field select,.wv-field textarea,.wv-event-submit select) { color:var(--ww-ink); background:var(--ww-paper); border-color:var(--ww-line); }
 .dark .wv-support :is(.wv-button-primary,.wv-feedback-rating button.is-selected) { background:#6b432f; color:#fff; border-color:#94715c; }
@@ -357,7 +362,7 @@
 .dark .wv-support .wv-spoiler { color:var(--ww-ink); background:var(--ww-paper-soft); border-color:var(--ww-line); }
 .dark .wv-support .wv-spoiler-label { color:var(--ww-brand); background:var(--ww-paper-soft); }
 @media(max-width:800px) { .ww-app .wv-support h1 { font-size:clamp(32px,7vw,44px) !important; } .ww-app .wv-support .wv-policy-prose h2 { font-size:26px !important; } .ww-app .wv-support.fw-page .fw-page-header h1 { font-size:clamp(36px,8.5vw,52px) !important; } .ww-app .wv-support .wv-about-copy section { padding-top:24px !important; } }
-@media(max-width:900px) { .wv-legal-layout { grid-template-columns:minmax(0,1fr); gap:34px; padding-top:24px; } .wv-policy-nav { position:static; max-height:none; padding:20px 24px; } .wv-policy-desktop { display:none; } .wv-policy-mobile { display:block; } .wv-policy-mobile summary { cursor:pointer; margin:0; min-height:24px; } .wv-policy-mobile[open] summary { margin-bottom:12px; } .wv-policy-nav a { font-size:13px; min-height:38px; } .wv-policy-prose h2 { font-size:26px; } .wv-policy-prose :where(p,li) { font-size:15px; } }
+@media(max-width:900px) { html .ww-app .wv-legal .wv-support-shell { width:calc(100% - 40px); } .wv-legal-layout { grid-template-columns:minmax(0,1fr); gap:34px; padding-top:24px; } .wv-policy-nav { position:static; max-height:none; padding:20px 24px; } .wv-policy-desktop { display:none; } .wv-policy-mobile { display:block; } .wv-policy-mobile summary { cursor:pointer; margin:0; min-height:24px; } .wv-policy-mobile[open] summary { margin-bottom:12px; } .wv-policy-nav a { font-size:13px; min-height:44px; } .wv-policy-prose h2 { font-size:26px; } .wv-policy-prose :where(p,li) { font-size:15px; } }
 .wv-hook-art>.wv-hook-cover{width:100%;max-height:460px;aspect-ratio:3/4;object-fit:cover}
 @media(max-width:600px){.wv-hook-art>.wv-hook-cover{max-height:280px}}
 

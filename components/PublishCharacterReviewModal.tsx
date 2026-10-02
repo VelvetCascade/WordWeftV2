@@ -3,6 +3,7 @@ import { Character } from '../types';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon } from './icons/Icons';
 import * as api from '../api/client';
 import { ImageUpload } from './ImageUpload';
+import { useDialog } from '../hooks/useDialog';
 
 interface PublishCharacterReviewModalProps {
     isOpen: boolean;
@@ -17,10 +18,13 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
     const [currentIndex, setCurrentIndex] = useState(0);
     const [drafts, setDrafts] = useState<Record<string, Partial<Character>>>({});
     const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState('');
+    const dialogRef = useDialog(isOpen && characters.length > 0, onClose, !isSaving);
 
     // Initialize drafts when characters change
     useEffect(() => {
         if (isOpen && characters.length > 0) {
+            setError('');
             setCurrentIndex(0);
             const initialDrafts: Record<string, Partial<Character>> = {};
             characters.forEach(char => {
@@ -70,6 +74,7 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
 
     const handleSaveAndPublish = async () => {
         setIsSaving(true);
+        setError('');
         try {
             // Update all characters that have draft changes
             for (const char of characters) {
@@ -84,8 +89,7 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
             onPublish();
         } catch (error) {
             console.error("Failed to update characters before publish:", error);
-            // Optionally could still publish on error, or abort. Let's still publish as fallback.
-            onPublish();
+            setError(error instanceof Error ? error.message : 'The character details could not be saved. Please retry.');
         } finally {
             setIsSaving(false);
         }
@@ -95,19 +99,20 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
     const isLast = currentIndex === characters.length - 1;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-dark-surface w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col scale-100 animate-in zoom-in-95 duration-200">
+        <div className="ww-editor-character-review-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="publish-character-review-title" tabIndex={-1} className="ww-editor-character-review bg-white dark:bg-dark-surface w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col scale-100 animate-in zoom-in-95 duration-200">
                 
                 {/* Header */}
                 <div className="bg-gray-50 dark:bg-dark-surface-alt p-6 border-b border-gray-100 dark:border-dark-border relative">
                     <button 
                         onClick={onClose} 
+                        disabled={isSaving} aria-label="Cancel publishing and close character review"
                         className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-border transition-colors text-gray-500"
                         title="Cancel Publish"
                     >
                         <XMarkIcon className="w-5 h-5" />
                     </button>
-                    <h2 className="text-2xl font-serif font-bold text-gray-800 dark:text-gray-100">Wait! Tell us about your new characters.</h2>
+                    <h2 id="publish-character-review-title" className="text-2xl font-serif font-bold text-gray-800 dark:text-gray-100">Review your new characters</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Before publishing, add a few quick details for the characters you just introduced.</p>
                     
                     {/* Progress Bar */}
@@ -119,6 +124,7 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
 
                 {/* Body - Carousel Item */}
                 <div className="p-6 md:p-8 flex-1 overflow-y-auto max-h-[60vh]">
+                    {error && <p className="ww-editor-review-error" role="alert">{error} These changes have not been published. Retry when you’re ready.</p>}
                     <div className="flex flex-col md:flex-row gap-8">
                         {/* Avatar Column */}
                         <div className="flex flex-col items-center gap-2">
@@ -144,10 +150,11 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
                             {/* Role Input */}
                             <div className="flex flex-col gap-2">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Role</label>
+                                    <label htmlFor="publish-character-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Role</label>
                                     <span className="text-xs text-gray-400">{(currentDraft.role || '').length}/50</span>
                                 </div>
                                 <input
+                                    id="publish-character-role" disabled={isSaving}
                                     type="text"
                                     maxLength={50}
                                     value={currentDraft.role || ''}
@@ -160,10 +167,11 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
                             {/* Bio */}
                             <div className="flex flex-col gap-2">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Short Bio</label>
+                                    <label htmlFor="publish-character-bio" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Short Bio</label>
                                     <span className="text-xs text-gray-400">{(currentDraft.description || '').length}/500</span>
                                 </div>
                                 <textarea
+                                    id="publish-character-bio" disabled={isSaving}
                                     maxLength={500}
                                     value={currentDraft.description || ''}
                                     onChange={(e) => handleUpdateField('description', e.target.value)}
@@ -175,10 +183,11 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
                             {/* Goal */}
                             <div className="flex flex-col gap-2">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Goal / Motivation</label>
+                                    <label htmlFor="publish-character-goal" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Goal / Motivation</label>
                                     <span className="text-xs text-gray-400">{(currentDraft.goal || '').length}/200</span>
                                 </div>
                                 <input
+                                    id="publish-character-goal" disabled={isSaving}
                                     type="text"
                                     maxLength={200}
                                     value={currentDraft.goal || ''}
@@ -195,6 +204,7 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
                 <div className="p-4 md:p-6 border-t border-gray-100 dark:border-dark-border bg-white dark:bg-dark-surface flex items-center justify-between">
                     <button 
                         onClick={handleSkip} 
+                        disabled={isSaving}
                         className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 font-medium transition-colors"
                     >
                         Skip & Publish
@@ -205,7 +215,7 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
                             <>
                                 <button
                                     onClick={handlePrev}
-                                    disabled={currentIndex === 0}
+                                    disabled={currentIndex === 0 || isSaving} aria-label="Previous character"
                                     className="p-2 border border-gray-200 dark:border-dark-border disabled:opacity-50 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors"
                                 >
                                     <ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -214,6 +224,7 @@ export const PublishCharacterReviewModal: React.FC<PublishCharacterReviewModalPr
                                 {!isLast ? (
                                     <button
                                         onClick={handleNext}
+                                        disabled={isSaving}
                                         className="px-5 py-2 bg-accent text-white font-medium rounded-lg hover:bg-primary transition-colors flex items-center gap-2"
                                     >
                                         Next Character <ChevronRightIcon className="w-4 h-4" />

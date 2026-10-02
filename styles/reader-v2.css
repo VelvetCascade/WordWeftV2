@@ -253,6 +253,11 @@
 .reader-experience.reader-v2 .reader-end-secondary-actions button { font: 500 11px Rubik, sans-serif; min-height: 44px; padding: 0 10px; }
 .reader-experience.reader-v2 .reader-copyright { font: 400 10px/1.6 Rubik, sans-serif; text-align: left; margin: 24px 0 0; opacity: 1; }
 .reader-experience.reader-v2 .reader-save-status { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--reader-muted); font: 400 10px/1.6 Rubik, sans-serif; margin-top: 26px; }
+.reader-experience.reader-v2 .reader-save-status button { color: var(--reader-accent); text-decoration: underline; font: inherit; font-weight: 600; min-height: 44px; padding-inline: 8px; }
+.reader-experience.reader-v2 .reader-copy .reader-character-mention { display: inline; padding: 0; min-height: 0; background: transparent; border: 0; color: var(--reader-accent); font: inherit; font-weight: 600; text-decoration: underline; text-decoration-color: color-mix(in srgb,var(--reader-accent) 35%,transparent); text-underline-offset: 3px; cursor: pointer; }
+.reader-experience.reader-v2 .reader-copy .reader-character-mention:hover { text-decoration-color: currentColor; }
+.reader-experience.reader-v2 .reader-copy .reader-character-mention:focus-visible { outline: 2px solid var(--reader-accent); outline-offset: 3px; border-radius: 2px; }
+.reader-experience.reader-v2 .reader-copy .reader-character-mention:disabled { color: var(--reader-copy); text-decoration: none; cursor: auto; }
 .reader-experience.reader-v2 .reader-conversation-rail { position: fixed; z-index: 11; top: 156px; right: max(36px, calc((100vw - 1320px) / 2)); width: 205px; padding: 24px; border: 1px solid var(--reader-line); border-radius: 13px; background: var(--reader-panel-solid); }
 .reader-experience.reader-v2 .reader-conversation-rail .ww-page-eyebrow { color: #28675E; font: 600 9px/1.5 Rubik, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
 .reader-experience.reader-v2 .reader-conversation-rail h2 { font: 500 19px/1.35 Rubik, sans-serif !important; color: var(--reader-ink) !important; margin: 20px 0 14px; }

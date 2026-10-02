@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, Plus, X } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
@@ -19,30 +20,39 @@ const TagInput: React.FC<{ tags: string[]; onChange: (tags: string[]) => void }>
 export const FeedbackPage: React.FC = () => {
     const { trackEvent } = useAnalytics();
     useEffect(() => { trackEvent('support', 'feedback_view'); }, []);
-    const [userType, setUserType] = useState('');
-    const [overallRating, setOverallRating] = useState(0);
-    const [triedFeatures, setTriedFeatures] = useState<Record<string, boolean>>({});
-    const [otherFeature, setOtherFeature] = useState('');
-    const [whatFeltGood, setWhatFeltGood] = useState('');
-    const [whatWasFrustrating, setWhatWasFrustrating] = useState('');
-    const [missingFeatures, setMissingFeatures] = useState<string[]>([]);
-    const [performanceIssue, setPerformanceIssue] = useState('');
-    const [performanceDetails, setPerformanceDetails] = useState('');
-    const [usageFrequency, setUsageFrequency] = useState('');
-    const [usageWhy, setUsageWhy] = useState('');
-    const [openThoughts, setOpenThoughts] = useState('');
-    const [contactPermission, setContactPermission] = useState(false);
-    const [contactEmail, setContactEmail] = useState('');
+    const [initialDraft] = useState<Record<string, any>>(() => typeof window !== 'undefined' ? window.history.state?.wordWeftFeedback || {} : {});
+    const textDraft = (field: string) => typeof initialDraft[field] === 'string' ? initialDraft[field] : '';
+    const [userType, setUserType] = useState(() => textDraft('userType'));
+    const [overallRating, setOverallRating] = useState(() => Number.isInteger(initialDraft.overallRating) ? Math.max(0, Math.min(5, initialDraft.overallRating)) : 0);
+    const [triedFeatures, setTriedFeatures] = useState<Record<string, boolean>>(() => Object.fromEntries(Object.entries(initialDraft.triedFeatures || {}).filter(([, value]) => typeof value === 'boolean')) as Record<string, boolean>);
+    const [otherFeature, setOtherFeature] = useState(() => textDraft('otherFeature'));
+    const [whatFeltGood, setWhatFeltGood] = useState(() => textDraft('whatFeltGood'));
+    const [whatWasFrustrating, setWhatWasFrustrating] = useState(() => textDraft('whatWasFrustrating'));
+    const [missingFeatures, setMissingFeatures] = useState<string[]>(() => Array.isArray(initialDraft.missingFeatures) ? initialDraft.missingFeatures.filter((item: unknown) => typeof item === 'string') : []);
+    const [performanceIssue, setPerformanceIssue] = useState(() => textDraft('performanceIssue'));
+    const [performanceDetails, setPerformanceDetails] = useState(() => textDraft('performanceDetails'));
+    const [usageFrequency, setUsageFrequency] = useState(() => textDraft('usageFrequency'));
+    const [usageWhy, setUsageWhy] = useState(() => textDraft('usageWhy'));
+    const [openThoughts, setOpenThoughts] = useState(() => textDraft('openThoughts'));
+    const [contactPermission, setContactPermission] = useState(initialDraft.contactPermission === true);
+    const [contactEmail, setContactEmail] = useState(() => textDraft('contactEmail'));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState('');
     const features = ['Writing a story', 'Reading stories', 'Comments/discussions', 'Library/shelves', 'Searching for stories', 'Profile', 'Notifications'];
     const ratingLabels = ['Very confusing', 'Somewhat confusing', 'Neutral', 'Easy to use', 'Extremely smooth'];
 
+    useEffect(() => {
+        if (window.location.pathname !== '/feedback' || submitted) return;
+        window.history.replaceState({ ...window.history.state, wordWeftFeedback: { userType, overallRating, triedFeatures, otherFeature, whatFeltGood, whatWasFrustrating, missingFeatures, performanceIssue, performanceDetails, usageFrequency, usageWhy, openThoughts, contactPermission, contactEmail } }, '');
+    }, [userType, overallRating, triedFeatures, otherFeature, whatFeltGood, whatWasFrustrating, missingFeatures, performanceIssue, performanceDetails, usageFrequency, usageWhy, openThoughts, contactPermission, contactEmail, submitted]);
+
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault(); setError(''); setIsSubmitting(true);
         try {
             await api.submitFeedback({ userType, overallRating: overallRating || null, triedFeatures: Object.entries(triedFeatures).filter(([, selected]) => selected).map(([feature]) => feature), otherTriedFeature: otherFeature || null, whatFeltGood: whatFeltGood || null, whatWasFrustrating: whatWasFrustrating || null, missingFeatures, performanceIssue: performanceIssue || null, performanceDetails: performanceDetails || null, usageFrequency: usageFrequency || null, usageFrequencyWhy: usageWhy || null, openThoughts: openThoughts || null, contactPermission, contactEmail: contactPermission ? contactEmail : null });
+            const { wordWeftFeedback: discardedDraft, ...historyState } = window.history.state || {};
+            window.history.replaceState(historyState, '');
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
         } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again.'); }
@@ -50,7 +60,8 @@ export const FeedbackPage: React.FC = () => {
     };
 
     return <div className="wv-support">
-        {submitted ? <main className="wv-support-shell wv-feedback-success"><div className="wv-notice wv-success" role="status"><Check size={30} /><h1>Thank you.</h1><p>Thanks for helping shape WordWeft. Your feedback helps us decide what to improve next.</p><a href="/" className="wv-button wv-button-primary">Back to WordWeft <ArrowRight size={18} /></a></div></main> : <main className="wv-support-shell">
+        {submitted ? <main className="wv-support-shell wv-feedback-success"><ReturnNavigation /><div className="wv-notice wv-success" role="status"><Check size={30} /><h1>Thank you.</h1><p>Thanks for helping shape WordWeft. Your feedback helps us decide what to improve next.</p><a href="/" className="wv-button wv-button-primary">Back to WordWeft <ArrowRight size={18} /></a></div></main> : <main className="wv-support-shell">
+            <ReturnNavigation />
             <header className="wv-pagehead"><p className="wv-eyebrow">Your experience matters</p><h1>Help shape WordWeft.</h1><p className="wv-lead">Tell us what worked, what felt difficult, and what you wish existed. Answer the questions that are useful to you.</p></header>
             <div className="wv-feedback-layout">
                 <aside className="wv-feedback-aside"><h2>A better place for stories.</h2><p>You’re using an early version of WordWeft. Reader and writer feedback helps us choose what to build next.</p><p>Need help with an account or want to report content?</p><a href="/contact" className="wv-button">Help and contact <ArrowRight size={17} /></a><a href="/privacy" className="wv-feedback-privacy">Read our Privacy Policy</a></aside>

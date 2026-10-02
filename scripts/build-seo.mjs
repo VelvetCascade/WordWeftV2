@@ -27,6 +27,7 @@ await writeFile(join(functions, 'template.html'), template);
 await writeFile(join(functions, 'static-bodies.json'), JSON.stringify(bodies));
 await writeFile(join(functions, 'build-config.json'), JSON.stringify({ apiBase, preview }));
 for (const file of ['handler.mjs', 'render.mjs', 'metadata.mjs', 'content.mjs']) await cp(`seo/${file}`, join(functions, file));
+await cp('dist-ssr/static.mjs', join(functions, 'static.mjs'));
 await writeFile(join(functions, 'package.json'), JSON.stringify({ type: 'module' }));
 await writeFile(join(functions, '.vc-config.json'), JSON.stringify({ runtime: 'nodejs22.x', handler: 'handler.mjs', launcherType: 'Nodejs', maxDuration: 30, supportsResponseStreaming: false }));
 await cp('dist', join(output, 'static'), { recursive: true });

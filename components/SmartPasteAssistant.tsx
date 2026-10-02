@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { XMarkIcon, SparklesIcon, PlusIcon, BookOpenIcon, CheckIcon } from './icons/Icons';
 import { Character } from '../types';
+import { useDialog } from '../hooks/useDialog';
 
 interface SmartPasteAssistantProps {
     isOpen: boolean;
@@ -18,13 +19,19 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
     const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
     const [isProcessing, setIsProcessing] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [error, setError] = useState('');
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const dialogRef = useDialog(isOpen, onClose, !isProcessing);
+    const charactersRef = useRef(existingCharacters);
+    charactersRef.current = existingCharacters;
+    useEffect(() => () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); }, []);
 
     useEffect(() => {
         if (!isOpen || !text) return;
 
         // 1. Extract Names
         const commonWords = new Set(['The', 'A', 'An', 'He', 'She', 'It', 'They', 'We', 'I', 'You', 'But', 'And', 'Or', 'So', 'Because', 'At', 'In', 'On', 'For', 'With', 'To', 'From']);
-        const existingNames = new Set(existingCharacters.map(c => c.name.toLowerCase()));
+        const existingNames = new Set(charactersRef.current.map(c => c.name.toLowerCase()));
         
         // Find Title Case words (not at start of a sentence if possible, but basic regex is fine for heuristic)
         const wordRegex = /\b[A-Z][a-z]+\b/g;
@@ -48,8 +55,9 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
         setSelectedNames(new Set(extracted));
 
         setSuccessMessage(null);
+        setError('');
 
-    }, [isOpen, text, existingCharacters]);
+    }, [isOpen, text]);
 
     if (!isOpen) return null;
 
@@ -62,28 +70,32 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
 
     const handleApplyAll = async () => {
         setIsProcessing(true);
+        setError('');
         try {
-            if (selectedNames.size > 0) {
-                await onAddCharacters(Array.from(selectedNames));
+            const existingNames = new Set(existingCharacters.map(character => character.name.toLowerCase()));
+            const namesToAdd = Array.from(selectedNames).filter(name => !existingNames.has(name.toLowerCase()));
+            if (namesToAdd.length > 0) {
+                await onAddCharacters(namesToAdd);
             }
-            setSuccessMessage("Successfully supercharged your story!");
-            setTimeout(() => {
+            setSuccessMessage("Characters added to your story guide.");
+            closeTimerRef.current = setTimeout(() => {
                 onClose();
                 setSuccessMessage(null);
             }, 2000);
         } catch (e) {
             console.error("Failed to apply elements", e);
+            setError(e instanceof Error ? e.message : 'The characters could not be added. Please try again.');
         } finally {
             setIsProcessing(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-dark-surface w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative flex flex-col scale-100 animate-in zoom-in-95 duration-200">
+        <div className="ww-editor-smart-paste-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Smart Paste Assistant" tabIndex={-1} className="ww-editor-smart-paste bg-white dark:bg-dark-surface w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative flex flex-col scale-100 animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-accent/20 to-primary/20 p-6 flex flex-col items-center border-b border-gray-100 dark:border-dark-border text-center relative">
-                    <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 transition-colors">
+                    <button onClick={onClose} disabled={isProcessing} aria-label="Close smart paste assistant" className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 transition-colors">
                         <XMarkIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                     </button>
                     <div className="w-14 h-14 rounded-full bg-white dark:bg-dark-surface-alt shadow-sm flex items-center justify-center mb-3">
@@ -95,6 +107,7 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
 
                 {/* Body */}
                 <div className="p-6 overflow-y-auto max-h-[50vh] flex flex-col gap-6">
+                    {error && <p className="ww-editor-scanner-error" role="alert">{error}</p>}
                     
                     {successMessage ? (
                          <div className="flex flex-col items-center justify-center py-8 text-accent text-center gap-3">
@@ -118,6 +131,7 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
                                             return (
                                                 <button
                                                     key={name}
+                                                    type="button" aria-pressed={selectedNames.has(name)} disabled={isProcessing}
                                                     onClick={() => toggleName(name)}
                                                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 flex items-center gap-1.5
                                                         ${isSelected 
@@ -137,7 +151,7 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
 
 
                             {/* Help / Demo Section */}
-                            <div className="mt-2 bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-4 items-center cursor-pointer hover:bg-primary/10 transition-colors" onClick={onShowDemo}>
+                            <button type="button" className="mt-2 bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-4 items-center cursor-pointer hover:bg-primary/10 transition-colors text-left" onClick={onShowDemo}>
                                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                                     <BookOpenIcon className="w-5 h-5 text-primary" />
                                 </div>
@@ -145,8 +159,8 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
                                     <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">Make it Interactive</h4>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Learn how to tag characters with @ and more.</p>
                                 </div>
-                                <span className="text-primary text-xs font-semibold">Demo &rarr;</span>
-                            </div>
+                                <span className="text-primary text-xs font-semibold">Tour &rarr;</span>
+                            </button>
 
                             {/* State: No data found */}
                             {potentialNames.length === 0 && (
@@ -173,7 +187,7 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
                             disabled={isProcessing || selectedNames.size === 0}
                             className="px-6 py-2 bg-accent hover:bg-accent-light text-white font-semibold rounded-lg text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isProcessing ? 'Applying...' : 'Supercharge!'}
+                            {isProcessing ? 'Adding…' : 'Add characters'}
                             {!isProcessing && <SparklesIcon className="w-4 h-4" />}
                         </button>
                     </div>

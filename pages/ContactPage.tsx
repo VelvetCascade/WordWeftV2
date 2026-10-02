@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, LockKeyhole, Mail, Plus, Search } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import type { User } from '../types';
@@ -18,14 +19,22 @@ const categories = [
     ['general', 'General support'], ['safety', 'Safety & abuse report'], ['copyright', 'Copyright / IP complaint'], ['privacy', 'Privacy request'], ['appeal', 'Appeal'], ['business', 'Business & partnerships'], ['legal', 'Legal request'], ['feedback', 'Feedback & suggestions'], ['other', 'Other'],
 ] as const;
 
-export const ContactPage: React.FC<{ currentUser: User | null }> = ({ currentUser }) => {
+export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => void }> = ({ currentUser, onSignIn }) => {
     const { trackEvent } = useAnalytics();
     useEffect(() => { trackEvent('support', 'contact_form_view'); }, []);
-    const [query, setQuery] = useState('');
-    const [formData, setFormData] = useState({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '' });
+    const [initialDraft] = useState(() => {
+        const saved = typeof window !== 'undefined' ? window.history.state?.wordWeftContact : undefined;
+        return saved?.userId === (currentUser?.id || 'guest') ? saved : undefined;
+    });
+    const [query, setQuery] = useState(initialDraft?.query || '');
+    const [formData, setFormData] = useState({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '', ...initialDraft?.formData });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        if (window.location.pathname !== '/contact' || submitted) return;
+        window.history.replaceState({ ...window.history.state, wordWeftContact: { userId: currentUser?.id || 'guest', query, formData } }, '');
+    }, [currentUser?.id, query, formData, submitted]);
     const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData(previous => ({ ...previous, [event.target.name]: event.target.value }));
         setError(null);
@@ -34,6 +43,8 @@ export const ContactPage: React.FC<{ currentUser: User | null }> = ({ currentUse
         event.preventDefault(); setIsSubmitting(true); setError(null);
         try {
             await api.submitGrievance(formData);
+            const { wordWeftContact: discardedDraft, ...historyState } = window.history.state || {};
+            window.history.replaceState(historyState, '');
             setSubmitted(true);
             setFormData({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '' });
         } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again later.'); }
@@ -43,6 +54,7 @@ export const ContactPage: React.FC<{ currentUser: User | null }> = ({ currentUse
     return (
         <div className="wv-support">
             <main className="wv-support-shell">
+                <ReturnNavigation />
                 <header className="wv-pagehead"><p className="wv-eyebrow">Help at WordWeft</p><h1>How can we help?</h1><p className="wv-lead">Find an answer, or send us a note with the details.</p></header>
                 <label className="wv-help-search"><Search size={21} aria-hidden="true" /><span className="sr-only">Search help topics</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search help topics" /></label>
                 <div className="wv-help-grid wv-section">
@@ -54,7 +66,7 @@ export const ContactPage: React.FC<{ currentUser: User | null }> = ({ currentUse
                     </section>
                     <section className="wv-contact-form" aria-labelledby="help-note">
                         <h2 id="help-note">Send us a note</h2>
-                        {!currentUser ? <div className="wv-notice wv-signin-notice"><LockKeyhole size={28} aria-hidden="true" /><h3>Sign in to send a message</h3><p>The grievance submission form is available to signed-in users. You can also contact us directly by email.</p><a href="/auth" className="wv-button wv-button-primary">Sign in or register <ArrowRight size={18} /></a></div> : submitted ? <div className="wv-notice wv-success" role="status"><Check size={28} aria-hidden="true" /><h3>Message sent</h3><p>Thank you for reaching out. We’ll respond to your inquiry as soon as possible.</p><button type="button" onClick={() => setSubmitted(false)} className="wv-button">Send another message</button></div> : <form onSubmit={handleSubmit} className="wv-form" aria-busy={isSubmitting}>
+                        {!currentUser ? <div className="wv-notice wv-signin-notice"><LockKeyhole size={28} aria-hidden="true" /><h3>Sign in to send a message</h3><p>The grievance submission form is available to signed-in users. You can also contact us directly by email.</p><a href="/auth" onClick={event => { if (onSignIn) { event.preventDefault(); onSignIn(); } }} className="wv-button wv-button-primary">Sign in or register <ArrowRight size={18} /></a></div> : submitted ? <div className="wv-notice wv-success" role="status"><Check size={28} aria-hidden="true" /><h3>Message sent</h3><p>Thank you for reaching out. We’ll respond to your inquiry as soon as possible.</p><button type="button" onClick={() => setSubmitted(false)} className="wv-button">Send another message</button></div> : <form onSubmit={handleSubmit} className="wv-form" aria-busy={isSubmitting}>
                             {error && <p className="wv-error" role="alert">{error}</p>}
                             <div className="wv-field-pair">
                                 <label className="wv-field" htmlFor="contact-name">Full name <span aria-hidden="true">*</span><input id="contact-name" name="name" autoComplete="name" value={formData.name} onChange={handleChange} required placeholder="Your name" /></label>

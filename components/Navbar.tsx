@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, BookOpen, Search, PenLine, MessageCircle, Library, Menu, X, Sun, Moon, LogOut, UserRound, Settings, Sparkles, Compass, Trophy, Feather, Info, ShieldCheck, Heart } from 'lucide-react';
 import { SearchOverlay } from './SearchOverlay';
 import { ResilientImage } from './ResilientImage';
+import { WordWeftLogo } from './icons/WordWeftLogo';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDialog } from '../hooks/useDialog';
 import type { User } from '../types';
@@ -38,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
   return <>
     <header className="v2-nav-wrap">
       <nav className="v2-nav" aria-label="Main navigation">
-        <a className="v2-brand" href="/" aria-label="WordWeft home"><img src="/design-v2/assets/brand-mark.jpg" width="28" height="36" alt="" /><span>WordWeft</span></a>
+        <a className="v2-brand" href="/" aria-label="WordWeft home"><WordWeftLogo /><span>WordWeft</span></a>
         <div className="v2-nav-primary">{primary.map(item => <a key={item.label} href={item.href} className={item.active ? 'active' : ''} aria-current={item.active ? 'page' : undefined}>{item.label}</a>)}<a href="/about" className={path === '/about' ? 'active' : ''} aria-current={path === '/about' ? 'page' : undefined}>About</a></div>
         <div className="v2-nav-actions">
           {isAuthenticated && <a href="/library" title="Your library" className={`v2-library-link ${path === '/library' ? 'active' : ''}`} aria-current={path === '/library' ? 'page' : undefined}><Library size={18} />Your library</a>}

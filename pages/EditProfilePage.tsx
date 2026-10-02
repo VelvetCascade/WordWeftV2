@@ -15,6 +15,29 @@ interface EditProfilePageProps {
   onChangePassword: (oldPassword_unused: string, newPassword_unused: string) => Promise<void>;
 }
 
+type SettingsSection = 'profile' | 'preferences' | 'security';
+interface ProfileDraft {
+  name: string;
+  avatarUrl: string;
+  avatarFileId: string | null;
+  bio: string;
+  location: string;
+  website: string;
+  dateOfBirth: string;
+  allowMatureContent: boolean;
+  twitter: string;
+  instagram: string;
+  threads: string;
+  selectedGenres: string[];
+}
+interface SettingsHistory {
+  userId: string;
+  activeSection: SettingsSection;
+  genreSearch: string;
+  draft: ProfileDraft;
+  lastSavedState: string;
+}
+
 const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> = ({ password, isVisible }) => {
   if (!isVisible) return null;
 
@@ -49,19 +72,24 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
     const { trackEvent } = useAnalytics();
-  const [name, setName] = useState(user.name);
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
-  const [avatarFileId, setAvatarFileId] = useState<string | null>(user.avatarFileId || null);
-  const [bio, setBio] = useState(user.bio || '');
-  const [location, setLocation] = useState(user.location || '');
-  const [website, setWebsite] = useState(user.website || '');
-  const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth || '');
-  const [allowMatureContent, setAllowMatureContent] = useState(user.allowMatureContent || false);
+  const [savedSettings] = useState<SettingsHistory | null>(() => {
+    const saved = window.history.state?.wordWeftSettings as SettingsHistory | undefined;
+    return saved?.userId === user.id && saved.draft ? saved : null;
+  });
+  const draft = savedSettings?.draft;
+  const [name, setName] = useState(draft?.name ?? user.name);
+  const [avatarUrl, setAvatarUrl] = useState(draft?.avatarUrl ?? user.avatarUrl);
+  const [avatarFileId, setAvatarFileId] = useState<string | null>(draft ? draft.avatarFileId : user.avatarFileId || null);
+  const [bio, setBio] = useState(draft?.bio ?? user.bio ?? '');
+  const [location, setLocation] = useState(draft?.location ?? user.location ?? '');
+  const [website, setWebsite] = useState(draft?.website ?? user.website ?? '');
+  const [dateOfBirth, setDateOfBirth] = useState(draft?.dateOfBirth ?? user.dateOfBirth ?? '');
+  const [allowMatureContent, setAllowMatureContent] = useState(draft?.allowMatureContent ?? user.allowMatureContent ?? false);
 
   // Socials
-  const [twitter, setTwitter] = useState(user.socials?.twitter || '');
-  const [instagram, setInstagram] = useState(user.socials?.instagram || '');
-  const [threads, setThreads] = useState(user.socials?.threads || '');
+  const [twitter, setTwitter] = useState(draft?.twitter ?? user.socials?.twitter ?? '');
+  const [instagram, setInstagram] = useState(draft?.instagram ?? user.socials?.instagram ?? '');
+  const [threads, setThreads] = useState(draft?.threads ?? user.socials?.threads ?? '');
   const [socialErrors, setSocialErrors] = useState<{ twitter?: string, instagram?: string, threads?: string }>({});
 
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -70,9 +98,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
   // Genres
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(user.favoriteGenres || []);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(draft?.selectedGenres ?? user.favoriteGenres ?? []);
   const [allGenres, setAllGenres] = useState<string[]>([]);
-  const [genreSearch, setGenreSearch] = useState('');
+  const [genreSearch, setGenreSearch] = useState(savedSettings?.genreSearch ?? '');
   const [genreError, setGenreError] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -85,7 +113,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
-  const [activeSection, setActiveSection] = useState<'profile' | 'preferences' | 'security'>('profile');
+  const [activeSection, setActiveSection] = useState<SettingsSection>(savedSettings?.activeSection ?? 'profile');
   const initialProfileState = useMemo(() => JSON.stringify({
     name: user.name, avatarUrl: user.avatarUrl, avatarFileId: user.avatarFileId || null,
     bio: user.bio || '', location: user.location || '', website: user.website || '',
@@ -93,9 +121,22 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     twitter: user.socials?.twitter || '', instagram: user.socials?.instagram || '', threads: user.socials?.threads || '',
     selectedGenres: user.favoriteGenres || [],
   }), [user]);
-  const [lastSavedState, setLastSavedState] = useState(initialProfileState);
+  const [lastSavedState, setLastSavedState] = useState(savedSettings?.lastSavedState ?? initialProfileState);
   const currentProfileState = JSON.stringify({ name, avatarUrl, avatarFileId, bio, location, website, dateOfBirth, allowMatureContent, twitter, instagram, threads, selectedGenres });
   const isDirty = currentProfileState !== lastSavedState;
+
+  // Keep this history entry's section and draft when visiting activity or policies.
+  // Password fields remain local to the form and are never written to history.
+  useEffect(() => {
+    if (window.location.pathname !== '/edit-profile') return;
+    window.history.replaceState({
+      ...window.history.state,
+      wordWeftSettings: {
+        userId: user.id, activeSection, genreSearch, lastSavedState,
+        draft: JSON.parse(currentProfileState) as ProfileDraft,
+      } satisfies SettingsHistory,
+    }, '');
+  }, [user.id, activeSection, genreSearch, lastSavedState, currentProfileState]);
 
   useEffect(() => {
     let active = true;
@@ -227,6 +268,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
 
   const handleCancel = () => {
+    const { wordWeftSettings: discardedDraft, ...historyState } = window.history.state || {};
+    window.history.replaceState(historyState, '');
     goBackOrReplace('/profile');
   };
 
@@ -277,7 +320,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                   setAvatarUrl(url);
                   setAvatarFileId(fileId);
               }}
-              fallbackUrl="/design-v2/assets/brand-mark.jpg"
+              fallbackUrl="/logo.svg"
               label=""
               className="ww-settings-upload"
               aspectRatio={1}

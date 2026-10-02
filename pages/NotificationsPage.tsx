@@ -8,6 +8,7 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ResilientImage } from '../components/ResilientImage';
 import { notificationCopy } from '../utils/notificationPresentation';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 
 interface NotificationsPageProps {
     currentUser: User | null;
@@ -141,6 +142,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     return (
         <div className="account-v2-notifications min-h-screen flex flex-col bg-gray-50 dark:bg-dark-background transition-colors duration-300 pb-20 xl:pb-0">
             <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 md:py-8">
+                <ReturnNavigation fallbackPath="/edit-profile" fallbackLabel="Back to settings" />
                 {/* Header */}
                 <div className="ww-notifications-header flex flex-wrap items-center justify-between mb-6 gap-3">
                     <div>

@@ -68,8 +68,8 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
             <div className="ww-auth-layout">
                 <aside className="ww-auth-artstrip" aria-hidden="true"><img src="/design-v2/assets/met-53681.jpg" alt="" /><img src="/design-v2/assets/met-45294.jpg" alt="" /><img src="/design-v2/assets/met-55020.jpg" alt="" /></aside>
             <div className="ww-auth-form-shell">
-                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-account-brand">
-                    <img src="/design-v2/assets/brand-mark.jpg" alt="" /><span>WordWeft</span>
+                <a href="/" className="ww-account-brand" aria-label="WordWeft home">
+                    <WordWeftLogo /><span>WordWeft</span>
                 </a>
                 <div className="ww-auth-card">
                     <button
@@ -79,7 +79,13 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                         <ArrowLeftIcon className="w-5 h-5" />
                     </button>
 
-                    {success ? (
+                    {!token.trim() ? (
+                        <div className="text-center py-8">
+                            <h1 className="text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Request a password reset link</h1>
+                            <p className="text-text-body dark:text-dark-text-body mb-6">This page needs the reset link from your email. Open that link, or request a new one from the sign-in page.</p>
+                            <a href="/auth" className="v2-button">Go to sign in</a>
+                        </div>
+                    ) : success ? (
                         <div className="text-center py-8">
                             <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CheckCircleIcon className="w-8 h-8 text-success" />

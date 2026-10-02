@@ -20,13 +20,15 @@ import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 import { applyBookMetadata } from '../utils/entityMetadata';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ResilientImage } from '../components/ResilientImage';
+import { completedChapterCount, isReadingFinished, resumeChapterIndex } from '../utils/readingJourney';
 import '../styles/reader-v2.css';
 import { useDialog } from '../hooks/useDialog';
+
 
 const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; current?: boolean; onToggleLike: (chapterId: string) => void; isLikePending: boolean }> = ({ bookId, chapter, index, onRead, progress, current = false, onToggleLike, isLikePending }) => {
     const isCompleted = progress >= 90;
     const accessLabel = chapter.accessLabel ?? 'FULL';
-    const actionLabel = chapter.status !== 'published' ? 'Not released' : accessLabel === 'PREVIEW' ? 'Preview' : accessLabel === 'SIGN_IN' ? 'Sign in to read' : current ? 'Continue' : isCompleted ? 'Finished' : index === 0 ? 'Start here' : 'Unread';
+    const actionLabel = chapter.status !== 'published' ? 'Not released' : accessLabel === 'PREVIEW' ? 'Preview' : accessLabel === 'SIGN_IN' ? 'Sign in to read' : isCompleted ? 'Finished' : current ? 'Continue' : index === 0 ? 'Start here' : 'Unread';
     return (
         <article className={`ww-chapter-timeline-row ${isCompleted ? 'is-finished' : ''} ${current ? 'is-current' : ''} ${chapter.status !== 'published' ? 'is-unreleased' : ''}`}>
             <span className="ww-chapter-timeline-marker" aria-hidden="true">{isCompleted ? '✓' : current ? '•' : index + 1}</span>
@@ -306,6 +308,19 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     useEffect(() => book ? applyBookMetadata(book) : undefined, [book]);
 
     useEffect(() => {
+        if (!currentUser) return;
+        let active = true;
+        const refresh = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            if (detail?.userId === currentUser.id && detail?.bookId === bookId) {
+                if (active) setReadingProgress(detail.progress);
+            }
+        };
+        window.addEventListener(api.READING_PROGRESS_UPDATED_EVENT, refresh);
+        return () => { active = false; window.removeEventListener(api.READING_PROGRESS_UPDATED_EVENT, refresh); };
+    }, [currentUser?.id, bookId]);
+
+    useEffect(() => {
         if (currentUserReview) {
             setUserRating(currentUserReview.rating);
             setUserComment(currentUserReview.comment);
@@ -370,7 +385,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const handleReadClick = () => {
         if (!book) return;
-        const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
+        const startChapter = resumeChapterIndex(book.chapters, readingProgress);
+        if (startChapter === null) return;
         trackEvent('reading', 'start_reading', book.title, undefined, { bookId: book.id, chapterIndex: startChapter });
         openReaderFromStory(book.id, startChapter, book.chapters[startChapter]?.id);
     };
@@ -486,11 +502,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const hasStartedReading = Boolean(
         readingProgress
-        && (readingProgress.overallProgress > 0 || Object.keys(readingProgress.chapters || {}).length > 0),
+        && book.chapters.some(chapter => (readingProgress.chapters?.[chapter.id]?.progress ?? 0) > 0),
     );
-    const mainButtonText = hasStartedReading
-        ? 'Continue reading'
-        : 'Read from beginning';
+    const isFinished = isReadingFinished(book.chapters, readingProgress);
+    const resumeIndex = resumeChapterIndex(book.chapters, readingProgress);
+    const mainButtonText = resumeIndex === null ? 'Chapters coming soon' : isFinished ? 'Read again' : hasStartedReading ? 'Continue reading' : 'Read from beginning';
     const storySummary = book.description?.trim() || book.summary;
 
     return (
@@ -535,8 +551,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <a className="ww-story-author-v2" href={`/author/${encodeURIComponent(book.author.id)}`}><ResilientImage src={book.author.avatarUrl} alt="" fallbackLabel={book.author.name} className="w-11 h-11 rounded-full" /><span><strong>{book.author.name}</strong><small>Writer</small></span></a>
                         <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}><p>{storySummary}</p>{storySummary.length > 240 && <button type="button" aria-expanded={isSummaryExpanded} onClick={() => setIsSummaryExpanded(value => !value)}>{isSummaryExpanded ? 'Show less' : 'Read full synopsis'}</button>}</div>
                         {book.tags?.filter(tag => !book.genres.includes(tag)).length > 0 && <div className="ww-story-tag-list">{book.tags.filter(tag => !book.genres.includes(tag)).map(tag => <a key={tag} href={`/tag/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>}
-                        {hasStartedReading && <div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(readingProgress.overallProgress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, readingProgress.overallProgress)}%` }} /></div><p>{Object.values(readingProgress.chapters || {}).filter(progress => progress.progress >= 90).length} chapters finished · Chapter {readingProgress.lastReadChapterIndex + 1} saved</p></div>}
-                        <div className="ww-story-actions-v2"><button className={`ww-story-read-action ${hasStartedReading ? 'is-resume' : ''}`} onClick={handleReadClick}>{mainButtonText}<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button><button className="ww-story-save-action" onClick={handleToggleLibrary} disabled={pendingAction === 'toggle-library'} aria-pressed={isBookInLibrary}>{pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In your library' : 'Add to library'}{isBookInLibrary ? <CheckCircleIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}</button><button className="ww-story-share-action" onClick={() => setIsShareModalOpen(true)}>Share<ShareIcon className="w-4 h-4" /></button>{isBookInLibrary && hasCustomShelves && <button className="ww-story-share-action" onClick={openManageShelvesModal}>Organize shelves</button>}</div>
+                        {hasStartedReading && <div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(readingProgress.overallProgress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, readingProgress.overallProgress)}%` }} /></div><p>{completedChapterCount(book.chapters, readingProgress)} chapters finished{isFinished ? ' · All released chapters read' : resumeIndex !== null ? ` · Continue with chapter ${resumeIndex + 1}` : ''}{readingProgress.pendingSync ? ' · Sync pending on this device' : ''}</p></div>}
+                        <div className="ww-story-actions-v2"><button className={`ww-story-read-action ${hasStartedReading ? 'is-resume' : ''}`} onClick={handleReadClick} disabled={resumeIndex === null}>{mainButtonText}<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button><button className="ww-story-save-action" onClick={handleToggleLibrary} disabled={pendingAction === 'toggle-library'} aria-pressed={isBookInLibrary}>{pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In your library' : 'Add to library'}{isBookInLibrary ? <CheckCircleIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}</button><button className="ww-story-share-action" onClick={() => setIsShareModalOpen(true)}>Share<ShareIcon className="w-4 h-4" /></button>{isBookInLibrary && hasCustomShelves && <button className="ww-story-share-action" onClick={openManageShelvesModal}>Organize shelves</button>}</div>
                         <dl className="ww-story-stats-v2"><div><dt>Reader rating</dt><dd><StarIcon className="w-4 h-4" />{book.rating.toFixed(1)}<small>{book.reviewsCount.toLocaleString()} reviews</small></dd></div><div><dt>Reads</dt><dd>{book.viewCount.toLocaleString()}</dd></div><div><dt>Likes</dt><dd>{book.likesCount.toLocaleString()}</dd></div><div><dt>Comments</dt><dd>{book.commentCount.toLocaleString()}</dd></div></dl>
                         <p className="ww-story-publication-meta">{book.chapters.length} chapters · {book.readingStatus}</p>
                         {book.nextScheduledReleaseAt && <div className="ww-next-release"><span>Next chapter</span><strong>{new Date(book.nextScheduledReleaseAt).toLocaleString()}</strong><small>Scheduled by {book.author.name}</small></div>}
@@ -544,7 +560,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <a href={discussLink(book.id, null, currentUser?.id === book.author.id)} className="ww-story-community-link"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
                         {showLibraryNudge && <div className="ww-library-saved-nudge"><span>Saved to your library. Share this story?</span><button onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}>Share</button></div>}
                     </div>
-                    <aside className="ww-story-contents-rail" aria-label="Table of contents"><span className="ww-page-eyebrow">Table of contents</span><h2>{book.chapters.length} {book.chapters.length === 1 ? 'chapter' : 'chapters'}</h2><p>Read in chapter order</p><div className="ww-story-contents-scroll">{book.chapters.slice(0, 8).map((chapter, index) => <ChapterItem key={chapter.id} bookId={book.id} chapter={chapter} index={index} progress={readingProgress?.chapters?.[chapter.id]?.progress || 0} current={hasStartedReading && readingProgress.lastReadChapterIndex === index} onRead={() => handleReadChapterClick(index)} onToggleLike={handleToggleChapterLike} isLikePending={pendingChapterLikes.has(chapter.id)} />)}</div><button className="ww-story-view-contents" onClick={() => { setActiveTab('Chapters'); requestAnimationFrame(() => document.getElementById('story-guide-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>View all chapters<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button></aside>
+                    <aside className="ww-story-contents-rail" aria-label="Table of contents"><span className="ww-page-eyebrow">Table of contents</span><h2>{book.chapters.length} {book.chapters.length === 1 ? 'chapter' : 'chapters'}</h2><p>Read in chapter order</p><div className="ww-story-contents-scroll">{book.chapters.slice(0, 8).map((chapter, index) => <ChapterItem key={chapter.id} bookId={book.id} chapter={chapter} index={index} progress={readingProgress?.chapters?.[chapter.id]?.progress || 0} current={hasStartedReading && !isFinished && resumeIndex === index} onRead={() => handleReadChapterClick(index)} onToggleLike={handleToggleChapterLike} isLikePending={pendingChapterLikes.has(chapter.id)} />)}</div><button className="ww-story-view-contents" onClick={() => { setActiveTab('Chapters'); requestAnimationFrame(() => document.getElementById('story-guide-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>View all chapters<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button></aside>
                 </section>
 
                 {/* Tab Navigation */}
@@ -588,7 +604,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                             chapter={chapter}
                                             index={i}
                                             progress={chapterProgress}
-                                            current={hasStartedReading && readingProgress.lastReadChapterIndex === i}
+                                            current={hasStartedReading && !isFinished && resumeIndex === i}
                                             onRead={() => handleReadChapterClick(i)}
                                             onToggleLike={handleToggleChapterLike}
                                             isLikePending={pendingChapterLikes.has(chapter.id)}

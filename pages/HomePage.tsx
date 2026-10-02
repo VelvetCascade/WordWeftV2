@@ -12,6 +12,8 @@ import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
 import { ResilientImage } from '../components/ResilientImage';
 import { createLatestRequestGate } from '../utils/runtimeLifecycle';
+import type { DiscoveryHeroGroups } from '../utils/discoveryHero';
+import { getGenreArtwork } from '../utils/genreArtwork';
 import '../styles/discovery-v2.css';
 
 // ─── Hero Search with Inline Autocomplete ─────────────────────
@@ -310,6 +312,10 @@ export const HomePage: React.FC = () => {
   const [loadError, setLoadError] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [activeShelf, setActiveShelf] = useState('');
+  const [heroGroups, setHeroGroups] = useState<DiscoveryHeroGroups>({ stories: [], novels: [], poems: [] });
+  const [heroLoading, setHeroLoading] = useState(true);
+  const [heroError, setHeroError] = useState('');
+  const [heroAttempt, setHeroAttempt] = useState(0);
   const { trackEvent } = useAnalytics();
   const SORT_OPTIONS = [{ value: 'most_read', label: 'Most read this week' }, { value: 'most_viewed', label: 'Most viewed this week' }, { value: 'recent_update', label: 'Recently updated' }, { value: 'new', label: 'New arrivals' }];
   useEffect(() => {
@@ -329,12 +335,18 @@ export const HomePage: React.FC = () => {
     api.getHomeGenres().then(value => { if (active) setGenreBooks(value); }).catch(() => {});
     return () => { active = false; };
   }, [attempt]);
-  const genreArt = (name: string) => {
-    const key = name.toLowerCase();
-    return key.includes('fantasy') ? 'fantasy' : key.includes('romance') ? 'romance' : key.includes('sci') ? 'scifi' : key.includes('myst') || key.includes('thrill') ? 'mystery' : key.includes('poet') ? 'poetry' : key.includes('essay') ? 'essays' : key.includes('life') ? 'life' : 'classics';
-  };
+  useEffect(() => {
+    let active = true;
+    setHeroLoading(true); setHeroError('');
+    api.getDiscoveryHero().then(groups => { if (active) setHeroGroups(groups); })
+      .catch(error => { if (active) setHeroError(error instanceof Error ? error.message : 'Featured books could not be loaded.'); })
+      .finally(() => { if (active) setHeroLoading(false); });
+    return () => { active = false; };
+  }, [heroAttempt]);
+  const featuredGenres = rankedGenres.slice(0, 8);
+  const featuredArtwork = featuredGenres.map(genre => getGenreArtwork(genre.name)).filter(Boolean);
   return <div className="v2-discovery">
-    <DiscoveryHero onRead={() => trackEvent('navigation', 'hero_cta_click', 'Start Reading')} onWrite={() => trackEvent('navigation', 'hero_cta_click', 'Start Writing')} />
+    <DiscoveryHero groups={heroGroups} isLoading={heroLoading} loadError={heroError} onRetry={() => setHeroAttempt(value => value + 1)} onRead={() => trackEvent('navigation', 'hero_cta_click', 'Start Reading')} onWrite={() => trackEvent('navigation', 'hero_cta_click', 'Start Writing')} />
     <div className="v2-home-search"><HeroSearch onScrolledPast={() => {}} /></div>
     <section className="v2-discovery-section" aria-labelledby="stories-heading">
       <div className="v2-section-heading"><div><p className="ww-page-eyebrow">Story discovery</p><h2 id="stories-heading">Find a story. Stay for a chapter.</h2></div><a href="/category">Browse stories <ArrowRight size={18} /></a></div>
@@ -343,7 +355,17 @@ export const HomePage: React.FC = () => {
         <div className="v2-feature-info"><p className="ww-page-eyebrow">{book.genres[0] || 'Original story'} · {book.readingStatus}</p><h3><a href={`/book/${encodeURIComponent(book.id)}`}>{book.title}</a></h3><a className="v2-feature-author" href={`/author/${encodeURIComponent(book.author.id)}`}>{book.author.name}</a><p className="v2-feature-summary">{book.summary || book.description}</p><div className="v2-feature-meta"><span><BookOpen size={15} />{book.chapters?.length || 0} chapters</span><span><StarIcon className="w-4 h-4" />{book.rating || 'New'}</span><a href={`/book/${encodeURIComponent(book.id)}`} aria-label={`Read ${book.title}`}>Read <ArrowRight size={16} /></a></div></div>
       </article>)}</div>}
     </section>
-    {!!rankedGenres.length && <section className="v2-discovery-section" aria-labelledby="genres-heading"><div className="v2-section-heading"><div><p className="ww-page-eyebrow">Explore</p><h2 id="genres-heading">Stories across genres.</h2></div><a href="/category">All genres <ArrowRight size={18} /></a></div><div className="v2-genre-strip">{rankedGenres.slice(0,8).map(genre => <a className="v2-genre-tile" href={`/genre/${encodeURIComponent(genre.name)}`} key={genre.name} onClick={() => trackEvent('navigation','genre_card_click',genre.name)}><img src={`/design-v2/assets/genre-${genreArt(genre.name)}.jpg`} alt="" loading="lazy" /><span>{genre.name}<small>{genre.bookCount} {genre.bookCount === 1 ? 'story' : 'stories'}</small></span></a>)}</div></section>}
+    {!!featuredGenres.length && <section className="v2-discovery-section" aria-labelledby="genres-heading">
+      <div className="v2-section-heading"><div><p className="ww-page-eyebrow">Explore</p><h2 id="genres-heading">Stories across genres.</h2></div><a href="/category">All genres <ArrowRight size={18} /></a></div>
+      <div className="v2-genre-strip">{featuredGenres.map(genre => {
+        const art = getGenreArtwork(genre.name);
+        return <a className={`v2-genre-tile ${art ? '' : 'v2-genre-tile-unillustrated'}`} href={`/genre/${encodeURIComponent(genre.name)}`} key={genre.name} onClick={() => trackEvent('navigation','genre_card_click',genre.name)}>
+          {art ? <img src={art.file} alt="" loading="lazy" style={art.position ? { objectPosition: art.position } : undefined} /> : <i aria-hidden="true">{genre.name.charAt(0)}</i>}
+          <span>{genre.name}<small>{genre.bookCount} {genre.bookCount === 1 ? 'story' : 'stories'}</small></span>
+        </a>;
+      })}</div>
+      {!!featuredArtwork.length && <details className="v2-artwork-credits"><summary>Artwork credits</summary><ul>{featuredArtwork.map(art => <li key={art.file}><a href={art.source} target="_blank" rel="noopener noreferrer">{art.title}</a><span>{art.artist}{art.date ? `, ${art.date}` : ''} · {art.genre}</span></li>)}</ul><p>The Metropolitan Museum of Art, Open Access. Public domain images (<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a>).</p></details>}
+    </section>}
     {books.length > 3 && <section className="v2-discovery-section v2-shelf" aria-labelledby="shelf-heading"><div className="v2-section-heading"><div><p className="ww-page-eyebrow">Your next read</p><h2 id="shelf-heading">A little more to discover.</h2></div><SortDropdown options={SORT_OPTIONS} value={sortMode} onChange={value => setSortMode(value as typeof sortMode)} /></div><div className="v2-shelf-grid" aria-busy={isLoading}>{books.slice(3,7).map(book => <BookCard book={book} key={book.id} onClick={() => window.location.hash = `/book/${book.id}`} />)}</div></section>}
     {!!Object.keys(genreBooks).length && <section className="v2-discovery-section"><div className="v2-section-heading"><h2>Choose a shelf.</h2><a href={`/genre/${encodeURIComponent(activeShelf || Object.keys(genreBooks)[0])}`}>Explore genre <ArrowRight size={18} /></a></div><div className="v2-genre-tabs" role="group" aria-label="Explore a genre shelf">{Object.keys(genreBooks).map(genre => <button type="button" key={genre} aria-pressed={(activeShelf || Object.keys(genreBooks)[0]) === genre} onClick={() => setActiveShelf(genre)}>{genre}</button>)}</div><div className="v2-scroll-shelf">{(genreBooks[activeShelf || Object.keys(genreBooks)[0]] || []).map(book => <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />)}</div></section>}
     {books[0]?.author && <section className="v2-author-spotlight"><ResilientImage src={books[0].author.avatarUrl} alt={books[0].author.name} fallbackLabel={books[0].author.name} /><div><p className="ww-page-eyebrow">Meet a storyteller</p><h2>{books[0].author.name}</h2>{books[0].author.bio && <p>{books[0].author.bio}</p>}<a href={`/author/${encodeURIComponent(books[0].author.id)}`}>Visit their writing room <ArrowRight size={16} /></a></div></section>}

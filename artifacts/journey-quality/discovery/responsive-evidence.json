@@ -1,0 +1,814 @@
+[
+  {
+    "name": "discovery/home-desktop",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": {
+      "x": 32,
+      "y": 124,
+      "width": 1376,
+      "height": 461,
+      "top": 124,
+      "right": 1408,
+      "bottom": 585,
+      "left": 32
+    },
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 1392,
+      "height": 66,
+      "top": 16,
+      "right": 1416,
+      "bottom": 82,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-mobile",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "hero": {
+      "x": 20,
+      "y": 106,
+      "width": 350,
+      "height": 668.890625,
+      "top": 106,
+      "right": 370,
+      "bottom": 774.890625,
+      "left": 20
+    },
+    "navigation": {
+      "x": 12,
+      "y": 12,
+      "width": 366,
+      "height": 60,
+      "top": 12,
+      "right": 378,
+      "bottom": 72,
+      "left": 12
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 781,
+      "width": 390,
+      "height": 63,
+      "top": 781,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-small-mobile",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 320,
+    "documentWidth": 320,
+    "hero": {
+      "x": 20,
+      "y": 106,
+      "width": 280,
+      "height": 658.921875,
+      "top": 106,
+      "right": 300,
+      "bottom": 764.921875,
+      "left": 20
+    },
+    "navigation": {
+      "x": 12,
+      "y": 12,
+      "width": 296,
+      "height": 60,
+      "top": 12,
+      "right": 308,
+      "bottom": 72,
+      "left": 12
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 697,
+      "width": 320,
+      "height": 63,
+      "top": 697,
+      "right": 320,
+      "bottom": 760,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-tablet",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 768,
+    "documentWidth": 768,
+    "hero": {
+      "x": 32,
+      "y": 130,
+      "width": 704,
+      "height": 805.03125,
+      "top": 130,
+      "right": 736,
+      "bottom": 935.03125,
+      "left": 32
+    },
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 720,
+      "height": 60,
+      "top": 16,
+      "right": 744,
+      "bottom": 76,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 961,
+      "width": 768,
+      "height": 63,
+      "top": 961,
+      "right": 768,
+      "bottom": 1024,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-desktop-viewport",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": {
+      "x": 32,
+      "y": 124,
+      "width": 1376,
+      "height": 461,
+      "top": 124,
+      "right": 1408,
+      "bottom": 585,
+      "left": 32
+    },
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 1392,
+      "height": 66,
+      "top": 16,
+      "right": 1416,
+      "bottom": 82,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-small-mobile-viewport",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 320,
+    "documentWidth": 320,
+    "hero": {
+      "x": 20,
+      "y": 106,
+      "width": 280,
+      "height": 658.921875,
+      "top": 106,
+      "right": 300,
+      "bottom": 764.921875,
+      "left": 20
+    },
+    "navigation": {
+      "x": 12,
+      "y": 12,
+      "width": 296,
+      "height": 60,
+      "top": 12,
+      "right": 308,
+      "bottom": 72,
+      "left": 12
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 697,
+      "width": 320,
+      "height": 63,
+      "top": 697,
+      "right": 320,
+      "bottom": 760,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-tablet-viewport",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 768,
+    "documentWidth": 768,
+    "hero": {
+      "x": 32,
+      "y": 130,
+      "width": 704,
+      "height": 805.03125,
+      "top": 130,
+      "right": 736,
+      "bottom": 935.03125,
+      "left": 32
+    },
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 720,
+      "height": 60,
+      "top": 16,
+      "right": 744,
+      "bottom": 76,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 961,
+      "width": 768,
+      "height": 63,
+      "top": 961,
+      "right": 768,
+      "bottom": 1024,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-dark-desktop",
+    "route": "/",
+    "theme": "dark",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": {
+      "x": 32,
+      "y": 124,
+      "width": 1376,
+      "height": 461,
+      "top": 124,
+      "right": 1408,
+      "bottom": 585,
+      "left": 32
+    },
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 1392,
+      "height": 66,
+      "top": 16,
+      "right": 1416,
+      "bottom": 82,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [
+      "/discovery-artwork/adventure.jpg",
+      "/discovery-artwork/fantasy.jpg",
+      "/discovery-artwork/literary-fiction.jpg",
+      "/discovery-artwork/romance.jpg",
+      "/discovery-artwork/poetry.jpg",
+      "/discovery-artwork/mystery.jpg",
+      "/discovery-artwork/sci-fi.jpg"
+    ],
+    "errors": []
+  },
+  {
+    "name": "discovery/home-without-javascript",
+    "route": "/",
+    "theme": "light",
+    "javaScriptEnabled": false,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": {
+      "x": 32,
+      "y": 108,
+      "width": 1376,
+      "height": 461,
+      "top": 108,
+      "right": 1408,
+      "bottom": 569,
+      "left": 32
+    },
+    "navigation": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 66,
+      "top": 0,
+      "right": 1440,
+      "bottom": 66,
+      "left": 0
+    },
+    "bottomNavigation": null,
+    "toc": null,
+    "policy": null,
+    "images": [
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-53681.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/met-55020.jpg",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3000/design-v2/assets/search-cover-2.png",
+        "loaded": true
+      }
+    ],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/privacy-desktop",
+    "route": "/privacy",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1920,
+    "documentWidth": 1920,
+    "hero": null,
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 1872,
+      "height": 66,
+      "top": 16,
+      "right": 1896,
+      "bottom": 82,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "toc": {
+      "x": 410,
+      "y": 599.203125,
+      "width": 250,
+      "height": 602.125,
+      "top": 599.203125,
+      "right": 660,
+      "bottom": 1201.328125,
+      "left": 410
+    },
+    "policy": {
+      "x": 708,
+      "y": 599.203125,
+      "width": 802,
+      "height": 7044.875,
+      "top": 599.203125,
+      "right": 1510,
+      "bottom": 7644.078125,
+      "left": 708
+    },
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/privacy-dark-mobile",
+    "route": "/privacy",
+    "theme": "dark",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "hero": null,
+    "navigation": {
+      "x": 12,
+      "y": 12,
+      "width": 366,
+      "height": 60,
+      "top": 12,
+      "right": 378,
+      "bottom": 72,
+      "left": 12
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 781,
+      "width": 390,
+      "height": 63,
+      "top": 781,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "toc": {
+      "x": 20,
+      "y": 578.625,
+      "width": 350,
+      "height": 64,
+      "top": 578.625,
+      "right": 370,
+      "bottom": 642.625,
+      "left": 20
+    },
+    "policy": {
+      "x": 20,
+      "y": 676.625,
+      "width": 350,
+      "height": 7729.046875,
+      "top": 676.625,
+      "right": 370,
+      "bottom": 8405.671875,
+      "left": 20
+    },
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/writer-studio-desktop",
+    "route": "/write",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": null,
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 1392,
+      "height": 66,
+      "top": 16,
+      "right": 1416,
+      "bottom": 82,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/analytics-dark-desktop",
+    "route": "/write/analytics",
+    "theme": "dark",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": null,
+    "navigation": {
+      "x": 24,
+      "y": 16,
+      "width": 1392,
+      "height": 66,
+      "top": 16,
+      "right": 1416,
+      "bottom": 82,
+      "left": 24
+    },
+    "bottomNavigation": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "toc": null,
+    "policy": null,
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/writing-tour-desktop",
+    "route": "/write/book/local-story-draft/chapter/local-story-draft-chapter-1/edit",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": null,
+    "navigation": null,
+    "bottomNavigation": null,
+    "toc": null,
+    "policy": null,
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/writing-tour-small-mobile",
+    "route": "/write/book/local-story-draft/chapter/local-story-draft-chapter-1/edit",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 320,
+    "documentWidth": 320,
+    "hero": null,
+    "navigation": null,
+    "bottomNavigation": null,
+    "toc": null,
+    "policy": null,
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/reader-desktop",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "hero": null,
+    "navigation": null,
+    "bottomNavigation": null,
+    "toc": null,
+    "policy": null,
+    "images": [],
+    "genres": [],
+    "errors": []
+  },
+  {
+    "name": "journeys/reader-mobile",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "theme": "light",
+    "javaScriptEnabled": true,
+    "status": 200,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "hero": null,
+    "navigation": null,
+    "bottomNavigation": null,
+    "toc": null,
+    "policy": null,
+    "images": [],
+    "genres": [],
+    "errors": []
+  }
+]

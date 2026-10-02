@@ -13,6 +13,7 @@ import {
 } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { openReaderFromStory } from '../utils/navigation';
+import { completedChapterCount, isReadingFinished, resumeChapterIndex } from '../utils/readingJourney';
 import '../styles/reader-v2.css';
 import { useDialog } from '../hooks/useDialog';
 
@@ -30,9 +31,9 @@ const LibraryBookCard: React.FC<{
     onRemove: (bookId: string) => void;
     onRestart: (bookId: string) => void;
 }> = ({ book, progressInfo, onOpen, onRemove, onRestart }) => {
-    const isCompleted = book.progress >= 100;
+    const isCompleted = isReadingFinished(book.chapters, progressInfo);
     const hasStarted = book.progress > 0 || Object.values(progressInfo?.chapters ?? {}).some(chapter => chapter.progress > 0);
-    const chapterIndex = progressInfo?.lastReadChapterIndex ?? 0;
+    const chapterIndex = resumeChapterIndex(book.chapters, progressInfo) ?? 0;
     const chapter = book.chapters[chapterIndex];
     const actionLabel = isCompleted ? 'Read again' : hasStarted ? 'Continue reading' : 'Start reading';
     return (
@@ -70,11 +71,33 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
         setLoadError('');
         setIsProgressLoading(true);
         api.getAllReadingProgress(user.id)
-            .then(progress => { if (active) { setAllProgress(progress); if (loadAttempt === 0 && !Object.values(progress).some(book => book.overallProgress > 0 && book.overallProgress < 100)) setActiveView('saved'); } })
+            .then(progress => {
+                if (!active) return;
+                setAllProgress(progress);
+                if (loadAttempt === 0) {
+                    const started = Object.entries(progress).filter(([, item]) => item.overallProgress > 0);
+                    const hasUnfinished = started.some(([bookId, item]) => {
+                        const book = user.library.flatMap(shelf => shelf.books).find(book => book.id === bookId);
+                        return book ? !isReadingFinished(book.chapters, item) : item.overallProgress < 100;
+                    });
+                    if (!hasUnfinished) setActiveView(started.length ? 'finished' : 'saved');
+                }
+            })
             .catch(() => { if (active) setLoadError('Your reading progress could not be loaded.'); })
             .finally(() => { if (active) setIsProgressLoading(false); });
         return () => { active = false; };
     }, [user.id, loadAttempt]);
+
+    useEffect(() => {
+        let active = true;
+        const refresh = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            if (detail?.userId !== user.id || !active || !detail.progress) return;
+            setAllProgress(previous => ({ ...previous, [detail.bookId]: detail.progress }));
+        };
+        window.addEventListener(api.READING_PROGRESS_UPDATED_EVENT, refresh);
+        return () => { active = false; window.removeEventListener(api.READING_PROGRESS_UPDATED_EVENT, refresh); };
+    }, [user.id]);
 
 
     const matureContentAllowed = useMemo(() => {
@@ -112,7 +135,7 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
     const activeShelf = navigationShelves.find(shelf => shelf.id === activeShelfId) ?? navigationShelves[0];
     const filteredBooks = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase();
-        const selected = (activeShelf?.books ?? []).filter(book => activeView === 'all' || (activeView === 'finished' ? book.progress >= 100 : activeView === 'reading' ? book.progress > 0 && book.progress < 100 : book.progress === 0));
+        const selected = (activeShelf?.books ?? []).filter(book => activeView === 'all' || (activeView === 'finished' ? isReadingFinished(book.chapters, allProgress[book.id]) : activeView === 'reading' ? book.progress > 0 && !isReadingFinished(book.chapters, allProgress[book.id]) : book.progress === 0));
         const filtered = normalizedQuery
             ? selected.filter(book => [book.title, book.author.name, ...(book.genres ?? [])].join(' ').toLocaleLowerCase().includes(normalizedQuery))
             : selected;
@@ -121,16 +144,17 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
             if (sort === 'progress') return right.progress - left.progress;
             return new Date(right.addedDate || 0).getTime() - new Date(left.addedDate || 0).getTime();
         });
-    }, [activeShelf, activeView, query, sort]);
+    }, [activeShelf, activeView, query, sort, allProgress]);
 
     useEffect(() => setVisibleBookCount(20), [activeShelfId, activeView, query, sort]);
 
-    const inProgressCount = allBooks.filter(book => book.progress > 0 && book.progress < 100).length;
-    const completedCount = allBooks.filter(book => book.progress >= 100).length;
+    const inProgressCount = allBooks.filter(book => book.progress > 0 && !isReadingFinished(book.chapters, allProgress[book.id])).length;
+    const completedCount = allBooks.filter(book => isReadingFinished(book.chapters, allProgress[book.id])).length;
 
     const openBook = (book: LibraryBook) => {
         const progress = allProgress[book.id];
-        const chapterIndex = Math.min(progress?.lastReadChapterIndex ?? 0, Math.max(0, book.chapters.length - 1));
+        const chapterIndex = resumeChapterIndex(book.chapters, progress);
+        if (chapterIndex === null) return;
         openReaderFromStory(book.id, chapterIndex, book.chapters[chapterIndex]?.id);
     };
 
@@ -176,10 +200,10 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
     };
 
     const savedCount = allBooks.filter(book => book.progress === 0).length;
-    const resumeBook = !query && (activeView === 'reading' || activeView === 'all') ? filteredBooks.find(book => book.progress > 0 && book.progress < 100) : undefined;
+    const resumeBook = !query && (activeView === 'reading' || activeView === 'all') ? filteredBooks.find(book => book.progress > 0 && !isReadingFinished(book.chapters, allProgress[book.id])) : undefined;
     const resumeProgress = resumeBook ? allProgress[resumeBook.id] : undefined;
-    const resumeChapterIndex = resumeProgress?.lastReadChapterIndex ?? 0;
-    const resumeChapter = resumeBook?.chapters[resumeChapterIndex];
+    const resumeIndex = resumeBook ? resumeChapterIndex(resumeBook.chapters, resumeProgress) ?? 0 : 0;
+    const resumeChapter = resumeBook?.chapters[resumeIndex];
     const shelfBooks = resumeBook ? filteredBooks.filter(book => book.id !== resumeBook.id) : filteredBooks;
 
     return (
@@ -191,7 +215,7 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
                 <div className="ww-library-tools-v2"><label className="ww-library-filter-input"><SearchIcon className="w-4 h-4" /><span className="sr-only">Search your library</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search your library" /></label><label className="ww-library-shelf-select"><span className="sr-only">Shelf</span><select value={activeShelf?.id ?? 'all'} onChange={event => setActiveShelfId(event.target.value)}>{navigationShelves.map(shelf => <option key={shelf.id} value={shelf.id}>{shelf.name} ({shelf.books.length})</option>)}</select></label><label className="ww-library-sort"><span className="sr-only">Sort</span><select value={sort} onChange={event => setSort(event.target.value as LibrarySort)}><option value="recent">Recently added</option><option value="title">Title A–Z</option><option value="progress">Reading progress</option></select></label><button type="button" className="ww-library-create-shelf" onClick={() => setIsCreateShelfOpen(true)}><PlusIcon className="w-4 h-4" />New shelf</button></div>
                 <main>
                     {isProgressLoading ? <div className="ww-library-progress-loading" role="status"><span />Loading your reading place…</div> : <>
-                        {resumeBook && <section className="ww-library-resume-v2" aria-label="Continue reading"><ResilientImage src={resumeBook.coverUrl} alt={resumeBook.title} fallbackLabel={resumeBook.title} variant="cover" className="ww-library-resume-cover" /><div className="ww-library-resume-copy"><span className="ww-page-eyebrow">Pick up where you left off</span><h2>{resumeBook.title}</h2><p>{resumeBook.author.name}{resumeChapter && <> · Chapter {resumeChapterIndex + 1}<br />{resumeChapter.title}</>}</p><div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(resumeBook.progress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, resumeBook.progress)}%` }} /></div><p>{Object.values(resumeProgress?.chapters ?? {}).filter(chapter => chapter.progress >= 90).length} chapters finished · Your saved chapter</p></div><div className="ww-library-resume-actions"><button type="button" onClick={() => openBook(resumeBook)}>Continue{resumeChapter ? ` chapter ${resumeChapterIndex + 1}` : ' reading'}<BookOpenIcon className="w-4 h-4" /></button><a href={`/book/${encodeURIComponent(resumeBook.id)}`}>Story details</a><button type="button" className="ww-library-resume-secondary" aria-label={`Restart ${resumeBook.title}`} title="Restart reading progress" onClick={() => setLibraryAction({ kind: 'restart', bookId: resumeBook.id })}>Restart</button><button type="button" className="ww-library-resume-secondary" aria-label={`Remove ${resumeBook.title} from library`} title="Remove story from library" onClick={() => setLibraryAction({ kind: 'remove', bookId: resumeBook.id })}>Remove</button></div></div></section>}
+                        {resumeBook && <section className="ww-library-resume-v2" aria-label="Continue reading"><ResilientImage src={resumeBook.coverUrl} alt={resumeBook.title} fallbackLabel={resumeBook.title} variant="cover" className="ww-library-resume-cover" /><div className="ww-library-resume-copy"><span className="ww-page-eyebrow">Pick up where you left off</span><h2>{resumeBook.title}</h2><p>{resumeBook.author.name}{resumeChapter && <> · Chapter {resumeIndex + 1}<br />{resumeChapter.title}</>}</p><div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(resumeBook.progress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, resumeBook.progress)}%` }} /></div><p>{completedChapterCount(resumeBook.chapters, resumeProgress)} chapters finished · Your next chapter{resumeProgress?.pendingSync ? ' · Sync pending on this device' : ''}</p></div><div className="ww-library-resume-actions"><button type="button" onClick={() => openBook(resumeBook)}>Continue{resumeChapter ? ` chapter ${resumeIndex + 1}` : ' reading'}<BookOpenIcon className="w-4 h-4" /></button><a href={`/book/${encodeURIComponent(resumeBook.id)}`}>Story details</a><button type="button" className="ww-library-resume-secondary" aria-label={`Restart ${resumeBook.title}`} title="Restart reading progress" onClick={() => setLibraryAction({ kind: 'restart', bookId: resumeBook.id })}>Restart</button><button type="button" className="ww-library-resume-secondary" aria-label={`Remove ${resumeBook.title} from library`} title="Remove story from library" onClick={() => setLibraryAction({ kind: 'remove', bookId: resumeBook.id })}>Remove</button></div></div></section>}
                         {shelfBooks.length > 0 ? <section className="ww-library-books-section"><div className="ww-library-results-heading"><h2>{resumeBook ? 'Also on your shelf' : activeView === 'saved' ? 'Saved for later' : activeView === 'finished' ? 'Stories you finished' : activeView === 'reading' ? 'Your reading shelf' : activeShelf?.name ?? 'All stories'}</h2><span>{shelfBooks.length} {shelfBooks.length === 1 ? 'story' : 'stories'}</span></div><div className={`ww-library-books-v2 ${activeView === 'saved' ? 'is-cover-grid' : ''}`}>{shelfBooks.slice(0, visibleBookCount).map(book => <LibraryBookCard key={book.id} book={book} progressInfo={allProgress[book.id]} onOpen={openBook} onRemove={bookId => setLibraryAction({ kind: 'remove', bookId })} onRestart={bookId => setLibraryAction({ kind: 'restart', bookId })} />)}</div>{visibleBookCount < shelfBooks.length && <button type="button" className="ww-library-show-more" onClick={() => setVisibleBookCount(count => count + 20)}>Show 20 more</button>}</section> : !resumeBook && <section className={`ww-library-empty-v2 ${allBooks.length === 0 ? 'is-empty-library' : ''}`}><img src="/design-v2/assets/met-436535.jpg" alt="A hillside beneath a swirling sky in a historical painting" /><div><span className="ww-page-eyebrow">Make room for a story</span><h2>{query ? 'No stories match your search.' : allBooks.length === 0 ? 'Your reading space starts here.' : activeView === 'reading' ? 'A new chapter is waiting.' : activeView === 'finished' ? 'Every story starts with a first page.' : 'This shelf is waiting for a story.'}</h2><p>{query ? 'Try a different title, author, or genre.' : activeView === 'reading' && savedCount > 0 ? 'Your saved stories are ready whenever you are. Start one and your reading place will appear here.' : 'Save stories you want to read, and return to your next chapter here.'}</p>{query ? <button type="button" onClick={() => setQuery('')}>Clear search</button> : activeView === 'reading' && savedCount > 0 ? <button type="button" onClick={() => setActiveView('saved')}>Explore your saved stories</button> : <a href="/category">Find your next story</a>}</div></section>}
                     </>}
                 </main>

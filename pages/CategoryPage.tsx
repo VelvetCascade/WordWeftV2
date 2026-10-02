@@ -22,6 +22,29 @@ const SORT_OPTIONS: Array<[SortOption, string]> = [
   ['new', 'Newly Added'],
 ];
 
+interface CatalogJourney {
+  viewMode: ViewMode;
+  sortOption: SortOption;
+  selectedGenres: string[];
+  genreSearch: string;
+  libraryQuery: string;
+  page: number;
+}
+
+const readCatalogJourney = (genre: string | null): CatalogJourney => {
+  const saved = window.history.state?.wordWeftCatalog;
+  const valid = saved?.path === window.location.pathname ? saved : {};
+  const text = (value: unknown) => typeof value === 'string' ? value.slice(0, 200) : '';
+  return {
+    viewMode: valid.viewMode === 'list' ? 'list' : 'grid',
+    sortOption: SORT_OPTIONS.some(([value]) => value === valid.sortOption) ? valid.sortOption : 'most_read',
+    selectedGenres: genre ? [genre] : Array.isArray(valid.selectedGenres) ? valid.selectedGenres.filter((value: unknown) => typeof value === 'string' && value.trim().length > 0 && value.length <= 100).slice(0, 1) : [],
+    genreSearch: text(valid.genreSearch),
+    libraryQuery: text(valid.libraryQuery),
+    page: Number.isInteger(valid.page) && valid.page >= 0 && valid.page <= 50 ? valid.page : 0,
+  };
+};
+
 const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onClick }) => (
   <div className="v2-story-list-item flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
     <ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
@@ -46,14 +69,15 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
 
 export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
     const { trackEvent } = useAnalytics();
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortOption, setSortOption] = useState<SortOption>('most_read');
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(genre ? [genre] : []);
+  const [journey] = useState(() => readCatalogJourney(genre));
+  const [viewMode, setViewMode] = useState<ViewMode>(journey.viewMode);
+  const [sortOption, setSortOption] = useState<SortOption>(journey.sortOption);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(journey.selectedGenres);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isGenreOpen, setIsGenreOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(journey.page);
   const [hasMore, setHasMore] = useState(false);
   const [totalBooks, setTotalBooks] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -62,13 +86,17 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [genresError, setGenresError] = useState(false);
-  const [genreSearch, setGenreSearch] = useState('');
-  const [libraryQuery, setLibraryQuery] = useState('');
+  const [genreSearch, setGenreSearch] = useState(journey.genreSearch);
+  const [libraryQuery, setLibraryQuery] = useState(journey.libraryQuery);
+  const [librarySearchError, setLibrarySearchError] = useState('');
 
   const genreDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const requestSequenceRef = useRef(0);
+  const journeyPathRef = useRef(window.location.pathname);
+  const initialFiltersRef = useRef({ genre: selectedGenres[0], sort: sortOption });
+  const restoringPageRef = useRef(journey.page);
   const filterRef = useDialog(isFilterOpen, () => setIsFilterOpen(false));
 
   const toggleGenre = (g: string) => {
@@ -113,20 +141,44 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   useEffect(() => {
     let active = true;
     const requestSequence = ++requestSequenceRef.current;
+    const restorePage = initialFiltersRef.current.genre === selectedGenres[0] && initialFiltersRef.current.sort === sortOption ? restoringPageRef.current : 0;
+    restoringPageRef.current = restorePage;
     setIsLoading(true);
     setIsLoadingMore(false);
     setLoadError(null);
     setPage(0);
-    api.getBooks({ genre: selectedGenres[0], sort: sortOption, page: 0, size: 20 }).then(res => {
+    const load = async () => {
+      let res = await api.getBooks({ genre: selectedGenres[0], sort: sortOption, page: 0, size: 20 });
+      let content = res.content;
+      let loadedPage = 0;
+      while (loadedPage < restorePage && res.hasMore && active && requestSequence === requestSequenceRef.current) {
+        res = await api.getBooks({ genre: selectedGenres[0], sort: sortOption, page: loadedPage + 1, size: 20 });
+        const seen = new Set(content.map(book => book.id));
+        content = [...content, ...res.content.filter(book => !seen.has(book.id))];
+        loadedPage++;
+      }
       if (!active || requestSequence !== requestSequenceRef.current) return;
-      setBooks(res.content);
+      restoringPageRef.current = 0;
+      setBooks(content);
+      setPage(loadedPage);
       setHasMore(res.hasMore);
       setTotalBooks(res.totalElements);
       setIsLoading(false);
-      if (window.location.pathname === '/category') applyMetadata(metadataFor(parseRoute('/category'), { books: res.content.filter(isPublicBook) }));
-    }).catch((error) => { if (active) { setLoadError(error instanceof Error ? error.message : 'The library could not be loaded.'); setIsLoading(false); } });
+      if (window.location.pathname === '/category') applyMetadata(metadataFor(parseRoute('/category'), { books: content.filter(isPublicBook) }));
+    };
+    void load().catch((error) => { if (active && requestSequence === requestSequenceRef.current) { setLoadError(error instanceof Error ? error.message : 'The library could not be loaded.'); setIsLoading(false); } });
     return () => { active = false; };
   }, [selectedGenres, sortOption, loadAttempt]);
+
+  useEffect(() => {
+    // Keep browsing choices on this entry so opening a story and going Back
+    // restores the same collection without interfering with navigation's scroll state.
+    if (window.location.pathname !== journeyPathRef.current) return;
+    window.history.replaceState({ ...window.history.state, wordWeftCatalog: {
+      path: journeyPathRef.current, viewMode, sortOption, selectedGenres, genreSearch, libraryQuery,
+      page: isLoading ? restoringPageRef.current : page,
+    } }, '');
+  }, [viewMode, sortOption, selectedGenres, genreSearch, libraryQuery, page, isLoading]);
 
   const loadNextPage = async () => {
     if (!hasMore || isLoading || isLoadingMore) return;
@@ -175,11 +227,15 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   const handleLibrarySearch = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!libraryQuery.trim()) return;
+    if (libraryQuery.trim().length < 2) {
+      setLibrarySearchError('Enter at least two characters to search.');
+      return;
+    }
+    setLibrarySearchError('');
     window.location.hash = `/search?q=${encodeURIComponent(libraryQuery.trim())}`;
   };
 
-  const FilterDrawer: React.FC = () => (
+  const filterDrawer = (
     <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setIsFilterOpen(false)}>
       <div className="absolute bottom-0 left-0 right-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={e => e.stopPropagation()} ref={filterRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="mobile-filter-heading">
         <div className="flex justify-between items-center mb-4">
@@ -191,18 +247,25 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           <input
             type="text"
             placeholder="Search genres..."
+            aria-label="Search genres"
+            data-dialog-focus
             value={genreSearch}
             onChange={e => setGenreSearch(e.target.value)}
             className="w-full h-10 px-4 mb-3 rounded-xl text-sm font-sans border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
           />
           <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
             {filteredGenres.map(g => (
-              <button key={g} onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
+              <button type="button" key={g} aria-pressed={selectedGenres.includes(g)} onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
                 {g}
               </button>
             ))}
             {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match.</p>}
           </div>
+          {selectedGenres.length > 0 && <button type="button" className="text-sm text-accent mt-3 hover:underline" onClick={() => setSelectedGenres([])}>Clear genre filter</button>}
+        </div>
+        <div className="mt-5">
+          <h4 className="font-sans font-semibold mb-3 dark:text-dark-text-rich">Sort stories</h4>
+          <div className="flex flex-wrap gap-2">{SORT_OPTIONS.map(([value, label]) => <button type="button" key={value} aria-pressed={sortOption === value} onClick={() => setSortOption(value)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium ${sortOption === value ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>{label}</button>)}</div>
         </div>
         <button onClick={() => setIsFilterOpen(false)} className="mt-6 w-full bg-accent text-white font-sans font-semibold py-3 rounded-xl">Apply Filters</button>
       </div>
@@ -222,9 +285,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
         <div className="ww-library-discovery">
           <form onSubmit={handleLibrarySearch} className="ww-library-search">
             <SearchIcon className="w-5 h-5" />
-            <input value={libraryQuery} onChange={event => setLibraryQuery(event.target.value)} placeholder="Search by title, author, world, or theme…" aria-label="Search the library" />
+            <input value={libraryQuery} onChange={event => { setLibraryQuery(event.target.value); setLibrarySearchError(''); }} placeholder="Search by title, author, world, or theme…" aria-label="Search the library" aria-describedby={librarySearchError ? 'catalog-search-hint' : undefined} />
             <button type="submit">Search</button>
           </form>
+          {librarySearchError && <p id="catalog-search-hint" role="status" className="text-sm text-accent mt-2">{librarySearchError}</p>}
           {allGenres.length > 0 && (
             <div className="ww-library-quick-genres">
               <span>Start with</span>
@@ -253,6 +317,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
                   <input
                     type="text"
                     placeholder="Search genres..."
+                    aria-label="Search genres"
                     value={genreSearch}
                     onChange={e => setGenreSearch(e.target.value)}
                     className="w-full h-9 px-3 mb-3 rounded-lg text-sm font-sans border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
@@ -354,7 +419,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
         </div>
       </div>
       {genresError && !loadError && <div className="sr-only" role="status">Genre filters are temporarily unavailable.</div>}
-      {isFilterOpen && <FilterDrawer />}
+      {isFilterOpen && filterDrawer}
       <Footer />
     </div>
   );

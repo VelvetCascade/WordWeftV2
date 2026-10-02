@@ -1,0 +1,13 @@
+/* The original SVG follows the text color of its brand link in both appearances. */
+.ww-brand-logo { display:block; flex:none; width:36px; height:36px; color:inherit; }
+html .v2-brand > .ww-brand-logo { width:34px; height:34px; }
+html .ww-app .ww-footer-mark { width:32px; height:32px; color:inherit; }
+html .ww-app .ww-footer-mark > .ww-brand-logo { width:32px; height:32px; }
+.ww-account-brand > .ww-brand-logo { width:36px; height:36px; }
+.dark .ww-settings-upload img[src='/logo.svg'] { filter:invert(1); }
+html .reader-experience.reader-v2 .reader-brand-v2 > :is(.ww-brand-logo,.reader-brand-symbol) { display:block; flex:none; width:30px; height:30px; color:inherit; }
+@media (max-width:760px) {
+    html .v2-brand > .ww-brand-logo { width:28px; height:28px; }
+    .ww-account-brand > .ww-brand-logo { width:30px; height:30px; }
+}
+@media (max-width:360px) { html .v2-brand > .ww-brand-logo { width:24px; height:24px; } }

@@ -155,7 +155,14 @@ public class BookService {
     }
 
     private Query discoverableBooksQuery(String genre) {
-        Set<AgeRating> allowedRatings = contentAccessService.allowedRatings();
+        return discoverableBooksQuery(genre, contentAccessService.allowedRatings());
+    }
+
+    private Query discoverableBooksQuery(String genre, Set<AgeRating> allowedRatings) {
+        return new Query(discoverableBooksCriteria(genre, allowedRatings));
+    }
+
+    private Criteria discoverableBooksCriteria(String genre, Set<AgeRating> allowedRatings) {
         List<Criteria> filters = new ArrayList<>();
         filters.add(Criteria.where("publicationStatus").is("published"));
         filters.add(new Criteria().orOperator(
@@ -181,7 +188,87 @@ public class BookService {
         if (genre != null && !genre.isBlank()) {
             filters.add(Criteria.where("genres").regex("^" + Pattern.quote(genre.trim()) + "$", "i"));
         }
-        return new Query(new Criteria().andOperator(filters));
+        return new Criteria().andOperator(filters);
+    }
+
+    public Map<String, List<Map<String, Object>>> getDiscoveryHero() {
+        return discoveryHero(contentAccessService.allowedRatings(), getCurrentUserId());
+    }
+
+    /** Public HTML always uses anonymous visibility, regardless of caller identity. */
+    public Map<String, List<Map<String, Object>>> getPublicDiscoveryHero() {
+        Map<String, List<Map<String, Object>>> groups = discoveryHero(EnumSet.of(AgeRating.ALL_AGES, AgeRating.TEEN_13), null);
+        groups.values().forEach(cards -> cards.forEach(card -> {
+            // Selection above has already applied the anonymous ratings. Avoid inheriting
+            // narrower viewer flags from the shared catalog card projection.
+            card.put("isDiscoverable", true);
+            card.put("isRestricted", false);
+        }));
+        return groups;
+    }
+
+    private static final Pattern HERO_NOVEL_FORMAT = Pattern.compile(
+            "^\\s*(?:novel|web[\\s_-]+novel|light[\\s_-]+novel|graphic[\\s_-]+novel)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HERO_POEM_FORMAT = Pattern.compile(
+            "^\\s*(?:poetry|poems?|poetry[\\s_-]+collection|collection[\\s_-]+of[\\s_-]+poems|poetry[\\s_-]+anthology)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HERO_NON_STORY_FORMAT = Pattern.compile(
+            "^\\s*(?:guide|essays?|memoir|biography|self[\\s_-]+help|non[\\s_-]+fiction)\\s*$", Pattern.CASE_INSENSITIVE);
+
+    private boolean heroNovel(Book book) {
+        return book.getCategory() != null && HERO_NOVEL_FORMAT.matcher(book.getCategory()).matches();
+    }
+
+    private boolean heroPoem(Book book) {
+        String category = book.getCategory();
+        return (category != null && HERO_POEM_FORMAT.matcher(category).matches())
+                || ((category == null || category.isBlank()) && book.getGenres() != null
+                    && book.getGenres().stream().anyMatch(genre -> genre != null && "poetry".equalsIgnoreCase(genre.trim())));
+    }
+
+    private boolean heroStory(Book book) {
+        return !heroPoem(book) && (book.getCategory() == null || !HERO_NON_STORY_FORMAT.matcher(book.getCategory()).matches());
+    }
+
+    private Criteria heroPoemCriteria() {
+        return new Criteria().orOperator(
+                Criteria.where("category").regex(HERO_POEM_FORMAT),
+                new Criteria().andOperator(
+                        new Criteria().orOperator(Criteria.where("category").is(null), Criteria.where("category").regex("^\\s*$")),
+                        Criteria.where("genres").regex("^\\s*poetry\\s*$", "i")));
+    }
+
+    private Map<String, List<Map<String, Object>>> discoveryHero(Set<AgeRating> allowed, String viewerId) {
+        List<Book> novels = heroCandidates(allowed, Criteria.where("category").regex(HERO_NOVEL_FORMAT), this::heroNovel);
+        List<Book> poems = heroCandidates(allowed, heroPoemCriteria(), this::heroPoem);
+        List<Book> stories = new ArrayList<>(heroCandidates(allowed, new Criteria().norOperator(
+                heroPoemCriteria(), Criteria.where("category").regex(HERO_NON_STORY_FORMAT),
+                Criteria.where("category").regex(HERO_NOVEL_FORMAT)), book -> heroStory(book) && !heroNovel(book)));
+        // A sparse catalog can still show three real stories: novels are stories too.
+        Set<String> storyIds = stories.stream().map(Book::getId).collect(Collectors.toSet());
+        for (Book novel : novels) if (stories.size() < 3 && storyIds.add(novel.getId())) stories.add(novel);
+        Map<String, List<Map<String, Object>>> groups = new LinkedHashMap<>();
+        groups.put("stories", stories.stream().map(book -> enrichBook(book, viewerId)).toList());
+        groups.put("novels", novels.stream().map(book -> enrichBook(book, viewerId)).toList());
+        groups.put("poems", poems.stream().map(book -> enrichBook(book, viewerId)).toList());
+        return groups;
+    }
+
+    private List<Book> heroCandidates(Set<AgeRating> allowed, Criteria format, java.util.function.Predicate<Book> matchesFormat) {
+        Query query = Query.query(new Criteria().andOperator(discoverableBooksCriteria(null, allowed), format,
+                Criteria.where("chapters").elemMatch(Criteria.where("status").is("published"))))
+                .with(discoverySort("most_read"));
+        // Covers need metadata, never manuscripts. A cursor stops once three eligible matches exist,
+        // so a less common format cannot disappear behind an arbitrary first-page cutoff.
+        query.fields().exclude("chapters.content").exclude("chapters.publishedContent");
+        try (java.util.stream.Stream<Book> candidates = mongoTemplate.stream(query, Book.class)) {
+            Set<String> seen = new HashSet<>();
+            return candidates.filter(book -> "published".equals(book.getPublicationStatus()))
+                    .filter(book -> allowed.contains(contentAccessService.effectiveRating(book)))
+                    .filter(book -> book.getChapters() != null && book.getChapters().stream().anyMatch(chapter -> "published".equals(chapter.getStatus())))
+                    .filter(book -> book.getId() != null && book.getTitle() != null && !book.getTitle().isBlank())
+                    .filter(book -> book.getCoverUrl() != null && !book.getCoverUrl().isBlank())
+                    .filter(matchesFormat).filter(book -> seen.add(book.getId())).limit(3).toList();
+        }
     }
 
     private Sort discoverySort(String sort) {

@@ -56,7 +56,10 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [followError, setFollowError] = useState('');
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
-    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>('published');
+    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>(() => {
+        const saved = window.history.state?.wordWeftAuthor;
+        return saved?.authorId === authorId && ['published', 'about', 'posts'].includes(saved.tab) ? saved.tab : 'published';
+    });
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const page = parseRoute(window.location.pathname + window.location.search).page || 1;
@@ -93,7 +96,14 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         if (author) applyAuthorMetadata(author, pageBooks);
     }, [author, pageBooks, page]);
 
-    useEffect(() => { setActiveTab('published'); }, [authorId, page]);
+    useEffect(() => {
+        const saved = window.history.state?.wordWeftAuthor;
+        setActiveTab(saved?.authorId === authorId && ['published', 'about', 'posts'].includes(saved.tab) ? saved.tab : 'published');
+    }, [authorId, page]);
+    useEffect(() => {
+        if (!window.location.pathname.startsWith(`/author/${encodeURIComponent(authorId)}`)) return;
+        window.history.replaceState({ ...window.history.state, wordWeftAuthor: { authorId, tab: activeTab } }, '');
+    }, [authorId, activeTab]);
 
     const handleFollowToggle = async () => {
         if (!author || isFollowLoading) return;

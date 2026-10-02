@@ -12,22 +12,37 @@ export const RouteSurface: React.FC<{ children: React.ReactNode; reader?: boolea
       ? (scrollRef.current = consumeNavigationScroll()) : scrollRef.current;
     if (reader) return;
     let settled = false;
+    let interacted = false;
+    let observer: MutationObserver | undefined;
+    const preserveInteraction = () => { interacted = true; settled = true; observer?.disconnect(); };
+    // Lazy content can arrive after someone has reached a notification, search or menu.
+    // Keep their chosen focus and scroll position rather than moving them again.
+    document.addEventListener('focusin', preserveInteraction, true);
+    document.addEventListener('pointerdown', preserveInteraction, true);
+    document.addEventListener('keydown', preserveInteraction, true);
+    document.addEventListener('wheel', preserveInteraction, { capture: true, passive: true });
     const apply = () => {
       if (settled) return;
+      if (interacted) { settled = true; return; }
       if (position) {
         if (document.documentElement.scrollHeight - window.innerHeight < position.y) return;
-        window.scrollTo(position.x, position.y); settled = true;
+        window.scrollTo(position.x, position.y); settled = true; observer?.disconnect();
       } else {
         window.scrollTo(0, 0);
         const heading = ref.current?.querySelector<HTMLElement>('h1');
-        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); settled = true; }
+        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); settled = true; observer?.disconnect(); }
       }
     };
     const frame = requestAnimationFrame(apply);
-    const observer = new MutationObserver(apply);
+    observer = new MutationObserver(apply);
     if (ref.current) observer.observe(ref.current, { childList: true, subtree: true });
-    const timer = window.setTimeout(() => { if (position && !settled) window.scrollTo(position.x, position.y); observer.disconnect(); }, 3000);
-    return () => { cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); };
+    return () => {
+      cancelAnimationFrame(frame); observer?.disconnect();
+      document.removeEventListener('focusin', preserveInteraction, true);
+      document.removeEventListener('pointerdown', preserveInteraction, true);
+      document.removeEventListener('keydown', preserveInteraction, true);
+      document.removeEventListener('wheel', preserveInteraction, true);
+    };
   }, [reader]);
   return <div ref={ref} className="v2-route-surface">{children}</div>;
 };

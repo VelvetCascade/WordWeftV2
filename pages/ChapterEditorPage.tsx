@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import type { User, Character, ContentWarning } from '../types';
-import { ArrowLeftIcon, EyeIcon, XMarkIcon, SwatchIcon, ShareIcon, CheckCircleIcon } from '../components/icons/Icons';
+import { ArrowLeftIcon, EyeIcon, XMarkIcon, ShareIcon, CheckCircleIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WorldBuildingSidebar } from '../components/WorldBuildingSidebar';
@@ -10,18 +10,18 @@ import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import parse, { domToReact } from 'html-react-parser';
 import { useFeedback } from '../contexts/FeedbackContext';
-import { WritingDemoModal } from '../components/WritingDemoModal';
+import { WritingDemoModal, type WritingTourTool } from '../components/WritingDemoModal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
 import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
 import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
-import { SparklesIcon, BookOpenIcon } from '../components/icons/Icons';
+import { SparklesIcon } from '../components/icons/Icons';
 import { ShareModal } from '../components/ShareModal';
 import { ScheduleChapterDialog } from '../components/ScheduleChapterDialog';
 import { ChapterVersionHistoryDialog } from '../components/ChapterVersionHistoryDialog';
 import { goBackOrReplace, replaceHash } from '../utils/navigation';
 import { navigatePath, lockNavigation } from '../utils/navigation';
-import { ArrowRight, Check, Cloud, History, List, LockKeyhole, Maximize2, Minimize2, NotebookPen, PanelRight, Plus, Settings2, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, BookOpenText, Check, ChevronDown, Cloud, History, List, LockKeyhole, Maximize2, Minimize2, NotebookPen, Plus, Search, Settings2, UsersRound, X } from 'lucide-react';
 import { NoteList } from '../components/NoteList';
 import { useDialog } from '../hooks/useDialog';
 
@@ -37,6 +37,11 @@ const fitChapterTitle = (element: HTMLTextAreaElement | null) => {
     element.style.height = '0px';
     element.style.height = `${element.scrollHeight}px`;
 };
+
+const warningLabels: Record<ContentWarning, string> = {
+    VIOLENCE: 'Violence', GORE: 'Gore', STRONG_LANGUAGE: 'Strong language', SEXUAL_CONTENT: 'Sexual content', ABUSE: 'Abuse', SELF_HARM: 'Self harm', SUBSTANCE_USE: 'Substance use', GRIEF: 'Grief', DISCRIMINATION: 'Discrimination', FLASHING_IMAGES: 'Flashing images', OTHER: 'Other',
+};
+const matureWarnings: ContentWarning[] = ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'];
 
 const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string; characters: Character[]; onCharacterClick: (char: Character) => void }> = ({ isOpen, onClose, title, content, characters, onCharacterClick }) => {
     const previewProseRef = React.useRef<HTMLDivElement>(null);
@@ -103,7 +108,7 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="ww-editor-preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Reader preview" tabIndex={-1} className="ww-editor-reader-preview bg-white dark:bg-dark-surface w-full max-w-3xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
                 {/* Mood Atmosphere in preview */}
                 <MoodAtmosphere contentRef={previewProseRef} active={true} />
@@ -167,6 +172,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     useEffect(() => {
         const shortcuts = (event: KeyboardEvent) => {
+            if (event.defaultPrevented || document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
             if (!(event.metaKey || event.ctrlKey)) return;
             if (event.shiftKey && event.key.toLowerCase() === 'f') { event.preventDefault(); setIsFocusMode(value => !value); }
             if (!event.shiftKey && event.key.toLowerCase() === 'j') { event.preventDefault(); setMobilePanel('chapters'); }
@@ -226,6 +232,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showDemoModal, setShowDemoModal] = useState(false);
+    const demoDismissedRef = useRef(false);
     const [smartPasteContent, setSmartPasteContent] = useState<string | null>(null);
     const [showSmartPasteToast, setShowSmartPasteToast] = useState(false);
     const [smartPastedCharacters, setSmartPastedCharacters] = useState<Character[]>([]);
@@ -255,12 +262,13 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     // Show Demo Modal on first visit if not seen
     useEffect(() => {
-        if (currentUser && currentUser.hasSeenWritingDemo === false) {
+        if (currentUser && currentUser.hasSeenWritingDemo === false && !demoDismissedRef.current) {
             setShowDemoModal(true);
         }
     }, [currentUser]);
 
     const handleCloseDemo = async () => {
+        demoDismissedRef.current = true;
         setShowDemoModal(false);
         if (currentUser && currentUser.hasSeenWritingDemo === false) {
             try {
@@ -458,17 +466,21 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     const handleAddCharacters = async (names: string[]) => {
         const newlyAdded: Character[] = [];
+        const failedNames: string[] = [];
         for (const name of names) {
             try {
                 const char = await api.createCharacter({ bookId, name, role: 'Secondary' });
                 newlyAdded.push(char);
             } catch (e) {
                 console.error("Failed to create character", name, e);
+                failedNames.push(name);
             }
         }
         setSmartPastedCharacters(prev => [...prev, ...newlyAdded]);
+        setCharacters(previous => Array.from(new Map([...previous, ...newlyAdded].map(character => [character.id, character])).values()));
         const updated = await api.getCharactersByBookId(bookId);
         setCharacters(updated);
+        if (failedNames.length) throw new Error(`Could not add ${failedNames.join(', ')}. Your other characters were added; retry the remaining names.`);
     };
 
     const executeDeferredPublish = () => {
@@ -549,8 +561,20 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         <textarea ref={attachTitleField} rows={1} value={title} onChange={event => handleTitleChange(event.target.value.replace(/[\r\n]+/g, ' '))} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); document.querySelector<HTMLElement>('.ProseMirror')?.focus(); } }} placeholder="Untitled chapter" aria-label="Chapter title" disabled={isLoadingContent || !!contentLoadError} />
     </div>;
     const manuscriptFooter = <footer className="ww-editor-manuscript-footer"><span>{wordCount.toLocaleString()} words · {Math.max(1, Math.ceil(wordCount / 220))} min read</span><span><LockKeyhole size={14} />{chapter?.status === 'published' ? 'Edits stay private until published' : 'Only you can see this draft'}</span></footer>;
-    const chapterNavigation = <><span className="ww-studio-eyebrow">{book.title}</span><h2>Manuscript</h2><nav aria-label="Chapters">{book.chapters.map((item, index) => <button type="button" key={item.id} disabled={saveState === 'saving' || isLoadingContent} className={item.id === chapterId ? 'active' : ''} aria-current={item.id === chapterId ? 'page' : undefined} onClick={() => { setMobilePanel(null); void leaveEditor(`/write/book/${bookId}/chapter/${item.id}/edit`); }}><span className={`ww-editor-chapter-number ${item.status}`}>{item.status === 'published' ? <Check size={15} /> : index + 1}</span><span>{item.title || `Chapter ${index + 1}`}<small>{item.status === 'published' ? 'Published' : item.status === 'scheduled' ? 'Scheduled' : 'Private draft'}{item.hasUnpublishedChanges ? ' · New edits' : ''}</small></span></button>)}{isNewChapter && <button className="active" type="button"><span className="ww-editor-chapter-number">{chapterNumber}</span><span>{title || 'Untitled chapter'}<small>Private draft</small></span></button>}</nav><button className="ww-editor-new-chapter" disabled={saveState === 'saving' || isLoadingContent} onClick={() => { setMobilePanel(null); void leaveEditor(`/write/book/${bookId}/chapter/new/edit`); }}><Plus size={17} />New chapter</button><div className="ww-editor-rail-tools"><button onClick={() => setShowDemoModal(true)}><BookOpenIcon className="w-4 h-4" />Writing tools tour</button><button onClick={() => setIsScannerOpen(true)}><SparklesIcon className="w-4 h-4" />Scan for characters</button><button onClick={() => setIsSidebarOpen(true)}><SwatchIcon className="w-4 h-4" />Story guide</button></div></>;
-    const detailsPanel = <div className="ww-editor-details-content"><h3>Chapter details</h3><label>Author note <small>Visible to readers</small><textarea rows={4} maxLength={1000} value={disclaimerNote} onChange={event => { disclaimerNoteRef.current = event.target.value; setDisclaimerNote(event.target.value); debouncedSave('preserve', content, title); }} placeholder="Add context without spoiling the chapter." /></label><details className="chapter-disclosure-editor"><summary>Content warnings <span>{contentWarnings.length ? `${contentWarnings.length} selected` : 'None'}</span></summary><p>Shown before this chapter opens.</p><div className="chapter-warning-options">{(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(warning => <button type="button" key={warning} aria-pressed={contentWarnings.includes(warning)} className={contentWarnings.includes(warning) ? 'selected' : ''} onClick={() => { const next = contentWarnings.includes(warning) ? contentWarnings.filter(item => item !== warning) : [...contentWarnings, warning]; contentWarningsRef.current = next; setContentWarnings(next); debouncedSave('preserve', content, title); }}>{warning.replaceAll('_', ' ').toLowerCase()}</button>)}</div>{contentWarnings.some(warning => ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'].includes(warning)) && <p className="ww-editor-mature-note">These warnings raise the story’s rating to Mature (18+).{!currentUser.dateOfBirth && <> Add your date of birth in <a href="/edit-profile">Profile Settings</a> before publishing.</>}</p>}</details><div className="ww-editor-detail-section"><h3>Publication</h3><p>{chapter?.status === 'published' ? 'The published version stays live while you work on changes.' : chapter?.status === 'scheduled' && chapter.scheduledAt ? `Scheduled for ${new Date(chapter.scheduledAt).toLocaleString()}.` : 'Your chapter stays private until you publish it.'}</p><button className="ww-editor-save-button" disabled={saveState === 'saving' || isLoadingContent || !!contentLoadError} onClick={() => handleSave('preserve', content, title)}><Cloud size={16} />{chapter?.status === 'published' ? 'Save changes' : 'Save draft'}</button><button className="ww-editor-schedule-button" onClick={() => setIsScheduleOpen(true)} disabled={saveState === 'saving' || isLoadingContent || !!contentLoadError || book.publicationStatus !== 'published' || chapter?.status === 'published'}>{chapter?.status === 'scheduled' ? 'Reschedule chapter' : 'Schedule chapter'}</button>{book.publicationStatus !== 'published' && <small>Publish the story before scheduling a chapter.</small>}</div><div className="ww-editor-detail-section"><h3>Revision history</h3><p>Return to a saved recovery point whenever you need to.</p><button className="ww-editor-history" onClick={() => setIsVersionHistoryOpen(true)} disabled={isNewChapter || saveState === 'saving'}><History size={16} />View revisions</button>{isNewChapter && <small>Available after your first save.</small>}</div></div>;
+    const chapterNavigation = <><span className="ww-studio-eyebrow">{book.title}</span><h2>Manuscript</h2><nav aria-label="Chapters">{book.chapters.map((item, index) => <button type="button" key={item.id} disabled={saveState === 'saving' || isLoadingContent} className={item.id === chapterId ? 'active' : ''} aria-current={item.id === chapterId ? 'page' : undefined} onClick={() => { setMobilePanel(null); void leaveEditor(`/write/book/${bookId}/chapter/${item.id}/edit`); }}><span className={`ww-editor-chapter-number ${item.status}`}>{item.status === 'published' ? <Check size={15} /> : index + 1}</span><span>{item.title || `Chapter ${index + 1}`}<small>{item.status === 'published' ? 'Published' : item.status === 'scheduled' ? 'Scheduled' : 'Private draft'}{item.hasUnpublishedChanges ? ' · New edits' : ''}</small></span></button>)}{isNewChapter && <button className="active" type="button"><span className="ww-editor-chapter-number">{chapterNumber}</span><span>{title || 'Untitled chapter'}<small>Private draft</small></span></button>}</nav><button className="ww-editor-new-chapter" disabled={saveState === 'saving' || isLoadingContent} onClick={() => { setMobilePanel(null); void leaveEditor(`/write/book/${bookId}/chapter/new/edit`); }}><Plus size={17} />New chapter</button><div className="ww-editor-rail-tools"><button type="button" title="Explore the writing studio and find its tools" onClick={() => setShowDemoModal(true)}><BookOpenText size={17} aria-hidden="true" />Writing tools tour</button><button type="button" title="Find repeated character names and link them to your cast" disabled={isLoadingContent || !!contentLoadError} onClick={() => setIsScannerOpen(true)}><Search size={17} aria-hidden="true" />Scan for characters</button><button type="button" title="Reference your characters, scenes, and private notes" onClick={() => setIsSidebarOpen(true)}><UsersRound size={17} aria-hidden="true" />Story guide</button></div></>;
+    const hasMatureWarnings = contentWarnings.some(warning => matureWarnings.includes(warning));
+    const detailsPanel = <div className="ww-editor-details-content">
+        <h3>Chapter details</h3>
+        <label>Author note <small>Visible to readers</small><textarea rows={4} maxLength={1000} value={disclaimerNote} onChange={event => { disclaimerNoteRef.current = event.target.value; setDisclaimerNote(event.target.value); debouncedSave('preserve', content, title); }} placeholder="Add context without spoiling the chapter." /></label>
+        <details className={`chapter-disclosure-editor ${contentWarnings.length ? 'has-warnings' : ''}`}>
+            <summary><span className="ww-editor-warning-label"><AlertTriangle size={17} aria-hidden="true" />Content warnings</span><span className="ww-editor-warning-count">{contentWarnings.length ? `${contentWarnings.length} selected` : 'None'}<ChevronDown size={15} aria-hidden="true" /></span></summary>
+            <p className="ww-editor-warning-guidance">Optional: select what applies. Readers see these before opening this chapter.</p>
+            <div className="chapter-warning-options">{(Object.keys(warningLabels) as ContentWarning[]).map(warning => <button type="button" key={warning} aria-pressed={contentWarnings.includes(warning)} className={contentWarnings.includes(warning) ? 'selected' : ''} onClick={() => { const next = contentWarnings.includes(warning) ? contentWarnings.filter(item => item !== warning) : [...contentWarnings, warning]; contentWarningsRef.current = next; setContentWarnings(next); debouncedSave('preserve', content, title); }}>{contentWarnings.includes(warning) && <Check size={13} aria-hidden="true" />}{warningLabels[warning]}</button>)}</div>
+            {hasMatureWarnings && <p className="ww-editor-mature-note"><AlertTriangle size={18} aria-hidden="true" /><span><strong>Mature rating</strong>These warnings require Mature (18+) or higher.{!currentUser.dateOfBirth && <> Add your date of birth in <a href="/edit-profile" onClick={event => { event.preventDefault(); void leaveEditor('/edit-profile'); }}>Profile Settings</a> before publishing.</>}</span></p>}
+        </details>
+        <div className="ww-editor-detail-section"><h3>Publication</h3><p>{chapter?.status === 'published' ? 'The published version stays live while you work on changes.' : chapter?.status === 'scheduled' && chapter.scheduledAt ? `Scheduled for ${new Date(chapter.scheduledAt).toLocaleString()}.` : 'Your chapter stays private until you publish it.'}</p><button className="ww-editor-save-button" disabled={saveState === 'saving' || isLoadingContent || !!contentLoadError} onClick={() => handleSave('preserve', content, title)}><Cloud size={16} />{chapter?.status === 'published' ? 'Save changes' : 'Save draft'}</button><button className="ww-editor-schedule-button" onClick={() => setIsScheduleOpen(true)} disabled={saveState === 'saving' || isLoadingContent || !!contentLoadError || book.publicationStatus !== 'published' || chapter?.status === 'published'}>{chapter?.status === 'scheduled' ? 'Reschedule chapter' : 'Schedule chapter'}</button>{book.publicationStatus !== 'published' && <small>Publish the story before scheduling a chapter.</small>}</div>
+        <div className="ww-editor-detail-section"><h3>Revision history</h3><p>Return to a saved recovery point whenever you need to.</p><button className="ww-editor-history" onClick={() => setIsVersionHistoryOpen(true)} disabled={isNewChapter || saveState === 'saving'}><History size={16} />View revisions</button>{isNewChapter && <small>Available after your first save.</small>}</div>
+    </div>;
     const notesPanel = <div className="ww-editor-notes-content"><div className="ww-editor-note-privacy"><LockKeyhole size={16} /><span>Only visible to you. Private notes never appear in the reader preview.</span></div><NoteList bookId={bookId} /></div>;
 
     return (
@@ -626,13 +650,26 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             <WritingDemoModal 
                 isOpen={showDemoModal} 
                 onClose={handleCloseDemo} 
+                onOpenTool={(tool: WritingTourTool) => {
+                    if (tool === 'guide') setIsSidebarOpen(true);
+                    if (tool === 'scanner') setIsScannerOpen(true);
+                    if (tool === 'preview') setIsPreviewOpen(true);
+                    if (tool === 'details') {
+                        setSideTab('details');
+                        if (window.matchMedia('(max-width: 980px)').matches) setMobilePanel('details');
+                        requestAnimationFrame(() => {
+                            const panel = window.matchMedia('(max-width: 980px)').matches ? mobileDialogRef.current : document.querySelector('.ww-editor-details-rail');
+                            panel?.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+                        });
+                    }
+                }}
             />
 
             {/* Smart Paste Toast */}
             {showSmartPasteToast && (
                 <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-lg animate-in slide-in-from-top-10 fade-in duration-300">
                     <div className="bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border-2 border-accent/40 flex items-center justify-between gap-4">
-                        <div 
+                        <button type="button" aria-label="Review pasted characters"
                             className="flex items-center gap-4 cursor-pointer flex-1 group" 
                             onClick={() => setShowSmartPasteToast(false)}
                         >
@@ -640,14 +677,14 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                                 <SparklesIcon className="w-7 h-7 text-accent animate-pulse" />
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-gray-900 dark:text-gray-100 text-base">✨ Story Paste Detected!</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium group-hover:text-accent transition-colors">Click here to auto-detect characters.</p>
+                                <p className="font-bold text-gray-900 dark:text-gray-100 text-base">Characters in your pasted text</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium group-hover:text-accent transition-colors">Review suggested names before adding them.</p>
                             </div>
-                        </div>
+                        </button>
                         <button 
                             onClick={() => { setSmartPasteContent(null); setShowSmartPasteToast(false); }} 
                             className="p-2 bg-gray-100 dark:bg-dark-border rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
-                            title="Dismiss"
+                            title="Dismiss" aria-label="Dismiss pasted character suggestions"
                         >
                             <XMarkIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                         </button>
@@ -661,7 +698,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                     isOpen={true}
                     text={smartPasteContent}
                     existingCharacters={characters}
-                    onClose={() => setSmartPasteContent(null)}
+                    onClose={() => { setSmartPasteContent(null); requestAnimationFrame(() => document.querySelector<HTMLElement>('.rte-content[contenteditable=true]')?.focus()); }}
                     onAddCharacters={handleAddCharacters}
                     onShowDemo={() => setShowDemoModal(true)}
                 />

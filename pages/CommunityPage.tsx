@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Bookmark, Compass, Feather, MessageCircle, Plus, Settings2, ShieldCheck, Users } from 'lucide-react';
 import type { User } from '../types';
 import type { Circle, CommunityMe, FeedMode, PostType } from '../types/community';
@@ -13,6 +13,11 @@ import { ResilientImage } from '../components/ResilientImage';
 
 interface Props { currentUser: User | null; onSignIn: () => void; circleSlug?: string; query?: string }
 const MODES: { mode: FeedMode; label: string; icon: typeof Compass }[] = [{ mode: 'discover', label: 'Discover', icon: Compass }, { mode: 'following', label: 'Following', icon: Users }, { mode: 'circles', label: 'Circles', icon: MessageCircle }, { mode: 'saved', label: 'Saved', icon: Bookmark }];
+const communityJourneyPath = () => window.location.pathname + window.location.search;
+const readCommunityFormat = (): PostType | '' => {
+  const saved = window.history.state?.wordWeftCommunity;
+  return saved?.path === communityJourneyPath() && Object.prototype.hasOwnProperty.call(POST_LABELS, saved.type) ? saved.type : '';
+};
 const CommunityContent: React.FC<Pick<Props, 'circleSlug' | 'query'>> = ({ circleSlug, query = '' }) => {
   const { user, requireAuth } = useCommunitySession();
   const [circles, setCircles] = useState<Circle[]>([]);
@@ -21,7 +26,8 @@ const CommunityContent: React.FC<Pick<Props, 'circleSlug' | 'query'>> = ({ circl
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [mode, setMode] = useState<FeedMode>('discover');
-  const [type, setType] = useState<PostType | ''>('');
+  const [type, setType] = useState<PostType | ''>(readCommunityFormat);
+  const journeyPathRef = useRef(communityJourneyPath());
   const [composer, setComposer] = useState(false);
   const [settings, setSettings] = useState(false);
   const [moderating, setModerating] = useState(false);
@@ -37,7 +43,13 @@ const CommunityContent: React.FC<Pick<Props, 'circleSlug' | 'query'>> = ({ circl
     if (user) api.getMe(controller.signal).then(setMe).catch(err => { if (!controller.signal.aborted) setError(communityError(err)); });
     return () => controller.abort();
   }, [user?.id, retry]);
-  useEffect(() => { setMode(communityFeedMode(query)); setType(''); setModerating(false); }, [circleSlug, query]);
+  useEffect(() => { setMode(communityFeedMode(query)); setType(readCommunityFormat()); setModerating(false); }, [circleSlug, query]);
+  useEffect(() => {
+    if (communityJourneyPath() !== journeyPathRef.current) return;
+    // Format choices belong to this feed entry; preserve navigation's own
+    // history fields so browser Back returns to the same conversation list.
+    window.history.replaceState({ ...window.history.state, wordWeftCommunity: { path: journeyPathRef.current, type } }, '');
+  }, [type]);
   useEffect(() => { if (new URLSearchParams(query).get('compose') === '1' && requireAuth()) setComposer(true); }, [query, user?.id]);
   const join = async (target: Circle) => {
     if (!requireAuth() || joining.includes(target.id)) return;

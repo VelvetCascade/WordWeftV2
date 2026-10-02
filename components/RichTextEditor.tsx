@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -22,6 +24,8 @@ import * as api from '../api/client';
 import { ImageCropModal } from './ImageCropModal';
 import imageCompression from 'browser-image-compression';
 import { ResizableImage } from './extensions/ResizableImageExtension';
+import { useDialog } from '../hooks/useDialog';
+import '../styles/writing-controls.css';
 
 // ─── SVG Icon Components ───────────────────────────────────────────
 const Icon: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -96,50 +100,47 @@ const MOOD_OPTIONS = [
 ] as const;
 
 const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const panelRef = React.useRef<HTMLDivElement>(null);
-
-    React.useEffect(() => {
-        if (!isOpen) return;
-        const handleOutsideClick = (e: MouseEvent) => {
-            if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleOutsideClick);
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
-    }, [isOpen]);
+    const [isOpen, setIsOpen] = useState(false);
+    const dialogRef = useDialog(isOpen, () => setIsOpen(false));
 
     return (
-        <div className="relative" ref={panelRef}>
-            <ToolbarButton
+        <>
+            <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                isActive={editor.isActive('moodBlock') || isOpen}
-                title="Set Atmosphere / Mood"
+                className={`rte-toolbar-btn ${editor.isActive('moodBlock') || isOpen ? 'rte-toolbar-btn-active' : ''}`}
+                title="Set atmosphere"
+                aria-label="Set atmosphere"
+                aria-haspopup="dialog"
+                aria-expanded={isOpen}
             >
                 <MoodIcon />
-            </ToolbarButton>
-
-            <div className={`mood-picker-panel ${isOpen ? 'mood-picker-panel--open' : ''}`}>
-                <div className="mood-picker-panel__title">🎭 Set Atmosphere</div>
-                <div className="mood-picker-grid">
+            </button>
+            {isOpen && createPortal(<div className="rte-mood-backdrop" onMouseDown={event => event.target === event.currentTarget && setIsOpen(false)}>
+                <div className="rte-mood-dialog" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="rte-mood-title" tabIndex={-1}>
+                <header><h2 id="rte-mood-title">Set chapter atmosphere</h2><button type="button" aria-label="Close atmosphere picker" onClick={() => setIsOpen(false)}><X size={20} aria-hidden="true" /></button></header>
+                <p>Insert a section with a mood. Write inside it, then check the effect in the reader preview.</p>
+                <div className="rte-mood-options">
                     {MOOD_OPTIONS.map(({ mood, emoji, label }) => (
                         <button
                             key={mood}
                             type="button"
-                            className={`mood-picker-card mood-picker-card--${mood}`}
+                            className={`rte-mood-option rte-mood-option--${mood}`}
+                            aria-label={label}
                             onClick={() => {
                                 (editor.chain().focus() as any).insertMoodBlock(mood).run();
                                 setIsOpen(false);
+                                requestAnimationFrame(() => editor.commands.focus());
                             }}
                         >
-                            <span className="mood-picker-card__emoji">{emoji}</span>
-                            <span className="mood-picker-card__label">{label}</span>
+                            <span aria-hidden="true">{emoji}</span>
+                            <span>{label}</span>
                         </button>
                     ))}
                 </div>
-            </div>
-        </div>
+                </div>
+            </div>, document.body)}
+        </>
     );
 };
 
@@ -508,10 +509,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }, [editor, readOnly]);
 
     useEffect(() => {
-        if (editor && value && editor.getHTML() !== value) {
+        if (editor && editor.getHTML() !== value) {
             if (editor.isEmpty && value === '<p></p>') return;
             if (!editor.isFocused) {
-                editor.commands.setContent(value);
+                editor.commands.setContent(value, { emitUpdate: false });
             }
         }
     }, [value, editor]);

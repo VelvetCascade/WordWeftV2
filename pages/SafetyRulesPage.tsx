@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 import '../styles/support-v2.css';
 
 const policySections = [["1", "Legal Compliance"], ["2", "Age Restrictions"], ["3", "Adult / NSFW Content"], ["4", "Violence & Harmful Content"], ["5", "Hate & Harassment"], ["6", "Spam & Platform Abuse"], ["7", "Plagiarism & Copyright"], ["8", "AI Content Rules"], ["9", "Covers & Media"], ["10", "Comment & Interaction Rules"], ["11", "Monetization Rules"], ["12", "Tagging & Content Warnings"], ["13", "Reporting & Enforcement"], ["14", "Appeals"], ["15", "Platform Protection Clause"], ["16", "Changes to Rules"]] as const;
@@ -45,6 +46,7 @@ export const SafetyRulesPage: React.FC = () => {
             {/* Hero Header */}
             <div className="wv-legal-header">
                 <div className="wv-support-shell wv-pagehead">
+                    <ReturnNavigation />
                     <p className="wv-eyebrow">WordWeft policies</p>
                     <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4 tracking-tight">
                         Safety & Content Rules

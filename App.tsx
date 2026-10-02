@@ -528,7 +528,7 @@ const App: React.FC = () => {
       case 'safety':
         return <SafetyRulesPage />;
       case 'contact':
-        return <ContactPage currentUser={currentUser} />;
+        return <ContactPage currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'feedback':
         return <FeedbackPage />;
       case 'author':
@@ -610,11 +610,11 @@ const App: React.FC = () => {
 
         {isWriterPage ? (
           <WriterLayout currentUser={currentUser ?? undefined}>
-            <PageErrorBoundary route={JSON.stringify(page)}><Suspense fallback={<PageLoadingFallback />}><RouteSurface key={window.location.pathname + window.location.search}>{renderPage()}</RouteSurface></Suspense></PageErrorBoundary>
+            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={window.location.pathname + window.location.search}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </WriterLayout>
         ) : (
           <main id="main-content" tabIndex={-1} className={`ww-app-main ww-page-${page.name} ${showNavbar ? 'ww-app-main-with-nav pb-24 xl:pb-0' : ''}`}>
-            <PageErrorBoundary route={JSON.stringify(page)}><Suspense fallback={<PageLoadingFallback />}><RouteSurface key={window.location.pathname + window.location.search} reader={page.name === 'reader'}>{renderPage()}</RouteSurface></Suspense></PageErrorBoundary>
+            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={window.location.pathname + window.location.search} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </main>
         )}
 

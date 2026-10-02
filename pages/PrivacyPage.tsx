@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 import '../styles/support-v2.css';
 
 const policySections = [["1", "What Data We Collect"], ["2", "How We Use Your Data"], ["3", "Cookies & Advertising Partners"], ["4", "Content Visibility & Public Data"], ["5", "Data Sharing"], ["6", "User Content Responsibility"], ["7", "Data Retention"], ["8", "Account Deletion"], ["9", "Security Measures"], ["10", "Children's Privacy"], ["11", "International Users"], ["12", "Your Rights"], ["13", "Changes to Policy"], ["14", "Contact"]] as const;
@@ -45,6 +46,7 @@ export const PrivacyPage: React.FC = () => {
             {/* Hero Header */}
             <div className="wv-legal-header">
                 <div className="wv-support-shell wv-pagehead">
+                    <ReturnNavigation />
                     <p className="wv-eyebrow">WordWeft policies</p>
                     <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4 tracking-tight">
                         Privacy Policy

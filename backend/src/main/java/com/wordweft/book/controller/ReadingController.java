@@ -1,171 +1,43 @@
-
 package com.wordweft.book.controller;
 
-import com.wordweft.book.model.*;
-import com.wordweft.book.repository.*;
-import com.wordweft.book.service.PublishedChapterView;
+import com.wordweft.book.service.ReadingProgressService;
 import com.wordweft.security.services.UserDetailsImpl;
-import com.wordweft.user.model.User;
-import com.wordweft.user.repository.UserRepository;
-import com.wordweft.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api")
 public class ReadingController {
-
     @Autowired
-    ReadingProgressRepository progressRepository;
-    @Autowired
-    BookRepository bookRepository;
-    @Autowired
-    LibraryRepository libraryRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    UserService userService;
+    ReadingProgressService progressService;
 
     @GetMapping("/reading/progress/{bookId}")
     public ResponseEntity<?> getProgress(@PathVariable String bookId) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        return ResponseEntity.ok(progressRepository.findByUserIdAndBookId(userDetails.getId(), bookId).orElse(null));
+        return ResponseEntity.ok(progressService.getProgress(userId(), bookId));
     }
 
     @GetMapping("/reading/progress")
     public ResponseEntity<?> getAllProgress() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        List<ReadingProgress> list = progressRepository.findByUserId(userDetails.getId());
-        Map<String, ReadingProgress> map = new HashMap<>();
-        list.forEach(p -> map.put(p.getBookId(), p));
-        return ResponseEntity.ok(map);
+        return ResponseEntity.ok(progressService.getAllProgress(userId()));
     }
 
     @PostMapping("/reading/progress")
     public ResponseEntity<?> saveProgress(@RequestBody Map<String, Object> payload) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        String bookId = (String) payload.get("bookId");
-
-        Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
-        List<Chapter> readableChapters = book.getChapters().stream()
-                .filter(chapter -> "published".equals(chapter.getStatus()))
-                .toList();
-        int totalChapters = readableChapters.size();
-
-        ReadingProgress progress = progressRepository.findByUserIdAndBookId(userDetails.getId(), bookId)
-                .orElse(new ReadingProgress());
-
-        progress.setUserId(userDetails.getId());
-        progress.setBookId(bookId);
-        progress.setLastReadScrollPosition((Integer) payload.get("scrollPosition"));
-        progress.setLastReadTimestamp(LocalDateTime.now());
-
-        // Update specific chapter progress
-        Map<String, Object> chapterData = (Map<String, Object>) payload.get("chapterData");
-        String chapterId = (String) chapterData.get("id");
-        int pVal = (Integer) chapterData.get("progress");
-        int sVal = (Integer) chapterData.get("scroll");
-
-        int readableChapterIndex = -1;
-        for (int index = 0; index < readableChapters.size(); index++) {
-            if (Objects.equals(readableChapters.get(index).getId(), chapterId)) {
-                readableChapterIndex = index;
-                break;
-            }
-        }
-        progress.setLastReadChapterIndex(Math.max(0, readableChapterIndex));
-
-        Chapter readableChapter = readableChapters.stream()
-                .filter(chapter -> Objects.equals(chapter.getId(), chapterId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Reading progress can only be saved for a published chapter."));
-
-        ReadingProgress.ChapterProgressItem item = new ReadingProgress.ChapterProgressItem();
-        item.setProgress(Math.min(100, Math.max(0, pVal)));
-        item.setScrollPosition(sVal);
-
-        progress.getChapters().put(chapterId, item);
-
-        // --- Stats Logic: Check if chapter is completed for the first time ---
-        if (pVal >= 90) {
-            if (progress.getCompletedChapterIds() == null) {
-                progress.setCompletedChapterIds(new HashSet<>());
-            }
-
-            if (!progress.getCompletedChapterIds().contains(chapterId)) {
-                // Mark as completed
-                progress.getCompletedChapterIds().add(chapterId);
-
-                // Update User Stats
-                User user = userRepository.findById(userDetails.getId()).orElseThrow();
-                if (user.getStats() == null)
-                    user.setStats(new User.UserStats());
-
-                // Find word count of this chapter
-                Optional<Chapter> chapterOpt = Optional.of(readableChapter);
-                if (chapterOpt.isPresent()) {
-                    user.getStats().setChaptersRead(user.getStats().getChaptersRead() + 1);
-                    user.getStats()
-                            .setTotalWordsRead(user.getStats().getTotalWordsRead() + PublishedChapterView.of(chapterOpt.get()).wordCount());
-
-                    // Increment books read if all chapters are done (simple logic)
-                    long completedPublishedChapters = readableChapters.stream()
-                            .filter(published -> progress.getCompletedChapterIds().contains(published.getId()))
-                            .count();
-                    if (completedPublishedChapters == totalChapters) {
-                        user.getStats().setBooksRead(user.getStats().getBooksRead() + 1);
-                    }
-
-                    userRepository.save(user);
-                }
-            }
-        }
-
-        // Calculate Overall Book Progress
-        if (totalChapters > 0) {
-            double totalPercentage = 0;
-            for (Chapter chapter : readableChapters) {
-                ReadingProgress.ChapterProgressItem cp = progress.getChapters().get(chapter.getId());
-                if (cp != null) {
-                    totalPercentage += cp.getProgress();
-                }
-            }
-            int overall = (int) (totalPercentage / totalChapters);
-            progress.setOverallProgress(Math.min(100, overall));
-        } else {
-            progress.setOverallProgress(0);
-        }
-
-        progressRepository.save(progress);
-
-        // Ensure book is in library
-        if (libraryRepository.findByUserIdAndBookId(userDetails.getId(), bookId).isEmpty()) {
-            LibraryEntry entry = new LibraryEntry();
-            entry.setUserId(userDetails.getId());
-            entry.setBookId(bookId);
-            entry.setAddedDate(LocalDate.now());
-            libraryRepository.save(entry);
-        }
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(progressService.saveProgress(userId(), ReadingProgressService.SaveRequest.from(payload)));
     }
 
     @DeleteMapping("/reading/progress/{bookId}")
     public ResponseEntity<?> clearProgress(@PathVariable String bookId) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        progressRepository.deleteByUserIdAndBookId(userDetails.getId(), bookId);
+        progressService.clearProgress(userId(), bookId);
         return ResponseEntity.ok().build();
     }
 
+    private String userId() {
+        return ((UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+    }
 }

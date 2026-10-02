@@ -2,7 +2,7 @@ package com.wordweft.user.service;
 
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.LibraryRepository;
-import com.wordweft.book.repository.ReadingProgressRepository;
+import com.wordweft.book.service.ReadingProgressService;
 import com.wordweft.book.repository.ShelfRepository;
 import com.wordweft.book.service.BookService;
 import com.wordweft.user.model.User;
@@ -23,7 +23,7 @@ class UserServiceTest {
         service.bookRepository = mock(BookRepository.class);
         service.libraryRepository = mock(LibraryRepository.class);
         service.shelfRepository = mock(ShelfRepository.class);
-        service.readingProgressRepository = mock(ReadingProgressRepository.class);
+        service.readingProgressService = mock(ReadingProgressService.class);
         service.bookService = mock(BookService.class);
         User user = new User("storyperson", "private@example.com", "hash");
         user.setId("user-1"); user.setBio("Public bio"); user.setLocation("Public place");
@@ -39,7 +39,7 @@ class UserServiceTest {
         assertFalse(profile.containsKey("following"));
         assertFalse(profile.containsKey("notificationPreferences"));
         verifyNoInteractions(service.bookService, service.bookRepository, service.libraryRepository,
-                service.shelfRepository, service.readingProgressRepository);
+                service.shelfRepository, service.readingProgressService);
     }
 
     @Test
@@ -49,7 +49,7 @@ class UserServiceTest {
         service.bookRepository = mock(BookRepository.class);
         service.libraryRepository = mock(LibraryRepository.class);
         service.shelfRepository = mock(ShelfRepository.class);
-        service.readingProgressRepository = mock(ReadingProgressRepository.class);
+        service.readingProgressService = mock(ReadingProgressService.class);
         service.bookService = mock(BookService.class);
         service.contentAccessService = mock(com.wordweft.book.service.ContentAccessService.class);
 
@@ -64,7 +64,7 @@ class UserServiceTest {
         entry.setBookId("book-mature-21");
         when(service.libraryRepository.findByUserId("user-young")).thenReturn(java.util.List.of(entry));
         when(service.shelfRepository.findByUserId("user-young")).thenReturn(java.util.List.of());
-        when(service.readingProgressRepository.findByUserId("user-young")).thenReturn(java.util.List.of());
+        when(service.readingProgressService.getAllProgress("user-young")).thenReturn(java.util.Map.of());
         when(service.bookRepository.findByAuthorId("user-young")).thenReturn(java.util.List.of());
 
         // enrichBookForProfileById returns a map safely (with isRestricted: true)
@@ -102,7 +102,7 @@ class UserServiceTest {
         service.bookRepository = mock(BookRepository.class);
         service.libraryRepository = mock(LibraryRepository.class);
         service.shelfRepository = mock(ShelfRepository.class);
-        service.readingProgressRepository = mock(ReadingProgressRepository.class);
+        service.readingProgressService = mock(ReadingProgressService.class);
         service.bookService = mock(BookService.class);
         service.contentAccessService = mock(com.wordweft.book.service.ContentAccessService.class);
 
@@ -117,7 +117,7 @@ class UserServiceTest {
         entry.setBookId("book-mature-21");
         when(service.libraryRepository.findByUserId("user-adult")).thenReturn(java.util.List.of(entry));
         when(service.shelfRepository.findByUserId("user-adult")).thenReturn(java.util.List.of());
-        when(service.readingProgressRepository.findByUserId("user-adult")).thenReturn(java.util.List.of());
+        when(service.readingProgressService.getAllProgress("user-adult")).thenReturn(java.util.Map.of());
         when(service.bookRepository.findByAuthorId("user-adult")).thenReturn(java.util.List.of());
 
         java.util.Map<String, Object> matureBookMap = new java.util.HashMap<>();

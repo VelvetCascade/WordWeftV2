@@ -121,6 +121,15 @@ html .reader-experience.reader-v2 .reader-conversation-rail { right: 24px; width
   html .ww-app .ww-writer-v2 .ww-analytics-header { flex-direction: row; align-items: end; }
   html .ww-app .ww-writer-v2 .ww-analytics-header label { width: 330px; min-width: 280px; flex-shrink: 0; }
 }
+/* Use the compact navigation before desktop links and account controls collide on tablets. */
+@media (min-width: 761px) and (max-width: 900px) {
+  html .v2-nav { grid-template-columns: minmax(0,1fr) auto; height: 60px; }
+  html :is(.v2-nav-primary,.v2-start,.v2-library-link) { display: none; }
+  html .v2-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; display: grid; grid-template-columns: repeat(4,1fr); background: var(--ww-paper); border-top: 1px solid var(--ww-line); padding: 8px 12px max(8px,env(safe-area-inset-bottom)); }
+  html .v2-bottom-nav a { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 46px; gap: 3px; font-size: 11px; color: var(--ww-muted); border-radius: 8px; }
+  html .v2-bottom-nav a.active { color: var(--ww-brand); background: var(--ww-brand-soft); }
+  html .ww-app-main-with-nav { padding-bottom: 82px !important; }
+}
 @media (max-width: 760px) {
   html .ww-app { --app-gutter: 20px; }
   html .v2-nav-wrap { margin: 12px 12px 0; top: 8px; }

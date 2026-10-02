@@ -22,7 +22,9 @@ public class ReadingProgress {
     private String userId;
     private String bookId;
     private int overallProgress; // 0-100
+    private boolean finished;
     private int lastReadChapterIndex;
+    private String lastReadChapterId;
     private int lastReadScrollPosition;
     private LocalDateTime lastReadTimestamp = LocalDateTime.now();
     
@@ -31,6 +33,9 @@ public class ReadingProgress {
     
     // Set of chapter IDs that have been fully read and counted towards user stats
     private Set<String> completedChapterIds = new HashSet<>();
+
+    // Lifetime completion ledger survives an intentional reading restart.
+    private Boolean bookCompletionCounted;
 
     @Data
     @NoArgsConstructor

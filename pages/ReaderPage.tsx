@@ -22,6 +22,8 @@ import parse, { domToReact } from 'html-react-parser';
 import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 import { readReaderPreferences } from '../utils/runtimeLifecycle';
 import { manuscriptProgress } from '../utils/readerProgress';
+import { isReadingFinished, mergeReadingSnapshots } from '../utils/readingJourney';
+import { WordWeftLogo } from '../components/icons/WordWeftLogo';
 import { ReaderSignInGate } from '../components/ReaderSignInGate';
 import { consumeReaderResumeIntent, readerChapterPath, saveReaderAuthIntent, type ReaderAuthView } from '../utils/readerAuthIntent';
 import { ensureCipherFontLoaded, preloadCipherFonts } from '../utils/cipherFont';
@@ -304,8 +306,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const moodContentRef = useRef<HTMLDivElement>(null);
     const saveProgressTimeoutRef = useRef<number | null>(null);
     const hasRecordedView = useRef<string | null>(null);
-    const lastSaveTimeRef = useRef<number>(0);
-    const maxPercentageRef = useRef<number>(0);
+    const observedProgressRef = useRef(new Map<string, { progress: number; scrollPosition: number; revision: number; dirty: boolean }>());
+    const activeChapterRef = useRef<string | undefined>(undefined);
+    const readerMountedRef = useRef(true);
+    const refreshedReadingAccountRef = useRef(new Set<string>());
     const trackedAccessEventsRef = useRef(new Set<string>());
     const appearanceAnchorRef = useRef<{ element: HTMLElement; top: number } | null>(null);
     const changeAppearance = useCallback((update: () => void) => {
@@ -328,6 +332,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
+    activeChapterRef.current = chapter?.id;
+    useEffect(() => {
+        readerMountedRef.current = true;
+        return () => { readerMountedRef.current = false; };
+    }, []);
     useEffect(() => {
         if (book && chapter && window.location.pathname === chapterPath(book.id, chapter.id)) applyMetadata(metadataFor(parseRoute(chapterPath(book.id, chapter.id)), book));
     }, [book, chapter]);
@@ -465,113 +474,128 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         });
     }, []);
 
-    const saveProgress = useCallback(() => {
+    const observeProgress = useCallback(() => {
+        if (!chapter || chapterContent?.access !== 'FULL' || isChapterLoading || !moodContentRef.current) return;
+        const previous = observedProgressRef.current.get(chapter.id);
+        const progress = Math.max(previous?.progress ?? 0, calculateProgress());
+        const scrollPosition = Math.max(0, Math.round(window.scrollY));
+        const changed = !previous || Math.abs(progress - previous.progress) > 0.01 || scrollPosition !== previous.scrollPosition;
+        const observation = { progress, scrollPosition, revision: (previous?.revision ?? 0) + (changed ? 1 : 0), dirty: !!previous?.dirty || changed };
+        observedProgressRef.current.set(chapter.id, observation);
+        setScrollProgress(calculateProgress());
+        return observation;
+    }, [chapter?.id, chapterContent?.access, isChapterLoading, calculateProgress]);
+
+    const saveProgress = useCallback((observe = true) => {
         if (!currentUser || !book || !chapter || chapterContent?.access !== 'FULL') return;
-
-        const now = Date.now();
-        if (now - lastSaveTimeRef.current < 500) {
-            return;
+        if (observe && activeChapterRef.current === chapter.id) observeProgress();
+        const observation = observedProgressRef.current.get(chapter.id);
+        if (!observation?.dirty) return;
+        const { progress, scrollPosition, revision } = observation;
+        observation.dirty = false;
+        const snapshot = { chapterId: chapter.id, chapterIndex: currentChapterIndex, progress, scrollPosition, timestamp: Date.now() };
+        const stillHere = () => readerMountedRef.current && activeChapterRef.current === chapter.id;
+        if (stillHere()) {
+            setProgressSaveState('saving');
+            setReadingProgress(previous => mergeReadingSnapshots(previous, [snapshot], book.chapters));
         }
-        lastSaveTimeRef.current = now;
-
-        const scrollTop = window.scrollY;
-        const percentage = calculateProgress();
-
-        if (percentage > maxPercentageRef.current) {
-            maxPercentageRef.current = percentage;
-        }
-
-        setProgressSaveState('saving');
-        void api.saveReadingProgress(
-            currentUser.id,
-            book,
-            currentChapterIndex,
-            scrollTop,
-            maxPercentageRef.current
-        ).then(() => {
-            setProgressSaveState('saved');
-            setReadingProgress(previous => previous ? {
-                ...previous,
-                lastReadChapterIndex: currentChapterIndex,
-                chapters: { ...previous.chapters, [chapter.id]: { progress: maxPercentageRef.current, scrollPosition: scrollTop } },
-            } : previous);
-        }).catch(error => {
-            setProgressSaveState('error');
-            console.warn('Reading progress could not be saved', error);
+        // This immediately records an immutable pending snapshot before the request leaves the page.
+        void api.saveReadingProgress(currentUser.id, book, currentChapterIndex, scrollPosition, progress).then(() => {
+            if (stillHere()) {
+                const latest = observedProgressRef.current.get(chapter.id);
+                // API events reflect every chapter in the book, including older failed saves.
+                // This observation must not mark the whole book saved or hide its Retry action.
+                if (latest?.revision !== revision) setProgressSaveState(previous => previous === 'error' ? 'error' : 'saving');
+            }
+            const refreshKey = progress >= 90 ? `${currentUser.id}:completed:${chapter.id}` : `${currentUser.id}:library:${book.id}`;
+            if (!refreshedReadingAccountRef.current.has(refreshKey)) {
+                refreshedReadingAccountRef.current.add(refreshKey);
+                void api.getMe().then(updated => { if (updated?.id === currentUser.id) onUserUpdate(updated); }).catch(() => { refreshedReadingAccountRef.current.delete(refreshKey); });
+            }
+        }).catch(() => {
+            const latest = observedProgressRef.current.get(chapter.id);
+            if (latest) latest.dirty = true;
+            if (stillHere()) setProgressSaveState('error');
         });
-    }, [currentUser, book, currentChapterIndex, chapter, chapterContent?.access, calculateProgress]);
+    }, [currentUser?.id, book, chapter?.id, currentChapterIndex, chapterContent?.access, observeProgress, onUserUpdate]);
 
     useEffect(() => {
-        if (!currentUser || !chapter || chapterContent?.access !== 'FULL' || resumedChapterId === chapter.id) return;
+        const updated = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            if (detail?.userId !== currentUser?.id || detail?.bookId !== bookId) return;
+            setReadingProgress(detail.progress);
+            setProgressSaveState(detail.status === 'error' || detail.progress?.syncError ? 'error' : detail.progress?.pendingSync ? 'saving' : 'saved');
+            if (detail.status === 'error' && chapter) {
+                const observation = observedProgressRef.current.get(chapter.id);
+                if (observation) observation.dirty = true;
+            }
+        };
+        window.addEventListener(api.READING_PROGRESS_UPDATED_EVENT, updated);
+        return () => window.removeEventListener(api.READING_PROGRESS_UPDATED_EVENT, updated);
+    }, [bookId, currentUser?.id, chapter?.id]);
 
+    useEffect(() => {
+        if (!chapter || chapterContent?.access !== 'FULL' || isChapterLoading) return;
+        const id = chapter.id;
+        if (!observedProgressRef.current.has(id)) observedProgressRef.current.set(id, { progress: 0, scrollPosition: 0, revision: 0, dirty: false });
+        setProgressSaveState('idle');
+        setScrollProgress(0);
+        if (!currentUser) return;
         let cancelled = false;
-
         const restorePosition = async () => {
             try {
-                const savedProgress = await api.getReadingProgressForBook(currentUser.id, bookId);
+                const saved = await api.getReadingProgressForBook(currentUser.id, bookId);
                 if (cancelled) return;
-
-                setReadingProgress(savedProgress);
-                maxPercentageRef.current = 0;
-                const savedChapterProgress = savedProgress?.chapters?.[chapter.id];
-                if (savedChapterProgress) {
-                    const savedScroll = savedChapterProgress.scrollPosition;
-                    if (savedChapterProgress.progress) {
-                        maxPercentageRef.current = savedChapterProgress.progress;
-                    }
-                    if (savedScroll > 0) {
-                        window.scrollTo({ top: savedScroll, behavior: 'instant' });
-                    } else {
-                        window.scrollTo(0, 0);
-                    }
-                } else {
-                    window.scrollTo(0, 0);
+                setReadingProgress(saved);
+                const observation = observedProgressRef.current.get(id)!;
+                const savedChapter = saved?.chapters?.[id];
+                const alreadyMoved = observation.revision > 0;
+                observation.progress = Math.max(observation.progress, savedChapter?.progress ?? 0);
+                if (!alreadyMoved && resumedChapterId !== id) {
+                    observation.scrollPosition = (savedChapter?.progress ?? 0) >= 90 ? 0 : savedChapter?.scrollPosition ?? 0;
+                    window.scrollTo({ top: observation.scrollPosition, behavior: 'instant' });
                 }
-            } catch (error) {
-                // A concurrent session expiry is already handled centrally by
-                // the API client; progress restoration must not become an
-                // unhandled browser error while the reader switches to a gate.
-                console.warn('Reading progress could not be restored', error);
+                setScrollProgress(calculateProgress());
+            } catch {
+                // Reading remains usable while sync is unavailable; observations are kept on this device.
+                if (!cancelled) setProgressSaveState('error');
             }
         };
-
-        const timerId = window.setTimeout(() => { void restorePosition(); }, 100);
-        return () => {
-            cancelled = true;
-            window.clearTimeout(timerId);
-        };
-    }, [bookId, chapter?.id, currentUser?.id, chapterContent?.access, resumedChapterId]);
+        const timer = window.setTimeout(() => { void restorePosition(); }, 100);
+        return () => { cancelled = true; window.clearTimeout(timer); };
+    }, [bookId, chapter?.id, currentUser?.id, chapterContent?.access, isChapterLoading, resumedChapterId, calculateProgress]);
 
     useEffect(() => {
+        if (!chapter || chapterContent?.access !== 'FULL' || isChapterLoading) return;
         const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-            setScrollProgress(calculateProgress());
-
-            if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-                setIsToolbarVisible(false);
-            } else {
-                setIsToolbarVisible(true);
-            }
-            lastScrollY.current = currentScrollY;
-
+            observeProgress();
+            const scrollY = window.scrollY;
+            setIsToolbarVisible(!(scrollY > lastScrollY.current && scrollY > 100));
+            lastScrollY.current = scrollY;
             if (saveProgressTimeoutRef.current === null) {
                 saveProgressTimeoutRef.current = window.setTimeout(() => {
-                    saveProgress();
                     saveProgressTimeoutRef.current = null;
-                }, 2000);
+                    saveProgress(false);
+                }, 1000);
             }
         };
-
+        const flush = () => saveProgress();
+        const visibility = () => { if (document.visibilityState === 'hidden') flush(); };
         window.addEventListener('scroll', handleScroll, { passive: true });
-
+        window.addEventListener('pagehide', flush);
+        window.addEventListener('online', flush);
+        document.addEventListener('visibilitychange', visibility);
         return () => {
             window.removeEventListener('scroll', handleScroll);
-            if (saveProgressTimeoutRef.current) {
-                clearTimeout(saveProgressTimeoutRef.current);
-            }
-            saveProgress();
+            window.removeEventListener('pagehide', flush);
+            window.removeEventListener('online', flush);
+            document.removeEventListener('visibilitychange', visibility);
+            if (saveProgressTimeoutRef.current !== null) window.clearTimeout(saveProgressTimeoutRef.current);
+            saveProgressTimeoutRef.current = null;
+            // The DOM may already show a different chapter; flush the observed chapter, never measure it here.
+            saveProgress(false);
         };
-    }, [saveProgress, calculateProgress]);
+    }, [chapter?.id, chapterContent?.access, currentUser?.id, isChapterLoading, saveProgress, observeProgress]);
 
     useEffect(() => {
         const handleReaderShortcuts = (event: KeyboardEvent) => {
@@ -777,6 +801,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
     if (!chapterContent) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
+    const nextReleasedIndex = book.chapters.findIndex((item, index) => index > currentChapterIndex && item.status === 'published');
+    const allReleasedRead = isReadingFinished(book.chapters, mergeReadingSnapshots(readingProgress, [{ chapterId: chapter.id, chapterIndex: currentChapterIndex, progress: Math.max(scrollProgress, observedProgressRef.current.get(chapter.id)?.progress ?? 0), scrollPosition: window.scrollY, timestamp: Date.now() }], book.chapters));
+    const storyComplete = allReleasedRead && book.readingStatus === 'Completed';
+
     const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
     const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
 
@@ -790,25 +818,28 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 const label = domNode.attribs['data-label'];
                 const character = characters.find(c => c.id === id);
                 return (
-                    <span
+                    <button type="button"
                         onClick={() => character && setViewingCharacter(character)}
-                        className={`font-semibold cursor-pointer transition-all duration-200 ${!character ? 'text-gray-400 line-through decoration-1' : 'text-accent hover:text-primary hover:underline underline-offset-2 decoration-accent/40'}`}
-                        title={character ? `View ${label || character.name}` : "Character not found"}
+                        disabled={!character}
+                        className="reader-character-mention"
+                        aria-label={character ? `View ${label || character.name}` : undefined}
                     >
                         {label || (character ? character.name : 'Unknown')}
-                    </span>
+                    </button>
                 );
             }
             if (domNode.type === 'tag' && domNode.name === 'span' && domNode.attribs && domNode.attribs.class === 'mention') {
                 const id = domNode.attribs['data-id'];
                 const character = characters.find(c => c.id === id);
                 return (
-                    <span
+                    <button type="button"
                         onClick={() => character && setViewingCharacter(character)}
-                        className={`font-semibold cursor-pointer text-accent hover:text-primary hover:underline underline-offset-2 decoration-accent/40 transition-all duration-200`}
+                        disabled={!character}
+                        className="reader-character-mention"
+                        aria-label={character ? `View ${character.name}` : undefined}
                     >
                         {domToReact(domNode.children, parseOptions)}
-                    </span>
+                    </button>
                 )
             }
 
@@ -904,7 +935,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             {/* Header */}
             <header className="reader-header reader-header-visible fixed top-0 left-0 right-0 z-20">
                 <div className="reader-header-inner">
-                    <div className="reader-context-left"><a className="reader-brand-v2" href="/"><img src="/design-v2/assets/brand-mark.jpg" alt="" />WordWeft</a><button onClick={handleReturnToStory} className="reader-back-button" aria-label={`Back to ${book.title}`}>
+                    <div className="reader-context-left"><a className="reader-brand-v2" href="/"><WordWeftLogo className="reader-brand-symbol" />WordWeft</a><button onClick={handleReturnToStory} className="reader-back-button" aria-label={`Back to ${book.title}`}>
                         <ChevronLeftIcon className="w-5 h-5" />
                         <span><small>Back to story</small><strong>{book.title}</strong></span>
                     </button></div>
@@ -990,12 +1021,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
                 {/* A calm chapter ending: react, continue, or return to the story. */}
                 {chapterContent.access === 'FULL' ? <section className="reader-chapter-end">
-                    <span className="reader-end-kicker">{currentChapterIndex < book.chapters.length - 1 ? 'End of chapter' : 'Story complete'}</span>
-                    <h2>{currentChapterIndex < book.chapters.length - 1 ? book.chapters[currentChapterIndex + 1].title : `You finished ${book.title}`}</h2>
-                    <p>{currentChapterIndex < book.chapters.length - 1 ? 'The next chapter is ready when you are.' : `You reached the final page of ${book.author.name}'s story.`}</p>
+                    <span className="reader-end-kicker">{nextReleasedIndex >= 0 ? 'End of chapter' : storyComplete ? 'Story complete' : allReleasedRead ? 'Up to date' : 'End of chapter'}</span>
+                    <h2>{nextReleasedIndex >= 0 ? book.chapters[nextReleasedIndex].title : storyComplete ? `You finished ${book.title}` : allReleasedRead ? `You're caught up with ${book.title}` : 'The final released chapter'}</h2>
+                    <p>{nextReleasedIndex >= 0 ? 'The next chapter is ready when you are.' : storyComplete ? `You reached the final page of ${book.author.name}'s story.` : allReleasedRead ? 'Your place is here when the next chapter arrives.' : 'Return to the story to explore any chapters you have yet to read.'}</p>
                     <div className="reader-end-primary-actions">
-                        {currentChapterIndex < book.chapters.length - 1 ? (
-                            <button onClick={() => goToChapter(currentChapterIndex + 1)}>Read next chapter <ChevronRightIcon className="w-5 h-5" /></button>
+                        {nextReleasedIndex >= 0 ? (
+                            <button onClick={() => goToChapter(nextReleasedIndex)}>Read next chapter <ChevronRightIcon className="w-5 h-5" /></button>
                         ) : (
                             <button onClick={handleReturnToStory}>Return to story <ChevronRightIcon className="w-5 h-5" /></button>
                         )}
@@ -1011,7 +1042,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <p className="reader-copyright">&copy; {new Date().getFullYear()} {book.author.name}. All rights reserved. Protected from unauthorized distribution and model training.</p>
                     <a href={discussLink(book.id, chapter.id, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
                 </section> : null}
-                {chapterContent.access === 'FULL' && <div className="reader-save-status" role="status"><span>{!currentUser ? 'Sign in to save your reading place' : progressSaveState === 'saving' ? 'Saving your place…' : progressSaveState === 'saved' ? '✓ Your place is saved' : progressSaveState === 'error' ? 'Your place could not be saved' : 'Your reading place syncs as you read'}</span><span>{Math.max(0, Math.ceil(readingMinutes * (1 - scrollProgress / 100)))} min left in this chapter</span></div>}
+                {chapterContent.access === 'FULL' && <div className="reader-save-status" role="status"><span>{!currentUser ? 'Sign in to save your reading place' : progressSaveState === 'saving' ? 'Saving your place…' : progressSaveState === 'saved' ? '✓ Your place is saved' : progressSaveState === 'error' ? 'Kept on this device. Sync could not finish.' : 'Your reading place syncs as you read'}</span>{progressSaveState === 'error' && <button type="button" onClick={() => { const observation = observedProgressRef.current.get(chapter.id); if (observation) observation.dirty = true; saveProgress(); }}>Retry saving your place</button>}<span>{Math.max(0, Math.ceil(readingMinutes * (1 - scrollProgress / 100)))} min left in this chapter</span></div>}
             </main>
             {chapterContent.access === 'FULL' && <aside className="reader-conversation-rail"><span className="ww-page-eyebrow">Chapter conversation</span><h2>A thought to share?</h2><p>Open a paragraph thread, or join the conversation at the end.</p><button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-pressed={chapter.isLiked}>{chapter.isLiked ? 'Liked' : 'Like chapter'}{chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}</button><button className="reader-conversation-count" onClick={() => openCommentDrawer(null)}>{comments.filter(comment => comment.paragraphIndex === null).length} chapter comments</button></aside>}
             <aside className="reader-outline-rail" aria-label="Story chapters">

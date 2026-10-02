@@ -2,6 +2,8 @@
 
 import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
 import { invalidateAuthSession, JWT_STORAGE_KEY, shouldInvalidateAuthSession } from '../utils/authSession';
+import type { DiscoveryHeroGroups } from '../utils/discoveryHero';
+import { mergeReadingSnapshots, type ReadingSnapshot } from '../utils/readingJourney';
 
 export { AUTH_SESSION_INVALID_EVENT } from '../utils/authSession';
 
@@ -9,6 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 
 const JWT_KEY = JWT_STORAGE_KEY;
+let verifiedSession: { authorization: string; userId: string } | null = null;
 const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
 const DEFAULT_JSON_TIMEOUT_MS = 30_000;
 
@@ -269,8 +272,10 @@ export async function getMe(): Promise<User | null> {
 
     try {
         const response = await fetchWithTimeout(`${API_BASE_URL}/users/me`, { headers: getHeaders() });
-
+        if (localStorage.getItem(JWT_KEY) !== token) return null;
         const backendUser = await handleResponse(response);
+        if (localStorage.getItem(JWT_KEY) !== token) return null;
+        verifiedSession = { authorization: `Bearer ${token}`, userId: backendUser.id };
         return mapBackendUserToFrontend(backendUser);
     } catch (e) {
         if (e instanceof ApiError && e.code === 'SESSION_INVALID') return null;
@@ -365,6 +370,11 @@ export async function getGenres(): Promise<string[]> {
 export async function getGenresRanked(): Promise<{ name: string; bookCount: number; readCount: number }[]> {
     const response = await fetch(`${API_BASE_URL}/books/genres/ranked`);
     return await handleResponse(response);
+}
+
+export async function getDiscoveryHero(): Promise<DiscoveryHeroGroups> {
+    const response = await fetch(`${API_BASE_URL}/books/hero`, { headers: getHeaders() });
+    return handleResponse(response);
 }
 
 export async function getBooks(filters: {
@@ -658,42 +668,191 @@ export async function submitStoryToGenreEvent(eventId: string, bookId: string): 
 
 // --- Library & Progress API ---
 
+type ProgressState = {
+    pending: Map<string, ReadingSnapshot>;
+    failed: Set<string>;
+    chapters?: { id: string; status: string }[];
+    server: BookProgress | null;
+    queue: Promise<void>;
+    inFlight: Map<number, Promise<void>>;
+    clearing: boolean;
+    version: number;
+};
+const progressStates = new Map<string, ProgressState>();
+const pendingProgressKey = (userId: string, bookId: string) => `ww_reading_pending_v1:${userId}:${bookId}`;
+export const READING_PROGRESS_UPDATED_EVENT = 'ww-reading-progress-updated';
+let snapshotTime = 0;
+
+function progressState(userId: string, bookId: string): ProgressState {
+    const key = pendingProgressKey(userId, bookId);
+    let state = progressStates.get(key);
+    if (!state) {
+        state = { pending: new Map(), failed: new Set(), server: null, queue: Promise.resolve(), inFlight: new Map(), clearing: false, version: 0 };
+        try {
+            const saved = JSON.parse(localStorage.getItem(key) || 'null');
+            if (Array.isArray(saved?.snapshots)) for (const item of saved.snapshots) {
+                if (typeof item.chapterId === 'string' && Number.isInteger(item.chapterIndex) && item.chapterIndex >= 0
+                    && Number.isFinite(item.progress) && item.progress >= 0 && item.progress <= 100
+                    && Number.isFinite(item.scrollPosition) && item.scrollPosition >= 0 && Number.isFinite(item.timestamp)) {
+                    state.pending.set(item.chapterId, item);
+                }
+            }
+            if (Array.isArray(saved?.chapters)) state.chapters = saved.chapters.filter((item: any) => typeof item.id === 'string' && typeof item.status === 'string');
+        } catch { /* Storage is optional; in-memory progress still survives app navigation. */ }
+        progressStates.set(key, state);
+    }
+    return state;
+}
+
+function persistPendingProgress(userId: string, bookId: string, state: ProgressState) {
+    try {
+        const key = pendingProgressKey(userId, bookId);
+        if (state.pending.size) localStorage.setItem(key, JSON.stringify({ snapshots: [...state.pending.values()], chapters: state.chapters }));
+        else localStorage.removeItem(key);
+    } catch { /* A full or restricted browser store must not interrupt reading. */ }
+}
+
+function readingSessionHeaders(userId: string) {
+    const headers = getHeaders();
+    if (!headers.Authorization || (verifiedSession && (verifiedSession.authorization !== headers.Authorization || verifiedSession.userId !== userId))) {
+        throw new ApiError('Your account changed. Reopen the story in your current account.', 409, 'session_changed');
+    }
+    return headers;
+}
+
+function enqueueProgress(userId: string, bookId: string, state: ProgressState, snapshot: ReadingSnapshot): Promise<void> {
+    const inFlight = state.inFlight.get(snapshot.timestamp);
+    if (inFlight) return inFlight;
+    // Capture the session before queueing so an account switch cannot write another reader's progress.
+    const headers = readingSessionHeaders(userId);
+    state.failed.delete(snapshot.chapterId);
+    const write = state.queue.catch(() => {}).then(async () => {
+        if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the story in your current account.', 409, 'session_changed');
+        const response = await fetch(`${API_BASE_URL}/reading/progress`, {
+            method: 'POST', headers, keepalive: true,
+            body: JSON.stringify({ bookId, chapterIndex: snapshot.chapterIndex, scrollPosition: snapshot.scrollPosition,
+                chapterData: { id: snapshot.chapterId, progress: snapshot.progress, scroll: snapshot.scrollPosition } }),
+        });
+        if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the story in your current account.', 409, 'session_changed');
+        const saved = await handleResponse(response);
+        state.version++;
+        state.server = saved || mergeReadingSnapshots(state.server, [snapshot], state.chapters);
+        if (state.server) state.server = { ...state.server, pendingSync: false };
+        if (state.pending.get(snapshot.chapterId)?.timestamp === snapshot.timestamp) state.pending.delete(snapshot.chapterId);
+        state.failed.delete(snapshot.chapterId);
+        persistPendingProgress(userId, bookId, state);
+        window.dispatchEvent(new CustomEvent(READING_PROGRESS_UPDATED_EVENT, { detail: { userId, bookId, status: state.failed.size ? 'error' : 'saved', progress: visibleReadingProgress(state) } }));
+    }).catch(error => {
+        state.failed.add(snapshot.chapterId);
+        window.dispatchEvent(new CustomEvent(READING_PROGRESS_UPDATED_EVENT, { detail: { userId, bookId, status: 'error', progress: visibleReadingProgress(state) } }));
+        throw error;
+    }).finally(() => { state.inFlight.delete(snapshot.timestamp); });
+    state.inFlight.set(snapshot.timestamp, write);
+    state.queue = write;
+    return write;
+}
+
+function retryPendingProgress(userId: string, bookId: string, state: ProgressState, authorization: string) {
+    if (state.clearing) return;
+    if (authorization !== getHeaders().Authorization) return;
+    for (const snapshot of state.pending.values()) {
+        if (!state.inFlight.has(snapshot.timestamp)) void enqueueProgress(userId, bookId, state, snapshot).catch(() => {});
+    }
+}
+
+function visibleReadingProgress(state: ProgressState): BookProgress | null {
+    const merged = mergeReadingSnapshots(state.server, [...state.pending.values()], state.chapters);
+    return merged ? { ...merged, pendingSync: state.pending.size > 0, syncError: state.failed.size > 0 } : null;
+}
+
 export async function getReadingProgressForBook(userId: string, bookId: string): Promise<BookProgress | null> {
-    const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, { headers: getHeaders() });
-    return await handleResponse(response);
+    const state = progressState(userId, bookId);
+    const headers = readingSessionHeaders(userId);
+    const version = state.version;
+    try {
+        const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, { headers });
+        if (headers.Authorization !== getHeaders().Authorization) return null;
+        const saved = await handleResponse(response);
+        if (headers.Authorization !== getHeaders().Authorization) return null;
+        if (state.version === version && !state.clearing) state.server = saved;
+    } catch (error) {
+        if (headers.Authorization !== getHeaders().Authorization) return null;
+        if (!state.pending.size || (error instanceof ApiError && error.status >= 400 && error.status < 500 && error.status !== 408 && error.status !== 429)) throw error;
+    }
+    const merged = visibleReadingProgress(state);
+    retryPendingProgress(userId, bookId, state, headers.Authorization);
+    return merged;
 }
 
 export async function getAllReadingProgress(userId: string): Promise<Record<string, BookProgress>> {
-    const response = await fetch(`${API_BASE_URL}/reading/progress`, { headers: getHeaders() });
-    return await handleResponse(response);
+    const headers = readingSessionHeaders(userId);
+    const versions = new Map([...progressStates].map(([key, state]) => [key, state.version]));
+    const response = await fetch(`${API_BASE_URL}/reading/progress`, { headers });
+    if (headers.Authorization !== getHeaders().Authorization) return {};
+    const result: Record<string, BookProgress> = await handleResponse(response);
+    if (headers.Authorization !== getHeaders().Authorization) return {};
+    const prefix = pendingProgressKey(userId, '');
+    const bookIds = new Set(Object.keys(result));
+    for (const key of progressStates.keys()) if (key.startsWith(prefix)) bookIds.add(key.slice(prefix.length));
+    try {
+        for (let index = 0; index < localStorage.length; index++) {
+            const key = localStorage.key(index);
+            if (key?.startsWith(prefix)) bookIds.add(key.slice(prefix.length));
+        }
+    } catch { /* Fall back to known in-memory observations. */ }
+    for (const bookId of bookIds) {
+        const state = progressState(userId, bookId);
+        if (!state.clearing && state.version === (versions.get(pendingProgressKey(userId, bookId)) ?? 0)) state.server = result[bookId] || null;
+        const merged = visibleReadingProgress(state);
+        if (merged) result[bookId] = merged;
+        else delete result[bookId];
+        retryPendingProgress(userId, bookId, state, headers.Authorization);
+    }
+    return result;
 }
 
 export async function saveReadingProgress(userId: string, book: Book, chapterIndex: number, scrollPosition: number, progressPercentage: number): Promise<void> {
-    const chapterId = book.chapters[chapterIndex].id;
-
-    const response = await fetch(`${API_BASE_URL}/reading/progress`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-            bookId: book.id,
-            chapterIndex,
-            scrollPosition,
-            chapterData: {
-                id: chapterId,
-                progress: Math.round(progressPercentage),
-                scroll: Math.round(scrollPosition)
-            }
-        })
-    });
-    await handleResponse(response);
+    const chapter = book.chapters[chapterIndex];
+    if (!chapter || chapter.status !== 'published' || !Number.isFinite(progressPercentage) || !Number.isFinite(scrollPosition)) return;
+    const state = progressState(userId, book.id);
+    if (state.clearing) return;
+    readingSessionHeaders(userId);
+    state.version++;
+    state.chapters = book.chapters.map(({ id, status }) => ({ id, status }));
+    const snapshot: ReadingSnapshot = {
+        chapterId: chapter.id, chapterIndex,
+        progress: Math.min(100, Math.max(0, Math.round(progressPercentage), state.pending.get(chapter.id)?.progress ?? 0, state.server?.chapters?.[chapter.id]?.progress ?? 0)),
+        scrollPosition: Math.max(0, Math.round(scrollPosition)),
+        timestamp: snapshotTime = Math.max(Date.now(), snapshotTime + 1),
+    };
+    state.pending.set(chapter.id, snapshot);
+    for (const id of state.pending.keys()) {
+        if (!state.chapters.some(chapter => chapter.id === id && chapter.status === 'published')) { state.pending.delete(id); state.failed.delete(id); }
+    }
+    persistPendingProgress(userId, book.id, state);
+    // Retry the whole book, including observations left behind by an earlier offline chapter.
+    const attempts = [...state.pending.values()].sort((left, right) => left.timestamp - right.timestamp)
+        .map(item => enqueueProgress(userId, book.id, state, item));
+    await Promise.all(attempts);
 }
 
 export async function clearReadingProgress(userId: string, bookId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-    });
-    await handleResponse(response);
+    const state = progressState(userId, bookId);
+    const headers = readingSessionHeaders(userId);
+    state.clearing = true;
+    state.version++;
+    try {
+        await state.queue.catch(() => {});
+        if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the library in your current account.', 409, 'session_changed');
+        const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, { method: 'DELETE', headers });
+        if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the library in your current account.', 409, 'session_changed');
+        await handleResponse(response);
+        state.version++;
+        state.server = null;
+        state.pending.clear();
+        state.failed.clear();
+        persistPendingProgress(userId, bookId, state);
+    } finally { state.clearing = false; }
 }
 
 export async function toggleBookInLibrary(userId: string, book: Book): Promise<User> {

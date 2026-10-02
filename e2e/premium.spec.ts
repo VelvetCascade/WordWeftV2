@@ -35,10 +35,17 @@ async function settled(page: Page) {
   await healthy(page);
 }
 
-test('public home follows the supplied artwork and discovery routes without full reloads', async ({ page }) => {
+test('public home shows published books and follows discovery routes without full reloads', async ({ page, request }) => {
   await page.goto('/'); await settled(page);
   await expect(page.getByRole('heading', { name: /Read stories.*Write your own/ })).toBeVisible();
-  await expect(page.locator('.v2-hero-art')).toBeVisible();
+  const groups = await (await request.get('/api/books/hero')).json();
+  const eligibleBooks = Object.values(groups).flat() as { id: string; title: string; coverUrl: string }[];
+  const firstBook = page.locator('.v2-hero-book').first();
+  await expect(firstBook).toBeVisible();
+  const target = await firstBook.getAttribute('href');
+  const shownBook = eligibleBooks.find(book => `/book/${book.id}` === target);
+  expect(shownBook, 'The featured cover links to an actual eligible published story').toBeTruthy();
+  await expect(firstBook.getByRole('img')).toHaveAttribute('src', shownBook!.coverUrl);
   await page.evaluate(() => (window as any).__routeProbe = 'same-document');
   await page.getByRole('link', { name: 'Read stories', exact: true }).click();
   await expect(page).toHaveURL(/\/category$/);

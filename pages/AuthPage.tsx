@@ -510,8 +510,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                 <img src="/design-v2/assets/met-55020.jpg" alt="" />
             </aside>
             <div className="ww-auth-form-shell w-full max-w-md">
-                <a href="/" onClick={(e) => { e.preventDefault(); window.location.hash = '/'; }} className="ww-account-brand" aria-label="WordWeft home">
-                    <img src="/design-v2/assets/brand-mark.jpg" alt="" /><span>WordWeft</span>
+                <a href="/" className="ww-account-brand" aria-label="WordWeft home">
+                    <WordWeftLogo /><span>WordWeft</span>
                 </a>
                 <div className="ww-auth-card relative bg-surface dark:bg-dark-surface rounded-3xl shadow-lifted p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
                     {isLoading && (
