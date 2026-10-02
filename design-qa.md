@@ -1,8 +1,8 @@
 # WordWeft design-v2 implementation QA
 
-final result: blocked
+final result: passed for the exercised local states
 
-The final screenshot comparison and verification results are being recorded before this report is marked passed.
+The source comparison, responsive review, keyboard checks and final 90-test browser run are complete. Provider-dependent live success paths remain subject to the limits below. The 2026-10-02 refinement adopts the user's later requirement for fluid desktop workspaces; its evidence supersedes the earlier fixed-width implementation captures.
 
 ## Comparison target and method
 
@@ -10,7 +10,7 @@ The visual source is `design-v2/WordWeft-Design-Revision-02/screens/`, including
 
 Some original exported PNGs have truncated black regions. The supplied editable HTML was therefore browser-rendered to obtain complete source captures. Both panels were rendered in Chromium with loaded fonts, at density 1, without browser chrome. Each combined comparison places source on the left and implementation on the right at equal scale; the extra 16 px gutter and 38 px label strip are outside the screenshots. Full-page lengths differ because the live application retains additional features and uses real fixture content. Blank space below the shorter panel is comparison canvas, not a product surface.
 
-Desktop CSS viewport: **1440 × 1100**. Mobile CSS viewport: **390 × 844**. Additional browser checks cover **393 px and 320 px** widths. `deviceScaleFactor: 1`; one screenshot pixel equals one CSS pixel. The original double-density PNGs are not mixed with these comparisons.
+The initial source comparison uses a desktop CSS viewport of **1440 × 1100** and a mobile viewport of **390 × 844**. Additional browser checks cover **393 px and 320 px** widths. The later refinement reviews **320, 390, 768, 1024, 1440, 1920 and 2560 px** widths. `deviceScaleFactor: 1`; one screenshot pixel equals one CSS pixel. The original double-density PNGs are not mixed with these comparisons.
 
 State: light appearance, scroll at the top, no open overlay or selection, stable loaded data. Home and sign-in are anonymous. Reader, community, and library use the fixture reader; studio, editor, and settings use the fixture writer. The source describes the corresponding anonymous or signed-in layout. Source and fixture story titles, authors, chapter counts, manuscript lengths, statistics, reviews, timestamps, membership, and preferences differ; these data differences are excluded from pixel-level fidelity judgments. The editor source initially opens Notes while the implementation initially opens Details; the common manuscript and toolbar are compared, and both sidebar tabs are tested separately.
 
@@ -63,6 +63,31 @@ Validation uses actual Chromium interactions and the real local backend/database
 
 Google sign-in, ImageKit upload, R2 upload, DOCX embedded-image storage, live email delivery, and external founding-writer sheet synchronization require real provider configuration. Their live success paths were not verified here. The isolated preview captures mail locally and confirms unconfigured R2 reports unavailable; it does not substitute a fake successful upload. These provider integrations need a credentialed staging pass before release. Automated browser coverage and this visual review are evidence for the exercised journeys, not a claim that every possible production account/data combination has been tested.
 
+## Completed UI refinement — 2026-10-02
+
+The complete route review covered **44 routes and 191 distinct route/viewport combinations**. The latest measurements show no document overflow, page exceptions, broken loaded images or visible error alerts in those fixture states. All 44 phone/desktop route pairs were visually inspected, together with wide workspaces, small-phone variants, alternate appearances and open interaction overlays. The selected final evidence and aggregate measurements are in [`artifacts/ui-polish-2026-10-02/`](artifacts/ui-polish-2026-10-02/README.md).
+
+1. **Fluid desktop composition.** Shared navigation and outer workspaces now follow the viewport with modest gutters. The studio uses an adaptive chapter-resume/statistics layout and a story/conversation split; settings gains a live public preview; story pages add contents; creation pages add practical publishing guidance; reading gains chapter and discussion rails. The editor keeps its chapter/manuscript/inspector composition. Prose and form controls remain comfortably sized. Evidence: `after/studio-1920.png`, `after/settings-1920.png`, `after/reader-1920.png`, `after/editor-2560.png`, `after/create-1920.png`.
+2. **Consistent navigation.** Ordinary writer pages use the shared 66 px desktop navigation, centered primary links, account/search/notification actions and the same mobile global navigation. Writer-local navigation sits above its content on phones. Focused reading and writing retain their task-specific controls. Viewport checks confirm that the studio and navbar use the available width.
+3. **Contained overlays and reliable focus.** Notification previews inherit the application appearance and fit the phone viewport. Story/chapter action menus select the available opening direction, close on outside interaction or Escape, and return focus correctly. Story details and other task dialogs support keyboard focus containment, Escape, busy states and validation. Evidence: `after/notifications-preview-390.png`, `after/story-details-390.png`; browser coverage exercises these behaviors at practical desktop and phone widths.
+4. **Reading and discovery corrections.** Selecting the already-open chapter preserves the manuscript. Genre discovery uses the configured API base. Mobile search gives covers and titles usable space. Hook Feed offers the full opening when necessary and brings the next story into view. The current chapter label uses a readable semantic color in Night appearance. Existing library, review, passage, discussion, reporting and sharing flows remain available.
+5. **Writer and account clarity.** Guide tabs identify Characters, Scenes and Private notes and reserve chapter actions for the chapter list. Mobile typography, toolbar controls and status labels are more readable. Settings and its live preview share the same avatar fallback. Analytics identify the story for every chapter in the combined view, keep all six columns visible on wide screens, and provide a keyboard-scrollable region on phones. Circle headings retain intact words alongside bounded artwork at 320 px. Evidence: `after/characters-390.png`, `after/editor-320.png`, `after/analytics-1920.png`, `after/circle-320.png`.
+
+| Validation | Result |
+| --- | --- |
+| Final complete Chromium suite against Spring Boot/MongoDB | **90 passed**, including 22 targeted UI regressions |
+| TypeScript | Passed |
+| Frontend unit checks | **84 passed** |
+| Production frontend/SSR build and static pages | Passed |
+| Initial JavaScript budget | **156.71 kB gzip**, within 350 kB |
+| Dedicated SEO checks | **22 passed**, included in the unit total |
+| Backend tests and package, unchanged during this refinement | **183 passed**, zero failures/errors/skips; BUILD SUCCESS |
+| Real local API integration | **139 assertions across 90 requests**, including cleanup |
+
+The browser test fixture isolates live AdSense scripts to avoid unrelated external advertisement promise failures. Production advertisement behavior is unchanged, and application page-error assertions remain enabled. The provider limits above still apply. Complete command results are recorded in `artifacts/ui-polish-2026-10-02/reports/verification.txt`.
+
+GitHub repository reads succeeded, but code writes through both connected accounts returned **403: Resource not accessible by integration**. The complete final source and Git checkpoint are therefore delivered through the authorized Google Drive folder with exact import/push instructions. Existing PR #153 contains the earlier redesign checkpoint until that branch is pushed.
+
 ## Implementation checklist
 
 - [x] Open source and rendered implementation together at matching viewport and density.
@@ -70,8 +95,8 @@ Google sign-in, ImageKit upload, R2 upload, DOCX embedded-image storage, live em
 - [x] Review typography, spacing, tokens, image quality, and app-specific copy.
 - [x] Preserve existing product features and document intentional adaptations.
 - [x] Fix P2 findings and recapture affected screens.
-- [ ] Confirm final editor captures and complete verification results.
+- [x] Confirm final editor captures and complete verification results.
 
 ## Follow-up polish
 
-No actionable P0/P1/P2 visual findings are intended to remain after the final recorded checks. Production content can produce different cover crops and name wrapping; the responsive layouts and image fallbacks should continue to be checked with real accounts during the credentialed staging pass.
+No actionable P0/P1/P2 visual findings remain from the exercised states in this review. Production content can produce different cover crops and name wrapping; the responsive layouts and image fallbacks should continue to be checked with real accounts during the credentialed staging pass.

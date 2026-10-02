@@ -604,7 +604,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
 
     const goToChapter = (index: number) => {
-        if (!book || (index < 0 || index >= book.chapters.length)) return;
+        if (!book || index === currentChapterIndex || index < 0 || index >= book.chapters.length) return;
         saveProgress();
         trackEvent('reading', 'chapter_navigate', index > currentChapterIndex ? 'next' : 'prev', undefined, { bookId: book.id, fromChapter: currentChapterIndex, toChapter: index });
         setChapterContent(null);
@@ -1014,6 +1014,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 {chapterContent.access === 'FULL' && <div className="reader-save-status" role="status"><span>{!currentUser ? 'Sign in to save your reading place' : progressSaveState === 'saving' ? 'Saving your place…' : progressSaveState === 'saved' ? '✓ Your place is saved' : progressSaveState === 'error' ? 'Your place could not be saved' : 'Your reading place syncs as you read'}</span><span>{Math.max(0, Math.ceil(readingMinutes * (1 - scrollProgress / 100)))} min left in this chapter</span></div>}
             </main>
             {chapterContent.access === 'FULL' && <aside className="reader-conversation-rail"><span className="ww-page-eyebrow">Chapter conversation</span><h2>A thought to share?</h2><p>Open a paragraph thread, or join the conversation at the end.</p><button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-pressed={chapter.isLiked}>{chapter.isLiked ? 'Liked' : 'Like chapter'}{chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}</button><button className="reader-conversation-count" onClick={() => openCommentDrawer(null)}>{comments.filter(comment => comment.paragraphIndex === null).length} chapter comments</button></aside>}
+            <aside className="reader-outline-rail" aria-label="Story chapters">
+                <div><span>YOUR CURRENT READ</span><h2>{book.title}</h2></div>
+                <nav aria-label="Chapter outline">{book.chapters.map((item, index) => <button key={item.id} disabled={item.status !== 'published'} aria-current={index === currentChapterIndex ? 'page' : undefined} onClick={() => goToChapter(index)}><span>CHAPTER {index + 1}{item.status !== 'published' ? ' · NOT RELEASED' : item.accessLabel === 'SIGN_IN' ? ' · SIGN IN TO READ' : ''}</span><strong>{item.title}</strong></button>)}</nav>
+                <footer><span>{Math.round(scrollProgress)}% of this chapter · {readingMinutes} min read</span><progress value={scrollProgress} max={100} aria-label="Reading progress" /></footer>
+            </aside>
             <aside className="reader-margin-progress" aria-label="Chapter progress"><span>{Math.round(scrollProgress)}%</span><i><span style={{ height: `${scrollProgress}%` }} /></i><small>{readingMinutes} min</small></aside>
 
             {/* Discussion Section (Bottom) */}

@@ -1,0 +1,34 @@
+.v2-notifications-trigger { position: relative; }
+.v2-notifications-badge { position: absolute; top: 3px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; display: grid; place-items: center; border: 2px solid var(--ww-paper); border-radius: 12px; background: #a5403b; color: #fff; font: 600 10px/1 Rubik, sans-serif; }
+.v2-notifications-scrim { position: fixed; inset: 0; z-index: 90; background: #191c1c66; backdrop-filter: blur(3px); }
+.v2-notifications-panel { position: absolute; top: 96px; right: max(24px, calc((100vw - 1320px) / 2)); display: flex; flex-direction: column; width: min(420px, calc(100vw - 32px)); max-height: min(650px, calc(100dvh - 120px)); overflow: hidden; border: 1px solid var(--ww-line); border-radius: 14px; background: var(--ww-paper); color: var(--ww-ink); box-shadow: var(--ww-shadow-lg); font: 400 14px/1.5 Rubik, sans-serif; animation: v2-sheet-in .18s ease-out; }
+.v2-notifications-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 20px 20px 16px; }
+.v2-notifications-heading small { color: var(--ww-muted); font-size: 10px; font-weight: 500; letter-spacing: .1em; }
+.v2-notifications-heading h2 { margin: 7px 0 0; color: var(--ww-ink); font: 700 26px/1.2 'WordWeft Serif', Georgia, serif; }
+.v2-notifications-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 20px 8px; color: var(--ww-muted); font-size: 12px; }
+.v2-notifications-tools button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ww-brand); font-size: 13px; }
+.v2-notifications-list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-top: 1px solid var(--ww-line); }
+.v2-notification-item { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 18px 20px; text-align: left; border-bottom: 1px solid var(--ww-line); background: transparent; transition: background .15s; }
+.v2-notification-item.is-unread { background: color-mix(in srgb, var(--ww-brand-soft) 60%, var(--ww-paper)); }
+.v2-notification-item:hover { background: var(--ww-paper-soft); }
+.v2-notification-icon, .v2-notification-avatar { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--ww-brand-soft); color: var(--ww-brand); }
+.v2-notification-copy { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.v2-notification-copy > span { display: block; font-size: 13px; line-height: 1.6; }
+.v2-notification-copy strong { font-weight: 600; }
+.v2-notification-copy time { display: block; margin-top: 6px; color: var(--ww-muted); font-size: 12px; }
+.v2-notification-unread { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--ww-brand); margin-top: 8px; }
+.v2-notifications-empty { display: grid; justify-items: center; gap: 12px; padding: 36px 26px; text-align: center; color: var(--ww-muted); }
+.v2-notifications-empty > svg { color: var(--ww-brand); }
+.v2-notifications-empty h3 { color: var(--ww-ink); font-size: 17px; font-weight: 500; }
+.v2-notifications-empty p { font-size: 13px; line-height: 1.7; max-width: 290px; }
+.v2-notifications-footer, .v2-notifications-load { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 12px 20px; color: var(--ww-brand); font-size: 13px; font-weight: 500; }
+.v2-notifications-footer { flex-shrink: 0; border-top: 1px solid var(--ww-line); }
+.v2-notifications-footer:hover, .v2-notifications-load:hover { background: var(--ww-paper-soft); }
+.v2-notifications-panel button:disabled { opacity: .5; cursor: wait; }
+.v2-notifications-error { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 12px 20px; background: color-mix(in srgb, #a5403b 8%, var(--ww-paper)); color: #a5403b; font-size: 13px; }
+.v2-notifications-error button { flex-shrink: 0; min-height: 44px; text-decoration: underline; }
+@media (max-width: 760px) {
+  .v2-notifications-panel { top: auto; bottom: 0; right: 0; width: 100%; max-height: 85dvh; border-radius: 16px 16px 0 0; animation: v2-notification-fade .15s ease-out; }
+  .v2-notifications-footer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+}
+@keyframes v2-notification-fade { from { opacity: 0; } to { opacity: 1; } }

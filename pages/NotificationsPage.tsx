@@ -7,6 +7,7 @@ import { communityNotificationPostId } from '../utils/community';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ResilientImage } from '../components/ResilientImage';
+import { notificationCopy } from '../utils/notificationPresentation';
 
 interface NotificationsPageProps {
     currentUser: User | null;
@@ -82,6 +83,13 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     onMarkAllRead, unreadCount, hasMore, onLoadMore, isLoading, error, onRetry,
 }) => {
     const [activeFilter, setActiveFilter] = useState('ALL');
+    const [verticalFilters, setVerticalFilters] = useState(() => window.matchMedia('(min-width: 1000px)').matches);
+    useEffect(() => {
+        const query = window.matchMedia('(min-width: 1000px)');
+        const sync = () => setVerticalFilters(query.matches);
+        query.addEventListener('change', sync);
+        return () => query.removeEventListener('change', sync);
+    }, []);
     const { trackEvent } = useAnalytics();
     const [searchQuery, setSearchQuery] = useState('');
     const [showSettings, setShowSettings] = useState(false);
@@ -214,13 +222,23 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                     </div>
                 )}
 
+                <div className="ww-notification-workspace"><div className="ww-notification-filters">
                 {/* Filter Tabs */}
-                <div role="tablist" aria-label="Notification filters" className="ww-notification-tabs flex gap-1 mb-4 bg-white dark:bg-dark-surface rounded-xl p-1 border border-gray-200 dark:border-dark-border shadow-sm overflow-x-auto scrollbar-hide">
+                <div role="tablist" aria-label="Notification filters" aria-orientation={verticalFilters ? 'vertical' : 'horizontal'} onKeyDown={event => {
+                    if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)) return;
+                    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]'));
+                    const index = items.indexOf(event.target as HTMLButtonElement);
+                    if (index < 0) return;
+                    event.preventDefault();
+                    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+                    items[next]?.click(); items[next]?.focus();
+                }} className="ww-notification-tabs flex gap-1 mb-4 bg-white dark:bg-dark-surface rounded-xl p-1 border border-gray-200 dark:border-dark-border shadow-sm overflow-x-auto scrollbar-hide">
                     {FILTER_TABS.map(tab => (
                         <button
                             key={tab.key}
                             role="tab"
                             aria-selected={activeFilter === tab.key}
+                            tabIndex={activeFilter === tab.key ? 0 : -1}
                             onClick={() => setActiveFilter(tab.key)}
                             className={`flex-[1_0_auto] px-3 md:px-0 md:flex-1 py-2 border-none rounded-lg font-sans text-[13px] font-semibold transition-colors ${activeFilter === tab.key ? 'bg-accent text-white shadow' : 'bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
                         >
@@ -241,6 +259,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                     />
                 </div>
 
+                </div>
                 {/* Notification List */}
                 <div className="ww-notification-list bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm">
                     {filtered.length === 0 ? (
@@ -274,19 +293,19 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                 )}
 
                                 {/* Content */}
-                                <div className="flex-1 min-w-0 font-sans">
+                                <div className="ww-notification-copy flex-1 min-w-0 font-sans">
                                     <p className={`m-0 text-sm leading-relaxed ${!n.read ? 'font-semibold text-text-rich dark:text-dark-text-rich' : 'font-medium text-text-body dark:text-dark-text-body'}`}>
                                         {n.metadata?.actorName && (
-                                            <span className="font-bold text-accent dark:text-accent mr-1 hover:underline">{n.metadata.actorName}</span>
+                                            <span className="font-bold text-accent dark:text-accent mr-1">{n.metadata.actorName}</span>
                                         )}
-                                        {n.message}
+                                        {notificationCopy(n).message}
                                     </p>
                                     {n.metadata?.bookTitle && (
                                         <p className="ww-notification-book font-sans m-0 mt-1 text-xs font-semibold text-accent">
                                             <BookOpen size={14} aria-hidden="true" /> {n.metadata.bookTitle}
                                         </p>
                                     )}
-                                    <span className="font-sans text-xs font-medium text-gray-400 dark:text-gray-500 mt-1.5 block">
+                                    <span className="ww-notification-time font-sans text-xs font-medium text-gray-400 dark:text-gray-500 mt-1.5 block">
                                         {getTimeAgo(n.createdAt)}
                                     </span>
                                 </div>
@@ -309,6 +328,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                             {isLoading ? 'Loading...' : 'Load more'}
                         </button>
                     )}
+                </div>
                 </div>
             </main>
         </div>

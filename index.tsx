@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles/design-system.css';
+import './styles/app-layout.css';
 import { installNavigation } from './utils/navigation';
 installNavigation();
 import { ThemeProvider } from './contexts/ThemeContext';

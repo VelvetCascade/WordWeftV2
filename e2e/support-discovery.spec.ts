@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 let token = '';
 const bucket = `127.11.${Date.now() % 200 + 1}`;

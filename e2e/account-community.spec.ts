@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Page } from './fixtures';
 
 // These tests use the disposable Mongo-backed runtime and its local email capture.
 const password = 'WordWeftLocal123!';

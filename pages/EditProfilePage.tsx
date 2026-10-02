@@ -6,6 +6,7 @@ import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
+import { ResilientImage } from '../components/ResilientImage';
 import { goBackOrReplace } from '../utils/navigation';
 
 interface EditProfilePageProps {
@@ -246,7 +247,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         </div>
         <p className="ml-14 mb-7 text-sm text-text-body dark:text-dark-text-body">{activeSection === 'profile' ? 'Choose how you appear to readers and writers.' : activeSection === 'preferences' ? 'Choose the stories you find and the content you see.' : 'Manage sign-in details and account access.'}</p>
 
-        <div className="ww-settings-layout">
+        <div className="ww-settings-layout" data-section={activeSection}>
           <nav className="ww-settings-nav" aria-label="Profile settings">
             {([
               ['profile', 'Public profile', 'Photo, bio and links'],
@@ -269,7 +270,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             </header>
             {activeSection === 'profile' && <>
             <div className={`ww-settings-photo ${avatarUrl ? '' : 'no-photo'}`}>
-            {!avatarUrl && <span className="ww-settings-photo-initials" aria-label={name}>{name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase()}</span>}
+            {!avatarUrl && <ResilientImage alt="" fallbackLabel={name || 'Writer'} className="ww-settings-photo-initials" />}
             <ImageUpload
               value={avatarUrl}
               onChange={(url, fileId) => {
@@ -571,6 +572,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             </div>
           </form>}
         </div>
+        <aside className="ww-settings-context" aria-label={activeSection === 'profile' ? 'Public profile preview' : 'Account information'}>
+          {activeSection === 'profile' ? <><span className="ww-page-eyebrow">Profile preview</span><ResilientImage src={avatarUrl} alt="Your profile photo" fallbackLabel={name || 'Writer'} className="ww-settings-preview-avatar" /><h2>{name || 'Your name'}</h2>{location && <span className="ww-settings-preview-location">{location}</span>}<p>{bio || 'Your bio introduces you to the people reading your work.'}</p><small>Changes appear in your public portfolio after you save.</small><a href="/profile">View your portfolio →</a></> : <><span className="ww-page-eyebrow">Your account</span><h2>{activeSection === 'security' ? 'Keep your account yours.' : 'Make room for your next read.'}</h2><p>{activeSection === 'security' ? 'Use a unique password. WordWeft will never ask you to share it in a comment or message.' : 'Reading preferences help shape discovery. Your library and reading progress stay with your account.'}</p><a href={activeSection === 'security' ? '/contact' : '/library'}>{activeSection === 'security' ? 'Get account help →' : 'Open your library →'}</a><a href="/privacy">Read our privacy policy →</a></>}
+        </aside>
         </div>
       </div>
     </div>

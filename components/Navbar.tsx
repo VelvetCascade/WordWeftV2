@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
       window.removeEventListener('hashchange', update); window.removeEventListener('keydown', shortcut);
     };
   }, []);
-  const primary = [{ label: 'Read', href: '/category', icon: Compass, active: ['/', '/home', '/category'].includes(path) || path.startsWith('/genre') || path.startsWith('/book') },
+  const primary = [{ label: 'Read', href: '/category', icon: Compass, active: ['/', '/home', '/category', '/search', '/hooks'].includes(path) || path.startsWith('/genre') || path.startsWith('/book') || path.startsWith('/author') },
     { label: 'Write', href: '/write', icon: PenLine, active: path.startsWith('/write') },
     { label: 'Community', href: '/community', icon: MessageCircle, active: path.startsWith('/community') }];
   const more = [{ label: 'Hook feed', href: '/hooks', icon: Sparkles }, { label: 'Events & challenges', href: '/events', icon: Trophy },
@@ -39,9 +39,9 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
     <header className="v2-nav-wrap">
       <nav className="v2-nav" aria-label="Main navigation">
         <a className="v2-brand" href="/" aria-label="WordWeft home"><img src="/design-v2/assets/brand-mark.jpg" width="28" height="36" alt="" /><span>WordWeft</span></a>
-        <div className="v2-nav-primary">{primary.map(item => <a key={item.label} href={item.href} className={item.active ? 'active' : ''} aria-current={item.active ? 'page' : undefined}>{item.label}</a>)}<a href="/about" className={path === '/about' ? 'active' : ''}>About</a></div>
+        <div className="v2-nav-primary">{primary.map(item => <a key={item.label} href={item.href} className={item.active ? 'active' : ''} aria-current={item.active ? 'page' : undefined}>{item.label}</a>)}<a href="/about" className={path === '/about' ? 'active' : ''} aria-current={path === '/about' ? 'page' : undefined}>About</a></div>
         <div className="v2-nav-actions">
-          {isAuthenticated && <a href="/library" className={`v2-library-link ${path === '/library' ? 'active' : ''}`}><Library size={18} />Your library</a>}
+          {isAuthenticated && <a href="/library" title="Your library" className={`v2-library-link ${path === '/library' ? 'active' : ''}`} aria-current={path === '/library' ? 'page' : undefined}><Library size={18} />Your library</a>}
           <button className="v2-icon-button" onClick={() => setSearchOpen(true)} aria-label="Search WordWeft" title="Search (Ctrl / ⌘ K)"><Search size={20} /></button>
           {isAuthenticated && notificationBell}
           {!isAuthenticated && <a href="/auth" className="v2-signin">Sign in</a>}

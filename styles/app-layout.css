@@ -1,0 +1,157 @@
+/* Shared screen geometry: the app uses the viewport; individual reading lines stay comfortable. */
+html .ww-app { --app-gutter: 32px; }
+html .v2-nav-wrap { margin: 16px 24px 0; top: 12px; }
+html .v2-nav { max-width: none; display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }
+html .v2-nav-actions { justify-self: end; }
+html :is(.v2-account-menu,.v2-notifications-panel) { right: 24px; }
+html .ww-app .ww-footer { max-width: none; width: calc(100% - 64px); }
+html .ww-app :is(.ww-library-container,.search-results-page > .container,.account-v2-settings > .container,.account-v2-profile .container,.account-v2-author .container) { max-width: none !important; width: 100%; padding-inline: var(--app-gutter) !important; }
+html .ww-app .v2-discovery { width: calc(100% - 64px); max-width: none; }
+html .ww-app :is(.v2-home-hero,.v2-home-search,.v2-discovery-section,.v2-author-spotlight) { max-width: none; margin-left: 0; margin-right: 0; }
+html .ww-app .v2-home-hero { grid-template-columns: minmax(0,.9fr) minmax(0,1fr); }
+html .ww-app .v2-hero-copy { width: fit-content; max-width: 100%; }
+html .ww-app .v2-home-search .hero-search-section { transform: none; }
+html .ww-app .v2-home-search .hero-search-section > .container { max-width: none; }
+html .ww-app .v2-home-search .hero-search-wrapper { margin: 0; }
+html .ww-app .v2-hero-art { max-height: 460px; }
+html .ww-app .v2-shelf-grid, html .ww-app .search-results-book-grid { grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); }
+html .ww-app .v2-browse-layout { grid-template-columns: 210px minmax(0,1fr); gap: 36px; }
+html .ww-app .v2-browse-results > .grid { grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); }
+html .ww-app .ww-library-v2 .ww-library-page-content { max-width: none; width: calc(100% - 64px); }
+html .ww-app .ww-library-v2 .ww-library-books-v2.is-cover-grid { grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); }
+html .ww-app .ww-story-page.ww-story-v2 > .container { max-width: none !important; }
+html .ww-app .ww-story-v2 .ww-story-header-inner { max-width: none; }
+html .ww-app .ww-story-v2 .ww-story-summary { max-width: 85ch; }
+html .ww-app .ww-story-v2 .ww-story-stats-v2 { max-width: 640px; }
+html .ww-app .ww-account-profile-banner { max-width: none; margin-inline: 32px; }
+html .ww-app :is(.account-v2-profile,.account-v2-author) .ww-account-story-grid { grid-template-columns: repeat(auto-fill,minmax(220px,1fr)) !important; }
+html .ww-app :is(.account-v2-profile,.account-v2-author) :is(.ww-profile-hero,.ww-author-hero)::before { display: none; }
+html .ww-app .account-v2-settings .ww-settings-layout { grid-template-columns: 230px minmax(0,1fr); }
+html .ww-app .account-v2-settings > .container > .flex > button { margin: 0; min-width: 44px; min-height: 44px; }
+html .ww-app .account-v2-settings > .container > p { margin-left: 60px !important; }
+.ww-settings-context { display: none; }
+html .ww-app .account-v2-notifications main { max-width: none !important; padding-inline: 32px; }
+html .ww-app :is(.community-page,.community-post-page) { max-width: none; padding-inline: 32px; }
+html .ww-app .community-layout { grid-template-columns: 230px minmax(0,1fr) 280px; gap: 36px; }
+html .ww-app .community-detail-layout { grid-template-columns: minmax(0,1fr) 280px; gap: 36px; }
+html .ww-app .community-post-body { max-width: 75ch; }
+html .ww-app .community-post-title { max-width: 38ch; }
+html .ww-app .wv-support-shell { width: calc(100% - 64px); max-width: none; }
+html .ww-app :is(.fw-main,.fw-shell) { width: calc(100% - 64px); max-width: none; }
+html .ww-app .fw-founder-art { max-height: 440px; object-fit: cover; }
+html .ww-app .wv-catalog-grid { grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); }
+html .ww-app .wv-hook-card { grid-template-columns: minmax(240px,.75fr) minmax(0,1.6fr); }
+html .ww-app .wv-hook-art { max-width: 440px; }
+html .ww-app .wv-hook-reading { max-width: 1000px; }
+html .ww-app .ww-writer-v2.ww-writer-shell { width: calc(100% - 48px); max-width: none !important; grid-template-columns: 230px minmax(0,1fr); }
+html .ww-app .ww-studio-overview-grid { grid-template-columns: minmax(0,1fr) minmax(270px,360px); }
+html .ww-app .ww-create-guidance { display: grid; gap: 20px; }
+html .ww-app .ww-create-book-shell { max-width: none; }
+html .reader-experience.reader-v2 .reader-header { left: 24px !important; right: 24px !important; top: 16px !important; }
+html .reader-experience.reader-v2 .reader-progress-track { left: 38px; right: 38px; top: 83px; }
+html .reader-experience.reader-v2 .reader-settings-panel { right: 24px; top: 102px; }
+html .reader-experience.reader-v2 .reader-conversation-rail { right: 24px; width: 248px; top: 120px; }
+.reader-outline-rail { display: none; }
+.ww-notification-workspace { min-width: 0; }
+@media (min-width: 1000px) {
+  .ww-notification-workspace { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 36px; align-items: start; }
+  .ww-notification-filters { position: sticky; top: 110px; }
+  html .ww-app .ww-notification-tabs { flex-direction: column; gap: 4px !important; border: 0 !important; }
+  html .ww-app .ww-notification-tabs button { flex: 0 0 auto; min-height: 46px; padding: 10px 14px !important; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 6px !important; font-size: 14px; }
+  html .ww-app .ww-notification-tabs button[aria-selected=true] { border-left-color: var(--account-teal); color: var(--account-teal) !important; background: var(--account-soft) !important; }
+  .ww-notification-row .ww-notification-copy { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 0 24px; align-items: start; }
+  .ww-notification-copy > p { max-width: 75ch; grid-column: 1; }
+  .ww-notification-copy > .ww-notification-time { grid-column: 2; grid-row: 1; white-space: nowrap; }
+}
+@media (max-width: 1499px) { html .reader-experience.reader-v2 .reader-conversation-rail { display: none; } }
+@media (min-width: 1500px) {
+  html .ww-app .account-v2-settings .ww-settings-layout { grid-template-columns: 230px minmax(0,1fr) 320px; gap: 36px; }
+  .ww-settings-context { display: flex; flex-direction: column; align-items: start; gap: 18px; position: sticky; top: 110px; padding: 28px; border: 1px solid var(--account-line); border-radius: 10px; background: var(--account-soft); color: var(--account-copy); }
+  .ww-settings-context .ww-page-eyebrow { margin: 0; }
+  .ww-settings-preview-avatar { width: 76px; height: 76px; object-fit: cover; border-radius: 50%; display: grid; place-items: center; background: var(--account-paper); color: var(--account-teal); font-size: 24px; }
+  .ww-settings-context h2 { color: var(--account-ink); font: 700 26px/1.3 'WordWeft Serif',Georgia,serif; }
+  .ww-settings-context p { font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+  .ww-settings-context small, .ww-settings-preview-location { font-size: 12px; line-height: 1.7; }
+  .ww-settings-context a { color: var(--account-teal); font-size: 13px; min-height: 44px; display: flex; align-items: center; }
+  html .ww-app .ww-writer-dashboard[data-view=overview] { display: grid; grid-template-columns: minmax(0,2fr) minmax(420px,1fr); gap: 30px 24px; align-items: stretch; }
+  .ww-writer-dashboard[data-view=overview] > .ww-studio-pagehead { grid-column: 1/-1; margin-bottom: 6px; }
+  .ww-writer-dashboard[data-view=overview] > .ww-studio-resume { grid-column: 1; gap: 24px; }
+  html .ww-app .ww-writer-dashboard[data-view=overview] > .ww-studio-metrics { grid-column: 2; margin: 0; gap: 12px; }
+  html .ww-app .ww-writer-dashboard[data-view=overview] .ww-studio-metrics article { padding: 20px 16px; gap: 10px; align-content: start; }
+  html .ww-app .ww-writer-dashboard[data-view=overview] .ww-studio-metrics article > svg { position: static; width: 20px; height: 20px; }
+  .ww-writer-dashboard[data-view=overview] > :is(.ww-studio-overview-grid,.ww-studio-quickstart,.ww-studio-alert) { grid-column: 1/-1; }
+  .ww-writer-dashboard[data-view=overview] .ww-studio-overview-grid > .ww-studio-stories { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 28px; }
+  .ww-writer-dashboard[data-view=overview] .ww-studio-stories > header { grid-column: 1/-1; }
+  .ww-writer-dashboard[data-view=overview] .ww-studio-story-row { min-height: 142px; }
+  html .ww-app .ww-writer-analytics { width: 100%; display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 24px; }
+  .ww-writer-analytics > :is(.ww-analytics-header,.ww-analytics-summary,[role=alert],[role=status]) { grid-column: 1/-1; }
+  html .ww-app .ww-writer-analytics > .ww-analytics-panel { margin-top: 0; }
+  html .ww-app .ww-writer-analytics .ww-analytics-side > .ww-analytics-panel { margin-top: 0; }
+  html .ww-app .ww-writer-analytics .ww-funnel-panel { margin-top: 0; }
+  html .ww-app .ww-writer-analytics > .ww-analytics-grid { display: contents; }
+  .ww-writer-analytics .ww-analytics-side { grid-column: 1/-1; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+  html .ww-app .ww-create-form { grid-template-columns: 240px minmax(0,1fr) 260px; gap: 36px; }
+  html .ww-app .ww-create-aside { display: contents; }
+  html .ww-app .ww-create-cover { grid-column: 1; grid-row: 1; align-self: start; }
+  html .ww-app .ww-create-guidance { grid-column: 3; grid-row: 1; align-self: start; position: sticky; top: 114px; }
+  html .ww-app .ww-studio-stories.is-story-library { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 32px; }
+  html .reader-experience.reader-v2 .reader-outline-rail { position: fixed; display: flex; flex-direction: column; gap: 22px; left: 24px; top: 120px; bottom: 24px; width: 248px; padding: 24px; background: var(--reader-panel-solid); border: 1px solid var(--reader-line); border-radius: 12px; color: var(--reader-copy); font: 400 13px/1.6 Rubik,sans-serif; }
+  .reader-outline-rail > div > span { color: var(--reader-muted); font-size: 11px; }
+  .reader-outline-rail h2 { color: var(--reader-ink); font: 700 24px/1.3 'WordWeft Serif',Georgia,serif; margin-top: 8px; }
+  .reader-outline-rail nav { overflow-y: auto; min-height: 0; flex: 1; }
+  .reader-outline-rail nav button { width: 100%; text-align: left; padding: 12px 8px; min-height: 64px; border-radius: 6px; color: var(--reader-copy); }
+  .reader-outline-rail nav button span { display: block; font-size: 10px; color: var(--reader-muted); }
+  .reader-outline-rail nav button strong { display: block; font-size: 13px; font-weight: 500; margin-top: 4px; }
+  .reader-outline-rail nav button:hover, .reader-outline-rail nav button[aria-current=page] { background: var(--reader-accent-soft); color: var(--reader-accent); }
+  .reader-outline-rail nav button:disabled { opacity: .5; cursor: not-allowed; }
+  .reader-outline-rail footer { border-top: 1px solid var(--reader-line); padding-top: 18px; }
+  .reader-outline-rail progress { display: block; width: 100%; height: 4px; margin-top: 12px; accent-color: #b88a43; }
+  html .reader-experience.reader-v2 .reader-margin-progress { display: none; }
+}
+@media (max-width: 1199px) {
+  html .ww-app .community-layout { grid-template-columns: 175px minmax(0,1fr); gap: 28px; }
+  html .ww-app .v2-browse-layout { grid-template-columns: 160px minmax(0,1fr); gap: 28px; }
+  html .ww-app .ww-writer-v2.ww-writer-shell { grid-template-columns: 190px minmax(0,1fr); }
+  html .ww-app .ww-studio-overview-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 1200px) {
+  html .ww-app .ww-story-v2 :is(.ww-story-tabs,.ww-story-tab-content) { width: calc(100% - 262px); max-width: none !important; margin-left: 262px !important; }
+}
+@media (min-width: 1100px) {
+  html .ww-app .ww-writer-v2 .ww-analytics-header { flex-direction: row; align-items: end; }
+  html .ww-app .ww-writer-v2 .ww-analytics-header label { width: 330px; min-width: 280px; flex-shrink: 0; }
+}
+@media (max-width: 760px) {
+  html .ww-app { --app-gutter: 20px; }
+  html .v2-nav-wrap { margin: 12px 12px 0; top: 8px; }
+  html .v2-nav { grid-template-columns: minmax(0,1fr) auto; }
+  html :is(.v2-account-menu,.v2-notifications-panel) { right: 0; }
+  html .ww-app .ww-footer { width: auto; }
+  html .ww-app .v2-discovery { width: calc(100% - 40px); }
+  html .ww-app .v2-home-hero { grid-template-columns: 1fr; }
+  html .ww-app .v2-hero-art { max-height: 280px; }
+  html .ww-app :is(.v2-shelf-grid,.search-results-book-grid), html .ww-app .v2-browse-results > .grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  html .ww-app .v2-browse-layout { display: block; }
+  html .ww-app .ww-library-v2 .ww-library-page-content, html .ww-app :is(.wv-support-shell,.fw-main,.fw-shell) { width: calc(100% - 40px); }
+  html .ww-app .ww-library-v2 .ww-library-books-v2.is-cover-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  html .ww-app :is(.account-v2-profile,.account-v2-author) .ww-account-story-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  html .ww-app .ww-account-profile-banner { margin-inline: 20px; }
+  html .ww-app .account-v2-settings .ww-settings-layout { display: block; }
+  html .ww-app .account-v2-settings > .container > p { margin-left: 0 !important; }
+  html .ww-app :is(.community-page,.community-post-page,.account-v2-notifications main) { padding-inline: 20px; }
+  html .ww-app :is(.community-layout,.community-detail-layout) { display: block; }
+  html .ww-app .wv-catalog-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  html .ww-app .wv-hook-card { grid-template-columns: 1fr; }
+  html .ww-app .ww-writer-v2.ww-writer-shell { width: 100%; display: block; }
+  html .reader-experience.reader-v2 .reader-header { left: 12px !important; right: 12px !important; top: 12px !important; }
+  html .reader-experience.reader-v2 .reader-progress-track { left: 22px; right: 22px; top: 73px; }
+  html .reader-experience.reader-v2 .reader-settings-panel { right: 0; top: auto; }
+}
+@media (max-width: 360px) { html .v2-nav { padding-inline: 10px; gap: 2px; } html .v2-brand { font-size: 21px; } html .v2-brand img { width: 20px; } }
+@media (max-width: 600px) {
+  html .ww-app .community-circle-hero { display: block; position: relative; }
+  html .ww-app .community-circle-hero h1 { font-size: clamp(24px,7vw,32px) !important; }
+  html .ww-app .community-circle-hero > div > p:last-of-type,
+  html .ww-app .community-circle-hero-actions { max-width: calc(100% - 88px); }
+  html .ww-app .community-circle-art { position: absolute; right: 18px; bottom: 24px; }
+}

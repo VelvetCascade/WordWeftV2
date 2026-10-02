@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-02",
+  "routes": 44,
+  "uniqueRouteViewportCaptures": 191,
+  "viewportWidths": [
+    320,
+    390,
+    768,
+    1024,
+    1440,
+    1920,
+    2560
+  ],
+  "pageOverflowFailures": 0,
+  "pageErrors": 0,
+  "brokenLoadedImages": 0,
+  "visibleErrorAlerts": 0,
+  "selectedEvidenceScreenshots": 25,
+  "deliveryRecaptures": 30,
+  "notes": [
+    "Latest measurement for each route and viewport is retained.",
+    "Opening overlays were separately captured at 1440 and 390 CSS pixels.",
+    "Measurements describe the exercised local fixture states; they do not imply exhaustive production data coverage."
+  ]
+}

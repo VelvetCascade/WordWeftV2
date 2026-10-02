@@ -1,4 +1,4 @@
-import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test, expect, type Page, type APIRequestContext } from './fixtures';
 
 const storyId = 'local-story-spring';
 const chapterId = `${storyId}-chapter-1`;

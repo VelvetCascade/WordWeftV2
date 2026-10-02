@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
 let readerToken = '', writerToken = '';
 const bucket = `127.12.${Date.now() % 200 + 1}`;

@@ -159,6 +159,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
             <input
               ref={inputRef}
               type="text"
+              aria-label="Search books, writers, or genres"
               value={query}
               onChange={handleInputChange}
               onFocus={() => setIsFocused(true)}
@@ -169,7 +170,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
               spellCheck={false}
             />
             {query && (
-              <button className="hero-search-clear" onClick={() => { setQuery(''); setBooks([]); setAuthors([]); }}>
+              <button className="hero-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); setBooks([]); setAuthors([]); }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18" /><path d="m6 6 12 12" />
                 </svg>

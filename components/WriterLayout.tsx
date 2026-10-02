@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, NotebookPen, MessageCircle, ChartNoAxesCombined, Users, Settings, CircleHelp, Menu, ArrowLeft, X, Library, Search, Bell } from 'lucide-react';
+import { LayoutDashboard, NotebookPen, MessageCircle, ChartNoAxesCombined, Users, Settings, CircleHelp, Menu, ArrowLeft, X } from 'lucide-react';
 import type { User } from '../types';
 import { navigatePath } from '../utils/navigation';
 import '../styles/writer-v2.css';
 import { useDialog } from '../hooks/useDialog';
+import { ResilientImage } from './ResilientImage';
 
 interface WriterLayoutProps {
   children: React.ReactNode;
@@ -44,14 +45,11 @@ export const WriterLayout: React.FC<WriterLayoutProps> = ({ children, currentUse
     { id: 'analytics', label: 'Statistics', icon: ChartNoAxesCombined, path: '/write/analytics' },
     { id: 'guide', label: 'Story guide', icon: Users, path: guideBookId ? `/write/book/${guideBookId}/manage?tab=characters` : '/write?view=stories' },
   ];
-  const initials = (currentUser?.name || 'Writer').split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase();
-
   return (
     <div className="ww-writer-v2 ww-writer-shell">
-      <header className="ww-studio-topnav"><a href="/" className="ww-studio-brand"><img src="/design-v2/assets/brand-mark.jpg" alt="" />WordWeft</a><nav className="ww-studio-global-nav" aria-label="WordWeft"><a href="/">Read</a><a href="/write" className="active" aria-current="page">Write</a><a href="/community">Community</a></nav><div className="ww-studio-global-actions"><a className="ww-studio-library-link" href="/library"><Library size={19} strokeWidth={1.6} />Your library</a><a href="/search" aria-label="Search stories"><Search size={19} strokeWidth={1.6} /></a><a href="/notifications" aria-label="Notifications"><Bell size={19} strokeWidth={1.6} /></a><a href="/profile" aria-label="Your profile"><span className="ww-studio-avatar">{initials}</span></a></div></header>
       <aside className="ww-studio-sidebar" aria-label="Writer studio navigation">
         <div className="ww-studio-identity">
-          {currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt="" /> : <span className="ww-studio-avatar">{initials}</span>}
+          <ResilientImage src={currentUser?.avatarUrl} alt="" fallbackLabel={currentUser?.name || 'Writer'} className="ww-studio-avatar" />
           <div><strong>{currentUser?.name || 'Your studio'}</strong><small>Writer studio</small></div>
         </div>
         <span className="ww-studio-nav-label">Your writing</span>
@@ -66,11 +64,11 @@ export const WriterLayout: React.FC<WriterLayoutProps> = ({ children, currentUse
         </nav>
         <div className="ww-studio-ownership"><strong>Your work stays yours.</strong><p>Private until you publish.<br />Always yours to keep.</p></div>
       </aside>
-      <main id="main-content" tabIndex={-1} className="ww-writer-main">{children}</main>
       <nav className="ww-studio-mobile-nav" aria-label="Writer studio">
         {destinations.slice(0, 3).map(item => <a key={item.id} href={item.path} className={active === item.id ? 'active' : ''} aria-current={active === item.id ? 'page' : undefined}><item.icon size={20} strokeWidth={1.6} /><span>{item.id === 'stories' ? 'Stories' : item.id === 'comments' ? 'Comments' : item.label}</span></a>)}
         <button type="button" onClick={() => setMoreOpen(!moreOpen)} aria-expanded={moreOpen} aria-controls="ww-studio-more"><Menu size={20} strokeWidth={1.6} /><span>More</span></button>
       </nav>
+      <main id="main-content" tabIndex={-1} className="ww-writer-main">{children}</main>
       {moreOpen && <div className="ww-studio-more-backdrop" onClick={event => event.target === event.currentTarget && setMoreOpen(false)}><div ref={moreDialogRef} tabIndex={-1} id="ww-studio-more" className="ww-studio-more" role="dialog" aria-modal="true" aria-label="More studio destinations"><header><strong>Your studio</strong><button aria-label="Close menu" onClick={() => setMoreOpen(false)}><X size={20} /></button></header>{[...destinations.slice(3), { id: 'settings', label: 'Settings', icon: Settings, path: '/edit-profile' }, { id: 'help', label: 'Writing help', icon: CircleHelp, path: '/help' }].map(item => <button className="ww-studio-link" key={item.id} onClick={() => { setMoreOpen(false); navigatePath(item.path); }}><item.icon size={20} />{item.label}</button>)}</div></div>}
     </div>
   );

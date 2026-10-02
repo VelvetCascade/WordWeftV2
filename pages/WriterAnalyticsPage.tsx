@@ -89,7 +89,7 @@ export const WriterAnalyticsPage: React.FC = () => {
                 </div>
                 <label>
                     Story
-                    <select value={selectedBookId} onChange={event => setSelectedBookId(event.target.value)}>
+                    <select aria-label="Story" value={selectedBookId} onChange={event => setSelectedBookId(event.target.value)}>
                         <option value="">All stories</option>
                         {storyOptions.map(story => <option key={story.bookId} value={story.bookId}>{story.title}</option>)}
                     </select>
@@ -146,18 +146,18 @@ export const WriterAnalyticsPage: React.FC = () => {
                         <section className="ww-analytics-panel ww-funnel-panel">
                             <div className="ww-analytics-panel-head"><div><span>Chapter journey</span><h2>Where readers continue</h2></div></div>
                             {analytics.chapterFunnel.length ? (
-                                <div className="ww-funnel-table-wrap">
+                                <div className="ww-funnel-table-wrap" role="region" aria-label="Chapter reader statistics" tabIndex={0}>
                                     <table className="ww-funnel-table">
-                                        <thead><tr><th>Chapter</th><th>Reached</th><th>Views</th><th>Finished</th><th>Continued</th><th>Signals</th></tr></thead>
+                                        <thead><tr><th scope="col">Chapter</th><th scope="col">Reached</th><th scope="col">Views</th><th scope="col">Finished</th><th scope="col">Continued</th><th scope="col">Signals</th></tr></thead>
                                         <tbody>
                                             {analytics.chapterFunnel.map(row => (
                                                 <tr key={`${row.bookId}-${row.chapterId}`}>
-                                                    <th><small>{String(row.chapterNumber).padStart(2, '0')}</small><span>{row.title}</span></th>
+                                                    <th scope="row"><small>{String(row.chapterNumber).padStart(2, '0')}</small><span className="ww-funnel-chapter"><strong title={row.title}>{row.title}</strong>{!selectedBookId && <small className="ww-funnel-story" title={storyOptions.find(story => story.bookId === row.bookId)?.title}>{storyOptions.find(story => story.bookId === row.bookId)?.title || 'Story unavailable'}</small>}</span></th>
                                                     <td>{row.reachedReaders}</td>
                                                     <td>{row.views}</td>
                                                     <td>{formatRate(row.completionRate)}</td>
                                                     <td>{row.continuationRate > 0 ? formatRate(row.continuationRate) : '—'}</td>
-                                                    <td>{row.likes} likes · {row.comments} comments</td>
+                                                    <td>{row.likes} {row.likes === 1 ? 'like' : 'likes'} · {row.comments} {row.comments === 1 ? 'comment' : 'comments'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

@@ -238,7 +238,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                             />
                         </section>
 
-                        <label htmlFor="isAIGenerated" className="ww-create-disclosure">
+                        <div className="ww-create-guidance"><label htmlFor="isAIGenerated" className="ww-create-disclosure">
                             <input type="checkbox" id="isAIGenerated" checked={isAIGenerated} onChange={e => setIsAIGenerated(e.target.checked)} />
                             <span className="ww-create-check" />
                             <span><strong>AI-assisted content</strong><small>Disclose if generation tools shaped the text or structure.</small></span>
@@ -247,6 +247,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         <div className="ww-create-preview-note">
                             <span>Next step</span>
                             <p><LockKeyhole size={15} />Your story starts as a private draft. Add a chapter before publishing.</p>
+                        </div>
                         </div>
                     </aside>
 

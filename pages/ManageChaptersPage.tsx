@@ -8,10 +8,12 @@ import { SceneList } from '../components/SceneList';
 import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
 import { ShareModal } from '../components/ShareModal';
+import { DisclosureMenu } from '../components/DisclosureMenu';
+import { useDialog } from '../hooks/useDialog';
 import { validateManuscriptFile } from '../utils/manuscriptImport';
 import { importProgressCopy, type ImportProgressPhase } from '../utils/importProgress';
 import { lockNavigation, navigatePath } from '../utils/navigation';
-import { ArrowRight, ExternalLink, MoreHorizontal, Plus, Upload } from 'lucide-react';
+import { ArrowRight, ExternalLink, Plus, Upload } from 'lucide-react';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -51,10 +53,11 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [isSaving, setIsSaving] = useState(false);
     const [isCoverUploading, setIsCoverUploading] = useState(false);
     const [saveError, setSaveError] = useState('');
+    const dialogRef = useDialog(isOpen, onClose, !isSaving && !isCoverUploading);
 
     useEffect(() => {
         if (isOpen) {
-            api.getGenres().then(setAllGenres);
+            api.getGenres().then(setAllGenres).catch(() => setAllGenres(book.genres || []));
             setTitle(book.title);
             setDescription(book.description || '');
             setCoverUrl(book.coverUrl);
@@ -136,17 +139,17 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-dark-surface w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onMouseDown={event => { if (event.target === event.currentTarget && !isSaving && !isCoverUploading) onClose(); }}>
+            <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="story-details-title" aria-busy={isSaving || isCoverUploading} className="ww-story-details-dialog bg-white dark:bg-dark-surface w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-6 border-b dark:border-dark-border flex justify-between items-center">
-                    <h3 className="text-xl font-bold dark:text-dark-text-rich">Edit Book Details</h3>
+                    <h3 id="story-details-title" className="text-xl font-bold dark:text-dark-text-rich">Story details</h3>
                     <button onClick={onClose} disabled={isSaving || isCoverUploading} aria-label="Close story details"><XMarkIcon className="w-6 h-6 text-gray-500" /></button>
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <form id="edit-book-form" onSubmit={handleSave} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Title</label>
-                            <input value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" required />
+                            <label htmlFor="story-details-name" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Title</label>
+                            <input id="story-details-name" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" required />
                         </div>
                         <ImageUpload 
                             value={coverUrl}
@@ -162,12 +165,13 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             disabled={isSaving}
                         />
                         <div>
-                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
-                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
+                            <label htmlFor="story-details-description" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
+                            <textarea id="story-details-description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Category</label>
+                            <label htmlFor="story-details-category" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Category</label>
                             <select
+                                id="story-details-category"
                                 value={category}
                                 onChange={e => setCategory(e.target.value)}
                                 className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat"
@@ -179,8 +183,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Story status</label>
-                            <select value={readingStatus} onChange={e => setReadingStatus(e.target.value as StoryStatus)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
+                            <label htmlFor="story-details-status" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Story status</label>
+                            <select id="story-details-status" value={readingStatus} onChange={e => setReadingStatus(e.target.value as StoryStatus)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
                                 <option value="Ongoing">Ongoing — new chapters are expected</option>
                                 <option value="Hiatus">On hiatus — updates are paused</option>
                                 <option value="Completed">Completed — the story is finished</option>
@@ -188,17 +192,18 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">This is shown to readers and can be changed any time.</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold mb-2 dark:text-dark-text-body">Genres</label>
+                            <label htmlFor="story-details-genres" className="block text-sm font-bold mb-2 dark:text-dark-text-body">Genres</label>
                             {genres.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 mb-3">
                                     {genres.map(g => (
-                                        <span key={g} onClick={() => toggleGenre(g)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors">
+                                        <button key={g} type="button" aria-label={`Remove ${g}`} onClick={() => toggleGenre(g)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors">
                                             {g} <span className="text-white/70">×</span>
-                                        </span>
+                                        </button>
                                     ))}
                                 </div>
                             )}
                             <input
+                                id="story-details-genres"
                                 type="text"
                                 placeholder="Search genres..."
                                 value={genreSearch}
@@ -207,7 +212,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             />
                             <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
                                 {filteredGenres.map(g => (
-                                    <button key={g} type="button" onClick={() => toggleGenre(g)} className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${genres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-border'}`}>
+                                    <button key={g} type="button" aria-pressed={genres.includes(g)} onClick={() => toggleGenre(g)} className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${genres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-border'}`}>
                                         {g}
                                     </button>
                                 ))}
@@ -215,8 +220,8 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             </div>
                         </div>
                         <div className="pt-2 border-t dark:border-dark-border mt-4">
-                            <label className="block text-sm font-bold mb-1 dark:text-dark-text-body">Age rating</label>
-                            <select value={ageRating} onChange={e => setAgeRating(e.target.value as AgeRating)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
+                            <label htmlFor="story-details-rating" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Age rating</label>
+                            <select id="story-details-rating" value={ageRating} onChange={e => setAgeRating(e.target.value as AgeRating)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border">
                                 <option value="ALL_AGES" disabled={RATING_SEVERITY[minRequiredRating] > RATING_SEVERITY['ALL_AGES']}>Everyone</option>
                                 <option value="TEEN_13" disabled={RATING_SEVERITY[minRequiredRating] > RATING_SEVERITY['TEEN_13']}>Teen 13+</option>
                                 <option value="MATURE_18">Mature 18+</option>
@@ -234,10 +239,10 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                             )}
                             <label className="block text-sm font-bold mt-4 mb-2 dark:text-dark-text-body">Content warnings</label>
                             <div className="flex flex-wrap gap-2">
-                                {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button key={w} type="button" onClick={() => setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])} className={`px-3 py-1 rounded-full text-xs ${contentWarnings.includes(w) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt'}`}>{w.replaceAll('_',' ')}</button>)}
+                                {(['VIOLENCE','GORE','STRONG_LANGUAGE','SEXUAL_CONTENT','ABUSE','SELF_HARM','SUBSTANCE_USE','GRIEF','DISCRIMINATION','OTHER'] as ContentWarning[]).map(w => <button key={w} type="button" aria-pressed={contentWarnings.includes(w)} onClick={() => setContentWarnings(prev => prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w])} className={`px-3 py-1 rounded-full text-xs ${contentWarnings.includes(w) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt'}`}>{w.replaceAll('_',' ')}</button>)}
                             </div>
-                            <label className="block text-sm font-bold mt-4 mb-1 dark:text-dark-text-body">Author’s content note</label>
-                            <textarea value={customDisclaimer} onChange={e => setCustomDisclaimer(e.target.value)} maxLength={1000} rows={3} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" placeholder="Optional context for readers" />
+                            <label htmlFor="story-details-note" className="block text-sm font-bold mt-4 mb-1 dark:text-dark-text-body">Author’s content note</label>
+                            <textarea id="story-details-note" value={customDisclaimer} onChange={e => setCustomDisclaimer(e.target.value)} maxLength={1000} rows={3} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" placeholder="Optional context for readers" />
                         </div>
                         <div className="pt-2 border-t dark:border-dark-border mt-4">
                             <label htmlFor="editIsAIGenerated" className="flex items-center cursor-pointer py-2">
@@ -278,10 +283,11 @@ const ConfirmDialog: React.FC<{
     onConfirm: () => void;
     onCancel: () => void;
 }> = ({ isOpen, title, message, confirmLabel = 'Delete', processingLabel = 'Deleting…', isProcessing = false, tone = 'danger', onConfirm, onCancel }) => {
+    const dialogRef = useDialog(isOpen, onCancel, !isProcessing);
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6" role="alertdialog" aria-modal="true" aria-busy={isProcessing}>
+        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onMouseDown={event => { if (event.target === event.currentTarget && !isProcessing) onCancel(); }}>
+            <div ref={dialogRef} tabIndex={-1} className="ww-studio-dialog bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6" role="alertdialog" aria-label={title} aria-modal="true" aria-busy={isProcessing}>
                 <h3 className="text-lg font-bold text-text-rich dark:text-dark-text-rich mb-2">{title}</h3>
                 <p className="text-sm text-text-body dark:text-dark-text-body mb-6">{message}</p>
                 <div className="flex justify-end gap-3">
@@ -313,6 +319,7 @@ const PublishStoryDialog: React.FC<{
     onPublish: (chapterIds: string[]) => void;
 }> = ({ isOpen, chapters, isPublishing, onClose, onPublish }) => {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const dialogRef = useDialog(isOpen, onClose, !isPublishing);
 
     const isComplete = (chapter: Chapter) => Boolean(
         chapter.title?.trim()
@@ -340,8 +347,8 @@ const PublishStoryDialog: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <section className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-dark-surface" role="dialog" aria-modal="true" aria-labelledby="publish-story-title">
+        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onMouseDown={event => { if (event.target === event.currentTarget && !isPublishing) onClose(); }}>
+            <section ref={dialogRef} tabIndex={-1} className="ww-studio-dialog w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-dark-surface" role="dialog" aria-modal="true" aria-labelledby="publish-story-title">
                 <header className="border-b p-5 dark:border-dark-border">
                     <h3 id="publish-story-title" className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Publish story</h3>
                     <p className="mt-1 text-sm text-text-body dark:text-dark-text-body">Choose how much of the story readers can see now. Chapters must be published in order.</p>
@@ -389,10 +396,11 @@ const ImportCharacterReviewDialog: React.FC<{
     onCreate: (names: string[]) => void;
 }> = ({ candidates, embeddedImages, uploadedImages, isSaving, onClose, onCreate }) => {
     const [selected, setSelected] = useState<string[]>([]);
+    const dialogRef = useDialog(true, onClose, !isSaving);
     useEffect(() => setSelected([]), [candidates]);
     return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-            <section className="w-full max-w-lg rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-dark-surface sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="import-review-title">
+        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget && !isSaving) onClose(); }}>
+            <section ref={dialogRef} tabIndex={-1} className="ww-studio-dialog w-full max-w-lg rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-dark-surface sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="import-review-title">
                 <h3 id="import-review-title" className="text-xl font-bold text-text-rich dark:text-dark-text-rich">Import complete</h3>
                 <p className="mt-1 text-sm text-text-body dark:text-dark-text-body">
                     {uploadedImages > 0 ? `${uploadedImages} of ${embeddedImages} embedded images were placed in the imported chapters. ` : ''}
@@ -434,7 +442,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             </div>
         </div>
         <span className="ww-manage-chapter-reads">{chapter.status === 'published' ? `${chapter.viewCount.toLocaleString()} reads` : 'Private'}</span>
-        <details className="ww-studio-story-menu ww-manage-chapter-menu"><summary aria-label={`Actions for ${chapter.title || `Chapter ${index + 1}`}`}><MoreHorizontal size={21} /></summary><div className="ww-manage-chapter-actions">
+        <DisclosureMenu className="ww-manage-chapter-menu" contentClassName="ww-manage-chapter-actions" label={`Actions for ${chapter.title || `Chapter ${index + 1}`}`}>
             <button
                 onClick={() => window.location.hash = `/write/book/${bookId}/chapter/${chapter.id}/edit`}
                 className="flex items-center justify-center flex-1 sm:flex-none gap-2 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-text-body dark:text-dark-text-body"
@@ -465,7 +473,7 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
             >
                 <TrashIcon className="w-4 h-4" />
             </button>
-        </div></details>
+        </DisclosureMenu>
     </div>
 );
 
@@ -715,12 +723,20 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     }
 
     const progressCopy = importProgressCopy({ phase: importPhase, percent: importPercent, elapsedSeconds: importElapsedSeconds });
+    const privateChapterCount = book.chapters.filter(chapter => chapter.status !== 'published').length;
+    const workspaceTitle = { chapters: book.title, characters: 'Characters', scenes: 'Scenes', notes: 'Private notes' }[activeTab];
+    const workspaceDescription = {
+        chapters: `${publishedChapterCount} published ${publishedChapterCount === 1 ? 'chapter' : 'chapters'} · ${privateChapterCount} private ${privateChapterCount === 1 ? 'draft' : 'drafts'} · ${totalWords.toLocaleString()} words`,
+        characters: 'Build your cast and link character details to your manuscript.',
+        scenes: 'Plan the moments that connect your chapters.',
+        notes: 'A private space for ideas, research, and reminders.',
+    }[activeTab];
 
     return (
         <div className="ww-manage-book-page">
             <header className="ww-studio-pagehead ww-manage-heading">
                 <span className="ww-studio-eyebrow">{activeTab === 'chapters' ? 'Your story' : book.title}</span>
-                <div><div><h1>{activeTab === 'chapters' ? book.title : 'Your story guide'}</h1><p>{activeTab === 'chapters' ? `${publishedChapterCount} published chapters · ${book.chapters.filter(chapter => chapter.status !== 'published').length} private drafts · ${totalWords.toLocaleString()} words` : 'Keep track of your world, characters, and private writing notes.'}</p></div><button className="ww-studio-primary" onClick={handleNewChapterClick} disabled={isNavigatingNewChapter}>New chapter <Plus size={19} /></button></div>
+                <div><div><h1>{workspaceTitle}</h1><p>{workspaceDescription}</p></div>{activeTab === 'chapters' && <button className="ww-studio-primary" onClick={handleNewChapterClick} disabled={isNavigatingNewChapter}>New chapter <Plus size={19} /></button>}</div>
             </header>
             {errorMsg && <div className="ww-manage-error" role="alert">{errorMsg}</div>}
             {importNotice && <div className="ww-manage-import-notice" role="status">{importNotice}</div>}
@@ -728,15 +744,15 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             <div className="ww-manage-workspace">
                 <nav className="ww-manage-tabs" aria-label="Story workspace">
                     {(['chapters', 'characters', 'scenes', 'notes'] as Tab[]).map((tab) => (
-                        <button key={tab} onClick={() => { setActiveTab(tab); navigatePath(`/write/book/${bookId}/manage${tab === 'chapters' ? '' : `?tab=${tab}`}`); }} className={activeTab === tab ? 'active' : ''}>
-                            <span>{tab === 'notes' ? 'Private notes' : tab}</span>
+                        <button key={tab} aria-current={activeTab === tab ? 'page' : undefined} onClick={() => { setActiveTab(tab); navigatePath(`/write/book/${bookId}/manage${tab === 'chapters' ? '' : `?tab=${tab}`}`); }} className={activeTab === tab ? 'active' : ''}>
+                            <span>{tab === 'notes' ? 'Private notes' : tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
                             {tab === 'chapters' && <small>{book.chapters.length}</small>}
                         </button>
                     ))}
                     <button onClick={() => setIsEditModalOpen(true)}>Story details</button>
                     <button onClick={() => navigatePath(`/write/analytics?book=${bookId}`)}>Statistics</button>
                 </nav>
-                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span>{isBookPublished && <a className="ww-studio-text-link" href={`/book/${book.id}`}>Preview story <ExternalLink size={16} /></a>}<details className="ww-studio-story-menu"><summary aria-label="Story actions"><MoreHorizontal size={21} /></summary><div><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></div></details><input ref={importInputRef} className="sr-only" type="file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => handleManuscriptImport(event.target.files?.[0])} /></div>
+                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span>{isBookPublished && <a className="ww-studio-text-link" href={`/book/${book.id}`}>Preview story <ExternalLink size={16} /></a>}<DisclosureMenu label="Story actions"><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></DisclosureMenu><input ref={importInputRef} className="sr-only" type="file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => handleManuscriptImport(event.target.files?.[0])} /></div>
                 {activeTab !== 'chapters' && <div className="ww-manage-guide-note">Private notes stay visible only to you. Character details linked in your manuscript appear in the reader’s story guide.</div>}
                 {activeTab === 'chapters' && (
                     <section className="ww-manage-chapters">

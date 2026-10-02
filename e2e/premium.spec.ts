@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
 const password = 'WordWeftLocal123!';
 let readerToken = '', writerToken = '', adminToken = '';
@@ -118,14 +118,14 @@ test('real sign in returns a reader to the protected destination and sign out cl
   await expect.poll(() => page.evaluate(() => localStorage.getItem('wordweft_jwt'))).toBeNull();
 });
 
-const publicRoutes = ['/', '/category', '/genre/Fantasy', '/search?q=Bellweather', '/auth', '/about', '/features', '/founding-writers', '/contact', '/feedback', '/terms', '/privacy', '/safety', '/read-online', '/writing-tools', '/publish-stories', '/world-building-tools', '/wattpad-alternative', '/book/local-story-spring', '/author/local-writer', '/community', '/hooks', '/events', '/challenges', '/not-a-real-page'];
+const publicRoutes = ['/', '/category', '/genre/Fantasy', '/search?q=Bellweather', '/auth', '/about', '/features', '/founding-writers', '/contact', '/feedback', '/terms', '/privacy', '/safety', '/read-online', '/writing-tools', '/publish-stories', '/world-building-tools', '/wattpad-alternatives', '/book/local-story-spring', '/author/local-writer', '/community', '/hooks', '/events', '/challenges', '/not-a-real-page'];
 for (const width of [1440, 393, 320]) test(`all public journeys render with no page errors at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: width === 1440 ? 1000 : 852 });
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   for (const route of publicRoutes) { await page.goto(route); await settled(page); }
   expect(errors).toEqual([]);
 });
-const signedRoutes = ['/library', '/profile', '/edit-profile', '/notifications', '/community', '/community/circle/cozy-fantasy', '/write', '/write?view=stories', '/write?view=comments', '/write/book/create', '/write/book/local-story-spring/manage', '/write/book/local-story-spring/manage?tab=characters', '/write/book/local-story-spring/chapter/local-story-spring-chapter-3/edit', '/write/analytics', '/write/settings'];
+const signedRoutes = ['/library', '/profile', '/edit-profile', '/notifications', '/community', '/community/circle/reader-recommendations', '/write', '/write?view=stories', '/write?view=comments', '/write/book/create', '/write/book/local-story-spring/manage', '/write/book/local-story-spring/manage?tab=characters', '/write/book/local-story-spring/chapter/local-story-spring-chapter-3/edit', '/write/analytics', '/write/settings'];
 for (const width of [1440, 393, 320]) test(`all signed reader and writer journeys render at ${width}px`, async ({ page }) => {
   await session(page, writerToken); await page.setViewportSize({ width, height: width === 1440 ? 1000 : 852 });
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));

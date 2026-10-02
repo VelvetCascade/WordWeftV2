@@ -573,7 +573,7 @@ const App: React.FC = () => {
   };
 
   const isWriterPage = page.name.startsWith('writer-');
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'reset-password' && !isWriterPage;
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'reset-password' && page.name !== 'writer-edit-chapter';
 
   const feedbackCtx = {
     triggerFeedback: feedback.triggerFeedback,
@@ -598,6 +598,8 @@ const App: React.FC = () => {
                 hasMore={notif.hasMore}
                 onLoadMore={notif.loadMore}
                 isLoading={notif.isLoading}
+                error={notif.error}
+                onRetry={notif.refresh}
               />
             ) : undefined
           }

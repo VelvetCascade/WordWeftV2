@@ -25,6 +25,25 @@ function readSeenStories(): string[] {
     }
 }
 
+const HookExcerpt: React.FC<{ text: string }> = ({ text }) => {
+    const [expanded, setExpanded] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
+    const excerptRef = useRef<HTMLQuoteElement>(null);
+    useEffect(() => {
+        const element = excerptRef.current;
+        if (!element) return;
+        const measure = () => setHasMore(element.scrollHeight > parseFloat(getComputedStyle(element).lineHeight) * 6 + 2);
+        const observer = new ResizeObserver(measure);
+        observer.observe(element);
+        measure();
+        return () => observer.disconnect();
+    }, [text]);
+    return <div className="wv-hook-excerpt-wrap">
+        <blockquote id="hook-opening" ref={excerptRef} className={`hook-feed-excerpt ${expanded ? 'is-expanded' : ''}`}>“{text}”</blockquote>
+        {hasMore && <button type="button" className="wv-hook-expand" onClick={() => setExpanded(value => !value)} aria-expanded={expanded} aria-controls="hook-opening">{expanded ? 'Show a shorter opening' : 'Read the full opening'}</button>}
+    </div>;
+};
+
 export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserUpdate, onSignIn }) => {
     const [cards, setCards] = useState<HookCard[]>([]);
     const [index, setIndex] = useState(0);
@@ -40,10 +59,19 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
 
     const tasteDialog = useRef<HTMLDialogElement>(null);
     const tasteTrigger = useRef<HTMLButtonElement>(null);
+    const cardRef = useRef<HTMLElement>(null);
+    const previousChapter = useRef<string | undefined>(undefined);
 
     const current = cards[index];
     const remaining = cards.length - index;
     const selectedTaste = currentUser?.favoriteGenres?.length ? currentUser.favoriteGenres : taste;
+    useEffect(() => {
+        if (!current) return;
+        if (previousChapter.current && previousChapter.current !== current.chapterId) {
+            cardRef.current?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+        }
+        previousChapter.current = current.chapterId;
+    }, [current?.chapterId]);
 
     const loadFeed = useCallback(async (excluded = seen, requestedTaste = selectedTaste) => {
         setLoading(true);
@@ -193,13 +221,13 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
                     </section>
                 </dialog>}
                 {error && <div role="alert" className="wv-error wv-hook-error">{error}<button type="button" className="wv-button" onClick={() => void loadFeed()}>Try again</button></div>}
-                {loading ? <section className="wv-hook-loading" role="status"><p>Loading openings…</p><div className="wv-hook-loading-lines" aria-hidden="true"><span /><span /><span /></div></section> : current ? <article className="wv-hook-card">
+                {loading ? <section className="wv-hook-loading" role="status"><p>Loading openings…</p><div className="wv-hook-loading-lines" aria-hidden="true"><span /><span /><span /></div></section> : current ? <article className="wv-hook-card" ref={cardRef}>
                     <div className="wv-hook-art">{current.coverUrl ? <ResilientImage src={current.coverUrl} alt={`Cover of ${current.title}`} fallbackLabel={current.title} variant="cover" className="wv-hook-cover" loading="eager" /> : <div className="wv-hook-art-empty"><BookOpen size={44} aria-hidden="true" /><span>Cover unavailable</span></div>}</div>
                     <div className="wv-hook-reading">
                         <div className="wv-hook-meta"><span>{current.chapterTitle}</span><span>{current.readingMinutes} min chapter</span></div>
                         <h2>{current.title}</h2><a className="wv-hook-author" href={`/author/${current.authorId}`}>by {current.authorName}</a>
                         {current.matchedGenres.length > 0 && <p className="wv-hook-match">Matched to {current.matchedGenres.join(' + ')}</p>}
-                        <blockquote className="hook-feed-excerpt">“{current.excerpt}”</blockquote>
+                        <HookExcerpt key={current.chapterId} text={current.excerpt} />
                         <div className="wv-hook-bottom"><div className="wv-hook-tags"><div>{current.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}</div><button type="button" disabled={likingChapterId === current.chapterId} onClick={() => void toggleLike()} className={`wv-hook-like ${liked.has(current.chapterId) ? 'is-liked' : ''}`} aria-pressed={liked.has(current.chapterId)} aria-label={liked.has(current.chapterId) ? 'Unlike this opening' : 'Like this opening'}><Heart size={17} fill={liked.has(current.chapterId) ? 'currentColor' : 'none'} /> {current.likesCount}</button></div>
                             <div className="wv-hook-actions"><button type="button" onClick={advance} className="wv-button"><X size={16} /> Not for me</button><button type="button" onClick={openStory} className="wv-button wv-button-primary">Open story <ArrowRight size={18} /></button></div><p className="wv-hook-keyboard">Keyboard: ← skip · → open</p>
                         </div>
