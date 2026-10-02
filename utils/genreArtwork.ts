@@ -1,0 +1,304 @@
+export interface GenreArtwork {
+    genre: string;
+    file: string;
+    title: string;
+    artist: string;
+    date: string;
+    source: string;
+    imageSource: string;
+    rights: string;
+    theme: string;
+    position?: string;
+}
+
+export const genreArtwork: GenreArtwork[] = [
+    {
+        "genre": "Romance",
+        "file": "/discovery-artwork/romance.jpg",
+        "title": "The Love Letter",
+        "artist": "Jean Honoré Fragonard",
+        "date": "early 1770s",
+        "source": "https://www.metmuseum.org/art/collection/search/436322",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DP-1014-001.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A love letter gives intimate hopes a tangible form."
+    },
+    {
+        "genre": "Young Adult",
+        "file": "/discovery-artwork/young-adult.jpg",
+        "title": "Women and children in a garden",
+        "artist": "Unidentified artist",
+        "date": "",
+        "source": "https://www.metmuseum.org/art/collection/search/51416",
+        "imageSource": "https://images.metmuseum.org/CRDImages/as/web-large/DP215053_CRD.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A garden shared across generations evokes growing up and finding a place."
+    },
+    {
+        "genre": "LGBTQ+",
+        "file": "/discovery-artwork/lgbtq.jpg",
+        "title": "Two Dancers",
+        "artist": "John Singer Sargent",
+        "date": "After 1900",
+        "source": "https://www.metmuseum.org/art/collection/search/12444",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ad/web-large/217505.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Two dancers share an expressive moment of connection and belonging."
+    },
+    {
+        "genre": "Comedy",
+        "file": "/discovery-artwork/comedy.jpg",
+        "title": "The Card Players",
+        "artist": "Louis Léopold Boilly",
+        "date": "1822",
+        "source": "https://www.metmuseum.org/art/collection/search/394897",
+        "imageSource": "https://images.metmuseum.org/CRDImages/dp/web-large/DP874355.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Expressive card players turn everyday company into theatrical comedy."
+    },
+    {
+        "genre": "Tragedy",
+        "file": "/discovery-artwork/tragedy.jpg",
+        "title": "Death of Ophelia",
+        "artist": "Eugène Delacroix",
+        "date": "1843",
+        "source": "https://www.metmuseum.org/art/collection/search/337110",
+        "imageSource": "https://images.metmuseum.org/CRDImages/dp/web-large/DP852087.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Ophelia's fate connects this dramatic scene to literary tragedy."
+    },
+    {
+        "genre": "Drama",
+        "file": "/discovery-artwork/drama.jpg",
+        "title": "The Actor Otani Oniji",
+        "artist": "Katsukawa Shun'ei 勝川春英",
+        "date": "1762–1819",
+        "source": "https://www.metmuseum.org/art/collection/search/56014",
+        "imageSource": "https://images.metmuseum.org/CRDImages/as/web-large/DP134601.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "An actor's vivid gesture evokes performance and heightened emotion."
+    },
+    {
+        "genre": "Mystery",
+        "file": "/discovery-artwork/mystery.jpg",
+        "title": "The Fortune-Teller",
+        "artist": "Georges de La Tour",
+        "date": "probably 1630s",
+        "source": "https://www.metmuseum.org/art/collection/search/436838",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DP-14286-015.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A fortune-teller and hidden intentions invite close reading of the scene."
+    },
+    {
+        "genre": "Humor",
+        "file": "/discovery-artwork/humor.jpg",
+        "title": "The Enraged Musician",
+        "artist": "William Hogarth",
+        "date": "November 30, 1741",
+        "source": "https://www.metmuseum.org/art/collection/search/403227",
+        "imageSource": "https://images.metmuseum.org/CRDImages/dp/web-large/DP827069.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Hogarth's crowded musical satire finds humor in noisy everyday encounters."
+    },
+    {
+        "genre": "Fan Fiction",
+        "file": "/discovery-artwork/fan-fiction.jpg",
+        "title": "The Dream of Aeneas",
+        "artist": "Salvator Rosa",
+        "date": "1660–65",
+        "source": "https://www.metmuseum.org/art/collection/search/437507",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DP160249.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Aeneas in a dream revisits a familiar myth through an artist's imagination."
+    },
+    {
+        "genre": "Adventure",
+        "file": "/discovery-artwork/adventure.jpg",
+        "title": "Under the Wave off Kanagawa (Kanagawa oki nami ura), also known as The Great Wave, from the series Thirty-six Views of Mount Fuji (Fugaku sanjūrokkei)",
+        "artist": "Katsushika Hokusai",
+        "date": "ca. 1830–32",
+        "source": "https://www.metmuseum.org/art/collection/search/56353",
+        "imageSource": "https://images.metmuseum.org/CRDImages/as/web-large/DP141067.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A great wave and the boats beneath it evoke a journey into uncertain waters."
+    },
+    {
+        "genre": "Horror",
+        "file": "/discovery-artwork/horror.jpg",
+        "title": "The Night Mare",
+        "artist": "Laurede",
+        "date": "1782",
+        "source": "https://www.metmuseum.org/art/collection/search/698484",
+        "imageSource": "https://images.metmuseum.org/CRDImages/dp/web-large/DP854863.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A historical nightmare image brings unsettling dream figures into view."
+    },
+    {
+        "genre": "Fantasy",
+        "file": "/discovery-artwork/fantasy.jpg",
+        "title": "The Unicorn Rests in a Garden (from the Unicorn Tapestries)",
+        "artist": "Artist unknown",
+        "date": "1495–1505",
+        "source": "https://www.metmuseum.org/art/collection/search/467642",
+        "imageSource": "https://images.metmuseum.org/CRDImages/cl/web-large/DP118991.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A unicorn in an enclosed garden opens a world of legend and enchantment."
+    },
+    {
+        "genre": "Non-Fiction",
+        "file": "/discovery-artwork/non-fiction.jpg",
+        "title": "The Death of Socrates",
+        "artist": "Jacques Louis David",
+        "date": "1787",
+        "source": "https://www.metmuseum.org/art/collection/search/436105",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DP-13139-001.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Socrates and his listeners evoke inquiry, ideas and the recorded human past."
+    },
+    {
+        "genre": "Action",
+        "file": "/discovery-artwork/action.jpg",
+        "title": "The Falcon Hunt",
+        "artist": "Artist unknown",
+        "date": "ca. 1500–1530",
+        "source": "https://www.metmuseum.org/art/collection/search/459953",
+        "imageSource": "https://images.metmuseum.org/CRDImages/rl/web-large/DP265240.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A falcon hunt captures swift movement, pursuit and a scene in progress."
+    },
+    {
+        "genre": "Supernatural",
+        "file": "/discovery-artwork/supernatural.jpg",
+        "title": "Dragon",
+        "artist": "Giacomo Laurenziani",
+        "date": "early 17th century",
+        "source": "https://www.metmuseum.org/art/collection/search/195357",
+        "imageSource": "https://images.metmuseum.org/CRDImages/es/web-large/DP-120-002.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A dragon gives an imagined creature a presence beyond the ordinary."
+    },
+    {
+        "genre": "Suspense",
+        "file": "/discovery-artwork/suspense.jpg",
+        "title": "The Storm",
+        "artist": "James McNeill Whistler",
+        "date": "1861",
+        "source": "https://www.metmuseum.org/art/collection/search/372738",
+        "imageSource": "https://images.metmuseum.org/CRDImages/dp/web-large/DP815452.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "An approaching storm holds a landscape between calm and disruption."
+    },
+    {
+        "genre": "Thriller",
+        "file": "/discovery-artwork/thriller.jpg",
+        "title": "After the Storm",
+        "artist": "Albert Bierstadt",
+        "date": "ca. 1870–80 (?)",
+        "source": "https://www.metmuseum.org/art/collection/search/12849",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ad/web-large/ap66.214.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "The charged aftermath of a storm suggests danger just beyond a quiet scene."
+    },
+    {
+        "genre": "Dark Fantasy",
+        "file": "/discovery-artwork/dark-fantasy.jpg",
+        "title": "The Forest of Arden",
+        "artist": "Albert Pinkham Ryder",
+        "date": "1888–97 (?), reworked 1908 (?)",
+        "source": "https://www.metmuseum.org/art/collection/search/11977",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ad/web-large/DT240272.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A shadowed forest from Shakespeare's imagined Arden blends wonder and unease."
+    },
+    {
+        "genre": "Crime",
+        "file": "/discovery-artwork/crime.jpg",
+        "title": "Mosaic of a mask",
+        "artist": "Artist unknown",
+        "date": "ca. 1st–2nd century CE",
+        "source": "https://www.metmuseum.org/art/collection/search/252555",
+        "imageSource": "https://images.metmuseum.org/CRDImages/gr/web-large/IMG_0773.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A theatrical mask suggests disguise, concealed identity and uncertain motives."
+    },
+    {
+        "genre": "War",
+        "file": "/discovery-artwork/war.jpg",
+        "title": "Washington Crossing the Delaware",
+        "artist": "Emanuel Leutze",
+        "date": "1851",
+        "source": "https://www.metmuseum.org/art/collection/search/11417",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ad/web-large/DP215410.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A wartime river crossing depicts collective risk and the weight of conflict."
+    },
+    {
+        "genre": "Urban Fantasy",
+        "file": "/discovery-artwork/urban-fantasy.jpg",
+        "title": "Venice, from the Porch of Madonna della Salute",
+        "artist": "Joseph Mallord William Turner",
+        "date": "ca. 1835",
+        "source": "https://www.metmuseum.org/art/collection/search/437853",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DP169568.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Turner's atmospheric Venice makes a familiar city feel almost otherworldly."
+    },
+    {
+        "genre": "Sci-Fi",
+        "file": "/discovery-artwork/sci-fi.jpg",
+        "title": "Celestial globe",
+        "artist": "Willem Jansz Blaeu",
+        "date": "after 1621",
+        "source": "https://www.metmuseum.org/art/collection/search/207816",
+        "imageSource": "https://images.metmuseum.org/CRDImages/es/web-large/DP-12901-001.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A celestial globe connects imagined journeys to stars, discovery and distant worlds."
+    },
+    {
+        "genre": "Slice of Life",
+        "file": "/discovery-artwork/slice-of-life.jpg",
+        "title": "The Harvest, Pontoise (La Récolte, Pontoise)",
+        "artist": "Camille Pissarro",
+        "date": "1881",
+        "source": "https://www.metmuseum.org/art/collection/search/459108",
+        "imageSource": "https://images.metmuseum.org/CRDImages/rl/web-large/DP-34499-001.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "Workers gathering a harvest find a story in the rhythm of everyday life."
+    },
+    {
+        "genre": "Military",
+        "file": "/discovery-artwork/military.jpg",
+        "title": "1807, Friedland",
+        "artist": "Ernest Meissonier",
+        "date": "ca. 1861–75",
+        "source": "https://www.metmuseum.org/art/collection/search/437052",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DT2144.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "An army in the field places organized conflict and its participants in view."
+    },
+    {
+        "genre": "Poetry",
+        "file": "/discovery-artwork/poetry.jpg",
+        "title": "The Poet",
+        "artist": "Gilles Demarteau",
+        "date": "18th century",
+        "source": "https://www.metmuseum.org/art/collection/search/835768",
+        "imageSource": "https://images.metmuseum.org/CRDImages/dp/web-large/DP889565.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "A portrait of a poet evokes attentive observation and language as an art."
+    },
+    {
+        "genre": "Literary Fiction",
+        "file": "/discovery-artwork/literary-fiction.jpg",
+        "title": "A Woman Seated beside a Vase of Flowers (Madame Paul Valpinçon?)",
+        "artist": "Edgar Degas",
+        "date": "1865",
+        "source": "https://www.metmuseum.org/art/collection/search/436121",
+        "imageSource": "https://images.metmuseum.org/CRDImages/ep/web-large/DP-25460-001.jpg",
+        "rights": "The Metropolitan Museum of Art Open Access; public domain (CC0).",
+        "theme": "An intimate everyday portrait invites attention to character and inner life."
+    }
+];
+export function getGenreArtwork(name: string): GenreArtwork | undefined {
+    return genreArtwork.find(art => art.genre.toLowerCase() === name.trim().toLowerCase());
+}

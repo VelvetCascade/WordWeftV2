@@ -2,7 +2,7 @@
 // Analytics Service — Core engine for tracking user events
 // Events are batched and sent to the backend API, which forwards them to Google Sheets
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 const JWT_KEY = 'wordweft_jwt';
 const BATCH_INTERVAL_MS = 30000; // Flush every 30 seconds
 // Capture useful navigation dimensions without retaining auth/reset tokens or arbitrary queries.

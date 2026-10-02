@@ -93,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/*/chapters/*/revisions").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/characters/book/*", "/api/characters/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/books/*/chapters/*/view").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/analytics/events").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/profile").permitAll()

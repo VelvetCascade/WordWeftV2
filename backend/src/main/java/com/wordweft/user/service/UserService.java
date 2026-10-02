@@ -72,7 +72,7 @@ public class UserService {
     @Autowired
     ShelfRepository shelfRepository;
     @Autowired
-    com.wordweft.book.repository.ReadingProgressRepository readingProgressRepository;
+    com.wordweft.book.service.ReadingProgressService readingProgressService;
     @Autowired
     com.wordweft.book.service.ContentAccessService contentAccessService;
 
@@ -100,6 +100,7 @@ public class UserService {
         if (user.getId().equals(currentViewerId)) {
             map.put("dateOfBirth", user.getDateOfBirth());
             map.put("allowMatureContent", user.isAllowMatureContent());
+            map.put("notificationPreferences", user.getNotificationPreferences());
         }
 
         // Stats Logic
@@ -147,10 +148,7 @@ public class UserService {
         List<com.wordweft.book.model.Shelf> customShelves = shelfRepository.findByUserId(user.getId());
 
         // Fetch all reading progress
-        List<com.wordweft.book.model.ReadingProgress> progressList = readingProgressRepository
-                .findByUserId(user.getId());
-        Map<String, com.wordweft.book.model.ReadingProgress> progressMap = progressList.stream()
-                .collect(Collectors.toMap(com.wordweft.book.model.ReadingProgress::getBookId, p -> p));
+        Map<String, com.wordweft.book.model.ReadingProgress> progressMap = readingProgressService.getAllProgress(user.getId());
 
         List<Map<String, Object>> shelves = new ArrayList<>();
 
@@ -197,7 +195,7 @@ public class UserService {
                 allBooks.add(b);
                 bookMap.put(e.getBookId(), b);
 
-                if (progress >= 100) {
+                if (p != null && p.isFinished()) {
                     completedBooks.add(b);
                 } else if (progress > 0) {
                     readingBooks.add(b);

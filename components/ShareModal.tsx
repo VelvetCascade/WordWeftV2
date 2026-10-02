@@ -1,3 +1,4 @@
+import { useDialog } from '../hooks/useDialog';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Book } from '../types';
 import { ShareIcon, LinkIcon, DocumentDuplicateIcon, XMarkIcon, CheckCircleIcon, TwitterIcon, InstagramIcon } from './icons/Icons';
@@ -620,6 +621,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
     const { theme } = useTheme();
     const [copied, setCopied] = useState(false);
+    const [copyError, setCopyError] = useState('');
     const [activeTab, setActiveTab] = useState<'quick' | 'story' | 'quote'>(initialTab);
     const [posterTheme, setPosterTheme] = useState<PosterTheme>('midnight');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -653,6 +655,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setCopied(false);
+            setCopyError('');
             const targetTab = (quickShareOnly || initialTab === 'story') ? 'quick' : initialTab;
             setActiveTab(targetTab);
         }
@@ -677,12 +680,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         if (isOpen && activeTab === 'quote') drawQuote();
     }, [isOpen, drawQuote, activeTab]);
 
+    const dialogRef = useDialog(isOpen, onClose);
+
     if (!isOpen) return null;
 
-    const handleCopyLink = () => {
-        navigator.clipboard.writeText(publicUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopyLink = async () => {
+        setCopyError('');
+        try {
+            await navigator.clipboard.writeText(publicUrl);
+            setCopied(true);
+        } catch {
+            setCopyError('Your browser could not copy the link. Select the link below to copy it manually.');
+        }
     };
 
     const shareLinks = {
@@ -751,7 +760,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     return (
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
-            role="dialog"
+            ref={dialogRef} tabIndex={-1} role="dialog"
             aria-modal="true"
             aria-label={`Share ${book.title}`}
             onClick={onClose}
@@ -766,7 +775,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         <ShareIcon className="w-5 h-5 text-accent" />
                         {chapter ? 'Share Chapter' : 'Share Book'}
                     </h3>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-gray-500">
+                    <button onClick={onClose} aria-label="Close share dialog" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors text-gray-500">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
                 </div>
@@ -844,16 +853,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                             <div className="flex flex-col gap-2">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Page Link</label>
                                 <div className="flex gap-2">
-                                    <div className="flex-1 bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm text-gray-500 dark:text-gray-400 truncate flex items-center">
-                                        {publicUrl}
-                                    </div>
+                                    <input aria-label="Story link" readOnly value={publicUrl} onFocus={event => event.currentTarget.select()} className="min-w-0 flex-1 bg-gray-50 dark:bg-dark-surface-alt border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm text-text-body dark:text-dark-text-body" />
                                     <button
                                         onClick={handleCopyLink}
+                                        aria-label={copied ? 'Story link copied' : 'Copy story link'}
                                         className={`px-4 py-2 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors ${copied ? 'bg-success/10 text-success' : 'bg-accent text-white hover:bg-primary'}`}
                                     >
                                         {copied ? <CheckCircleIcon className="w-5 h-5" /> : <DocumentDuplicateIcon className="w-5 h-5" />}
                                     </button>
                                 </div>
+                                <span className="sr-only" role="status">{copied ? 'Story link copied' : ''}</span>
+                                {copyError && <p role="alert" className="text-sm text-text-body dark:text-dark-text-body">{copyError}</p>}
                             </div>
                         </div>
                     )}

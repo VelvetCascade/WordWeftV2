@@ -6,6 +6,7 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
 import { goBackOrReplace, replaceHash } from '../utils/navigation';
+import { ArrowRight, Check, LockKeyhole } from 'lucide-react';
 
 interface CreateBookPageProps {
     currentUser: User;
@@ -16,6 +17,9 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
     const { trackEvent } = useAnalytics();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [summary, setSummary] = useState('');
+    const [tags, setTags] = useState('');
+    const [genresError, setGenresError] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [category, setCategory] = useState('');
     const [ageRating, setAgeRating] = useState<AgeRating>('TEEN_13');
@@ -49,7 +53,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         api.getGenres().then(fetchedGenres => {
             setAllGenres(fetchedGenres);
             setIsLoadingGenres(false);
-        });
+        }).catch(() => { setGenresError('Genres could not load. You can add them from story details later.'); setIsLoadingGenres(false); });
     }, []);
 
     const toggleGenre = (genre: string) => {
@@ -81,12 +85,12 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         const newBookData = {
             title,
             description,
-            summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
-            coverUrl: coverUrl || 'https://picsum.photos/seed/newbook/400/600',
+            summary: summary.trim() || description.substring(0, 150) + (description.length > 150 ? '...' : ''),
+            coverUrl: coverUrl || new URL('/design-v2/assets/met-53681.jpg', window.location.origin).href,
             coverFileId,
             genres: selectedGenres,
             category: finalCategory,
-            tags: selectedGenres,
+            tags: tags.trim() ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : selectedGenres,
             ageRating,
             contentWarnings,
             customDisclaimer,
@@ -124,8 +128,8 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                     </button>
                     <div>
                         <span className="ww-create-eyebrow">New story</span>
-                        <h1>Begin a new world.</h1>
-                        <p>Give the project a clear identity now. You can refine every detail as the story grows.</p>
+                        <h1>Story details</h1>
+                        <p>Add the title, introduction, and artwork readers will see.</p>
                     </div>
                 </header>
 
@@ -137,11 +141,15 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <div><h2>Story essentials</h2><p>The title and promise readers see first.</p></div>
                             </div>
                             <div className="ww-create-field">
-                                <label htmlFor="title">Book title</label>
-                                <input type="text" id="title" value={title} onChange={e => setTitle(e.target.value)} required placeholder="The Last Sky-Sailor" autoFocus />
+                                <label htmlFor="title">Story title</label>
+                                <input type="text" id="title" value={title} maxLength={100} onChange={e => setTitle(e.target.value)} required placeholder="The Last Sky-Sailor" autoFocus />
                             </div>
                             <div className="ww-create-field">
-                                <div className="ww-create-label-row"><label htmlFor="description">Story description</label><span>{description.length} characters</span></div>
+                                <label htmlFor="story-summary">A short introduction <small>(optional)</small></label>
+                                <input id="story-summary" type="text" maxLength={200} value={summary} onChange={event => setSummary(event.target.value)} placeholder="One line that invites the reader in." />
+                            </div>
+                            <div className="ww-create-field">
+                                <div className="ww-create-label-row"><label htmlFor="description">Synopsis</label><span>{description.length} characters</span></div>
                                 <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} required rows={6} placeholder="What makes this story impossible to put down?" />
                             </div>
                         </section>
@@ -168,14 +176,16 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <div className="ww-create-label-row"><label htmlFor="genre-search">Genres</label><span>{selectedGenres.length} selected</span></div>
                                 <input id="genre-search" type="search" placeholder="Search genres" value={genreSearch} onChange={e => setGenreSearch(e.target.value)} />
                                 <div className="ww-create-genres">
+                                    {genresError && <p role="alert">{genresError}</p>}
                                     {isLoadingGenres ? <p>Loading genres…</p> : filteredGenres.map(g => (
                                         <button key={g} type="button" onClick={() => toggleGenre(g)} className={selectedGenres.includes(g) ? 'selected' : ''}>
-                                            {selectedGenres.includes(g) && <span>✓</span>}{g}
+                                            {selectedGenres.includes(g) && <Check size={13} />}{g}
                                         </button>
                                     ))}
                                     {!isLoadingGenres && filteredGenres.length === 0 && <p>No genres match your search.</p>}
                                 </div>
                             </div>
+                            <div className="ww-create-field"><label htmlFor="story-tags">Tags <small>(optional)</small></label><input id="story-tags" value={tags} onChange={event => setTags(event.target.value)} placeholder="Homecoming, family, slow burn" /><small>Separate tags with commas to help readers find your story.</small></div>
                         </section>
 
                         <section className="ww-create-section">
@@ -221,14 +231,14 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 value={coverUrl}
                                 onChange={(url, fileId) => { setCoverUrl(url); setCoverFileId(fileId); }}
                                 label=""
-                                fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                                fallbackUrl="/design-v2/assets/met-53681.jpg"
                                 aspectRatio={2/3}
                                 cropShape="rect"
                                 onBusyChange={setIsCoverUploading}
                             />
                         </section>
 
-                        <label htmlFor="isAIGenerated" className="ww-create-disclosure">
+                        <div className="ww-create-guidance"><label htmlFor="isAIGenerated" className="ww-create-disclosure">
                             <input type="checkbox" id="isAIGenerated" checked={isAIGenerated} onChange={e => setIsAIGenerated(e.target.checked)} />
                             <span className="ww-create-check" />
                             <span><strong>AI-assisted content</strong><small>Disclose if generation tools shaped the text or structure.</small></span>
@@ -236,7 +246,8 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
 
                         <div className="ww-create-preview-note">
                             <span>Next step</span>
-                            <p>We’ll open your story studio so you can create the first chapter.</p>
+                            <p><LockKeyhole size={15} />Your story starts as a private draft. Add a chapter before publishing.</p>
+                        </div>
                         </div>
                     </aside>
 
@@ -251,7 +262,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         )}
                         <button className="ww-create-cancel" type="button" onClick={() => goBackOrReplace('/write')} disabled={isSubmitting || isCoverUploading}>Cancel</button>
                         <button className="ww-create-submit" type="submit" disabled={!title || !description || isSubmitting || isCoverUploading}>
-                            {isCoverUploading ? 'Uploading cover…' : isSubmitting ? 'Creating story…' : 'Create story'} <span>→</span>
+                            {isCoverUploading ? 'Uploading cover…' : isSubmitting ? 'Creating story…' : 'Save as draft'} <ArrowRight size={18} />
                         </button>
                     </footer>
                 </form>

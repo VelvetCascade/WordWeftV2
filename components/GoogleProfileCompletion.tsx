@@ -1,3 +1,6 @@
+import '../styles/account-v2.css';
+import { useDialog } from '../hooks/useDialog';
+import { ModernBirthdaySelector } from './ModernBirthdaySelector';
 import React, { useState } from 'react';
 import * as api from '../api/client';
 import type { User } from '../types';
@@ -12,8 +15,11 @@ interface GoogleProfileCompletionProps {
 export function GoogleProfileCompletion({ user, onComplete, onCancel }: GoogleProfileCompletionProps) {
     const [username, setUsername] = useState('');
     const [bio, setBio] = useState('');
+    const [birthday, setBirthday] = useState('');
+    const [accepted, setAccepted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const dialogRef = useDialog(true, onCancel, !isLoading);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,9 +30,17 @@ export function GoogleProfileCompletion({ user, onComplete, onCancel }: GooglePr
             return;
         }
 
+        const birthDate = new Date(`${birthday}T00:00:00`);
+        const today = new Date();
+        const minimumAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+        if (!birthday || !Number.isFinite(birthDate.getTime()) || birthDate > minimumAgeDate) {
+            setError('You must be at least 13 years old to join WordWeft. Please enter your birthday.');
+            return;
+        }
+        if (!accepted) { setError('Please accept the Terms and Privacy Policy to continue.'); return; }
         setIsLoading(true);
         try {
-            const updatedUser = await api.updateUserProfile(user.id, { name: username, bio });
+            const updatedUser = await api.updateUserProfile(user.id, { name: username, bio, dateOfBirth: birthday });
             onComplete(updatedUser);
         } catch (err: any) {
             setError(err.message || 'Failed to update profile. Username might be taken.');
@@ -36,15 +50,15 @@ export function GoogleProfileCompletion({ user, onComplete, onCancel }: GooglePr
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-surface dark:bg-dark-surface rounded-2xl p-8 max-w-md w-full shadow-2xl relative border border-primary/20 dark:border-dark-border animate-slide-in-bottom">
+        <div className="account-v2-dialog fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="google-profile-heading" className="bg-surface dark:bg-dark-surface ww-google-completion rounded-2xl p-8 max-w-md w-full shadow-2xl relative border border-primary/20 dark:border-dark-border animate-slide-in-bottom">
 
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary dark:text-dark-text-rich">
                         <Book className="w-8 h-8" />
                     </div>
-                    <h2 className="text-2xl font-bold font-serif text-text-rich dark:text-dark-text-rich mb-2">
-                        Welcome to WordWeft!
+                    <h2 id="google-profile-heading" className="text-2xl font-bold font-serif text-text-rich dark:text-dark-text-rich mb-2">
+                        Make yourself at home
                     </h2>
                     <p className="text-text-body dark:text-dark-text-body">
                         You're almost there. Please choose a username to complete your profile.
@@ -52,19 +66,22 @@ export function GoogleProfileCompletion({ user, onComplete, onCancel }: GooglePr
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-danger/10 border border-danger/20 text-danger rounded-xl text-sm text-center">
+                    <div role="alert" className="mb-6 p-4 bg-danger/10 border border-danger/20 text-danger rounded-xl text-sm text-center">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-text-rich dark:text-dark-text-rich mb-1">
+                        <label htmlFor="google-profile-name" className="block text-sm font-medium text-text-rich dark:text-dark-text-rich mb-1">
                             Choose a Username <span className="text-danger">*</span>
                         </label>
                         <div className="relative">
                             <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-body/50" />
                             <input
+                                id="google-profile-name"
+                                autoComplete="username"
+                                maxLength={20}
                                 type="text"
                                 required
                                 value={username}
@@ -73,14 +90,16 @@ export function GoogleProfileCompletion({ user, onComplete, onCancel }: GooglePr
                                 placeholder="creative_writer42"
                             />
                         </div>
-                        <p className="text-xs text-text-body mt-2">Only letters, numbers, and underscores.</p>
+                        <p className="text-xs text-text-body mt-2">3–20 letters, numbers, or underscores.</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-text-rich dark:text-dark-text-rich mb-1">
+                        <label htmlFor="google-profile-bio" className="block text-sm font-medium text-text-rich dark:text-dark-text-rich mb-1">
                             Short Bio (Optional)
                         </label>
                         <textarea
+                            id="google-profile-bio"
+                            maxLength={1000}
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-primary/20 dark:border-dark-border bg-background dark:bg-dark-background focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-text-rich dark:text-dark-text-rich placeholder-text-body/50 h-24 resize-none"
@@ -88,6 +107,8 @@ export function GoogleProfileCompletion({ user, onComplete, onCancel }: GooglePr
                         />
                     </div>
 
+                    <ModernBirthdaySelector value={birthday} onChange={setBirthday} />
+                    <label className="flex items-start gap-3 text-sm"><input type="checkbox" required checked={accepted} onChange={event => setAccepted(event.target.checked)} className="mt-1" /><span>I agree to the <a href="/terms" target="_blank" rel="noreferrer" className="underline">Terms</a> and <a href="/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</a>.</span></label>
                     <div className="flex gap-4 pt-4">
                         <button
                             type="button"

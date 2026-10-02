@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { buildResponse } from './render.mjs';
+import { renderHome } from './static.mjs';
 
 const template = readFileSync(new URL('./template.html', import.meta.url), 'utf8');
 const staticBodies = JSON.parse(readFileSync(new URL('./static-bodies.json', import.meta.url), 'utf8'));
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
     if (!response.ok) { const error = new Error('Public content request failed'); error.status = response.status; throw error; }
     return response.json();
   };
-  const result = await buildResponse({ url: req.url, host: req.headers.host?.split(':')[0], template, staticBodies, fetchJson, preview: process.env.SEO_NOINDEX === 'true' || process.env.VERCEL_ENV === 'preview' || buildConfig.preview });
+  const result = await buildResponse({ url: req.url, host: req.headers.host?.split(':')[0], template, staticBodies, fetchJson, renderHome, preview: process.env.SEO_NOINDEX === 'true' || process.env.VERCEL_ENV === 'preview' || buildConfig.preview });
   res.writeHead(result.status, result.headers);
   res.end(req.method === 'HEAD' ? '' : result.body);
 }

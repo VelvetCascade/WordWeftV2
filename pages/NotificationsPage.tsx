@@ -1,3 +1,5 @@
+import { Bell, BookOpen, MessageCircle, CornerDownRight, UserPlus, Settings2, CheckCheck } from 'lucide-react';
+import '../styles/account-v2.css';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { AppNotification, User, NavigateTo, NotificationPreferences } from '../types';
 import type { Page } from '../App';
@@ -5,9 +7,12 @@ import { communityNotificationPostId } from '../utils/community';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ResilientImage } from '../components/ResilientImage';
+import { notificationCopy } from '../utils/notificationPresentation';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 
 interface NotificationsPageProps {
     currentUser: User | null;
+    onPreferencesChange?: (preferences: NotificationPreferences) => void;
     navigateTo: NavigateTo;
     onLogout: () => void;
     notifications: AppNotification[];
@@ -23,26 +28,16 @@ interface NotificationsPageProps {
 
 const FILTER_TABS = [
     { key: 'ALL', label: 'All' },
+    { key: 'UNREAD', label: 'Unread' },
     { key: 'SOCIAL', label: 'Social' },
     { key: 'COMMUNITY', label: 'Community' },
     { key: 'STORIES', label: 'Stories' },
     { key: 'SYSTEM', label: 'System' },
 ];
 
-const getNotificationIcon = (type: string): string => {
-    switch (type) {
-        case 'COMMUNITY_COMMENT': return '💬';
-        case 'COMMUNITY_REPLY': return '↩️';
-        case 'COMMUNITY_RELEASE': return '📚';
-        case 'NEW_FOLLOWER': return '👤';
-        case 'NEW_COMMENT': return '💬';
-        case 'COMMENT_REPLY': return '↩️';
-        case 'AUTHOR_NEW_CHAPTER': return '📖';
-        case 'AUTHOR_NEW_STORY': return '📚';
-        case 'BOOK_UPDATE': return '🔔';
-        case 'SYSTEM_UPDATE': return '⚙️';
-        default: return '🔔';
-    }
+const getNotificationIcon = (type: string): React.ReactNode => {
+    const Icon = type.includes('REPLY') ? CornerDownRight : type.includes('COMMENT') ? MessageCircle : type === 'NEW_FOLLOWER' ? UserPlus : type.includes('CHAPTER') || type.includes('STORY') || type.includes('RELEASE') ? BookOpen : type === 'SYSTEM_UPDATE' ? Settings2 : Bell;
+    return <Icon size={19} strokeWidth={1.6} aria-hidden="true" />;
 };
 
 const getTimeAgo = (dateStr: string): string => {
@@ -85,10 +80,17 @@ const getNotificationTarget = (n: AppNotification): Page | null => {
 };
 
 export const NotificationsPage: React.FC<NotificationsPageProps> = ({
-    currentUser, navigateTo, onLogout, notifications, onMarkRead,
+    currentUser, onPreferencesChange, navigateTo, onLogout, notifications, onMarkRead,
     onMarkAllRead, unreadCount, hasMore, onLoadMore, isLoading, error, onRetry,
 }) => {
     const [activeFilter, setActiveFilter] = useState('ALL');
+    const [verticalFilters, setVerticalFilters] = useState(() => window.matchMedia('(min-width: 1000px)').matches);
+    useEffect(() => {
+        const query = window.matchMedia('(min-width: 1000px)');
+        const sync = () => setVerticalFilters(query.matches);
+        query.addEventListener('change', sync);
+        return () => query.removeEventListener('change', sync);
+    }, []);
     const { trackEvent } = useAnalytics();
     const [searchQuery, setSearchQuery] = useState('');
     const [showSettings, setShowSettings] = useState(false);
@@ -101,7 +103,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     // Load preferences from user
     useEffect(() => {
         if (currentUser) {
-            const userPrefs = (currentUser as any).notificationPreferences;
+            const userPrefs = currentUser.notificationPreferences;
             if (userPrefs) {
                 setPreferences(userPrefs);
             }
@@ -115,7 +117,9 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
         setPreferenceError('');
         setPreferences(newPrefs);
         try {
-            await api.updateNotificationPreferences(newPrefs);
+            const saved = await api.updateNotificationPreferences(newPrefs);
+            setPreferences(saved);
+            onPreferencesChange?.(saved);
         } catch (e) {
             // Revert on error
             setPreferences(preferences);
@@ -127,7 +131,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
 
     // Filter notifications
     const filtered = notifications.filter(n => {
-        const matchesFilter = activeFilter === 'ALL' || getTypeCategory(n.type) === activeFilter;
+        const matchesFilter = activeFilter === 'ALL' || (activeFilter === 'UNREAD' ? !n.read : getTypeCategory(n.type) === activeFilter);
         const matchesSearch = !searchQuery ||
             n.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (n.metadata?.actorName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -136,14 +140,17 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
     });
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark-background transition-colors duration-300 pb-20 xl:pb-0">
+        <div className="account-v2-notifications min-h-screen flex flex-col bg-gray-50 dark:bg-dark-background transition-colors duration-300 pb-20 xl:pb-0">
             <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 md:py-8">
+                <ReturnNavigation fallbackPath="/edit-profile" fallbackLabel="Back to settings" />
                 {/* Header */}
-                <div className="flex flex-wrap items-center justify-between mb-6 gap-3">
+                <div className="ww-notifications-header flex flex-wrap items-center justify-between mb-6 gap-3">
                     <div>
+                        <p className="ww-page-eyebrow">Your activity</p>
                         <h1 className="font-sans text-2xl md:text-3xl font-bold text-text-rich dark:text-dark-text-rich m-0">
                             Notifications
                         </h1>
+                        <p className="mt-2 text-sm text-gray-500">New chapters, replies, and the people around your stories.</p>
                         {unreadCount > 0 && (
                             <p className="font-sans mt-1 text-[13px] font-medium text-gray-500 dark:text-gray-400">
                                 {unreadCount} unread
@@ -156,7 +163,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                 onClick={onMarkAllRead}
                                 className="px-3.5 py-2 text-[13px] font-sans font-semibold bg-accent text-white rounded-lg hover:bg-primary transition-colors hover:shadow-md"
                             >
-                                Mark all read
+                                <CheckCheck size={17} aria-hidden="true" /> Mark all read
                             </button>
                         )}
                         <button
@@ -165,14 +172,14 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                             aria-controls="notification-preferences"
                             className="px-3.5 py-2 text-[13px] font-sans font-semibold bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-text-body dark:text-dark-text-body rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors shadow-sm"
                         >
-                            ⚙ Settings
+                            <Settings2 size={17} aria-hidden="true" /> Preferences
                         </button>
                     </div>
                 </div>
 
                 {/* Settings Panel */}
                 {showSettings && (
-                    <div id="notification-preferences" className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-5 mb-5 animate-fade-in">
+                    <div id="notification-preferences" className="ww-notification-preferences bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border shadow-sm p-5 mb-5 animate-fade-in">
                         <h3 className="font-sans m-0 mb-4 text-[15px] font-bold text-text-rich dark:text-dark-text-rich">
                             Notification Preferences
                         </h3>
@@ -217,11 +224,23 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                     </div>
                 )}
 
+                <div className="ww-notification-workspace"><div className="ww-notification-filters">
                 {/* Filter Tabs */}
-                <div className="flex gap-1 mb-4 bg-white dark:bg-dark-surface rounded-xl p-1 border border-gray-200 dark:border-dark-border shadow-sm overflow-x-auto scrollbar-hide">
+                <div role="tablist" aria-label="Notification filters" aria-orientation={verticalFilters ? 'vertical' : 'horizontal'} onKeyDown={event => {
+                    if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)) return;
+                    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]'));
+                    const index = items.indexOf(event.target as HTMLButtonElement);
+                    if (index < 0) return;
+                    event.preventDefault();
+                    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+                    items[next]?.click(); items[next]?.focus();
+                }} className="ww-notification-tabs flex gap-1 mb-4 bg-white dark:bg-dark-surface rounded-xl p-1 border border-gray-200 dark:border-dark-border shadow-sm overflow-x-auto scrollbar-hide">
                     {FILTER_TABS.map(tab => (
                         <button
                             key={tab.key}
+                            role="tab"
+                            aria-selected={activeFilter === tab.key}
+                            tabIndex={activeFilter === tab.key ? 0 : -1}
                             onClick={() => setActiveFilter(tab.key)}
                             className={`flex-[1_0_auto] px-3 md:px-0 md:flex-1 py-2 border-none rounded-lg font-sans text-[13px] font-semibold transition-colors ${activeFilter === tab.key ? 'bg-accent text-white shadow' : 'bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
                         >
@@ -242,11 +261,12 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                     />
                 </div>
 
+                </div>
                 {/* Notification List */}
-                <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm">
+                <div className="ww-notification-list bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm">
                     {filtered.length === 0 ? (
                         <div className="py-16 px-5 text-center">
-                            <span className="text-4xl block mb-3 opacity-80">🔔</span>
+                            <Bell className="w-9 h-9 mx-auto mb-4 text-teal-700" strokeWidth={1.5} aria-hidden="true" />
                             <p className="font-sans m-0 text-[15px] font-semibold text-text-rich dark:text-dark-text-rich">
                                 {searchQuery ? 'No matching notifications' : 'No notifications yet'}
                             </p>
@@ -263,38 +283,38 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                     const target = getNotificationTarget(n);
                                     if (target) navigateTo(target);
                                 }}
-                                className={`flex items-start gap-4 w-full p-4 border-b border-gray-100 dark:border-dark-border last:border-0 text-left transition-colors ${!n.read ? 'bg-accent/5 dark:bg-accent/10 hover:bg-accent/10 dark:hover:bg-accent/20' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-dark-surface-alt'}`}
+                                className={`ww-notification-row ${!n.read ? 'unread' : ''} flex items-start gap-4 w-full p-4 border-b border-gray-100 dark:border-dark-border last:border-0 text-left transition-colors ${!n.read ? 'bg-accent/5 dark:bg-accent/10 hover:bg-accent/10 dark:hover:bg-accent/20' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-dark-surface-alt'}`}
                             >
                                 {/* Icon / Avatar */}
                                 {n.metadata?.actorAvatar ? (
                                     <ResilientImage src={n.metadata.actorAvatar} alt={n.metadata.actorName || 'Notification sender'} fallbackLabel={n.metadata.actorName} className="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-sm" />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-surface-alt flex items-center justify-center flex-shrink-0 text-xl shadow-inner text-gray-700 dark:text-gray-300">
+                                    <div className="ww-notification-symbol w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-surface-alt flex items-center justify-center flex-shrink-0 text-xl shadow-inner text-gray-700 dark:text-gray-300">
                                         {getNotificationIcon(n.type)}
                                     </div>
                                 )}
 
                                 {/* Content */}
-                                <div className="flex-1 min-w-0 font-sans">
+                                <div className="ww-notification-copy flex-1 min-w-0 font-sans">
                                     <p className={`m-0 text-sm leading-relaxed ${!n.read ? 'font-semibold text-text-rich dark:text-dark-text-rich' : 'font-medium text-text-body dark:text-dark-text-body'}`}>
                                         {n.metadata?.actorName && (
-                                            <span className="font-bold text-accent dark:text-accent mr-1 hover:underline">{n.metadata.actorName}</span>
+                                            <span className="font-bold text-accent dark:text-accent mr-1">{n.metadata.actorName}</span>
                                         )}
-                                        {n.message}
+                                        {notificationCopy(n).message}
                                     </p>
                                     {n.metadata?.bookTitle && (
-                                        <p className="font-sans m-0 mt-1 text-xs font-semibold text-accent">
-                                            📖 {n.metadata.bookTitle}
+                                        <p className="ww-notification-book font-sans m-0 mt-1 text-xs font-semibold text-accent">
+                                            <BookOpen size={14} aria-hidden="true" /> {n.metadata.bookTitle}
                                         </p>
                                     )}
-                                    <span className="font-sans text-xs font-medium text-gray-400 dark:text-gray-500 mt-1.5 block">
+                                    <span className="ww-notification-time font-sans text-xs font-medium text-gray-400 dark:text-gray-500 mt-1.5 block">
                                         {getTimeAgo(n.createdAt)}
                                     </span>
                                 </div>
 
                                 {/* Unread dot */}
                                 {!n.read && (
-                                    <div className="w-2.5 h-2.5 rounded-full bg-accent flex-shrink-0 mt-3 shadow" />
+                                    <span className="w-2.5 h-2.5 rounded-full bg-accent flex-shrink-0 mt-3"><span className="sr-only">Unread</span></span>
                                 )}
                             </button>
                         ))
@@ -310,6 +330,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                             {isLoading ? 'Loading...' : 'Load more'}
                         </button>
                     )}
+                </div>
                 </div>
             </main>
         </div>

@@ -34,7 +34,7 @@ export function documentHtml(template, meta, body, { noindex = false, persistNoi
 
 const xml = (entries, index = false) => `<?xml version="1.0" encoding="UTF-8"?>\n<${index ? 'sitemapindex' : 'urlset'} xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.map(entry => `<${index ? 'sitemap' : 'url'}><loc>${h(SITE_ORIGIN + entry.path)}</loc>${entry.lastmod ? `<lastmod>${h(entry.lastmod)}</lastmod>` : ''}</${index ? 'sitemap' : 'url'}>`).join('')}</${index ? 'sitemapindex' : 'urlset'}>`;
 
-export async function buildResponse({ url: input, host = '', template, staticBodies = {}, fetchJson, preview = false }) {
+export async function buildResponse({ url: input, host = '', template, staticBodies = {}, fetchJson, renderHome, preview = false }) {
   const url = new URL(input, SITE_ORIGIN), route = parseRoute(url.href);
   const noindex = preview || (!!host && host !== new URL(SITE_ORIGIN).host && !host.startsWith('localhost') && !host.startsWith('127.0.0.1'));
   const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', ...(noindex ? { 'X-Robots-Tag': 'noindex, follow' } : {}) };
@@ -63,6 +63,18 @@ export async function buildResponse({ url: input, host = '', template, staticBod
       return { status: 200, headers: { ...headers, 'Content-Type': 'application/xml; charset=utf-8' }, body: xml(entries) };
     }
     if (route.kind === 'missing' || route.page === 0) return error(404, 'Page not found', 'This page is unavailable.');
+    if (route.kind === 'static' && route.path === '/' && renderHome) {
+      let groups = { stories: [], novels: [], poems: [] };
+      try {
+        const catalog = await fetchJson('/hero');
+        groups = Object.fromEntries(Object.keys(groups).map(group => [group,
+          (Array.isArray(catalog?.[group]) ? catalog[group] : []).filter(isPublicBook).slice(0, 3),
+        ]));
+      } catch {
+        // Reading and writing entry points remain useful while the catalog is slow.
+      }
+      return { status: 200, headers, body: documentHtml(template, metadataFor(route), renderHome(groups), { noindex, persistNoindex: noindex }) };
+    }
     if (route.kind === 'static') return { status: 200, headers: { ...headers, ...(!noindex ? { 'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400' } : {}) }, body: documentHtml(template, metadataFor(route), staticBodies[route.path] || '', { noindex, persistNoindex: noindex }) };
     if (route.kind === 'private') return { status: 200, headers: { ...headers, 'X-Robots-Tag': 'noindex, follow' }, body: documentHtml(template, metadataFor(route), wrapPublic('<h1>WordWeft</h1><p>Open the reading and writing community, or sign in to your account.</p><a href="/auth">Sign in</a>'), { noindex: true, persistNoindex: noindex }) };
     let data;

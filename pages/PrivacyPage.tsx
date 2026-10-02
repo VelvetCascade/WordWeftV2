@@ -3,9 +3,13 @@ import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
+import { ReturnNavigation } from '../components/ReturnNavigation';
+import '../styles/support-v2.css';
+
+const policySections = [["1", "What Data We Collect"], ["2", "How We Use Your Data"], ["3", "Cookies & Advertising Partners"], ["4", "Content Visibility & Public Data"], ["5", "Data Sharing"], ["6", "User Content Responsibility"], ["7", "Data Retention"], ["8", "Account Deletion"], ["9", "Security Measures"], ["10", "Children's Privacy"], ["11", "International Users"], ["12", "Your Rights"], ["13", "Changes to Policy"], ["14", "Contact"]] as const;
 
 const Section: React.FC<{ number: string; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
-    <section className="mb-10">
+    <section id={`privacy-${number}`} className="wv-policy-section">
         <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-4 flex items-baseline gap-3">
             <span className="text-accent font-extrabold text-2xl">{number}.</span>
             {title}
@@ -38,12 +42,12 @@ export const PrivacyPage: React.FC = () => {
     const { trackEvent } = useAnalytics();
     useEffect(() => { trackEvent('content', 'policy_view', 'privacy'); }, []);
     return (
-        <div>
+        <div className="wv-support wv-legal">
             {/* Hero Header */}
-            <div className="bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 -translate-x-1/3 blur-3xl"></div>
-                <div className="absolute bottom-0 right-0 w-64 h-64 bg-accent/5 rounded-full translate-y-1/2 translate-x-1/3 blur-3xl"></div>
-                <div className="container mx-auto px-6 py-16 relative z-10 text-center">
+            <div className="wv-legal-header">
+                <div className="wv-support-shell wv-pagehead">
+                    <ReturnNavigation />
+                    <p className="wv-eyebrow">WordWeft policies</p>
                     <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4 tracking-tight">
                         Privacy Policy
                     </h1>
@@ -67,7 +71,12 @@ export const PrivacyPage: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="container mx-auto px-6 py-16 max-w-3xl">
+            <main className="wv-support-shell wv-legal-layout">
+                <aside className="wv-policy-nav">
+                    <nav className="wv-policy-desktop" aria-label="On this page"><h2>On this page</h2><ol>{policySections.map(([number, title]) => <li key={number}><a href={`#privacy-${number}`}>{number}. {title}</a></li>)}</ol></nav>
+                    <details className="wv-policy-mobile"><summary>On this page</summary><nav aria-label="On this page"><ol>{policySections.map(([number, title]) => <li key={number}><a href={`#privacy-${number}`}>{number}. {title}</a></li>)}</ol></nav></details>
+                </aside>
+                <article className="wv-policy-prose">
 
                 <Section number="1" title="What Data We Collect">
                     <SubSection title="A. Account Information">
@@ -351,7 +360,8 @@ export const PrivacyPage: React.FC = () => {
 
                 <AdUnit format="horizontal" />
 
-            </div>
+                </article>
+            </main>
 
             <Footer />
         </div>

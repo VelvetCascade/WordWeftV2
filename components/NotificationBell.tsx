@@ -1,148 +1,50 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { ArrowRight, Bell, BookOpen, CheckCheck, MessageCircle, Reply, Settings, UserRound, X } from 'lucide-react';
 import type { AppNotification, NavigateTo } from '../types';
 import type { Page } from '../App';
 import { communityNotificationPostId } from '../utils/community';
+import { useDialog } from '../hooks/useDialog';
+import { ResilientImage } from './ResilientImage';
+import { notificationCopy } from '../utils/notificationPresentation';
+import '../styles/notifications-v2.css';
 
-// --- Icons ---
-const BellIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-);
-
-const CheckIcon: React.FC = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <polyline points="20 6 9 17 4 12" />
-    </svg>
-);
-
-// --- Notification Item ---
-const getNotificationIcon = (type: string): string => {
-    switch (type) {
-        case 'COMMUNITY_COMMENT': return '💬';
-        case 'COMMUNITY_REPLY': return '↩️';
-        case 'COMMUNITY_RELEASE': return '📚';
-        case 'NEW_FOLLOWER': return '👤';
-        case 'NEW_COMMENT': return '💬';
-        case 'COMMENT_REPLY': return '↩️';
-        case 'AUTHOR_NEW_CHAPTER': return '📖';
-        case 'AUTHOR_NEW_STORY': return '📚';
-        case 'BOOK_UPDATE': return '🔔';
-        case 'SYSTEM_UPDATE': return '⚙️';
-        default: return '🔔';
-    }
+const getNotificationIcon = (type: string) => {
+    if (type === 'NEW_FOLLOWER') return UserRound;
+    if (type.includes('REPLY')) return Reply;
+    if (type.includes('COMMENT')) return MessageCircle;
+    if (type === 'SYSTEM_UPDATE') return Settings;
+    if (type.includes('CHAPTER') || type.includes('STORY') || type === 'COMMUNITY_RELEASE') return BookOpen;
+    return Bell;
 };
 
 const getTimeAgo = (dateStr: string): string => {
     const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    if (!Number.isFinite(date.getTime())) return 'Recently';
+    const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return days < 7 ? `${days}d ago` : date.toLocaleDateString();
 };
 
-const getNotificationTarget = (n: AppNotification): Page | null => {
-    const postId = communityNotificationPostId(n);
+const getNotificationTarget = (notification: AppNotification): Page | null => {
+    const postId = communityNotificationPostId(notification);
     if (postId) return { name: 'community-post', postId };
-    switch (n.type) {
-        case 'NEW_FOLLOWER':
-            return { name: 'author', authorId: n.entityId };
+    switch (notification.type) {
+        case 'NEW_FOLLOWER': return { name: 'author', authorId: notification.entityId };
         case 'NEW_COMMENT':
         case 'COMMENT_REPLY':
-        case 'AUTHOR_NEW_CHAPTER': {
-            const bookId = n.metadata?.bookId;
-            if (bookId) return { name: 'book-details', bookId };
-            return null;
-        }
+        case 'AUTHOR_NEW_CHAPTER':
+            return notification.metadata?.bookId ? { name: 'book-details', bookId: notification.metadata.bookId } : null;
         case 'AUTHOR_NEW_STORY':
-        case 'BOOK_UPDATE': {
-            return { name: 'book-details', bookId: n.entityId };
-        }
-        default:
-            return null;
+        case 'BOOK_UPDATE': return { name: 'book-details', bookId: notification.entityId };
+        default: return null;
     }
 };
 
-interface NotificationItemProps {
-    notification: AppNotification;
-    onRead: (id: string) => void;
-    onNavigate: NavigateTo;
-}
-
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRead, onNavigate }) => {
-    const handleClick = () => {
-        if (!notification.read) onRead(notification.id);
-        const target = getNotificationTarget(notification);
-        if (target) onNavigate(target);
-    };
-
-    return (
-        <button
-            onClick={handleClick}
-            style={{
-                display: 'flex', alignItems: 'flex-start', gap: '12px',
-                width: '100%', padding: '12px 16px', border: 'none',
-                background: notification.read ? 'transparent' : 'rgba(var(--accent-rgb, 99,102,241), 0.06)',
-                cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s',
-                borderBottom: '1px solid rgba(128,128,128,0.1)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(128,128,128,0.08)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = notification.read ? 'transparent' : 'rgba(var(--accent-rgb, 99,102,241), 0.06)')}
-        >
-            {/* Avatar or Icon */}
-            <div style={{ fontSize: '20px', flexShrink: 0, marginTop: '2px' }}>
-                {notification.metadata?.actorAvatar ? (
-                    <img
-                        src={notification.metadata.actorAvatar}
-                        alt=""
-                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                ) : (
-                    <span>{getNotificationIcon(notification.type)}</span>
-                )}
-            </div>
-
-            {/* Content */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                    margin: 0, fontSize: '13.5px', lineHeight: 1.4,
-                    color: 'var(--text-primary, #1a1a2e)',
-                    fontWeight: notification.read ? 400 : 500,
-                }}>
-                    {notification.metadata?.actorName && (
-                        <strong style={{ fontWeight: 600 }}>{notification.metadata.actorName} </strong>
-                    )}
-                    {notification.message}
-                </p>
-                <span style={{
-                    fontSize: '11.5px', color: 'var(--text-tertiary, #94a3b8)',
-                    marginTop: '3px', display: 'block',
-                }}>
-                    {getTimeAgo(notification.createdAt)}
-                </span>
-            </div>
-
-            {/* Unread dot */}
-            {!notification.read && (
-                <div style={{
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: 'var(--accent-color, #6366f1)',
-                    flexShrink: 0, marginTop: '8px',
-                }} />
-            )}
-        </button>
-    );
-};
-
-// --- Bell Component ---
 interface NotificationBellProps {
     unreadCount: number;
     notifications: AppNotification[];
@@ -152,137 +54,61 @@ interface NotificationBellProps {
     hasMore: boolean;
     onLoadMore: () => void;
     isLoading: boolean;
+    error?: string;
+    onRetry?: () => void;
 }
 
 export const NotificationBell: React.FC<NotificationBellProps> = ({
-    unreadCount, notifications, onMarkRead, onMarkAllRead,
-    onNavigate, hasMore, onLoadMore, isLoading,
+    unreadCount, notifications, onMarkRead, onMarkAllRead, onNavigate,
+    hasMore, onLoadMore, isLoading, error, onRetry,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
-    // Close on click outside
+    const dialogRef = useDialog(isOpen, () => setIsOpen(false));
     useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
-            }
+        const close = () => setIsOpen(false);
+        window.addEventListener('wordweft:navigate', close);
+        window.addEventListener('popstate', close);
+        return () => {
+            window.removeEventListener('wordweft:navigate', close);
+            window.removeEventListener('popstate', close);
         };
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClick);
-            return () => document.removeEventListener('mousedown', handleClick);
-        }
-    }, [isOpen]);
+    }, []);
 
-    return (
-        <div ref={dropdownRef} style={{ position: 'relative' }}>
-            {/* Bell Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                aria-label="Notifications"
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors relative"
-            >
-                <BellIcon className="w-6 h-6 text-text-body dark:text-dark-text-body" />
-                {unreadCount > 0 && (
-                    <span style={{
-                        position: 'absolute', top: '2px', right: '2px',
-                        background: '#ef4444', color: 'white',
-                        fontSize: '10px', fontWeight: 700,
-                        minWidth: '16px', height: '16px',
-                        borderRadius: '10px', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                        padding: '0 4px', lineHeight: 1,
-                        animation: 'notifBadgePulse 2s ease-in-out infinite',
-                    }}>
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                )}
-            </button>
-
-            {/* Dropdown */}
-            {isOpen && (
-                <div className="bg-white dark:bg-dark-surface border border-gray-200/80 dark:border-dark-border" style={{
-                    position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                    width: '380px', maxHeight: '480px',
-                    borderRadius: '12px',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
-                    overflow: 'hidden', zIndex: 1000,
-                    display: 'flex', flexDirection: 'column',
-                }}>
-                    {/* Header */}
-                    <div className="border-b border-gray-200 dark:border-dark-border" style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '14px 16px',
-                    }}>
-                        <h3 className="text-text-body dark:text-dark-text-body" style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>
-                            Notifications
-                        </h3>
-                        {unreadCount > 0 && (
-                            <button
-                                onClick={onMarkAllRead}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    fontSize: '12px', color: 'var(--accent-color, #6366f1)',
-                                    fontWeight: 500,
-                                }}
-                            >
-                                <CheckIcon /> Mark all read
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Notification List */}
-                    <div style={{ overflowY: 'auto', flex: 1 }}>
-                        {notifications.length === 0 ? (
-                            <div className="text-text-body dark:text-dark-text-body" style={{
-                                padding: '40px 20px', textAlign: 'center',
-                                fontSize: '13px',
+    return <>
+        <button className="v2-icon-button v2-notifications-trigger" onClick={() => setIsOpen(true)}
+            aria-label="Notifications" aria-haspopup="dialog" aria-expanded={isOpen} aria-controls="notification-preview">
+            <Bell size={20} aria-hidden="true" />
+            {unreadCount > 0 && <span className="v2-notifications-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+        </button>
+        {isOpen && createPortal(
+            <div className="v2-notifications-scrim" onMouseDown={event => { if (event.target === event.currentTarget) setIsOpen(false); }}>
+                <div id="notification-preview" ref={dialogRef} className="v2-notifications-panel" role="dialog" aria-modal="true" aria-label="Notification preview" tabIndex={-1}>
+                    <header className="v2-notifications-heading">
+                        <div><small>YOUR READING & WRITING</small><h2>Notifications</h2></div>
+                        <button className="v2-icon-button" aria-label="Close notifications" onClick={() => setIsOpen(false)}><X size={20} /></button>
+                    </header>
+                    {unreadCount > 0 && <div className="v2-notifications-tools"><span>{unreadCount} unread</span><button disabled={isLoading} onClick={onMarkAllRead}><CheckCheck size={17} />Mark all read</button></div>}
+                    {error && <div className="v2-notifications-error" role="alert"><p>{error}</p>{onRetry && <button onClick={onRetry} disabled={isLoading}>Try again</button>}</div>}
+                    <div className="v2-notifications-list" aria-busy={isLoading}>
+                        {notifications.map(notification => {
+                            const Icon = getNotificationIcon(notification.type);
+                            const copy = notificationCopy(notification);
+                            return <button className={`v2-notification-item ${notification.read ? '' : 'is-unread'}`} key={notification.id} onClick={() => {
+                                if (!notification.read) onMarkRead(notification.id);
+                                const target = getNotificationTarget(notification);
+                                if (target) { setIsOpen(false); onNavigate(target); }
                             }}>
-                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', opacity: 0.5 }}>
-                                    <BellIcon className="w-8 h-8 text-text-body dark:text-dark-text-body" />
-                                </div>
-                                No notifications yet
-                            </div>
-                        ) : (
-                            <>
-                                {notifications.slice(0, 10).map(n => (
-                                    <NotificationItem
-                                        key={n.id}
-                                        notification={n}
-                                        onRead={onMarkRead}
-                                        onNavigate={(page: Page) => { setIsOpen(false); onNavigate(page); }}
-                                    />
-                                ))}
-                            </>
-                        )}
+                                {notification.metadata?.actorAvatar ? <ResilientImage src={notification.metadata.actorAvatar} alt="" fallbackLabel={notification.metadata.actorName || 'Reader'} className="v2-notification-avatar" /> : <span className="v2-notification-icon"><Icon size={19} /></span>}
+                                <span className="v2-notification-copy"><span>{copy.actor && <strong>{copy.actor} </strong>}{copy.message}</span><time dateTime={notification.createdAt}>{getTimeAgo(notification.createdAt)}</time></span>
+                                {!notification.read && <span className="v2-notification-unread" aria-label="Unread" />}
+                            </button>;
+                        })}
+                        {notifications.length === 0 && !error && <div className="v2-notifications-empty"><Bell size={28} /><h3>{isLoading ? 'Loading your updates…' : 'You’re all caught up.'}</h3><p>{isLoading ? 'Your notifications will appear here.' : 'New chapters, conversations, and followers will appear here.'}</p></div>}
+                        {hasMore && notifications.length > 0 && !error && <button className="v2-notifications-load" onClick={onLoadMore} disabled={isLoading}>{isLoading ? 'Loading…' : 'Load earlier notifications'}</button>}
                     </div>
-
-                    {/* Footer */}
-                    {notifications.length > 0 && (
-                        <button
-                            onClick={() => { setIsOpen(false); onNavigate({ name: 'notifications' }); }}
-                            className="text-accent border-t border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-surface-alt"
-                            style={{
-                                width: '100%', padding: '12px', border: 'none',
-                                borderTop: '1px solid',
-                                background: 'none', cursor: 'pointer',
-                                fontSize: '13px', fontWeight: 500,
-                            }}
-                        >
-                            View all notifications
-                        </button>
-                    )}
+                    <button className="v2-notifications-footer" onClick={() => { setIsOpen(false); onNavigate({ name: 'notifications' }); }}>View all notifications <ArrowRight size={17} /></button>
                 </div>
-            )}
-
-            {/* CSS Animation */}
-            <style>{`
-                @keyframes notifBadgePulse {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.1); }
-                }
-            `}</style>
-        </div>
-    );
+            </div>, document.querySelector('.ww-app') || document.body
+        )}
+    </>;
 };

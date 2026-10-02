@@ -24,10 +24,17 @@ const EMPTY_ANALYTICS: WriterAnalytics = {
 export const WriterAnalyticsPage: React.FC = () => {
     const [analytics, setAnalytics] = useState<WriterAnalytics>(EMPTY_ANALYTICS);
     const [storyOptions, setStoryOptions] = useState<WriterStoryAnalytics[]>([]);
-    const [selectedBookId, setSelectedBookId] = useState('');
+    const [selectedBookId, setSelectedBookId] = useState(() => new URLSearchParams(window.location.search).get('book') || '');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
+
+    useEffect(() => {
+        if (!selectedBookId || storyOptions.length) return;
+        let active = true;
+        api.getWriterAnalytics().then(result => { if (active) setStoryOptions(result.stories); }).catch(() => {});
+        return () => { active = false; };
+    }, [selectedBookId]);
 
     useEffect(() => {
         let active = true;
@@ -48,6 +55,7 @@ export const WriterAnalyticsPage: React.FC = () => {
 
     const trend = useMemo(() => normalizeDailyTrend(analytics.dailyTrend, 14), [analytics.dailyTrend]);
     const maxTrendValue = Math.max(1, ...trend.map(point => Math.max(point.readers, point.views)));
+    const axisMax = Math.max(4, Math.ceil(maxTrendValue / 4) * 4);
     const releasesByDate = useMemo(() => {
         const releases = new Map<string, string[]>();
         analytics.releaseMarkers.forEach(marker => {
@@ -76,12 +84,12 @@ export const WriterAnalyticsPage: React.FC = () => {
             <header className="ww-analytics-header">
                 <div>
                     <span>Reader growth</span>
-                    <h1>Writer analytics</h1>
-                    <p>See where readers arrive, continue, and finish—without invasive tracking.</p>
+                    <h1>Story statistics</h1>
+                    <p>Where readers spend time with your work.</p>
                 </div>
                 <label>
                     Story
-                    <select value={selectedBookId} onChange={event => setSelectedBookId(event.target.value)}>
+                    <select aria-label="Story" value={selectedBookId} onChange={event => setSelectedBookId(event.target.value)}>
                         <option value="">All stories</option>
                         {storyOptions.map(story => <option key={story.bookId} value={story.bookId}>{story.title}</option>)}
                     </select>
@@ -109,21 +117,26 @@ export const WriterAnalyticsPage: React.FC = () => {
                             <div><span>Last 14 days</span><h2>Reader momentum</h2></div>
                             <div className="ww-trend-legend"><i /><span>Readers</span><i /><span>Views</span></div>
                         </div>
-                        <div className="ww-trend-chart" aria-label="Fourteen-day reader and view trend">
+                        <div className="ww-trend-chart-frame">
+                        <div className="ww-trend-axis" aria-hidden="true">{[axisMax, axisMax * .75, axisMax * .5, axisMax * .25, 0].map(value => <span key={value}>{value.toLocaleString()}</span>)}</div>
+                        <div className="ww-trend-chart" role="img" aria-label={`Last fourteen days: ${trend.reduce((sum, point) => sum + point.views, 0).toLocaleString()} chapter views. Daily values are in the table below.`}>
                             {trend.map((point, index) => {
                                 const releases = releasesByDate.get(point.date) || [];
                                 return (
                                     <div className="ww-trend-day" key={point.date}>
                                         <div className="ww-trend-bars" aria-label={`${point.date}: ${point.readers} readers and ${point.views} views`}>
-                                            <i style={{ height: `${Math.max(3, point.readers / maxTrendValue * 100)}%` }} />
-                                            <i style={{ height: `${Math.max(3, point.views / maxTrendValue * 100)}%` }} />
-                                            {releases.length > 0 && <b title={`Released: ${releases.join(', ')}`} aria-label={`Release: ${releases.join(', ')}`} />}
+                                            <i title={`${point.readers} readers`} style={{ height: `${point.readers / axisMax * 100}%` }} />
+                                            <i title={`${point.views} views`} style={{ height: `${point.views / axisMax * 100}%` }} />
+                                            <span className="ww-trend-value" aria-hidden="true">{point.views}</span>
+                                            {releases.length > 0 && <b title={`Released: ${releases.join(', ')}`} aria-hidden="true" />}
                                         </div>
                                         <span>{index % 2 === 0 || index === trend.length - 1 ? new Date(`${point.date}T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' }) : ''}</span>
                                     </div>
                                 );
                             })}
                         </div>
+                        </div>
+                        <details className="ww-trend-data"><summary>View daily data · {trend.reduce((sum, point) => sum + point.views, 0).toLocaleString()} views in this period</summary><table><caption className="sr-only">Reader activity in the last fourteen days</caption><thead><tr><th scope="col">Date</th><th scope="col">Readers</th><th scope="col">Chapter views</th><th scope="col">Chapter releases</th></tr></thead><tbody>{trend.map(point => <tr key={point.date}><th scope="row">{new Date(`${point.date}T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })}</th><td>{point.readers.toLocaleString()}</td><td>{point.views.toLocaleString()}</td><td>{(releasesByDate.get(point.date) || []).join(', ') || '—'}</td></tr>)}</tbody></table></details>
                         {analytics.summary.uniqueReaders === 0 && (
                             <p className="ww-analytics-honest-empty">No reader events yet. Share a published story; this chart starts filling as chapters are opened.</p>
                         )}
@@ -133,18 +146,18 @@ export const WriterAnalyticsPage: React.FC = () => {
                         <section className="ww-analytics-panel ww-funnel-panel">
                             <div className="ww-analytics-panel-head"><div><span>Chapter journey</span><h2>Where readers continue</h2></div></div>
                             {analytics.chapterFunnel.length ? (
-                                <div className="ww-funnel-table-wrap">
+                                <div className="ww-funnel-table-wrap" role="region" aria-label="Chapter reader statistics" tabIndex={0}>
                                     <table className="ww-funnel-table">
-                                        <thead><tr><th>Chapter</th><th>Reached</th><th>Views</th><th>Finished</th><th>Continued</th><th>Signals</th></tr></thead>
+                                        <thead><tr><th scope="col">Chapter</th><th scope="col">Reached</th><th scope="col">Views</th><th scope="col">Finished</th><th scope="col">Continued</th><th scope="col">Signals</th></tr></thead>
                                         <tbody>
                                             {analytics.chapterFunnel.map(row => (
                                                 <tr key={`${row.bookId}-${row.chapterId}`}>
-                                                    <th><small>{String(row.chapterNumber).padStart(2, '0')}</small><span>{row.title}</span></th>
+                                                    <th scope="row"><small>{String(row.chapterNumber).padStart(2, '0')}</small><span className="ww-funnel-chapter"><strong title={row.title}>{row.title}</strong>{!selectedBookId && <small className="ww-funnel-story" title={storyOptions.find(story => story.bookId === row.bookId)?.title}>{storyOptions.find(story => story.bookId === row.bookId)?.title || 'Story unavailable'}</small>}</span></th>
                                                     <td>{row.reachedReaders}</td>
                                                     <td>{row.views}</td>
                                                     <td>{formatRate(row.completionRate)}</td>
                                                     <td>{row.continuationRate > 0 ? formatRate(row.continuationRate) : '—'}</td>
-                                                    <td>{row.likes} likes · {row.comments} comments</td>
+                                                    <td>{row.likes} {row.likes === 1 ? 'like' : 'likes'} · {row.comments} {row.comments === 1 ? 'comment' : 'comments'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

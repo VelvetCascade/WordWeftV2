@@ -3,9 +3,13 @@ import React, { useEffect } from 'react';
 import { Footer } from '../components/Footer';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import AdUnit from '../components/AdUnit';
+import { ReturnNavigation } from '../components/ReturnNavigation';
+import '../styles/support-v2.css';
+
+const policySections = [["1", "Legal Compliance"], ["2", "Age Restrictions"], ["3", "Adult / NSFW Content"], ["4", "Violence & Harmful Content"], ["5", "Hate & Harassment"], ["6", "Spam & Platform Abuse"], ["7", "Plagiarism & Copyright"], ["8", "AI Content Rules"], ["9", "Covers & Media"], ["10", "Comment & Interaction Rules"], ["11", "Monetization Rules"], ["12", "Tagging & Content Warnings"], ["13", "Reporting & Enforcement"], ["14", "Appeals"], ["15", "Platform Protection Clause"], ["16", "Changes to Rules"]] as const;
 
 const Section: React.FC<{ number: string; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
-    <section className="mb-10">
+    <section id={`safety-${number}`} className="wv-policy-section">
         <h2 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich mb-4 flex items-baseline gap-3">
             <span className="text-accent font-extrabold text-2xl">{number}.</span>
             {title}
@@ -38,12 +42,12 @@ export const SafetyRulesPage: React.FC = () => {
     const { trackEvent } = useAnalytics();
     useEffect(() => { trackEvent('content', 'policy_view', 'safety'); }, []);
     return (
-        <div>
+        <div className="wv-support wv-legal">
             {/* Hero Header */}
-            <div className="bg-white dark:bg-dark-surface border-b border-gray-200/80 dark:border-dark-border relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-red-500/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl"></div>
-                <div className="container mx-auto px-6 py-16 relative z-10 text-center">
+            <div className="wv-legal-header">
+                <div className="wv-support-shell wv-pagehead">
+                    <ReturnNavigation />
+                    <p className="wv-eyebrow">WordWeft policies</p>
                     <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich mb-4 tracking-tight">
                         Safety & Content Rules
                     </h1>
@@ -67,7 +71,12 @@ export const SafetyRulesPage: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="container mx-auto px-6 py-16 max-w-3xl">
+            <main className="wv-support-shell wv-legal-layout">
+                <aside className="wv-policy-nav">
+                    <nav className="wv-policy-desktop" aria-label="On this page"><h2>On this page</h2><ol>{policySections.map(([number, title]) => <li key={number}><a href={`#safety-${number}`}>{number}. {title}</a></li>)}</ol></nav>
+                    <details className="wv-policy-mobile"><summary>On this page</summary><nav aria-label="On this page"><ol>{policySections.map(([number, title]) => <li key={number}><a href={`#safety-${number}`}>{number}. {title}</a></li>)}</ol></nav></details>
+                </aside>
+                <article className="wv-policy-prose">
 
                 <Section number="1" title="Legal Compliance">
                     <p>Users must follow applicable laws of their country and the server-hosting jurisdiction.</p>
@@ -304,7 +313,8 @@ export const SafetyRulesPage: React.FC = () => {
                     </div>
                 </section>
 
-            </div>
+                </article>
+            </main>
 
             <AdUnit format="horizontal" />
 

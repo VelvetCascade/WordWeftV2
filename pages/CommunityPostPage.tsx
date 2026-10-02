@@ -15,5 +15,17 @@ export const CommunityPostPage: React.FC<{ postId: string; currentUser: User | n
   const [retry, setRetry] = useState(0);
   const [warningRevealed, setWarningRevealed] = useState(false);
   useEffect(() => { const controller = new AbortController(); setLoading(true); setPost(null); setError(''); setWarningRevealed(false); api.getPost(postId, controller.signal).then(setPost).catch(err => { if (!controller.signal.aborted) setError(communityError(err)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [postId, currentUser?.id, retry]);
-  return <CommunitySession user={currentUser} onSignIn={onSignIn}><div className="community-post-page"><a className="community-back" href={post ? `#/community/circle/${encodeURIComponent(post.circle.slug)}` : '#/community'}><ArrowLeft size={17} />{post ? `Back to ${post.circle.name}` : 'Back to Community'}</a>{loading ? <CommunityLoading /> : error ? <CommunityError message={error} onRetry={() => setRetry(value => value + 1)} /> : post ? <><CommunityPostCard key={post.id} post={post} detail onUpdate={setPost} onDelete={() => setPost(null)} onWarningRevealChange={setWarningRevealed} />{canShowCommunityContent(post.status, post.canModerate) && canShowCommunityDiscussion(post.contentWarnings, warningRevealed) && <CommunityComments key={post.id} post={post} onCountChange={delta => setPost(previous => previous?.id === postId ? withCommentCountDelta(previous, delta) : previous)} />}</> : <CommunityEmpty title="This conversation is no longer available.">Visit the community to find another conversation.</CommunityEmpty>}</div></CommunitySession>;
+  return <CommunitySession user={currentUser} onSignIn={onSignIn}>
+    <div className="community-post-page">
+      <a className="community-back" href={post ? `#/community/circle/${encodeURIComponent(post.circle.slug)}` : '#/community'}><ArrowLeft size={17} />{post ? `Back to ${post.circle.name}` : 'Back to Community'}</a>
+      {loading ? <CommunityLoading /> : error ? <CommunityError message={error} onRetry={() => setRetry(value => value + 1)} /> : post ? <div className="community-detail-layout">
+        <main><CommunityPostCard key={post.id} post={post} detail onUpdate={setPost} onDelete={() => setPost(null)} onWarningRevealChange={setWarningRevealed} />
+          {canShowCommunityContent(post.status, post.canModerate) && canShowCommunityDiscussion(post.contentWarnings, warningRevealed) && <CommunityComments key={post.id} post={post} onCountChange={delta => setPost(previous => previous?.id === postId ? withCommentCountDelta(previous, delta) : previous)} />}
+        </main>
+        <aside className="community-detail-context"><p className="community-eyebrow">ABOUT THIS CIRCLE</p><h2>{post.circle.name}</h2><p>{post.circle.description}</p><a className="community-button" href={`#/community/circle/${encodeURIComponent(post.circle.slug)}`}>Explore circle</a>
+          {post.circle.rules.length > 0 && <section className="community-rules"><h2>Good conversations start here</h2><ol>{post.circle.rules.map((rule, index) => <li key={index}><span>{String(index + 1).padStart(2, '0')}</span><p>{rule}</p></li>)}</ol></section>}
+        </aside>
+      </div> : <CommunityEmpty title="This conversation is no longer available.">Visit the community to find another conversation.</CommunityEmpty>}
+    </div>
+  </CommunitySession>;
 };

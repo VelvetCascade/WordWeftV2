@@ -5,9 +5,10 @@ import { ConfirmDialog } from './ConfirmDialog';
 
 interface NoteListProps {
     bookId: string;
+    chapterId?: string;
 }
 
-export const NoteList: React.FC<NoteListProps> = ({ bookId }) => {
+export const NoteList: React.FC<NoteListProps> = ({ bookId, chapterId }) => {
     const [notes, setNotes] = useState<Note[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [newNote, setNewNote] = useState<Partial<Note>>({ title: '', content: '' });
@@ -17,11 +18,11 @@ export const NoteList: React.FC<NoteListProps> = ({ bookId }) => {
 
     useEffect(() => {
         loadNotes();
-    }, [bookId]);
+    }, [bookId, chapterId]);
 
     const loadNotes = async () => {
         try {
-            setNotes(await api.getNotesByBookId(bookId));
+            setNotes(chapterId ? await api.getNotesByChapterId(chapterId) : await api.getNotesByBookId(bookId));
             setError(null);
         } catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : 'Notes could not be loaded.');
@@ -33,7 +34,7 @@ export const NoteList: React.FC<NoteListProps> = ({ bookId }) => {
         setBusyAction('create');
         setError(null);
         try {
-            const created = await api.createNote({ ...newNote, content: newNote.content.trim(), bookId });
+            const created = await api.createNote({ ...newNote, content: newNote.content.trim(), bookId, ...(chapterId ? { chapterId } : {}) });
             setNotes(current => [...current, created]);
             setIsCreating(false);
             setNewNote({ title: '', content: '' });
@@ -78,12 +79,14 @@ export const NoteList: React.FC<NoteListProps> = ({ bookId }) => {
                 <div className="ww-story-tool-form p-4 bg-card-bg dark:bg-dark-card-bg rounded-lg border border-border dark:border-dark-border space-y-4">
                     <input
                         type="text"
+                        aria-label="Private note title"
                         placeholder="Title (Optional)"
                         value={newNote.title}
                         onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
                         className="w-full p-2 rounded-md bg-background dark:bg-dark-background border border-input-border dark:border-dark-input-border"
                     />
                     <textarea
+                        aria-label="Private note content"
                         placeholder="Content"
                         value={newNote.content}
                         onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}

@@ -68,7 +68,9 @@ public class SearchService {
             results = mongoTemplate.getCollection(BOOKS_COLLECTION)
                     .aggregate(pipeline).into(new ArrayList<>());
         } catch (RuntimeException unavailableAtlasSearch) {
-            return prefixMatches;
+            Pattern titleContains = Pattern.compile(Pattern.quote(query == null ? "" : query.trim()),
+                    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            return mergeById(prefixMatches, searchBookTitles(titleContains, 5), 5);
         }
 
         // Enrich with author names
@@ -344,8 +346,12 @@ public class SearchService {
     }
 
     private List<Map<String, Object>> searchBookPrefixes(String query, int limit) {
+        return searchBookTitles(prefixPattern(query), limit);
+    }
+
+    private List<Map<String, Object>> searchBookTitles(Pattern titlePattern, int limit) {
         Query mongoQuery = Query.query(Criteria.where("publicationStatus").is("published")
-                .and("title").regex(prefixPattern(query))).limit(limit * 3);
+                .and("title").regex(titlePattern)).limit(limit * 3);
         mongoQuery.fields().exclude("chapters.content");
         return mongoTemplate.find(mongoQuery, Book.class).stream()
                 .filter(contentAccessService::canDiscover)

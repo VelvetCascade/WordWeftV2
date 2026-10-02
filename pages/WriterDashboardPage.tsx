@@ -1,227 +1,127 @@
-
-import React, { useEffect, useState } from 'react';
-import type { User, Book } from '../types';
-import { PlusIcon, CloudArrowUpIcon, CloudArrowDownIcon, ChartBarIcon, PencilSquareIcon, ShareIcon } from '../components/icons/Icons';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, BookOpen, Check, Cloud, Heart, MessageCircle, NotebookPen, Plus, Search, Share2, Users } from 'lucide-react';
+import type { User, Book, Chapter, Comment } from '../types';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WriterQuickStart } from '../components/WriterQuickStart';
 import { ShareModal } from '../components/ShareModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ResilientImage } from '../components/ResilientImage';
+import { DisclosureMenu } from '../components/DisclosureMenu';
+import { navigatePath } from '../utils/navigation';
 
-interface WriterDashboardProps {
-  currentUser: User;
-  onUserUpdate: (user: User) => void;
-}
-
-const DraftBookListItem: React.FC<{ book: Book }> = ({ book }) => {
-    const totalChapters = book.chapters.length;
-    const handleContinueWriting = () => {
-        window.location.hash = `/write/book/${book.id}/manage`;
-    };
-
-    return (
-        <article className="ww-draft-book-card bg-white dark:bg-dark-surface p-4 rounded-xl border dark:border-dark-border flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 group transition-shadow hover:shadow-md">
-            <div className="flex gap-4 flex-1 min-w-0 w-full" onClick={handleContinueWriting}>
-                <img 
-                    src={book.coverUrl} 
-                    alt={book.title} 
-                    className="w-16 h-24 object-cover rounded-md flex-shrink-0 cursor-pointer shadow-sm transition-transform group-hover:scale-105"
-                />
-                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <h4 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent truncate">
-                        {book.title}
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="text-xs font-sans font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Draft</span>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{totalChapters} Chapter{totalChapters !== 1 ? 's' : ''}</p>
-                    </div>
-                </div>
-            </div>
-            <button onClick={handleContinueWriting} className="w-full sm:w-auto justify-center text-sm font-sans font-semibold text-white bg-accent px-4 py-2 rounded-lg hover:bg-primary transition-colors flex items-center gap-2 flex-shrink-0">
-               <PencilSquareIcon className="w-4 h-4" /> Continue
-            </button>
-        </article>
-    );
+interface WriterDashboardProps { currentUser: User; onUserUpdate: (user: User) => void; }
+type StudioView = 'overview' | 'stories' | 'comments';
+type ReaderComment = Comment & { bookTitle: string; chapterTitle: string };
+const readView = (): StudioView => {
+    const value = new URLSearchParams(window.location.search).get('view');
+    return value === 'stories' || value === 'comments' ? value : 'overview';
 };
-
-const PublishedBookCard: React.FC<{ book: Book; onUnpublish: (book: Book) => void; isUpdating: boolean; }> = ({ book, onUnpublish, isUpdating }) => {
-    const publishedChapters = book.chapters.filter(c => c.status === 'published').length;
-    const totalChapters = book.chapters.length;
-    const [isShareOpen, setIsShareOpen] = useState(false);
-    
-    const handleManageChapters = () => {
-        window.location.hash = `/write/book/${book.id}/manage`;
-    };
-    
-    const handlePublishNewChapter = () => {
-        window.location.hash = `/write/book/${book.id}/chapter/new/edit`;
-    };
-
-    return (
-        <article className="ww-published-book-card bg-white dark:bg-dark-surface rounded-xl border dark:border-dark-border p-4 flex flex-col sm:flex-row items-start gap-4 group transition-shadow hover:shadow-md">
-            <div className="flex gap-4 w-full sm:w-auto flex-1 min-w-0">
-                <img
-                    src={book.coverUrl}
-                    alt={book.title}
-                    className="w-20 h-28 object-cover rounded-md flex-shrink-0 cursor-pointer shadow-sm transition-transform group-hover:scale-105"
-                    onClick={handleManageChapters}
-                />
-                <div className="flex-1 flex flex-col min-w-0 justify-center">
-                    <h4 className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich cursor-pointer hover:text-accent truncate" onClick={handleManageChapters}>
-                        {book.title}
-                    </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Published on {new Date(book.publishedDate!).toLocaleDateString()}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{totalChapters} Chapters ({publishedChapters} published)</p>
-                </div>
-            </div>
-            <div className="w-full sm:w-auto mt-2 sm:mt-auto flex flex-wrap items-center justify-end gap-2 pt-2 sm:self-end border-t border-gray-100 sm:border-0 dark:border-dark-border">
-                <button onClick={() => { window.location.hash = '/write/analytics'; }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="View Analytics">
-                    <ChartBarIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); setIsShareOpen(true); }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors" title="Share Book">
-                    <ShareIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
-                </button>
-                <button onClick={() => onUnpublish(book)} disabled={isUpdating} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors disabled:cursor-wait disabled:opacity-50" title="Unpublish Book" aria-label={`Unpublish ${book.title}`}>
-                    <CloudArrowDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-400"/>
-                </button>
-                <button onClick={handlePublishNewChapter} className="flex-1 sm:flex-none justify-center text-sm font-sans font-semibold text-accent border border-accent px-3 py-1.5 rounded-lg hover:bg-accent hover:text-white transition-colors flex items-center gap-1.5">
-                   <CloudArrowUpIcon className="w-4 h-4" /> Add Chapter
-                </button>
-                <button onClick={handleManageChapters} className="flex-1 sm:flex-none justify-center text-sm font-sans font-semibold text-white bg-accent px-3 py-1.5 rounded-lg hover:bg-primary transition-colors flex items-center gap-1.5">
-                   <PencilSquareIcon className="w-4 h-4" /> Chapters
-                </button>
-            </div>
-            <ShareModal
-                isOpen={isShareOpen}
-                onClose={() => setIsShareOpen(false)}
-                book={book}
-                shareTextOverride={`Read my book '${book.title}' on WordWeft — ${book.chapters.length} chapters of ${book.genres[0] || 'fiction'}. Check it out!`}
-            />
-        </article>
-    );
-};
-
-const CreateNewBookCard: React.FC = () => (
-    <article
-        onClick={() => window.location.hash = '/write/book/create'} 
-        onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                window.location.hash = '/write/book/create';
-            }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label="Start a new story"
-        className="ww-create-book-card bg-white dark:bg-dark-surface h-full rounded-xl border-2 border-dashed dark:border-dark-border flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-accent dark:hover:border-accent hover:text-accent dark:hover:text-accent transition-colors group"
-    >
-        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-dark-surface-alt flex items-center justify-center mb-4 transition-colors group-hover:bg-accent/10">
-             <PlusIcon className="w-8 h-8 text-gray-500 dark:text-gray-400 transition-colors group-hover:text-accent"/>
-        </div>
-        <span>Blank canvas</span>
-        <p className="font-sans font-semibold">Start a new story</p>
-        <small>Shape the premise, cover, and reader promise.</small>
-    </article>
-);
-
+const studioPath = (book: Book) => `/write/book/${book.id}/manage`;
+const editPath = (book: Book, chapter?: Chapter) => `/write/book/${book.id}/chapter/${chapter?.id || 'new'}/edit`;
 
 export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUser, onUserUpdate }) => {
-    const drafts = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'draft') ?? [];
-    const published = currentUser.writtenBooks?.filter(b => b.publicationStatus === 'published') ?? [];
-    const allWrittenBooks = currentUser.writtenBooks ?? [];
-    const totalChapters = allWrittenBooks.reduce((total, book) => total + book.chapters.length, 0);
-    const totalViews = allWrittenBooks.reduce((total, book) => total + (book.viewCount || 0), 0);
-    const totalLikes = allWrittenBooks.reduce((total, book) => total + (book.likesCount || 0), 0);
-    const { trackEvent } = useAnalytics();
+    const [view, setView] = useState<StudioView>(readView);
+    const [filter, setFilter] = useState<'all' | 'draft' | 'published'>('all');
+    const [search, setSearch] = useState('');
+    const [shareBook, setShareBook] = useState<Book | null>(null);
     const [unpublishTarget, setUnpublishTarget] = useState<Book | null>(null);
     const [pendingBookId, setPendingBookId] = useState<string | null>(null);
-    const [actionError, setActionError] = useState<string | null>(null);
-    useEffect(() => { trackEvent('writing', 'writer_dashboard_view'); }, []);
-
-    const handleUnpublishBook = async () => {
-        if (!unpublishTarget || pendingBookId) return;
-        const target = unpublishTarget;
-        setPendingBookId(target.id);
-        setActionError(null);
+    const [actionError, setActionError] = useState('');
+    const [comments, setComments] = useState<ReaderComment[]>([]);
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentsError, setCommentsError] = useState('');
+    const [commentsRefresh, setCommentsRefresh] = useState(0);
+    const [replyTarget, setReplyTarget] = useState<ReaderComment | null>(null);
+    const [replyText, setReplyText] = useState('');
+    const [replySending, setReplySending] = useState(false);
+    const { trackEvent } = useAnalytics();
+    const allBooks = currentUser.writtenBooks || [];
+    const published = allBooks.filter(book => book.publicationStatus === 'published');
+    const drafts = allBooks.filter(book => book.publicationStatus === 'draft');
+    const totalViews = published.reduce((total, book) => total + (book.viewCount || 0), 0);
+    const totalComments = published.reduce((total, book) => total + (book.commentCount || 0), 0);
+    const publishedChapterCount = published.reduce((total, book) => total + book.chapters.filter(chapter => chapter.status === 'published').length, 0);
+    const recentDraft = useMemo(() => {
+        const available = allBooks.flatMap(book => book.chapters.filter(chapter => chapter.status === 'draft' || chapter.hasUnpublishedChanges).map(chapter => ({ book, chapter })));
         try {
-            const updatedUser = await api.unpublishBook(currentUser.id, target.id);
-            onUserUpdate(updatedUser);
-            setUnpublishTarget(null);
-        } catch (error) {
-            setActionError(error instanceof Error ? error.message : 'The story could not be unpublished.');
-        } finally {
-            setPendingBookId(null);
-        }
+            const recent = JSON.parse(localStorage.getItem(`ww:last-writing:${currentUser.id}`) || 'null');
+            const matched = available.find(item => item.book.id === recent?.bookId && item.chapter.id === recent?.chapterId);
+            if (matched) return matched;
+        } catch { /* The studio can still resume a server draft when browser storage is unavailable. */ }
+        return available[available.length - 1] || (drafts.length ? { book: drafts[drafts.length - 1], chapter: undefined } : undefined);
+    }, [allBooks, currentUser.id]);
+    const visibleBooks = allBooks.filter(book => (filter === 'all' || book.publicationStatus === filter) && book.title.toLowerCase().includes(search.toLowerCase()));
+
+    useEffect(() => { trackEvent('writing', 'writer_dashboard_view'); }, []);
+    useEffect(() => {
+        const sync = () => setView(readView());
+        window.addEventListener('wordweft:navigate', sync);
+        window.addEventListener('popstate', sync);
+        window.addEventListener('hashchange', sync);
+        return () => { window.removeEventListener('wordweft:navigate', sync); window.removeEventListener('popstate', sync); window.removeEventListener('hashchange', sync); };
+    }, []);
+    useEffect(() => {
+        if (view !== 'comments') return;
+        let active = true;
+        setCommentsLoading(true);
+        setCommentsError('');
+        const chapters = published.flatMap(book => book.chapters.filter(chapter => chapter.status === 'published' && chapter.commentCount > 0).map(chapter => ({ book, chapter })));
+        Promise.allSettled(chapters.map(async ({ book, chapter }) => (await api.getChapterComments(book.id, chapter.id)).map(comment => ({ ...comment, bookTitle: book.title, chapterTitle: chapter.title })))).then(results => {
+            if (!active) return;
+            setComments(results.flatMap(result => result.status === 'fulfilled' ? result.value : []).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)));
+            if (results.some(result => result.status === 'rejected')) setCommentsError('Some chapter comments could not load. Try again to fetch the rest.');
+            setCommentsLoading(false);
+        });
+        return () => { active = false; };
+    }, [view, currentUser.writtenBooks, commentsRefresh]);
+
+    const handleUnpublish = async () => {
+        if (!unpublishTarget || pendingBookId) return;
+        setPendingBookId(unpublishTarget.id);
+        setActionError('');
+        try { onUserUpdate(await api.unpublishBook(currentUser.id, unpublishTarget.id)); setUnpublishTarget(null); }
+        catch (failure) { setActionError(failure instanceof Error ? failure.message : 'The story could not be unpublished.'); }
+        finally { setPendingBookId(null); }
+    };
+    const sendReply = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!replyTarget || !replyText.trim() || replySending) return;
+        setReplySending(true);
+        try {
+            await api.addChapterComment(replyTarget.bookId, replyTarget.chapterId, replyTarget.paragraphIndex, replyText.trim(), replyTarget.id);
+            setReplyTarget(null); setReplyText(''); setCommentsRefresh(value => value + 1);
+        } catch (failure) { setCommentsError(failure instanceof Error ? failure.message : 'Your reply could not be sent.'); }
+        finally { setReplySending(false); }
     };
 
+    const renderStory = (book: Book) => <article key={book.id} className="ww-studio-story-row">
+        <a className="ww-studio-story-cover" href={studioPath(book)}><ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" className="ww-studio-row-cover" /></a>
+        <div className="ww-studio-story-copy"><a href={studioPath(book)}><h3>{book.title}</h3></a><p>{book.genres[0] || book.category || 'Story'} · {book.chapters.length} {book.chapters.length === 1 ? 'chapter' : 'chapters'}</p></div>
+        <span className={`ww-studio-status ${book.publicationStatus}`}>{book.publicationStatus === 'published' ? 'Published' : 'Private draft'}</span>
+        <DisclosureMenu label={`Actions for ${book.title}`}><a href={studioPath(book)}><NotebookPen size={16} />Manage chapters</a><a href={editPath(book, [...book.chapters].reverse().find(chapter => chapter.status === 'draft'))}><Plus size={16} />{book.chapters.some(chapter => chapter.status === 'draft') ? 'Continue draft' : 'New chapter'}</a>{book.publicationStatus === 'published' && <><button onClick={() => setShareBook(book)}><Share2 size={16} />Share story</button><a href="/write/analytics"><BookOpen size={16} />Statistics</a><button onClick={() => setUnpublishTarget(book)} disabled={pendingBookId === book.id}>Return to draft</button></>}</DisclosureMenu>
+    </article>;
+
     return (
-        <div className="ww-writer-dashboard p-6 md:p-8">
-            <span className="ww-page-eyebrow">Writer studio</span>
-            <div className="ww-writer-hero-row">
-                <div>
-                    <h1 className="font-sans text-3xl md:text-4xl font-extrabold text-text-rich dark:text-dark-text-rich">Your stories, in motion.</h1>
-                    <p className="text-text-body dark:text-dark-text-body mt-2">Welcome back, {currentUser.name}. Pick up a draft or begin with a blank page.</p>
-                </div>
-                <button onClick={() => window.location.hash = '/write/book/create'} className="ww-writer-new-story"><PlusIcon className="w-5 h-5" /> New story</button>
-            </div>
+        <div className="ww-writer-dashboard" data-view={view}>
+            <header className="ww-studio-pagehead">
+                <span className="ww-studio-eyebrow">{view === 'comments' ? 'Reader conversation' : 'Your writing'}</span>
+                <div><div><h1>{view === 'stories' ? 'My stories' : view === 'comments' ? 'Reader comments' : 'Writer studio'}</h1><p>{view === 'overview' ? `Welcome back, ${currentUser.name.split(' ')[0]}. Pick up your draft, or start something new.` : view === 'stories' ? 'Every world you’re building, in one place.' : 'Read what stayed with your readers, and keep the conversation going.'}</p></div>{view !== 'comments' && <a href="/write/book/create" className="ww-studio-primary">New story <Plus size={18} /></a>}</div>
+            </header>
+            {actionError && <p className="ww-studio-alert" role="alert">{actionError}</p>}
 
-            {actionError && <div role="alert" className="mt-5 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{actionError}</div>}
+            {view === 'overview' && <>
+                {recentDraft ? <section className="ww-studio-resume" aria-label="Continue your draft"><ResilientImage src={recentDraft.book.coverUrl} alt="" fallbackLabel={recentDraft.book.title} variant="cover" className="ww-studio-resume-cover" loading="eager" /><div><span className="ww-studio-eyebrow">Continue your draft</span><h2>{recentDraft.chapter?.title || recentDraft.book.title}</h2><p>{recentDraft.book.title}{recentDraft.chapter ? ` · Chapter ${recentDraft.book.chapters.indexOf(recentDraft.chapter) + 1} · ${recentDraft.chapter.wordCount.toLocaleString()} words` : ' · Ready for its first chapter'}</p><span className="ww-studio-private"><Cloud size={16} />Private until you publish</span></div><a href={editPath(recentDraft.book, recentDraft.chapter)} className="ww-studio-primary">Continue writing <ArrowRight size={19} /></a></section> : <section className="ww-studio-resume ww-studio-resume-empty"><div className="ww-studio-empty-icon"><NotebookPen size={30} strokeWidth={1.5} /></div><div><span className="ww-studio-eyebrow">Your next story starts here</span><h2>A place for your unfinished ideas.</h2><p>Create a private draft. Take it one chapter at a time.</p></div><a href="/write/book/create" className="ww-studio-primary">Start a story <ArrowRight size={19} /></a></section>}
+                <section className="ww-studio-metrics" aria-label="Writing overview"><article><BookOpen size={20} /><span>Total chapter reads</span><strong>{totalViews.toLocaleString()}</strong><small>Across {publishedChapterCount} published chapters</small></article><article><Users size={20} /><span>Followers</span><strong>{(currentUser.followersCount || 0).toLocaleString()}</strong><small>Your writing community</small></article><article><MessageCircle size={20} /><span>Comments</span><strong>{totalComments.toLocaleString()}</strong><a href="/write?view=comments">Open reader conversations <ArrowRight size={14} /></a></article></section>
+                <div className="ww-studio-overview-grid"><section className="ww-studio-stories"><header><h2>Your stories</h2><a href="/write?view=stories">View all <ArrowRight size={18} /></a></header>{allBooks.length ? allBooks.slice(0, 4).map(renderStory) : <div className="ww-studio-empty"><BookOpen size={30} /><h3>Your first story is waiting.</h3><p>Add a title, a little context, and the opening chapter.</p><a href="/write/book/create" className="ww-studio-text-link">Create your first story <ArrowRight size={17} /></a></div>}</section><aside className="ww-studio-conversation"><span className="ww-studio-eyebrow">Reader conversation</span><h3>{totalComments ? `${totalComments.toLocaleString()} comments on your writing` : 'Stories start conversations.'}</h3><p>{totalComments ? 'Come back to a thought from your readers, and reply when you have a moment.' : 'When readers respond to a published chapter, their comments will be here.'}</p><a href="/write?view=comments" className="ww-studio-text-link">Open comments <ArrowRight size={18} /></a><div className="ww-studio-conversation-rule" /><span className="ww-studio-eyebrow">Your manuscript</span><p>{drafts.length} private {drafts.length === 1 ? 'story' : 'stories'} · {published.length} published</p><a href="/write/analytics" className="ww-studio-text-link">View statistics <ArrowRight size={18} /></a></aside></div>
+                <div className="ww-studio-quickstart"><WriterQuickStart currentUser={currentUser} /></div>
+            </>}
 
-            <section className="ww-writer-metrics" aria-label="Writing overview">
-                <article><span>Projects</span><strong>{allWrittenBooks.length}</strong><small>{drafts.length} currently drafting</small></article>
-                <article><span>Chapters</span><strong>{totalChapters}</strong><small>Across every story</small></article>
-                <article><span>Total reads</span><strong>{totalViews.toLocaleString()}</strong><small>Published work</small></article>
-                <article><span>Reader love</span><strong>{totalLikes.toLocaleString()}</strong><small>Chapter likes</small></article>
-            </section>
-            
-            {/* Writer Quick Start Guide */}
-            <div className="mt-6">
-                <WriterQuickStart currentUser={currentUser} />
-            </div>
-            
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-2 space-y-4">
-                    <div className="ww-writer-section-heading"><span>In progress</span><h2>Your drafts</h2></div>
-                    {drafts.length > 0 ? (
-                         drafts.map(book => <DraftBookListItem key={book.id} book={book} />)
-                     ) : (
-                         <div className="ww-writer-empty text-center py-10 bg-white dark:bg-dark-surface rounded-xl border-2 border-dashed dark:border-dark-border">
-                             <strong>No drafts waiting.</strong>
-                             <p className="text-gray-500 dark:text-gray-400">Start fresh or add a new chapter to a published story.</p>
-                         </div>
-                     )}
-                </div>
+            {view === 'stories' && <section><div className="ww-studio-story-filters"><div role="tablist" aria-label="Story status">{(['all', 'published', 'draft'] as const).map(value => <button role="tab" aria-selected={filter === value} className={filter === value ? 'active' : ''} key={value} onClick={() => setFilter(value)}>{value === 'all' ? 'All stories' : value === 'draft' ? 'Drafts' : 'Published'}<small>{value === 'all' ? allBooks.length : value === 'draft' ? drafts.length : published.length}</small></button>)}</div><label><Search size={17} /><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search your stories" aria-label="Search your stories" /></label></div><div className="ww-studio-stories is-story-library">{visibleBooks.length ? visibleBooks.map(renderStory) : <div className="ww-studio-empty"><NotebookPen size={32} /><h3>{search ? 'No matching stories.' : 'A blank page is a beginning.'}</h3><p>{search ? 'Try another title or change the status filter.' : 'Your stories stay private until you choose to publish.'}</p>{!search && <a className="ww-studio-primary" href="/write/book/create">Create a story <Plus size={18} /></a>}</div>}</div></section>}
 
-                <div className="space-y-4">
-                    <div className="ww-writer-section-heading"><span>Create</span><h2>Start something new</h2></div>
-                    <CreateNewBookCard />
-                </div>
-            </div>
-
-            <section className="mt-12">
-                <div className="ww-writer-section-heading ww-writer-section-heading-inline"><span>On the shelf</span><h2>Published works</h2></div>
-                {published.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {published.map(book => <PublishedBookCard key={book.id} book={book} onUnpublish={setUnpublishTarget} isUpdating={pendingBookId === book.id} />)}
-                    </div>
-                ) : (
-                    <div className="ww-writer-empty text-center py-10 bg-white dark:bg-dark-surface rounded-xl border-2 border-dashed dark:border-dark-border">
-                        <strong>Your shelf is still quiet.</strong>
-                        <p className="text-gray-500 dark:text-gray-400">Publish a chapter when it feels ready for readers.</p>
-                    </div>
-                )}
-            </section>
-            <ConfirmDialog
-                isOpen={!!unpublishTarget}
-                title="Unpublish story?"
-                message={`“${unpublishTarget?.title || 'This story'}” will disappear from public reading pages and move back to Drafts. You can publish it again later.`}
-                confirmLabel="Unpublish story"
-                processingLabel="Unpublishing…"
-                isProcessing={!!unpublishTarget && pendingBookId === unpublishTarget.id}
-                tone="warning"
-                onCancel={() => setUnpublishTarget(null)}
-                onConfirm={handleUnpublishBook}
-            />
+            {view === 'comments' && <section className="ww-studio-comments">{commentsError && <div role="alert" className="ww-studio-alert">{commentsError}<button onClick={() => setCommentsRefresh(value => value + 1)}>Try again</button></div>}{commentsLoading ? <p role="status" className="ww-studio-empty">Loading reader conversations…</p> : comments.filter(comment => !comment.parentId).length ? comments.filter(comment => !comment.parentId).map(comment => <article className="ww-studio-comment" key={comment.id}><header><span className="ww-studio-avatar">{comment.user.name.split(/\s+/).slice(0, 2).map(word => word[0]).join('')}</span><div><strong>{comment.user.name}</strong><p>{comment.bookTitle} · {comment.chapterTitle}</p></div><time dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleDateString()}</time></header><p className="ww-studio-comment-content">{comment.content}</p>{comments.filter(reply => reply.parentId === comment.id).map(reply => <div className="ww-studio-comment-reply" key={reply.id}><strong>{reply.user.name}</strong><p>{reply.content}</p></div>)}{replyTarget?.id === comment.id ? <form onSubmit={sendReply}><label htmlFor="studio-comment-reply">Your reply</label><textarea id="studio-comment-reply" value={replyText} onChange={event => setReplyText(event.target.value)} rows={3} autoFocus required /><div><button type="button" onClick={() => setReplyTarget(null)} disabled={replySending}>Cancel</button><button className="ww-studio-primary" disabled={replySending || !replyText.trim()}>{replySending ? 'Sending…' : 'Post reply'}<ArrowRight size={16} /></button></div></form> : <button className="ww-studio-text-link" onClick={() => { setReplyTarget(comment); setReplyText(''); }}><MessageCircle size={16} />Reply</button>}</article>) : <div className="ww-studio-empty"><MessageCircle size={34} /><h3>No reader comments yet.</h3><p>Publish and share a chapter to invite a conversation.</p><a href="/write?view=stories" className="ww-studio-text-link">Go to your stories <ArrowRight size={18} /></a></div>}</section>}
+            {shareBook && <ShareModal isOpen onClose={() => setShareBook(null)} book={shareBook} shareTextOverride={`Read my story '${shareBook.title}' on WordWeft.`} />}
+            <ConfirmDialog isOpen={!!unpublishTarget} title="Unpublish story?" message={`“${unpublishTarget?.title || 'This story'}” will be removed from public reading and return to your drafts. The manuscript stays saved, and you can publish it again.`} confirmLabel="Unpublish story" processingLabel="Unpublishing…" isProcessing={!!pendingBookId} tone="warning" onCancel={() => setUnpublishTarget(null)} onConfirm={handleUnpublish} />
         </div>
     );
 };

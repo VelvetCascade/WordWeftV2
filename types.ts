@@ -186,6 +186,7 @@ export interface User {
   library: Shelf[];
   writtenBooks?: Book[];
   hasSeenWritingDemo?: boolean;
+  notificationPreferences?: NotificationPreferences;
   dateOfBirth?: string;
   allowMatureContent?: boolean;
   roles?: string[];
@@ -422,7 +423,11 @@ export interface ChapterProgress {
 export interface BookProgress {
   overallProgress: number; // 0-100
   lastReadChapterIndex: number;
+  lastReadChapterId?: string;
   lastReadScrollPosition: number;
+  lastReadTimestamp?: string;
+  pendingSync?: boolean;
+  syncError?: boolean;
   chapters: { [chapterId: string]: ChapterProgress };
 }
 

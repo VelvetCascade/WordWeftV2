@@ -29,3 +29,6 @@ scratch/
 
 /.vercel/
 /.npm-cache/
+
+/test-results/
+/playwright-report/

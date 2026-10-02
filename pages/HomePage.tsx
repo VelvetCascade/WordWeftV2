@@ -1,68 +1,20 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowRight, BookOpen, RefreshCw, Search, Sparkles } from 'lucide-react';
 import type { Book, Author, SearchBookResult, SearchAuthorResult } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
+import { DiscoveryHero } from '../components/DiscoveryHero';
 import { SortDropdown } from '../components/SortDropdown';
-import { SearchIcon, XMarkIcon } from '../components/icons/Icons';
-import { StarIcon } from '../components/icons/Icons';
+import { SearchIcon, XMarkIcon, StarIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
 import { ResilientImage } from '../components/ResilientImage';
 import { createLatestRequestGate } from '../utils/runtimeLifecycle';
-
-
-const HeroCarousel: React.FC<{ books: Book[] }> = ({ books }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (books.length === 0) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [books.length]);
-
-  const getCardStyle = (index: number) => {
-    if (books.length === 0) return {};
-    const offset = (index - currentIndex + books.length) % books.length;
-
-    if (offset === 0) { // Active
-      return { transform: 'translateX(0) scale(1)', opacity: 1, zIndex: 3 };
-    }
-    if (offset === 1) { // Next
-      return { transform: 'translateX(50%) scale(0.8)', opacity: 0.7, zIndex: 2 };
-    }
-    if (offset === books.length - 1) { // Previous
-      return { transform: 'translateX(-50%) scale(0.8)', opacity: 0.7, zIndex: 2 };
-    }
-    // Hidden
-    return { transform: `translateX(${offset > books.length / 2 ? '-100%' : '100%'}) scale(0.6)`, opacity: 0, zIndex: 1 };
-  };
-
-  if (books.length === 0) {
-    return <div className="relative w-full h-64 md:h-96 flex items-center justify-center"><div className="w-64 h-96 bg-gray-200 dark:bg-dark-surface-alt rounded-xl animate-pulse"></div></div>;
-  }
-
-  return (
-    <div className="relative w-full h-64 md:h-96 flex items-center justify-center perspective-1000">
-      {books.map((book, index) => (
-        <div
-          key={book.id}
-          className="absolute w-40 md:w-64 transition-transform duration-700 ease-in-out"
-          style={getCardStyle(index)}
-          onClick={() => window.location.hash = `/book/${book.id}`}
-        >
-          <img src={book.coverUrl} alt={book.title} className="w-full h-auto object-cover rounded-xl shadow-lifted cursor-pointer" />
-        </div>
-      ))}
-    </div>
-  );
-};
-
+import type { DiscoveryHeroGroups } from '../utils/discoveryHero';
+import { getGenreArtwork } from '../utils/genreArtwork';
+import '../styles/discovery-v2.css';
 
 // ─── Hero Search with Inline Autocomplete ─────────────────────
 
@@ -142,9 +94,10 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
+    requestGateRef.current.invalidate();
     setQuery(val);
     setSelectedIndex(-1);
-    requestGateRef.current.invalidate();
+    if (val.trim().length < 2) { setBooks([]); setAuthors([]); setIsLoading(false); setSearchError(''); }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchAutocomplete(val), 300);
   };
@@ -208,6 +161,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
             <input
               ref={inputRef}
               type="text"
+              aria-label="Search books, writers, or genres"
               value={query}
               onChange={handleInputChange}
               onFocus={() => setIsFocused(true)}
@@ -218,7 +172,7 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
               spellCheck={false}
             />
             {query && (
-              <button className="hero-search-clear" onClick={() => { setQuery(''); setBooks([]); setAuthors([]); }}>
+              <button className="hero-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); setBooks([]); setAuthors([]); }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18" /><path d="m6 6 12 12" />
                 </svg>
@@ -350,251 +304,71 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
 
 
 export const HomePage: React.FC = () => {
-  const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
-  const [genres, setGenres] = useState<string[]>([]);
-  const [searchValue, setSearchValue] = useState("");
   const [books, setBooks] = useState<Book[]>([]);
   const [rankedGenres, setRankedGenres] = useState<{ name: string; bookCount: number; readCount: number }[]>([]);
-  const [spotlightAuthor, setSpotlightAuthor] = useState<Author | null>(null);
-  const [heroSearchPast, setHeroSearchPast] = useState(false);
-  const [sortMode, setSortMode] = useState<'most_read' | 'most_viewed' | 'recent_update' | 'new'>('most_read');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPersonalizedModal, setShowPersonalizedModal] = useState(false);
   const [genreBooks, setGenreBooks] = useState<Record<string, Book[]>>({});
+  const [sortMode, setSortMode] = useState<'most_read' | 'most_viewed' | 'recent_update' | 'new'>('most_read');
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  const [activeShelf, setActiveShelf] = useState('');
+  const [heroGroups, setHeroGroups] = useState<DiscoveryHeroGroups>({ stories: [], novels: [], poems: [] });
+  const [heroLoading, setHeroLoading] = useState(true);
+  const [heroError, setHeroError] = useState('');
+  const [heroAttempt, setHeroAttempt] = useState(0);
   const { trackEvent } = useAnalytics();
-
-  const SORT_OPTIONS = [
-    { value: 'most_read', label: 'Most Read (7 days)' },
-    { value: 'most_viewed', label: 'Most Viewed (7 days)' },
-    { value: 'recent_update', label: 'Recently Updated' },
-    { value: 'new', label: 'Newly Added' },
-  ];
-
-  const fetchBooks = (sort: string, pageNum: number, append: boolean) => {
-    setIsLoading(true);
-    api.getBooks({ sort: sort as any, page: pageNum, size: 12 }).then(res => {
-      setBooks(prev => append ? [...prev, ...res.content] : res.content);
-      if (window.location.pathname === '/home') applyMetadata(metadataFor(parseRoute('/home'), { books: res.content.filter(isPublicBook) }));
-      setIsLoading(false);
-      if (!append && res.content.length > 0) {
-        setSpotlightAuthor(res.content[0].author);
-      }
-    });
-  };
-
+  const SORT_OPTIONS = [{ value: 'most_read', label: 'Most read this week' }, { value: 'most_viewed', label: 'Most viewed this week' }, { value: 'recent_update', label: 'Recently updated' }, { value: 'new', label: 'New arrivals' }];
   useEffect(() => {
-    fetchBooks(sortMode, 0, false);
-  }, [sortMode]);
-
+    let active = true;
+    setIsLoading(true); setLoadError('');
+    api.getBooks({ sort: sortMode, page: 0, size: 12 }).then(response => {
+      if (!active) return;
+      setBooks(response.content);
+      if (window.location.pathname === '/home' || window.location.pathname === '/') applyMetadata(metadataFor(parseRoute('/home'), { books: response.content.filter(isPublicBook) }));
+    }).catch(error => { if (active) setLoadError(error instanceof Error ? error.message : 'Stories could not be loaded.'); })
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
+  }, [sortMode, attempt]);
   useEffect(() => {
-    api.getGenresRanked().then(setRankedGenres);
-    api.getHomeGenres().then(setGenreBooks);
-  }, []);
-
-  // Dispatch custom event so Navbar can react
+    let active = true;
+    api.getGenresRanked().then(value => { if (active) setRankedGenres(value); }).catch(() => {});
+    api.getHomeGenres().then(value => { if (active) setGenreBooks(value); }).catch(() => {});
+    return () => { active = false; };
+  }, [attempt]);
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('heroSearchVisibility', { detail: { visible: !heroSearchPast } }));
-  }, [heroSearchPast]);
-
-  return (
-    <div className="ww-home-page overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="ww-home-hero relative min-h-[65vh] md:h-screen md:min-h-[600px] flex items-center text-white overflow-hidden py-28 md:py-0">
-        <div className="absolute inset-0 bg-animated-gradient animate-gradient-shift"></div>
-        <div className="absolute inset-0 bg-primary/30"></div>
-        <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 lg:gap-8 items-center h-full">
-          <div className="ww-home-hero-copy text-center lg:text-left z-20 flex flex-col items-center lg:items-start">
-            <span className="ww-home-eyebrow">Your library</span>
-            <h1 className="font-sans text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tighter mb-4 drop-shadow-md">
-              Find something<br />worth reading.
-            </h1>
-            <p className="text-lg md:text-xl max-w-lg text-gray-100 mb-8 drop-shadow">
-              Browse original fiction, continue a saved story, or return to your own draft.
-            </p>
-            <div className="ww-home-actions flex justify-center lg:justify-start space-x-4">
-              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Reading'); window.location.hash = '/category'; }} className="ww-home-primary">Explore the library</button>
-              <button onClick={() => { trackEvent('navigation', 'hero_cta_click', 'Start Writing'); window.location.hash = '/write'; }} className="ww-home-secondary">Open writer studio</button>
-            </div>
-          </div>
-          <div className="hidden md:flex lg:block justify-center items-center w-full z-10 mt-8 lg:mt-0 opacity-90 pb-16 lg:pb-0">
-            <HeroCarousel books={books.slice(0, 5)} />
-          </div>
-        </div>
-      </section>
-
-      {/* Hero Search — live autocomplete, morphs into navbar on scroll */}
-      <HeroSearch onScrolledPast={setHeroSearchPast} />
-
-      {books[0] && (
-        <section className="ww-home-feature container mx-auto px-6">
-          <div className="ww-home-feature-cover">
-            <img src={books[0].coverUrl} alt={`Cover of ${books[0].title}`} />
-            <span>Editor&rsquo;s shelf</span>
-          </div>
-          <div className="ww-home-feature-copy">
-            <span className="ww-page-eyebrow">A story worth meeting</span>
-            <h2>{books[0].title}</h2>
-            <p className="ww-home-feature-author">by <button onClick={() => window.location.hash = `/author/${books[0].author.id}`}>{books[0].author.name}</button></p>
-            <p className="ww-home-feature-summary">{books[0].summary || books[0].description}</p>
-            <div className="ww-home-feature-meta">
-              <span><StarIcon className="w-4 h-4" /> {books[0].rating || 'New'}</span>
-              <span>{books[0].chapters.length} chapters</span>
-              <span>{books[0].readingStatus}</span>
-              {books[0].genres.slice(0, 2).map(genre => <button type="button" key={genre} onClick={() => window.location.hash = `/genre/${encodeURIComponent(genre)}`}>{genre}</button>)}
-            </div>
-            <div className="ww-home-feature-actions">
-              <button onClick={() => window.location.hash = `/book/${books[0].id}`}>Open story <span>→</span></button>
-              <button onClick={() => window.location.hash = '/category'}>Browse all stories</button>
-            </div>
-          </div>
-          <div className="ww-home-feature-note"><span>&ldquo;</span><p>Stories are how we rehearse being human.</p><small>WordWeft reading room</small></div>
-        </section>
-      )}
-
-      {/* Explore Books */}
-      <section className="ww-content-section container mx-auto px-6 mb-24 mt-4 md:mt-8">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <h2 className="font-sans text-2xl sm:text-3xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">Explore Books</h2>
-          <div className="flex-shrink-0">
-            <SortDropdown
-              options={SORT_OPTIONS}
-              value={sortMode}
-              onChange={(v) => setSortMode(v as any)}
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {books.length > 0
-            ? books.map(book => (
-              <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
-            ))
-            : Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="w-full aspect-[2/3] bg-gray-200 dark:bg-dark-surface-alt rounded-xl"></div>
-                <div className="h-4 bg-gray-200 dark:bg-dark-surface-alt rounded mt-3 w-3/4"></div>
-                <div className="h-3 bg-gray-200 dark:bg-dark-surface-alt rounded mt-2 w-1/2"></div>
-              </div>
-            ))
-          }
-        </div>
-        <div className="text-center mt-8"><a href="/category" className="inline-flex min-h-11 items-center rounded-xl bg-accent px-6 py-3 font-sans text-sm font-semibold text-white hover:bg-primary">Browse all stories</a></div>
-      </section>
-
-      {/* Top Genres */}
-      {rankedGenres.length > 0 && (
-        <section className="container mx-auto px-6 mb-24">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <h2 className="font-sans text-2xl sm:text-3xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">Top Genres</h2>
-            {rankedGenres.length > 6 && (
-              <a href="/category"
-                className="flex-shrink-0 font-sans text-sm font-semibold text-accent hover:text-primary transition-colors whitespace-nowrap"
-              >
-                Browse all genres
-              </a>
-            )}
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {rankedGenres.slice(0, 6).map((genre, idx) => {
-              const gradients = [
-                'bg-gradient-to-br from-violet-600 to-purple-800',
-                'bg-gradient-to-br from-rose-500 to-pink-700',
-                'bg-gradient-to-br from-sky-500 to-blue-700',
-                'bg-gradient-to-br from-amber-500 to-orange-700',
-                'bg-gradient-to-br from-emerald-500 to-teal-700',
-                'bg-gradient-to-br from-indigo-500 to-blue-800',
-                'bg-gradient-to-br from-fuchsia-500 to-purple-700',
-                'bg-gradient-to-br from-cyan-500 to-teal-600',
-                'bg-gradient-to-br from-red-500 to-rose-700',
-                'bg-gradient-to-br from-lime-500 to-green-700',
-              ];
-              return (
-                <div
-                  key={genre.name}
-                  onClick={() => { trackEvent('navigation', 'genre_card_click', genre.name); window.location.hash = `/genre/${encodeURIComponent(genre.name)}`; }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      trackEvent('navigation', 'genre_card_click', genre.name);
-                      window.location.hash = `/genre/${encodeURIComponent(genre.name)}`;
-                    }
-                  }}
-                  role="link"
-                  tabIndex={0}
-                  aria-label={`Explore ${genre.name}`}
-                  className="relative h-36 rounded-2xl p-5 flex flex-col justify-end text-white font-sans cursor-pointer overflow-hidden group transition-transform duration-300 hover:scale-[1.03] hover:shadow-lg"
-                >
-                  <div className={`absolute inset-0 transition-all duration-500 ${gradients[idx % gradients.length]} group-hover:brightness-110`}></div>
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300"></div>
-                  <span className="absolute top-3 right-3 z-10 bg-white/20 backdrop-blur-sm text-[10px] font-bold px-2 py-0.5 rounded-full">{genre.bookCount} books</span>
-                  <span className="relative z-10 font-bold text-xl leading-tight">{genre.name}</span>
-                  <span className="relative z-10 text-xs font-medium text-white/70 mt-1 group-hover:text-white/90 transition-colors">Explore →</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Genre-wise Book Sections */}
-      {Object.keys(genreBooks).length > 0 && Object.entries(genreBooks).map(([genre, gBooks]) => (
-        <section key={genre} className="container mx-auto px-6 mb-16">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="font-sans text-xl sm:text-2xl font-bold text-text-rich dark:text-dark-text-rich leading-tight truncate">{genre}</h2>
-            <a
-              href={`/genre/${encodeURIComponent(genre)}`}
-              className="flex-shrink-0 font-sans text-sm font-semibold text-accent hover:underline transition-colors whitespace-nowrap"
-            >
-              View All →
-            </a>
-          </div>
-          <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-            {gBooks.map(book => (
-              <div key={book.id} className="flex-shrink-0 w-40">
-                <BookCard book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-
-      {/* Author Spotlight - Hidden for now
-      {spotlightAuthor && (
-        <section className="bg-white dark:bg-dark-surface py-24">
-          <div className="container mx-auto px-6">
-            <div className="flex flex-col md:flex-row items-center bg-surface dark:bg-dark-surface-alt rounded-3xl shadow-soft p-8 md:p-12 gap-8">
-              <img src={spotlightAuthor.avatarUrl} alt={spotlightAuthor.name} className="w-32 h-32 rounded-full object-cover" />
-              <div className="text-center md:text-left">
-                <p className="font-sans text-sm font-semibold text-accent mb-2">Author Spotlight</p>
-                <h3 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich mb-2">{spotlightAuthor.name}</h3>
-                <p className="max-w-xl mb-4">{spotlightAuthor.bio}</p>
-                <button onClick={() => window.location.hash = `/author/${spotlightAuthor.id}`} className="font-sans font-semibold text-accent hover:underline">View Profile</button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-      */}
-
-      {/* Personalized Modal */}
-      {showPersonalizedModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowPersonalizedModal(false)}>
-          <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
-            <div className="text-4xl mb-4">✨</div>
-            <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery</h3>
-            <p className="text-text-body dark:text-dark-text-body mb-6">
-              Explore stories using transparent ranking and genre filters to find your next great read.
-            </p>
-            <button
-              onClick={() => setShowPersonalizedModal(false)}
-              className="bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-colors"
-            >
-              Back to Explore
-            </button>
-          </div>
-        </div>
-      )}
-
-      <Footer />
-    </div>
-  );
+    let active = true;
+    setHeroLoading(true); setHeroError('');
+    api.getDiscoveryHero().then(groups => { if (active) setHeroGroups(groups); })
+      .catch(error => { if (active) setHeroError(error instanceof Error ? error.message : 'Featured books could not be loaded.'); })
+      .finally(() => { if (active) setHeroLoading(false); });
+    return () => { active = false; };
+  }, [heroAttempt]);
+  const featuredGenres = rankedGenres.slice(0, 8);
+  const featuredArtwork = featuredGenres.map(genre => getGenreArtwork(genre.name)).filter(Boolean);
+  return <div className="v2-discovery">
+    <DiscoveryHero groups={heroGroups} isLoading={heroLoading} loadError={heroError} onRetry={() => setHeroAttempt(value => value + 1)} onRead={() => trackEvent('navigation', 'hero_cta_click', 'Start Reading')} onWrite={() => trackEvent('navigation', 'hero_cta_click', 'Start Writing')} />
+    <div className="v2-home-search"><HeroSearch onScrolledPast={() => {}} /></div>
+    <section className="v2-discovery-section" aria-labelledby="stories-heading">
+      <div className="v2-section-heading"><div><p className="ww-page-eyebrow">Story discovery</p><h2 id="stories-heading">Find a story. Stay for a chapter.</h2></div><a href="/category">Browse stories <ArrowRight size={18} /></a></div>
+      {loadError ? <div className="v2-load-state" role="alert"><BookOpen size={28} /><h3>The shelves are taking a moment.</h3><p>{loadError}</p><button className="v2-button secondary" onClick={() => setAttempt(value => value + 1)}><RefreshCw size={16} />Try again</button></div> : isLoading && !books.length ? <div className="v2-story-discovery-grid" aria-label="Loading stories" aria-busy="true">{[0,1,2].map(index => <div className="v2-story-skeleton" key={index}><div /><span /><span /></div>)}</div> : !books.length ? <div className="v2-load-state"><BookOpen size={28} /><h3>A new shelf, a new beginning.</h3><p>The first stories are on their way. Your words could be among them.</p><a href="/write" className="v2-button">Start a story <ArrowRight size={16} /></a></div> : <div className="v2-story-discovery-grid">{books.slice(0,3).map((book,index) => <article className={`v2-feature-story ${index === 0 ? 'lead' : ''}`} key={book.id}>
+        <a className="v2-feature-cover" href={`/book/${encodeURIComponent(book.id)}`} aria-label={`Open ${book.title}`}><ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" /></a>
+        <div className="v2-feature-info"><p className="ww-page-eyebrow">{book.genres[0] || 'Original story'} · {book.readingStatus}</p><h3><a href={`/book/${encodeURIComponent(book.id)}`}>{book.title}</a></h3><a className="v2-feature-author" href={`/author/${encodeURIComponent(book.author.id)}`}>{book.author.name}</a><p className="v2-feature-summary">{book.summary || book.description}</p><div className="v2-feature-meta"><span><BookOpen size={15} />{book.chapters?.length || 0} chapters</span><span><StarIcon className="w-4 h-4" />{book.rating || 'New'}</span><a href={`/book/${encodeURIComponent(book.id)}`} aria-label={`Read ${book.title}`}>Read <ArrowRight size={16} /></a></div></div>
+      </article>)}</div>}
+    </section>
+    {!!featuredGenres.length && <section className="v2-discovery-section" aria-labelledby="genres-heading">
+      <div className="v2-section-heading"><div><p className="ww-page-eyebrow">Explore</p><h2 id="genres-heading">Stories across genres.</h2></div><a href="/category">All genres <ArrowRight size={18} /></a></div>
+      <div className="v2-genre-strip">{featuredGenres.map(genre => {
+        const art = getGenreArtwork(genre.name);
+        return <a className={`v2-genre-tile ${art ? '' : 'v2-genre-tile-unillustrated'}`} href={`/genre/${encodeURIComponent(genre.name)}`} key={genre.name} onClick={() => trackEvent('navigation','genre_card_click',genre.name)}>
+          {art ? <img src={art.file} alt="" loading="lazy" style={art.position ? { objectPosition: art.position } : undefined} /> : <i aria-hidden="true">{genre.name.charAt(0)}</i>}
+          <span>{genre.name}<small>{genre.bookCount} {genre.bookCount === 1 ? 'story' : 'stories'}</small></span>
+        </a>;
+      })}</div>
+      {!!featuredArtwork.length && <details className="v2-artwork-credits"><summary>Artwork credits</summary><ul>{featuredArtwork.map(art => <li key={art.file}><a href={art.source} target="_blank" rel="noopener noreferrer">{art.title}</a><span>{art.artist}{art.date ? `, ${art.date}` : ''} · {art.genre}</span></li>)}</ul><p>The Metropolitan Museum of Art, Open Access. Public domain images (<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a>).</p></details>}
+    </section>}
+    {books.length > 3 && <section className="v2-discovery-section v2-shelf" aria-labelledby="shelf-heading"><div className="v2-section-heading"><div><p className="ww-page-eyebrow">Your next read</p><h2 id="shelf-heading">A little more to discover.</h2></div><SortDropdown options={SORT_OPTIONS} value={sortMode} onChange={value => setSortMode(value as typeof sortMode)} /></div><div className="v2-shelf-grid" aria-busy={isLoading}>{books.slice(3,7).map(book => <BookCard book={book} key={book.id} onClick={() => window.location.hash = `/book/${book.id}`} />)}</div></section>}
+    {!!Object.keys(genreBooks).length && <section className="v2-discovery-section"><div className="v2-section-heading"><h2>Choose a shelf.</h2><a href={`/genre/${encodeURIComponent(activeShelf || Object.keys(genreBooks)[0])}`}>Explore genre <ArrowRight size={18} /></a></div><div className="v2-genre-tabs" role="group" aria-label="Explore a genre shelf">{Object.keys(genreBooks).map(genre => <button type="button" key={genre} aria-pressed={(activeShelf || Object.keys(genreBooks)[0]) === genre} onClick={() => setActiveShelf(genre)}>{genre}</button>)}</div><div className="v2-scroll-shelf">{(genreBooks[activeShelf || Object.keys(genreBooks)[0]] || []).map(book => <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />)}</div></section>}
+    {books[0]?.author && <section className="v2-author-spotlight"><ResilientImage src={books[0].author.avatarUrl} alt={books[0].author.name} fallbackLabel={books[0].author.name} /><div><p className="ww-page-eyebrow">Meet a storyteller</p><h2>{books[0].author.name}</h2>{books[0].author.bio && <p>{books[0].author.bio}</p>}<a href={`/author/${encodeURIComponent(books[0].author.id)}`}>Visit their writing room <ArrowRight size={16} /></a></div></section>}
+    <Footer />
+  </div>;
 };

@@ -1,7 +1,29 @@
 import { chapterPath } from '../seo/metadata.mjs';
+import { internalNavigationTrail, returnNavigationTarget, lastMatchingTrailIndex, type NavigationTrailEntry } from './navigationHistory';
 let navigationLock: { url: string; message: string } | null = null;
+let pendingScroll: { x: number; y: number } | null = null;
+let lastEntry: { url: string; state: Record<string, any> } | null = null;
+export const consumeNavigationScroll = () => {
+    const value = pendingScroll;
+    pendingScroll = null;
+    return value;
+};
+const saveScroll = () => window.history.replaceState({ ...window.history.state, wordWeftScroll: { x: window.scrollX, y: window.scrollY } }, '');
 
 const currentUrl = () => window.location.pathname + window.location.search + window.location.hash;
+const entryId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+const trail = () => internalNavigationTrail(window.history.state?.wordWeftReturnTrail);
+const rememberEntry = () => { lastEntry = { url: currentUrl(), state: { ...window.history.state } }; };
+const ensureEntry = () => {
+    if (!window.history.state?.wordWeftEntryId) {
+        window.history.replaceState({ ...window.history.state, wordWeftEntryId: entryId(), wordWeftReturnTrail: [] }, '');
+    }
+};
+const nextEntryState = (source: { url: string; state: Record<string, any> }) => ({
+    wordWeftEntryId: entryId(),
+    wordWeftReturnTrail: [...internalNavigationTrail(source.state.wordWeftReturnTrail),
+        { url: source.url, id: source.state.wordWeftEntryId } as NavigationTrailEntry].slice(-40),
+});
 
 export const lockNavigation = (message: string) => {
     navigationLock = { url: currentUrl(), message };
@@ -37,19 +59,53 @@ export const navigatePath = (path: string, replace = false) => {
     if (target.origin !== window.location.origin) return;
     const next = target.pathname + target.search + target.hash;
     if (next === routePath() + window.location.hash) return;
-    window.history[replace ? 'replaceState' : 'pushState'](replace ? window.history.state : null, '', next);
+    ensureEntry();
+    saveScroll();
+    pendingScroll = null;
+    const state = replace ? window.history.state : nextEntryState({ url: currentUrl(), state: window.history.state });
+    window.history[replace ? 'replaceState' : 'pushState'](state, '', next);
+    rememberEntry();
     window.dispatchEvent(new Event('wordweft:navigate'));
 };
 /** Preserve old shared #/ links and editor actions while exposing crawlable URLs. */
 export const installNavigation = () => {
-    const migrateHash = () => {
+    window.history.scrollRestoration = 'manual';
+    const restoreScroll = (event: PopStateEvent) => {
+        // Fragment navigation can create a history entry with no app state.
+        // Keep its origin so policy contents still return to the correct task.
+        if (!event.state?.wordWeftEntryId && lastEntry && !window.location.hash.startsWith('#/') &&
+            currentUrl().split('#')[0] === lastEntry.url.split('#')[0]) {
+            window.history.replaceState(nextEntryState(lastEntry), '');
+        }
+        const position = event.state?.wordWeftScroll;
+        pendingScroll = position && Number.isFinite(position.x) && Number.isFinite(position.y) ? position : { x: 0, y: 0 };
+        if (!window.location.hash.startsWith('#/')) { ensureEntry(); rememberEntry(); }
+    };
+    // A legacy hash action creates its history entry before hashchange fires.
+    // Capture the outgoing place while scrolling, so browser Back still resumes it.
+    let scrollFrame = 0;
+    const recordScroll = () => {
+        cancelAnimationFrame(scrollFrame);
+        scrollFrame = requestAnimationFrame(saveScroll);
+    };
+    window.addEventListener('scroll', recordScroll, { passive: true });
+    window.addEventListener('popstate', restoreScroll);
+    const migrateHash = (initial = false) => {
         if (window.location.hash.startsWith('#/')) {
             const target = window.location.hash.slice(1);
-            if (!target.startsWith('//')) window.history.replaceState(window.history.state, '', target);
+            if (!target.startsWith('//')) {
+                const state = !initial && lastEntry && lastEntry.url !== target ? nextEntryState(lastEntry) : window.history.state;
+                window.history.replaceState(state, '', target);
+            }
+        } else if (lastEntry && currentUrl() !== lastEntry.url && currentUrl().split('#')[0] === lastEntry.url.split('#')[0] &&
+            window.history.state?.wordWeftEntryId === lastEntry.state.wordWeftEntryId) {
+            window.history.replaceState(nextEntryState(lastEntry), '');
         }
+        ensureEntry(); rememberEntry();
     };
-    migrateHash();
-    window.addEventListener('hashchange', migrateHash);
+    migrateHash(true);
+    const handleHashChange = () => migrateHash();
+    window.addEventListener('hashchange', handleHashChange);
     const click = (event: MouseEvent) => {
         if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         const anchor = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
@@ -62,12 +118,22 @@ export const installNavigation = () => {
         event.preventDefault(); navigatePath(target.pathname + target.search + target.hash);
     };
     document.addEventListener('click', click);
-    return () => { document.removeEventListener('click', click); window.removeEventListener('hashchange', migrateHash); };
+    return () => {
+        cancelAnimationFrame(scrollFrame);
+        document.removeEventListener('click', click); window.removeEventListener('hashchange', handleHashChange);
+        window.removeEventListener('scroll', recordScroll); window.removeEventListener('popstate', restoreScroll);
+    };
 };
 export const goBackOrReplace = (fallbackPath: string) => {
-    if (window.history.length > 1) { window.history.back(); return; }
+    const target = returnNavigationTarget(trail(), currentUrl());
+    if (target && window.history.length > target.distance) { window.history.go(-target.distance); return; }
     navigatePath(fallbackPath, true);
 };
+export const getReturnNavigation = (fallbackPath = '/', fallbackLabel = 'Back to discover') => ({
+    label: (typeof window !== 'undefined' ? returnNavigationTarget(trail(), currentUrl())?.label : undefined) || fallbackLabel,
+    // Resolve on activation too: a native section anchor may have added entries.
+    onClick: () => goBackOrReplace(fallbackPath),
+});
 export const replaceHash = (path: string) => navigatePath(path, true);
 export const openReaderFromStory = (bookId: string, chapterIndex: number, chapterId?: string) => {
     navigatePath(chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
@@ -75,8 +141,13 @@ export const openReaderFromStory = (bookId: string, chapterIndex: number, chapte
 };
 export const replaceReaderChapter = (bookId: string, chapterIndex: number, chapterId?: string) => {
     window.history.replaceState(window.history.state, '', chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
+    rememberEntry();
 };
 export const returnToStory = (bookId: string) => {
-    if (window.history.state?.wordWeftReaderParent === bookId && window.history.length > 1) { window.history.back(); return; }
+    const entries = trail();
+    const path = `/book/${encodeURIComponent(bookId)}`;
+    const index = lastMatchingTrailIndex(entries, entry => entry.url.split('?')[0].split('#')[0] === path);
+    const distance = entries.length - index;
+    if (index >= 0 && window.history.length > distance) { window.history.go(-distance); return; }
     navigatePath(`/book/${encodeURIComponent(bookId)}`, true);
 };

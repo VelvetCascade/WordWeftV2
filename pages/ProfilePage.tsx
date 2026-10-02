@@ -1,3 +1,4 @@
+import '../styles/account-v2.css';
 import React, { useEffect, useState } from 'react';
 import type { Book, User } from '../types';
 import { BookCard } from '../components/BookCard';
@@ -73,16 +74,16 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
     }, [user.id, loadAttempt]);
 
     return (
-        <div className="ww-profile-page">
+        <div className="account-v2-profile ww-profile-page">
             <header className="ww-profile-hero relative overflow-hidden border-b border-gray-200/80 bg-white dark:border-dark-border dark:bg-dark-surface">
-                <div className="ww-profile-banner-orb" aria-hidden="true" />
+                <div className="ww-account-profile-banner"><img src="/design-v2/assets/met-45294.jpg" alt="" /></div>
                 <div className="ww-profile-hero-inner container relative z-10 mx-auto px-6 py-12">
                     <span className="ww-page-eyebrow">Your public portfolio</span>
                     <div className="ww-profile-identity mt-5 flex flex-col items-start gap-8 md:flex-row">
                         <div className="ww-profile-avatar relative shrink-0">
                             <ResilientImage src={user.avatarUrl} alt={user.name} fallbackLabel={user.name} className="h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-lifted dark:border-dark-surface" />
                             <div className="absolute -bottom-3 -right-3 rounded-xl bg-white p-1.5 shadow-md dark:bg-dark-surface">
-                                <span className="block rounded-lg bg-gradient-to-r from-amber-200 to-yellow-400 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-yellow-900">{user.stats?.readerLevel || 'Novice'}</span>
+                                <span className="block rounded-lg bg-[#EAF1ED] px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-yellow-900">{user.stats?.readerLevel || 'Novice'}</span>
                             </div>
                         </div>
 
@@ -130,11 +131,11 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
                         <div><span>Written by you</span><h2 id="portfolio-heading">Your published work</h2><p>This is the work readers see when they visit your portfolio.</p></div>
                         <button type="button" onClick={() => { window.location.hash = '/write/book/create'; }}><PlusIcon className="h-4 w-4" /> New story</button>
                     </div>
-                    {writtenBooks.length > 0 ? <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{writtenBooks.map(book => <BookCard key={book.id} book={book} onClick={() => { window.location.hash = `/book/${book.id}`; }} />)}</div> : <div className="ww-profile-empty"><BookOpenIcon className="h-11 w-11" /><h3>Your portfolio is ready for its first story.</h3><p>Publish a story and it will appear here automatically.</p><button type="button" onClick={() => { window.location.hash = '/write'; }}>Open writer studio</button></div>}
+                    {writtenBooks.length > 0 ? <div className="ww-account-story-grid grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{writtenBooks.map(book => <BookCard key={book.id} book={book} onClick={() => { window.location.hash = `/book/${book.id}`; }} />)}</div> : <div className="ww-profile-empty"><BookOpenIcon className="h-11 w-11" /><h3>Your portfolio is ready for its first story.</h3><p>Publish a story and it will appear here automatically.</p><button type="button" onClick={() => { window.location.hash = '/write'; }}>Open writer studio</button></div>}
                 </section>
             </main>
 
-            <ConnectionsModal isOpen={!!connectionModalType} onClose={() => setConnectionModalType(null)} title={connectionModalType === 'followers' ? 'Followers' : 'Following'} userId={user.id} type={connectionModalType || 'followers'} />
+            <ConnectionsModal isOpen={!!connectionModalType} onClose={() => setConnectionModalType(null)} title={connectionModalType === 'followers' ? 'Followers' : 'Following'} userId={user.id} viewerId={user.id} type={connectionModalType || 'followers'} />
             <AuthorShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} author={user} authorBooks={writtenBooks} />
             <Footer />
         </div>

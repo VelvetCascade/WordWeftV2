@@ -1,16 +1,19 @@
 
 import React from 'react';
+import '../../styles/branding.css';
 
 interface WordWeftLogoProps {
     className?: string;
 }
 
-export const WordWeftLogo: React.FC<WordWeftLogoProps> = ({ className = 'w-10 h-10' }) => (
+export const WordWeftLogo: React.FC<WordWeftLogoProps> = ({ className = 'ww-brand-logo' }) => (
     <svg
         viewBox="850 700 4300 4100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        aria-hidden="true"
+        focusable="false"
     >
         <g transform="translate(0.000000,5460.000000) scale(1,-1)" fill="currentColor" stroke="none">
             <path d="M2798 4650 c-472 -50 -927 -265 -1253 -594 -396 -398 -598 -884 -596

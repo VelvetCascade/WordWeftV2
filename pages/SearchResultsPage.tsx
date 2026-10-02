@@ -5,6 +5,8 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { StarIcon } from '../components/icons/Icons';
 import AdUnit from '../components/AdUnit';
+import { Footer } from '../components/Footer';
+import { Search, ArrowRight } from 'lucide-react';
 import { ResilientImage } from '../components/ResilientImage';
 import { createLatestRequestGate } from '../utils/runtimeLifecycle';
 
@@ -16,6 +18,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     const [activeTab, setActiveTab] = useState<SearchTab>('all');
     const [results, setResults] = useState<SearchFullResponse>({});
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingPage, setLoadingPage] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const [inputValue, setInputValue] = useState('');
     const [searchError, setSearchError] = useState('');
@@ -25,10 +28,11 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     useEffect(() => { setQuery(searchQuery); setInputValue(searchQuery); }, [searchQuery]);
 
     const fetchResults = useCallback(async (q: string, tab: SearchTab, page: number) => {
-        if (q.trim().length < 2) return;
+        if (q.trim().length < 2) { requestGateRef.current.invalidate(); setResults({}); setSearchError(''); setIsLoading(false); loadingRef.current = false; return; }
         if (loadingRef.current && page > 0) return;
         const requestId = requestGateRef.current.begin();
         loadingRef.current = true;
+        setLoadingPage(page);
         setIsLoading(true);
         setSearchError('');
         try {
@@ -49,6 +53,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                     } : prev.authors,
                 }));
             }
+            setCurrentPage(page);
         } catch (e) {
             if (requestGateRef.current.isLatest(requestId)) {
                 console.error('Search error:', e);
@@ -65,23 +70,18 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     useEffect(() => () => requestGateRef.current.invalidate(), []);
 
     useEffect(() => {
-        if (query) {
-            setCurrentPage(0);
-            fetchResults(query, activeTab, 0);
-        }
+        setCurrentPage(0);
+        fetchResults(query, activeTab, 0);
     }, [query, activeTab, fetchResults]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (inputValue.trim().length >= 2) {
-            setQuery(inputValue.trim());
-            window.location.hash = `/search?q=${encodeURIComponent(inputValue.trim())}`;
-        }
+        setQuery(inputValue.trim());
+        window.location.hash = `/search${inputValue.trim() ? `?q=${encodeURIComponent(inputValue.trim())}` : ''}`;
     };
 
     const handleLoadMore = () => {
         const nextPage = currentPage + 1;
-        setCurrentPage(nextPage);
         fetchResults(query, activeTab, nextPage);
     };
 
@@ -102,6 +102,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     return (
         <div className="search-results-page">
             <div className="container mx-auto px-4 md:px-6 py-8">
+                <div className="v2-search-heading"><p className="ww-page-eyebrow">Follow your curiosity</p><h1>Find your next story.</h1><p>Search by title, writer, or something you love.</p></div>
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="search-results-bar">
                     <svg className="search-results-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -119,6 +120,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                     <button type="submit" className="search-results-bar-btn">Search</button>
                 </form>
 
+                {query.trim().length < 2 && <section className="v2-search-start" role="status"><Search size={28} /><h2>Every good story starts somewhere.</h2><p>Enter at least two characters to find stories and people. Or explore a shelf to see where it takes you.</p><a className="v2-button secondary" href="/category">Browse stories <ArrowRight size={16} /></a></section>}
                 {/* Tabs */}
                 <div className="search-results-tabs">
                     {tabs.map((tab) => (
@@ -142,7 +144,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                         <p className="text-text-body dark:text-dark-text-body">{searchError}</p>
                         <button type="button" className="search-results-load-more-btn mt-5" onClick={() => void fetchResults(query, activeTab, 0)}>Try again</button>
                     </div>
-                ) : isLoading && currentPage === 0 ? (
+                ) : isLoading && loadingPage === 0 ? (
                     <div className="search-results-loading">
                         <div className="search-overlay-spinner" />
                         <p>Searching for "{query}"...</p>
@@ -192,7 +194,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                         )}
 
                         {/* Empty State */}
-                        {!isLoading && query && bookResults.length === 0 && authorResults.length === 0 && (
+                        {!isLoading && query.trim().length >= 2 && bookResults.length === 0 && authorResults.length === 0 && (
                             <div className="search-results-empty">
                                 <svg className="w-20 h-20 text-gray-200 dark:text-gray-700 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                     <circle cx="11" cy="11" r="8" />
@@ -219,6 +221,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
 
                 <AdUnit format="horizontal" />
             </div>
+            <Footer />
         </div>
     );
 };

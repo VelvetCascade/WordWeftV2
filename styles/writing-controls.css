@@ -1,0 +1,18 @@
+.rte-mood-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #17203199; backdrop-filter: blur(3px); }
+.rte-mood-dialog { --mood-paper: #fff; --mood-ink: #191c1c; --mood-muted: #626b79; --mood-line: #dce2ec; --mood-surface: #f6f7fa; --mood-blue: #344e83; width: min(480px,100%); max-height: calc(100dvh - 40px); padding: 24px; overflow-y: auto; border: 1px solid var(--mood-line); border-radius: 13px; background: var(--mood-paper); color: var(--mood-ink); font-family: Rubik,sans-serif; }
+.dark .rte-mood-dialog { --mood-paper: #202a39; --mood-ink: #edf0f5; --mood-muted: #a8b2c2; --mood-line: #344155; --mood-surface: #171e2a; --mood-blue: #aabde8; }
+.rte-mood-dialog :focus-visible { outline: 2px solid var(--mood-blue); outline-offset: 3px; }
+.rte-mood-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.rte-mood-dialog h2 { color: var(--mood-ink); font: 600 23px/1.3 Rubik,sans-serif; letter-spacing: -.025em; }
+.rte-mood-dialog > header > button { flex: 0 0 44px; display: grid; place-items: center; width: 44px; min-height: 44px; color: var(--mood-muted); }
+.rte-mood-dialog > p { margin: 16px 0 23px; color: var(--mood-muted); font-size: 14px; line-height: 1.8; }
+.rte-mood-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.rte-mood-option { display: grid; justify-items: center; gap: 10px; min-height: 94px; padding: 13px 6px; border: 1px solid var(--mood-line); border-radius: 8px; color: var(--mood-ink); background: var(--mood-surface); font: 400 12px/1.5 Rubik,sans-serif; }
+.rte-mood-option:hover { border-color: var(--mood-blue); }
+.rte-mood-option > span:first-child { font-size: 29px; }
+@media (max-width: 480px) {
+  .rte-mood-backdrop { padding: 12px; }
+  .rte-mood-dialog { padding: 20px; max-height: calc(100dvh - 24px); }
+  .rte-mood-dialog h2 { font-size: 21px; }
+  .rte-mood-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}

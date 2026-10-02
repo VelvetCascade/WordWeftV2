@@ -4,10 +4,12 @@ import com.wordweft.book.model.Character;
 import com.wordweft.book.service.CharacterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.CacheControl;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/characters")
@@ -18,8 +20,9 @@ public class CharacterController {
     private CharacterService characterService;
 
     @GetMapping("/book/{bookId}")
-    public List<Character> getCharactersByBookId(@PathVariable String bookId) {
-        return characterService.getCharactersByBookId(bookId);
+    public ResponseEntity<List<Map<String, Object>>> getCharactersByBookId(@PathVariable String bookId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore().cachePrivate()).varyBy("Authorization")
+                .body(characterService.getCharactersByBookId(bookId));
     }
 
     @PostMapping
@@ -28,9 +31,10 @@ public class CharacterController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Character> getCharacterById(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getCharacterById(@PathVariable String id) {
         return characterService.getCharacterById(id)
-                .map(ResponseEntity::ok)
+                .map(character -> ResponseEntity.ok().cacheControl(CacheControl.noStore().cachePrivate())
+                        .varyBy("Authorization").body(character))
                 .orElse(ResponseEntity.notFound().build());
     }
 

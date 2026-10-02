@@ -1,3 +1,4 @@
+import '../styles/account-v2.css';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import type { User } from '../types';
@@ -5,12 +6,36 @@ import { ArrowLeftIcon, CheckCircleIcon, TwitterIcon, InstagramIcon, ThreadsIcon
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
+import { ResilientImage } from '../components/ResilientImage';
 import { goBackOrReplace } from '../utils/navigation';
 
 interface EditProfilePageProps {
   user: User;
   onUpdateProfile: (updatedData: Partial<User>) => Promise<void>;
   onChangePassword: (oldPassword_unused: string, newPassword_unused: string) => Promise<void>;
+}
+
+type SettingsSection = 'profile' | 'preferences' | 'security';
+interface ProfileDraft {
+  name: string;
+  avatarUrl: string;
+  avatarFileId: string | null;
+  bio: string;
+  location: string;
+  website: string;
+  dateOfBirth: string;
+  allowMatureContent: boolean;
+  twitter: string;
+  instagram: string;
+  threads: string;
+  selectedGenres: string[];
+}
+interface SettingsHistory {
+  userId: string;
+  activeSection: SettingsSection;
+  genreSearch: string;
+  draft: ProfileDraft;
+  lastSavedState: string;
 }
 
 const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> = ({ password, isVisible }) => {
@@ -47,30 +72,35 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
     const { trackEvent } = useAnalytics();
-  const [name, setName] = useState(user.name);
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
-  const [avatarFileId, setAvatarFileId] = useState<string | null>(user.avatarFileId || null);
-  const [bio, setBio] = useState(user.bio || '');
-  const [location, setLocation] = useState(user.location || '');
-  const [website, setWebsite] = useState(user.website || '');
-  const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth || '');
-  const [allowMatureContent, setAllowMatureContent] = useState(user.allowMatureContent || false);
+  const [savedSettings] = useState<SettingsHistory | null>(() => {
+    const saved = window.history.state?.wordWeftSettings as SettingsHistory | undefined;
+    return saved?.userId === user.id && saved.draft ? saved : null;
+  });
+  const draft = savedSettings?.draft;
+  const [name, setName] = useState(draft?.name ?? user.name);
+  const [avatarUrl, setAvatarUrl] = useState(draft?.avatarUrl ?? user.avatarUrl);
+  const [avatarFileId, setAvatarFileId] = useState<string | null>(draft ? draft.avatarFileId : user.avatarFileId || null);
+  const [bio, setBio] = useState(draft?.bio ?? user.bio ?? '');
+  const [location, setLocation] = useState(draft?.location ?? user.location ?? '');
+  const [website, setWebsite] = useState(draft?.website ?? user.website ?? '');
+  const [dateOfBirth, setDateOfBirth] = useState(draft?.dateOfBirth ?? user.dateOfBirth ?? '');
+  const [allowMatureContent, setAllowMatureContent] = useState(draft?.allowMatureContent ?? user.allowMatureContent ?? false);
 
   // Socials
-  const [twitter, setTwitter] = useState(user.socials?.twitter || '');
-  const [instagram, setInstagram] = useState(user.socials?.instagram || '');
-  const [threads, setThreads] = useState(user.socials?.threads || '');
+  const [twitter, setTwitter] = useState(draft?.twitter ?? user.socials?.twitter ?? '');
+  const [instagram, setInstagram] = useState(draft?.instagram ?? user.socials?.instagram ?? '');
+  const [threads, setThreads] = useState(draft?.threads ?? user.socials?.threads ?? '');
   const [socialErrors, setSocialErrors] = useState<{ twitter?: string, instagram?: string, threads?: string }>({});
-  
+
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
   // Genres
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(user.favoriteGenres || []);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(draft?.selectedGenres ?? user.favoriteGenres ?? []);
   const [allGenres, setAllGenres] = useState<string[]>([]);
-  const [genreSearch, setGenreSearch] = useState('');
+  const [genreSearch, setGenreSearch] = useState(savedSettings?.genreSearch ?? '');
   const [genreError, setGenreError] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -83,7 +113,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
-  const [activeSection, setActiveSection] = useState<'profile' | 'preferences' | 'security'>('profile');
+  const [activeSection, setActiveSection] = useState<SettingsSection>(savedSettings?.activeSection ?? 'profile');
   const initialProfileState = useMemo(() => JSON.stringify({
     name: user.name, avatarUrl: user.avatarUrl, avatarFileId: user.avatarFileId || null,
     bio: user.bio || '', location: user.location || '', website: user.website || '',
@@ -91,12 +121,27 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     twitter: user.socials?.twitter || '', instagram: user.socials?.instagram || '', threads: user.socials?.threads || '',
     selectedGenres: user.favoriteGenres || [],
   }), [user]);
-  const [lastSavedState, setLastSavedState] = useState(initialProfileState);
+  const [lastSavedState, setLastSavedState] = useState(savedSettings?.lastSavedState ?? initialProfileState);
   const currentProfileState = JSON.stringify({ name, avatarUrl, avatarFileId, bio, location, website, dateOfBirth, allowMatureContent, twitter, instagram, threads, selectedGenres });
   const isDirty = currentProfileState !== lastSavedState;
 
+  // Keep this history entry's section and draft when visiting activity or policies.
+  // Password fields remain local to the form and are never written to history.
   useEffect(() => {
-    api.getGenres().then(setAllGenres);
+    if (window.location.pathname !== '/edit-profile') return;
+    window.history.replaceState({
+      ...window.history.state,
+      wordWeftSettings: {
+        userId: user.id, activeSection, genreSearch, lastSavedState,
+        draft: JSON.parse(currentProfileState) as ProfileDraft,
+      } satisfies SettingsHistory,
+    }, '');
+  }, [user.id, activeSection, genreSearch, lastSavedState, currentProfileState]);
+
+  useEffect(() => {
+    let active = true;
+    api.getGenres().then(genres => { if (active) setAllGenres(genres); }).catch(() => { if (active) setGenreError('Genres could not be loaded. Please try again later.'); });
+    return () => { active = false; };
   }, []);
 
   const validateUrl = (url: string, type: 'twitter' | 'instagram' | 'threads') => {
@@ -223,57 +268,66 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
 
   const handleCancel = () => {
+    const { wordWeftSettings: discardedDraft, ...historyState } = window.history.state || {};
+    window.history.replaceState(historyState, '');
     goBackOrReplace('/profile');
   };
 
   const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
   return (
-    <div className="ww-profile-settings min-h-screen bg-gray-50 dark:bg-dark-background">
+    <div className="account-v2-settings ww-profile-settings min-h-screen bg-gray-50 dark:bg-dark-background">
       <div className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl">
         <div className="flex items-center gap-4 mb-3">
           <button
             onClick={handleCancel}
+            aria-label="Back to your profile"
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-surface-alt transition-colors"
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <div><p className="ww-page-eyebrow">Account settings</p><h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">Your profile</h1></div>
+          <div><p className="ww-page-eyebrow">Your settings</p><h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">{activeSection === 'profile' ? 'Profile settings' : activeSection === 'preferences' ? 'Reading preferences' : 'Privacy & security'}</h1></div>
         </div>
-        <p className="ml-14 mb-7 text-sm text-text-body dark:text-dark-text-body">Manage what readers see, tune discovery, or update account security.</p>
+        <p className="ml-14 mb-7 text-sm text-text-body dark:text-dark-text-body">{activeSection === 'profile' ? 'Choose how you appear to readers and writers.' : activeSection === 'preferences' ? 'Choose the stories you find and the content you see.' : 'Manage sign-in details and account access.'}</p>
 
-        <div className="ww-settings-layout">
+        <div className="ww-settings-layout" data-section={activeSection}>
           <nav className="ww-settings-nav" aria-label="Profile settings">
             {([
               ['profile', 'Public profile', 'Photo, bio and links'],
               ['preferences', 'Reading preferences', 'Genres and content access'],
-              ['security', 'Security', 'Email and password'],
+              ['security', 'Privacy and security', 'Email and password'],
             ] as const).map(([id, label, description]) => (
-              <button type="button" key={id} onClick={() => setActiveSection(id)} className={activeSection === id ? 'active' : ''}>
-                <strong>{label}</strong><span>{description}</span>
+              <button type="button" key={id} aria-label={label} onClick={() => setActiveSection(id)} className={activeSection === id ? 'active' : ''}>
+                <strong>{id === 'profile' ? 'Profile' : id === 'preferences' ? 'Reading' : label}</strong><span>{description}</span>
               </button>
             ))}
+            <a href="/notifications">Notifications</a>
+            <a href="/privacy">Privacy policy</a>
           </nav>
 
         <div className="ww-settings-panel bg-white dark:bg-dark-surface rounded-2xl border dark:border-dark-border">
-          {activeSection !== 'security' && <form onSubmit={handleSave} className="space-y-6">
+          {activeSection !== 'security' && <form onSubmit={handleSave} className={`space-y-6 ${activeSection === 'profile' ? 'ww-settings-profile-form' : ''}`}>
             <header className="ww-settings-panel-head">
               <div><h2>{activeSection === 'profile' ? 'Public profile' : 'Reading preferences'}</h2><p>{activeSection === 'profile' ? 'This is how your author portfolio appears to readers.' : 'Choose what helps WordWeft shape your library.'}</p></div>
               {isDirty && <span>Unsaved changes</span>}
             </header>
             {activeSection === 'profile' && <>
-            <ImageUpload 
+            <div className={`ww-settings-photo ${avatarUrl ? '' : 'no-photo'}`}>
+            {!avatarUrl && <ResilientImage alt="" fallbackLabel={name || 'Writer'} className="ww-settings-photo-initials" />}
+            <ImageUpload
               value={avatarUrl}
               onChange={(url, fileId) => {
                   setAvatarUrl(url);
                   setAvatarFileId(fileId);
               }}
-              fallbackUrl={`https://i.pravatar.cc/150?u=${user.email}`}
-              label="Profile Avatar"
+              fallbackUrl="/logo.svg"
+              label=""
+              className="ww-settings-upload"
               aspectRatio={1}
               cropShape="circle"
               onBusyChange={setIsAvatarUploading}
             />
+            </div>
 
             <div>
               <label htmlFor="name" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">
@@ -342,6 +396,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     <TwitterIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
+                    aria-label="X or Twitter profile URL"
                     type="url"
                     value={twitter}
                     onChange={(e) => handleSocialChange(e.target.value, 'twitter')}
@@ -356,6 +411,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     <InstagramIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
+                    aria-label="Instagram profile URL"
                     type="url"
                     value={instagram}
                     onChange={(e) => handleSocialChange(e.target.value, 'instagram')}
@@ -370,6 +426,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     <ThreadsIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
+                    aria-label="Threads profile URL"
                     type="url"
                     value={threads}
                     onChange={(e) => handleSocialChange(e.target.value, 'threads')}
@@ -390,14 +447,15 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               {selectedGenres.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {selectedGenres.map(genre => (
-                    <span key={genre} onClick={() => toggleGenre(genre)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-sans font-medium bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors shadow-sm">
-                      {genre} <span className="text-white/70">×</span>
-                    </span>
+                    <button type="button" aria-label={`Remove ${genre} from favorites`} key={genre} onClick={() => toggleGenre(genre)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-sans font-medium bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors shadow-sm">
+                      {genre} <XMarkIcon className="h-3.5 w-3.5" />
+                    </button>
                   ))}
                 </div>
               )}
               <input
-                type="text"
+                type="search"
+                aria-label="Search favorite genres"
                 placeholder="Search genres..."
                 value={genreSearch}
                 onChange={e => setGenreSearch(e.target.value)}
@@ -409,6 +467,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     key={genre}
                     type="button"
                     onClick={() => toggleGenre(genre)}
+                    aria-pressed={selectedGenres.includes(genre)}
                     className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-all ${selectedGenres.includes(genre)
                         ? 'bg-primary text-white shadow-md'
                         : 'bg-gray-100 dark:bg-dark-surface-alt text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border'
@@ -425,7 +484,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               <h3 className="font-sans font-bold text-text-rich dark:text-dark-text-rich">Content preferences</h3>
               <p className="text-sm text-text-body dark:text-dark-text-body mt-1 mb-4">Your birthday is private and is used to enforce age-appropriate access.</p>
               <label htmlFor="dateOfBirth" className="block text-sm font-sans font-medium text-text-body dark:text-dark-text-body mb-1">Date of birth</label>
-              <input type="date" id="dateOfBirth" value={dateOfBirth} onChange={e => { setDateOfBirth(e.target.value); setAllowMatureContent(false); }} className="w-full h-11 px-4 rounded-xl border-gray-300 dark:bg-dark-surface dark:border-dark-border" />
+              <input type="date" max={new Date().toISOString().slice(0, 10)} id="dateOfBirth" value={dateOfBirth} onChange={e => { setDateOfBirth(e.target.value); setAllowMatureContent(false); }} className="w-full h-11 px-4 rounded-xl border-gray-300 dark:bg-dark-surface dark:border-dark-border" />
               <label className="mt-4 flex items-start gap-3 cursor-pointer">
                 <input type="checkbox" className="mt-1" checked={allowMatureContent} disabled={!dateOfBirth || (() => { const d = new Date(dateOfBirth); const now = new Date(); let age = now.getFullYear() - d.getFullYear(); if (now < new Date(now.getFullYear(), d.getMonth(), d.getDate())) age--; return age < 18; })()} onChange={e => setAllowMatureContent(e.target.checked)} />
                 <span><strong className="block text-sm text-text-rich dark:text-dark-text-rich">Include mature stories</strong><small className="text-xs text-text-body dark:text-dark-text-body">Show 18+/21+ stories in discovery when your age permits. You’ll still see chapter-specific warnings.</small></span>
@@ -435,8 +494,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
             <div className="ww-settings-savebar flex justify-between items-center w-full">
               <div>
-                {saveError && <p className="text-sm text-danger font-sans">{saveError}</p>}
-                {saveSuccess && <p className="text-sm text-success font-sans">{saveSuccess}</p>}
+                {saveError && <p role="alert" className="text-sm text-danger font-sans">{saveError}</p>}
+                {saveSuccess && <p role="status" className="text-sm text-success font-sans">{saveSuccess}</p>}
               </div>
               <div className="flex justify-end gap-4">
                 <button
@@ -482,7 +541,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  tabIndex={-1}
+
                   aria-label={showCurrentPassword ? "Hide password" : "Show password"}
                 >
                   {showCurrentPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -509,7 +568,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  tabIndex={-1}
+
                   aria-label={showNewPassword ? "Hide password" : "Show password"}
                 >
                   {showNewPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -533,7 +592,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  tabIndex={-1}
+
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
                   {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -541,9 +600,10 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
               </div>
             </div>
 
-            {passwordError && <p className="text-sm text-danger font-sans">{passwordError}</p>}
-            {passwordSuccess && <p className="text-sm text-success font-sans">{passwordSuccess}</p>}
+            {passwordError && <p role="alert" className="text-sm text-danger font-sans">{passwordError}</p>}
+            {passwordSuccess && <p role="status" className="text-sm text-success font-sans">{passwordSuccess}</p>}
 
+            <p className="ww-account-security-note">Your email, birthday, private library and drafts are never shown on your public profile. <a href="/privacy">Read our privacy policy</a>.</p>
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -555,6 +615,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             </div>
           </form>}
         </div>
+        <aside className="ww-settings-context" aria-label={activeSection === 'profile' ? 'Public profile preview' : 'Account information'}>
+          {activeSection === 'profile' ? <><span className="ww-page-eyebrow">Profile preview</span><ResilientImage src={avatarUrl} alt="Your profile photo" fallbackLabel={name || 'Writer'} className="ww-settings-preview-avatar" /><h2>{name || 'Your name'}</h2>{location && <span className="ww-settings-preview-location">{location}</span>}<p>{bio || 'Your bio introduces you to the people reading your work.'}</p><small>Changes appear in your public portfolio after you save.</small><a href="/profile">View your portfolio →</a></> : <><span className="ww-page-eyebrow">Your account</span><h2>{activeSection === 'security' ? 'Keep your account yours.' : 'Make room for your next read.'}</h2><p>{activeSection === 'security' ? 'Use a unique password. WordWeft will never ask you to share it in a comment or message.' : 'Reading preferences help shape discovery. Your library and reading progress stay with your account.'}</p><a href={activeSection === 'security' ? '/contact' : '/library'}>{activeSection === 'security' ? 'Get account help →' : 'Open your library →'}</a><a href="/privacy">Read our privacy policy →</a></>}
+        </aside>
         </div>
       </div>
     </div>

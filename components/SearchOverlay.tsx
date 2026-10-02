@@ -1,3 +1,4 @@
+import { useDialog } from '../hooks/useDialog';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { SearchBookResult, SearchAuthorResult } from '../types';
@@ -21,7 +22,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const overlayRef = useRef<HTMLDivElement>(null);
+    const overlayRef = useDialog(isOpen, onClose);
     const previousFocusRef = useRef<HTMLElement | null>(null);
     const requestGateRef = useRef<ReturnType<typeof createLatestRequestGate> | null>(null);
     if (!requestGateRef.current) requestGateRef.current = createLatestRequestGate();
@@ -51,16 +52,6 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         requestGateRef.current?.invalidate();
     }, []);
-
-    // Lock body scroll when open
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [isOpen]);
 
     // Escape key to close
     useEffect(() => {
@@ -98,9 +89,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
+        requestGateRef.current?.invalidate();
         setQuery(val);
         setSelectedIndex(-1);
-        requestGateRef.current?.invalidate();
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => fetchAutocomplete(val), 300);
     };
@@ -175,6 +166,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                         role="combobox"
                         aria-expanded={totalResults > 0}
                         aria-controls="search-overlay-results"
+                        aria-label="Search stories and people"
+                        data-dialog-focus
                     />
                     <button onClick={onClose} className="search-overlay-close-btn" aria-label="Close search">
                         <span>ESC</span>

@@ -5,11 +5,11 @@ module.exports = {
     "extend": {
       "fontFamily": {
         "sans": [
-          "Inter",
+          "Rubik",
           "sans-serif"
         ],
         "serif": [
-          "Literata",
+          "WordWeft Serif",
           "serif"
         ],
         "mono": [
@@ -18,21 +18,21 @@ module.exports = {
         ]
       },
       "colors": {
-        "primary": "#5D4037",
-        "accent": "#8D6E63",
-        "background": "#FBF9F6",
+        "primary": "#6B432F",
+        "accent": "#6B432F",
+        "background": "#FBFAF7",
         "surface": "#FFFFFF",
-        "text-rich": "#4E342E",
-        "text-body": "#795548",
+        "text-rich": "#191C1C",
+        "text-body": "#686660",
         "dark-background": "#261F1D",
         "dark-surface": "#3E2723",
-        "dark-surface-alt": "#4E342E",
+        "dark-surface-alt": "#191C1C",
         "dark-text-rich": "#EFEBE9",
         "dark-text-body": "#BCAAA4",
-        "dark-border": "#5D4037",
-        "success": "#689F38",
-        "warning": "#FFA000",
-        "danger": "#D32F2F"
+        "dark-border": "#6B432F",
+        "success": "#28675E",
+        "warning": "#B88A43",
+        "danger": "#A5403B"
       },
       "borderRadius": {
         "xl": "12px",

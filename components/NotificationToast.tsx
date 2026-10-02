@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import type { AppNotification, NavigateTo } from '../types';
 import type { Page } from '../App';
 import { communityNotificationPostId } from '../utils/community';
+import { notificationCopy } from '../utils/notificationPresentation';
+import '../styles/notification-toast.css';
 
 interface NotificationToastProps {
     notification: AppNotification | null;
@@ -39,6 +41,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ notificati
     }, [notification]);
 
     if (!notification) return null;
+    const { actor, message } = notificationCopy(notification);
 
     const handleClick = () => {
         onDismiss();
@@ -64,71 +67,36 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ notificati
     };
 
     return (
-        <>
-            <style>{`
-                @keyframes toastSlideIn {
-                    from { transform: translateX(120%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes toastSlideOut {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(120%); opacity: 0; }
-                }
-            `}</style>
-            <div
+            <div className="ww-notification-toast" data-visible={isVisible}>
+            <button type="button" className="ww-notification-toast-open" aria-label={`Open notification: ${actor ? actor + ' ' : ''}${message}`}
                 onClick={handleClick}
-                style={{
-                    position: 'fixed', bottom: '24px', right: '24px',
-                    maxWidth: '360px', width: '100%',
-                    background: 'var(--bg-primary, #ffffff)',
-                    borderRadius: '12px',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)',
-                    border: '1px solid rgba(128,128,128,0.12)',
-                    padding: '14px 16px',
-                    display: 'flex', alignItems: 'flex-start', gap: '12px',
-                    cursor: 'pointer', zIndex: 10000,
-                    animation: isVisible ? 'toastSlideIn 0.3s ease-out' : 'toastSlideOut 0.3s ease-in',
-                    transition: 'transform 0.3s, opacity 0.3s',
-                }}
             >
                 {/* Icon / Avatar */}
                 {notification.metadata?.actorAvatar ? (
                     <img
                         src={notification.metadata.actorAvatar}
                         alt=""
-                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        className="ww-notification-toast-avatar"
                     />
                 ) : (
-                    <span style={{ fontSize: '24px', flexShrink: 0 }}>
+                    <span className="ww-notification-toast-icon" aria-hidden="true">
                         {getNotificationIcon(notification.type)}
                     </span>
                 )}
 
                 {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                        margin: 0, fontSize: '13px', lineHeight: 1.4,
-                        color: 'var(--text-primary, #1a1a2e)',
-                    }}>
-                        {notification.metadata?.actorName && (
-                            <strong>{notification.metadata.actorName} </strong>
-                        )}
-                        {notification.message}
-                    </p>
-                </div>
+                <span className="ww-notification-toast-copy" role="status">
+                    {actor && <strong>{actor} </strong>}{message}
+                </span>
+            </button>
 
                 {/* Close button */}
                 <button
+                    type="button" className="ww-notification-toast-dismiss" aria-label="Dismiss notification"
                     onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-                    style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: 'var(--text-tertiary, #94a3b8)', fontSize: '18px',
-                        padding: '0 2px', lineHeight: 1, flexShrink: 0,
-                    }}
                 >
                     ×
                 </button>
             </div>
-        </>
     );
 };

@@ -107,6 +107,11 @@ public class BookController {
         return viewerScoped(bookService.getHomeGenres());
     }
 
+    @GetMapping("/hero")
+    public ResponseEntity<?> getDiscoveryHero() {
+        return viewerScoped(bookService.getDiscoveryHero());
+    }
+
     @GetMapping("/genre/{name}")
     public ResponseEntity<?> getBooksByGenre(
             @PathVariable String name,

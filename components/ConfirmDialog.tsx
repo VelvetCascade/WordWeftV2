@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { useDialog } from '../hooks/useDialog';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -23,17 +24,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     onCancel,
     onConfirm,
 }) => {
-    const cancelRef = useRef<HTMLButtonElement>(null);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        cancelRef.current?.focus();
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && !isProcessing) onCancel();
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, isProcessing, onCancel]);
+    const dialogRef = useDialog(isOpen, onCancel, !isProcessing);
 
     if (!isOpen) return null;
 
@@ -43,6 +34,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onMouseDown={(event) => { if (event.target === event.currentTarget && !isProcessing) onCancel(); }}
         >
             <div
+                ref={dialogRef}
+                tabIndex={-1}
                 role="alertdialog"
                 aria-modal="true"
                 aria-labelledby="confirm-dialog-title"
@@ -53,7 +46,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 <p id="confirm-dialog-message" className="mt-3 leading-relaxed text-text-body dark:text-dark-text-body">{message}</p>
                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <button
-                        ref={cancelRef}
+                        data-dialog-focus
                         type="button"
                         onClick={onCancel}
                         disabled={isProcessing}

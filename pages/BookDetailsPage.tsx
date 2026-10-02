@@ -19,85 +19,32 @@ import { ReportModal } from '../components/ReportModal';
 import { goBackOrReplace, openReaderFromStory } from '../utils/navigation';
 import { applyBookMetadata } from '../utils/entityMetadata';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ResilientImage } from '../components/ResilientImage';
+import { completedChapterCount, isReadingFinished, resumeChapterIndex } from '../utils/readingJourney';
+import '../styles/reader-v2.css';
+import { useDialog } from '../hooks/useDialog';
 
-const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; onToggleLike: (chapterId: string) => void; isLikePending: boolean }> = ({ bookId, chapter, index, onRead, progress, onToggleLike, isLikePending }) => {
+
+const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; current?: boolean; onToggleLike: (chapterId: string) => void; isLikePending: boolean }> = ({ bookId, chapter, index, onRead, progress, current = false, onToggleLike, isLikePending }) => {
     const isCompleted = progress >= 90;
-    const isInProgress = progress > 0 && progress < 90;
     const accessLabel = chapter.accessLabel ?? 'FULL';
-    const actionLabel = accessLabel === 'PREVIEW'
-        ? 'Preview'
-        : accessLabel === 'SIGN_IN'
-            ? 'Sign in to read'
-            : isInProgress ? 'Continue' : isCompleted ? 'Read Again' : 'Read';
-
+    const actionLabel = chapter.status !== 'published' ? 'Not released' : accessLabel === 'PREVIEW' ? 'Preview' : accessLabel === 'SIGN_IN' ? 'Sign in to read' : isCompleted ? 'Finished' : current ? 'Continue' : index === 0 ? 'Start here' : 'Unread';
     return (
-        <div 
-            onClick={() => { if (chapter.status === 'published') onRead(); }}
-            className={`ww-reader-chapter-row flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-border last:border-b-0 group ${chapter.status === 'published' ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-surface-alt transition-colors' : ''}`}
-        >
-            <div className="ww-reader-chapter-main flex items-center gap-4 flex-1 min-w-0">
-                {isCompleted ? <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0" /> : <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center flex-shrink-0">{index + 1}</span>}
-                <div className="flex-1 min-w-0 pr-2">
-                    <h4 className="font-sans font-semibold text-text-rich dark:text-dark-text-rich line-clamp-2 leading-tight">
-                        {chapter.status === 'published' ? (
-                            <a
-                                href={`/book/${encodeURIComponent(bookId)}/chapter/${encodeURIComponent(chapter.id)}`}
-                                aria-label={`${chapter.title} — ${actionLabel}`}
-                                className="text-left hover:text-accent focus-visible:text-accent transition-colors"
-                                onClick={(event) => { event.stopPropagation(); if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onRead(); } }}
-                            >
-                                {chapter.title}
-                            </a>
-                        ) : chapter.title}
-                    </h4>
-                    <div className="ww-reader-chapter-meta flex items-center gap-4 mt-2">
-                        {/* Progress Bar */}
-                        <div className="w-24 bg-gray-200 dark:bg-dark-border rounded-full h-1.5 overflow-hidden flex-shrink-0">
-                            <div
-                                className={`h-1.5 rounded-full transition-all duration-500 ${isCompleted ? 'bg-success' : 'bg-amber-500'}`}
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-
-                        {/* Chapter Stats */}
-                        <div className="ww-reader-chapter-stats flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1" title="Views">
-                                <EyeIcon className="w-3.5 h-3.5" /> {chapter.viewCount}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); onToggleLike(chapter.id); }}
-                                disabled={isLikePending}
-                                aria-busy={isLikePending}
-                                className={`flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full p-2 transition-colors hover:text-danger disabled:cursor-wait disabled:opacity-60 ${chapter.isLiked ? 'text-danger' : ''}`}
-                                title={chapter.isLiked ? "Unlike Chapter" : "Like Chapter"}
-                                aria-label={`${chapter.isLiked ? 'Unlike' : 'Like'} ${chapter.title}`}
-                                aria-pressed={chapter.isLiked}
-                            >
-                                {chapter.isLiked ? <HeartIconSolid className="w-3.5 h-3.5" /> : <HeartIcon className="w-3.5 h-3.5" />}
-                                {chapter.likesCount}
-                            </button>
-                            <span className="flex items-center gap-1" title="Comments">
-                                <ChatBubbleLeftIcon className="w-3.5 h-3.5" /> {chapter.commentCount}
-                            </span>
-                        </div>
-                    </div>
+        <article className={`ww-chapter-timeline-row ${isCompleted ? 'is-finished' : ''} ${current ? 'is-current' : ''} ${chapter.status !== 'published' ? 'is-unreleased' : ''}`}>
+            <span className="ww-chapter-timeline-marker" aria-hidden="true">{isCompleted ? '✓' : current ? '•' : index + 1}</span>
+            <div className="ww-chapter-timeline-content">
+                <div className="ww-chapter-timeline-meta"><span>Chapter {String(index + 1).padStart(2, '0')}</span><span>{actionLabel}</span></div>
+                <h4>{chapter.status === 'published' ? <a href={`/book/${encodeURIComponent(bookId)}/chapter/${encodeURIComponent(chapter.id)}`} aria-label={`${chapter.title} — ${actionLabel}`} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onRead(); } }}>{chapter.title}</a> : chapter.title}</h4>
+                <div className="ww-chapter-timeline-stats">
+                    <button type="button" onClick={() => onToggleLike(chapter.id)} disabled={isLikePending} aria-busy={isLikePending} aria-label={`${chapter.isLiked ? 'Unlike' : 'Like'} ${chapter.title}`} aria-pressed={chapter.isLiked} className={chapter.isLiked ? 'is-liked' : ''}>{chapter.isLiked ? <HeartIconSolid className="w-3.5 h-3.5" /> : <HeartIcon className="w-3.5 h-3.5" />}{chapter.likesCount.toLocaleString()}</button>
+                    <span><EyeIcon className="w-3.5 h-3.5" />{chapter.viewCount.toLocaleString()}</span>
+                    <span><ChatBubbleLeftIcon className="w-3.5 h-3.5" />{chapter.commentCount.toLocaleString()}</span>
+                    {!!chapter.wordCount && <span>· {Math.max(1, Math.ceil(chapter.wordCount / 230))} min</span>}
                 </div>
+                {progress > 0 && !isCompleted && <div className="ww-chapter-timeline-progress" role="progressbar" aria-label="Chapter reading progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(100, progress))}><span style={{ width: `${Math.min(100, progress)}%` }} /></div>}
             </div>
-            {chapter.status === 'published' ? (
-                <div className="ww-reader-chapter-cta flex items-center gap-2">
-                    {accessLabel === 'SIGN_IN' ? <LockClosedIcon className="w-4 h-4 text-gray-400" aria-hidden="true" /> : null}
-                    <span className={`font-sans font-semibold text-sm whitespace-nowrap ml-2 ${accessLabel === 'FULL' ? 'hidden sm:block text-accent opacity-0 group-hover:opacity-100 transition-opacity' : 'text-accent'}`}>
-                        {actionLabel}
-                    </span>
-                    <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 sm:hidden transition-opacity flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                </div>
-            ) : (
-                <LockClosedIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-            )}
-        </div>
+            {chapter.status !== 'published' || accessLabel === 'SIGN_IN' ? <LockClosedIcon className="ww-chapter-access-icon w-4 h-4" /> : null}
+        </article>
     );
 };
 
@@ -112,7 +59,7 @@ const StarRatingInput: React.FC<{ rating: number; setRating: (r: number) => void
                         key={starValue}
                         onClick={() => setRating(starValue)}
                         onMouseEnter={() => setHoverRating(starValue)}
-                        className="p-1"
+                        className="ww-review-star-button"
                         aria-label={`Rate ${starValue} out of 5 stars`}
                         aria-pressed={rating === starValue}
                     >
@@ -262,6 +209,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [hoverRating, setHoverRating] = useState(0);
     const [userComment, setUserComment] = useState('');
     const [isEditingReview, setIsEditingReview] = useState(false);
+    const [isReviewComposeOpen, setIsReviewComposeOpen] = useState(false);
     // Share nudge state
     const [showLibraryNudge, setShowLibraryNudge] = useState(false);
     const [showReviewShareNudge, setShowReviewShareNudge] = useState(false);
@@ -279,6 +227,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [pendingAction, setPendingAction] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [pendingChapterLikes, setPendingChapterLikes] = useState<Set<string>>(new Set());
+    const reviewDialogRef = useDialog(isReviewComposeOpen, () => setIsReviewComposeOpen(false), pendingAction !== 'save-review');
+    const shelvesDialogRef = useDialog(isManageShelvesModalOpen, () => setIsManageShelvesModalOpen(false), !isSavingShelves);
 
     const openManageShelvesModal = () => {
         if (!currentUser) return;
@@ -358,6 +308,19 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     useEffect(() => book ? applyBookMetadata(book) : undefined, [book]);
 
     useEffect(() => {
+        if (!currentUser) return;
+        let active = true;
+        const refresh = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            if (detail?.userId === currentUser.id && detail?.bookId === bookId) {
+                if (active) setReadingProgress(detail.progress);
+            }
+        };
+        window.addEventListener(api.READING_PROGRESS_UPDATED_EVENT, refresh);
+        return () => { active = false; window.removeEventListener(api.READING_PROGRESS_UPDATED_EVENT, refresh); };
+    }, [currentUser?.id, bookId]);
+
+    useEffect(() => {
         if (currentUserReview) {
             setUserRating(currentUserReview.rating);
             setUserComment(currentUserReview.comment);
@@ -422,7 +385,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const handleReadClick = () => {
         if (!book) return;
-        const startChapter = readingProgress ? readingProgress.lastReadChapterIndex : 0;
+        const startChapter = resumeChapterIndex(book.chapters, readingProgress);
+        if (startChapter === null) return;
         trackEvent('reading', 'start_reading', book.title, undefined, { bookId: book.id, chapterIndex: startChapter });
         openReaderFromStory(book.id, startChapter, book.chapters[startChapter]?.id);
     };
@@ -442,6 +406,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             trackEvent('social', 'write_review', book?.title, userRating, { bookId, reviewLength: userComment.trim().length });
             setAllReviews(updatedReviews);
             setIsEditingReview(false);
+            setIsReviewComposeOpen(false);
             setShowReviewShareNudge(true);
             setTimeout(() => setShowReviewShareNudge(false), 10000);
         } catch (error) {
@@ -537,15 +502,15 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const hasStartedReading = Boolean(
         readingProgress
-        && (readingProgress.overallProgress > 0 || Object.keys(readingProgress.chapters || {}).length > 0),
+        && book.chapters.some(chapter => (readingProgress.chapters?.[chapter.id]?.progress ?? 0) > 0),
     );
-    const mainButtonText = hasStartedReading
-        ? `Continue Reading (Ch. ${readingProgress.lastReadChapterIndex + 1})`
-        : 'Read from Start';
+    const isFinished = isReadingFinished(book.chapters, readingProgress);
+    const resumeIndex = resumeChapterIndex(book.chapters, readingProgress);
+    const mainButtonText = resumeIndex === null ? 'Chapters coming soon' : isFinished ? 'Read again' : hasStartedReading ? 'Continue reading' : 'Read from beginning';
     const storySummary = book.description?.trim() || book.summary;
 
     return (
-        <div className="ww-story-page bg-white dark:bg-dark-surface">
+        <div className="ww-story-page ww-story-v2">
             {actionError && <div role="alert" className="fixed left-1/2 top-24 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-xl border border-danger/30 bg-white px-4 py-3 text-sm text-danger shadow-xl dark:bg-dark-surface">{actionError}</div>}
             {/* Sticky Header */}
             <div className="ww-story-header sticky top-0 z-30 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border">
@@ -573,142 +538,39 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             </div>
 
             <div className="container mx-auto px-4 sm:px-6 py-12">
-                {/* Book Summary Section */}
-                <section className="ww-story-hero grid md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12 mb-16">
-                    <div className="ww-story-cover md:col-span-1 lg:col-span-1">
-                        <img src={book.coverUrl} alt={book.title} className="w-full h-auto rounded-2xl shadow-lifted" />
+                <nav className="ww-story-breadcrumb" aria-label="Breadcrumb"><a href="/category">Read</a><span>›</span>{book.genres[0] && <><a href={`/genre/${encodeURIComponent(book.genres[0])}`}>{book.genres[0]}</a><span>›</span></>}<span>{book.title}</span></nav>
+                <section className="ww-story-hero-v2">
+                    <div className="ww-story-art-column">
+                        <ResilientImage src={book.coverUrl} alt={book.title} fallbackLabel={book.title} variant="cover" className="ww-story-art" />
+                        <div className="ww-story-art-caption"><span className="ww-page-eyebrow">The story at a glance</span>{book.summary && book.summary.trim() !== storySummary.trim() && <p>{book.summary}</p>}</div>
+                        <div className="ww-story-genre-tags"><AgeRatingBadge rating={book.ageRating} />{book.isAIGenerated && <AIBadge />}{book.genres.map(genre => <a key={genre} href={`/genre/${encodeURIComponent(genre)}`}>{genre}</a>)}<span>{book.readingStatus}</span></div>
                     </div>
-                    <div className="ww-story-intro md:col-span-2 lg:col-span-3">
+                    <div className="ww-story-copy-column">
                         <span className="ww-page-eyebrow">A WordWeft story</span>
-                        <h1 className="font-sans text-4xl lg:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich leading-tight mb-2">{book.title}</h1>
-                        <p className="text-lg text-text-body dark:text-dark-text-body mb-4">by <a href={`/author/${encodeURIComponent(book.author.id)}`} className="font-semibold text-accent cursor-pointer hover:underline">{book.author.name}</a></p>
-
-                        {/* Book Stats */}
-                        <div className="ww-story-stats flex flex-wrap items-center gap-6 mb-6 text-gray-600 dark:text-gray-400">
-                            <div className="ww-story-rating flex items-center gap-2" title="Average reader rating">
-                                <div className="flex items-center text-amber-500">
-                                    {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < Math.round(book.rating) ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
-                                </div>
-                                <span><strong>{book.rating.toFixed(1)}</strong><small>{book.reviewsCount.toLocaleString()} {book.reviewsCount === 1 ? 'review' : 'reviews'}</small></span>
-                            </div>
-
-                            <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
-
-                            <div className="flex items-center gap-2" title="Total Views">
-                                <EyeIcon className="w-5 h-5" />
-                                <span className="font-sans font-medium">{book.viewCount.toLocaleString()}</span>
-                            </div>
-
-                            <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
-
-                            {/* Aggregated Likes Display (Non-interactive at book level) */}
-                            <div className="flex items-center gap-2" title="Total Likes (across all chapters)">
-                                <HeartIcon className="w-5 h-5" />
-                                <span className="font-sans font-medium">{book.likesCount.toLocaleString()}</span>
-                            </div>
-
-                            <div className="h-6 w-px bg-gray-300 dark:bg-dark-border"></div>
-
-                            <div className="flex items-center gap-2" title="Total Comments (across all chapters)">
-                                <ChatBubbleLeftIcon className="w-5 h-5" />
-                                <span className="font-sans font-medium">{book.commentCount.toLocaleString()}</span>
-                            </div>
-
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 mb-6">
-                            <AgeRatingBadge rating={book.ageRating} />
-                            {book.isAIGenerated && <AIBadge />}
-                            {book.genres.map(g => <a key={g} href={`/genre/${encodeURIComponent(g)}`} className="text-sm font-sans font-medium bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body px-3 py-1 rounded-full hover:text-accent hover:ring-1 hover:ring-accent/30 transition-colors">{g}</a>)}
-                            {book.tags?.filter(tag => !book.genres.includes(tag)).map(tag => <a key={tag} href={`/tag/${encodeURIComponent(tag)}`} className="text-sm font-sans font-medium text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full hover:text-accent">#{tag}</a>)}
-                        </div>
-
-                        <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}>
-                            <p className="text-base text-text-body dark:text-dark-text-body max-w-3xl leading-relaxed">{storySummary}</p>
-                            {storySummary.length > 180 && (
-                                <button
-                                    type="button"
-                                    aria-expanded={isSummaryExpanded}
-                                    onClick={() => setIsSummaryExpanded(value => !value)}
-                                >
-                                    {isSummaryExpanded ? 'Show less' : 'Read full summary'}
-                                </button>
-                            )}
-                        </div>
-                        <div className="ww-story-facts">
-                            <div><strong>{book.chapters.length}</strong><span>Chapters</span></div>
-                            <div><strong>{book.readingStatus}</strong><span>Story status</span></div>
-                            <div><strong>{book.reviewsCount.toLocaleString()}</strong><span>Reader reviews</span></div>
-                        </div>
-
-                        {book.nextScheduledReleaseAt && (
-                            <div className="ww-next-release" aria-label="Next chapter release">
-                                <span>Next chapter</span>
-                                <strong>{new Date(book.nextScheduledReleaseAt).toLocaleString()}</strong>
-                                <small>Scheduled by {book.author.name}</small>
-                            </div>
-                        )}
-
-                        {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance">
-                            <strong>Content guidance</strong>
-                            {book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(w => <span key={w}>{warningLabel(w)}</span>)}</div>}
-                            {book.customDisclaimer && <p>{book.customDisclaimer}</p>}
-                        </div>}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <button onClick={handleReadClick} className="w-full sm:w-auto bg-accent text-white font-sans font-semibold px-8 py-3 rounded-xl hover:bg-opacity-80 transition-all hover:scale-105 duration-300 shadow-lg">
-                                {mainButtonText}
-                            </button>
-                            <button
-                                onClick={handleToggleLibrary}
-                                disabled={pendingAction === 'toggle-library'}
-                                className={`w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${isBookInLibrary
-                                    ? 'bg-success/10 text-success'
-                                    : 'bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border'
-                                    }`}
-                            >
-                                {isBookInLibrary ? <CheckCircleIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
-                                {pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In Your Library' : 'Add to Library'}
-                            </button>
-                            {isBookInLibrary && hasCustomShelves && (
-                                <button
-                                    onClick={openManageShelvesModal}
-                                    className="w-full sm:w-auto font-sans font-semibold px-6 py-3 rounded-xl bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border transition-colors flex items-center justify-center gap-2"
-                                >
-                                    Organize Shelves
-                                </button>
-                            )}
-                            <button
-                                onClick={() => setIsShareModalOpen(true)}
-                                className="w-full sm:w-auto font-sans font-semibold px-8 py-3 rounded-xl bg-gray-100 dark:bg-dark-surface-alt text-text-rich dark:text-dark-text-rich hover:bg-gray-200 dark:hover:bg-dark-border transition-colors flex items-center justify-center gap-2"
-                            >
-                                <ShareIcon className="w-5 h-5" />
-                                Share
-                            </button>
-                        </div>
-
-                        <a href={discussLink(book.id, null, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
-                        {/* R5: Add-to-library share nudge */}
-                        {showLibraryNudge && (
-                            <div className="mt-4 flex items-center justify-between gap-3 bg-accent/5 border border-accent/20 rounded-xl px-4 py-3 animate-fade-in">
-                                <p className="text-sm text-text-body dark:text-dark-text-body">Added! Recommend it to friends?</p>
-                                <button
-                                    onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}
-                                    className="text-sm font-bold text-accent hover:underline whitespace-nowrap flex-shrink-0"
-                                >
-                                    Share
-                                </button>
-                            </div>
-                        )}
+                        <h1>{book.title}</h1>
+                        <a className="ww-story-author-v2" href={`/author/${encodeURIComponent(book.author.id)}`}><ResilientImage src={book.author.avatarUrl} alt="" fallbackLabel={book.author.name} className="w-11 h-11 rounded-full" /><span><strong>{book.author.name}</strong><small>Writer</small></span></a>
+                        <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}><p>{storySummary}</p>{storySummary.length > 240 && <button type="button" aria-expanded={isSummaryExpanded} onClick={() => setIsSummaryExpanded(value => !value)}>{isSummaryExpanded ? 'Show less' : 'Read full synopsis'}</button>}</div>
+                        {book.tags?.filter(tag => !book.genres.includes(tag)).length > 0 && <div className="ww-story-tag-list">{book.tags.filter(tag => !book.genres.includes(tag)).map(tag => <a key={tag} href={`/tag/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>}
+                        {hasStartedReading && <div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(readingProgress.overallProgress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, readingProgress.overallProgress)}%` }} /></div><p>{completedChapterCount(book.chapters, readingProgress)} chapters finished{isFinished ? ' · All released chapters read' : resumeIndex !== null ? ` · Continue with chapter ${resumeIndex + 1}` : ''}{readingProgress.pendingSync ? ' · Sync pending on this device' : ''}</p></div>}
+                        <div className="ww-story-actions-v2"><button className={`ww-story-read-action ${hasStartedReading ? 'is-resume' : ''}`} onClick={handleReadClick} disabled={resumeIndex === null}>{mainButtonText}<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button><button className="ww-story-save-action" onClick={handleToggleLibrary} disabled={pendingAction === 'toggle-library'} aria-pressed={isBookInLibrary}>{pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In your library' : 'Add to library'}{isBookInLibrary ? <CheckCircleIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}</button><button className="ww-story-share-action" onClick={() => setIsShareModalOpen(true)}>Share<ShareIcon className="w-4 h-4" /></button>{isBookInLibrary && hasCustomShelves && <button className="ww-story-share-action" onClick={openManageShelvesModal}>Organize shelves</button>}</div>
+                        <dl className="ww-story-stats-v2"><div><dt>Reader rating</dt><dd><StarIcon className="w-4 h-4" />{book.rating.toFixed(1)}<small>{book.reviewsCount.toLocaleString()} reviews</small></dd></div><div><dt>Reads</dt><dd>{book.viewCount.toLocaleString()}</dd></div><div><dt>Likes</dt><dd>{book.likesCount.toLocaleString()}</dd></div><div><dt>Comments</dt><dd>{book.commentCount.toLocaleString()}</dd></div></dl>
+                        <p className="ww-story-publication-meta">{book.chapters.length} chapters · {book.readingStatus}</p>
+                        {book.nextScheduledReleaseAt && <div className="ww-next-release"><span>Next chapter</span><strong>{new Date(book.nextScheduledReleaseAt).toLocaleString()}</strong><small>Scheduled by {book.author.name}</small></div>}
+                        {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance"><strong>Content guidance</strong>{book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(warning => <span key={warning}>{warningLabel(warning)}</span>)}</div>}{book.customDisclaimer && <p>{book.customDisclaimer}</p>}</div>}
+                        <a href={discussLink(book.id, null, currentUser?.id === book.author.id)} className="ww-story-community-link"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
+                        {showLibraryNudge && <div className="ww-library-saved-nudge"><span>Saved to your library. Share this story?</span><button onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}>Share</button></div>}
                     </div>
+                    <aside className="ww-story-contents-rail" aria-label="Table of contents"><span className="ww-page-eyebrow">Table of contents</span><h2>{book.chapters.length} {book.chapters.length === 1 ? 'chapter' : 'chapters'}</h2><p>Read in chapter order</p><div className="ww-story-contents-scroll">{book.chapters.slice(0, 8).map((chapter, index) => <ChapterItem key={chapter.id} bookId={book.id} chapter={chapter} index={index} progress={readingProgress?.chapters?.[chapter.id]?.progress || 0} current={hasStartedReading && !isFinished && resumeIndex === index} onRead={() => handleReadChapterClick(index)} onToggleLike={handleToggleChapterLike} isLikePending={pendingChapterLikes.has(chapter.id)} />)}</div><button className="ww-story-view-contents" onClick={() => { setActiveTab('Chapters'); requestAnimationFrame(() => document.getElementById('story-guide-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>View all chapters<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button></aside>
                 </section>
 
                 {/* Tab Navigation */}
-                <div className="ww-story-tabs flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
+                <div id="story-guide-tabs" className="ww-story-tabs flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
                     {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => {
                         const btn = (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
+                                aria-pressed={activeTab === tab}
                                 className={`px-6 py-3 font-sans font-medium text-sm transition-colors border-b-2 ${activeTab === tab
                                     ? 'border-accent text-accent'
                                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
@@ -732,7 +594,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     {activeTab === 'Chapters' && (
                         <section className="animate-fade-in">
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-4">Chapters</h3>
-                            <div className="bg-surface dark:bg-dark-surface rounded-2xl border border-gray-200/80 dark:border-dark-border overflow-hidden">
+                            <div className="ww-story-full-contents">
                                 {book.chapters.map((chapter, i) => {
                                     const chapterProgress = readingProgress?.chapters?.[chapter.id]?.progress || 0;
                                     return (
@@ -742,6 +604,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                             chapter={chapter}
                                             index={i}
                                             progress={chapterProgress}
+                                            current={hasStartedReading && !isFinished && resumeIndex === i}
                                             onRead={() => handleReadChapterClick(i)}
                                             onToggleLike={handleToggleChapterLike}
                                             isLikePending={pendingChapterLikes.has(chapter.id)}
@@ -762,51 +625,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <section className="animate-fade-in">
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Community Reviews</h3>
 
-                            {/* Review Form / User's Review */}
-                            <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border mb-8">
-                                {!currentUser ? (
-                                    <div className="text-center">
-                                        <p className="mb-4">You must be logged in to leave a review.</p>
-                                        <button onClick={() => window.location.hash = '/auth'} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors">
-                                            Log in to leave a review
-                                        </button>
-                                    </div>
-                                ) : currentUserReview && !isEditingReview ? (
-                                    // Display user's existing review
-                                    <div>
-                                        <div className="flex justify-between items-start">
-                                            <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-4">Your Review</h4>
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => setIsEditingReview(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><PencilIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
-                                                <button onClick={() => setConfirmation('review')} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt" aria-label="Delete your review"><TrashIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center">
-                                            {[...Array(5)].map((_, i) => <StarIcon key={i} className={`w-5 h-5 ${i < currentUserReview.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}
-                                        </div>
-                                        <p className="text-text-body dark:text-dark-text-body mt-2">{currentUserReview.comment}</p>
-                                    </div>
-                                ) : (
-                                    // Display review form
-                                    <form onSubmit={handleSubmitReview}>
-                                        <h4 className="font-sans font-semibold text-lg text-text-rich dark:text-dark-text-rich mb-2">{currentUserReview ? 'Edit Your Review' : 'Write a Review'}</h4>
-                                        <StarRatingInput rating={userRating} setRating={setUserRating} hoverRating={hoverRating} setHoverRating={setHoverRating} />
-                                        <textarea
-                                            value={userComment}
-                                            onChange={(e) => setUserComment(e.target.value)}
-                                            placeholder="Share your thoughts..."
-                                            className="w-full mt-4 p-3 rounded-lg border-gray-300 focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-body"
-                                            rows={4}
-                                            required
-                                        ></textarea>
-                                        <div className="flex justify-end items-center gap-4 mt-4">
-                                            {isEditingReview && <button type="button" onClick={() => setIsEditingReview(false)} className="font-sans font-semibold text-sm">Cancel</button>}
-                                            <button type="submit" disabled={!userRating || !userComment.trim() || pendingAction === 'save-review'} className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed">
-                                                {pendingAction === 'save-review' ? 'Saving…' : currentUserReview ? 'Update Review' : 'Submit Review'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                )}
+                            <div className="ww-story-review-entry">
+                                {!currentUser ? <div><p>Sign in to share your thoughts on this story.</p><button onClick={() => window.location.hash = '/auth'}>Sign in to review</button></div> : currentUserReview ? <div><div className="ww-story-own-review-heading"><h4>Your review</h4><div><button onClick={() => { setIsEditingReview(true); setIsReviewComposeOpen(true); }} aria-label="Edit your review"><PencilIcon className="w-4 h-4" /></button><button onClick={() => setConfirmation('review')} aria-label="Delete your review"><TrashIcon className="w-4 h-4" /></button></div></div><div className="flex items-center">{[...Array(5)].map((_, index) => <StarIcon key={index} className={`w-4 h-4 ${index < currentUserReview.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}</div><p>{currentUserReview.comment}</p></div> : <div><p>What stayed with you?</p><button onClick={() => { setIsEditingReview(false); setIsReviewComposeOpen(true); }}>Write a review<PencilIcon className="w-4 h-4" /></button></div>}
                             </div>
 
                             {/* Other Reviews */}
@@ -839,13 +659,15 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 )}
             </div>
 
+            {isReviewComposeOpen && currentUser && <div className="ww-review-compose-overlay" onClick={event => { if (event.target === event.currentTarget && pendingAction !== 'save-review') setIsReviewComposeOpen(false); }}><div ref={reviewDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="review-compose-title" className="ww-review-compose-panel"><div className="ww-review-compose-heading"><h2 id="review-compose-title">{isEditingReview ? 'Edit your review' : 'Rate & review'}</h2><button type="button" onClick={() => setIsReviewComposeOpen(false)} disabled={pendingAction === 'save-review'} aria-label="Close review"><XMarkIcon className="w-5 h-5" /></button></div><p>{book.title} by {book.author.name}</p><form onSubmit={handleSubmitReview}><label>Your rating</label><StarRatingInput rating={userRating} setRating={setUserRating} hoverRating={hoverRating} setHoverRating={setHoverRating} /><label htmlFor="story-review-content">Your review</label><textarea id="story-review-content" value={userComment} onChange={event => setUserComment(event.target.value)} placeholder="What stayed with you?" rows={6} required data-dialog-focus />{actionError && <p className="ww-review-compose-error" role="alert">{actionError}</p>}<div className="ww-review-compose-actions"><button type="button" disabled={pendingAction === 'save-review'} onClick={() => setIsReviewComposeOpen(false)}>Cancel</button><button type="submit" disabled={!userRating || !userComment.trim() || pendingAction === 'save-review'}>{pendingAction === 'save-review' ? 'Saving…' : currentUserReview ? 'Update review' : 'Post review'}</button></div></form></div></div>}
+
             {/* Manage Shelves Modal */}
             {isManageShelvesModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
+                    <div ref={shelvesDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="manage-shelves-title" className="ww-story-shelves-panel bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Manage Shelves</h3>
-                            <button onClick={() => setIsManageShelvesModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                            <h3 id="manage-shelves-title" className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Manage shelves</h3>
+                            <button aria-label="Close manage shelves" onClick={() => setIsManageShelvesModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                                 <XMarkIcon className="w-6 h-6" />
                             </button>
                         </div>
@@ -879,7 +701,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                 {isSavingShelves ? 'Saving...' : 'Save Changes'}
                             </button>
                             <button
-                                onClick={() => setConfirmation('library')}
+                                onClick={() => { setIsManageShelvesModalOpen(false); setConfirmation('library'); }}
                                 disabled={pendingAction === 'remove-library'}
                                 className="w-full py-2.5 font-bold text-danger bg-danger/10 hover:bg-danger/20 rounded-xl transition-colors text-sm"
                             >

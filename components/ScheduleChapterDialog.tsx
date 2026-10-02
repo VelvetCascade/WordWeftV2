@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { browserTimezoneLabel, localScheduleInputValue, toUtcSchedule } from '../utils/publishing';
+import { useDialog } from '../hooks/useDialog';
+import { X } from 'lucide-react';
 
 interface ScheduleChapterDialogProps {
     isOpen: boolean;
@@ -25,6 +27,7 @@ export const ScheduleChapterDialog: React.FC<ScheduleChapterDialogProps> = ({
     const [localValue, setLocalValue] = useState(() => toLocalInput(initialScheduledAt));
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const dialogRef = useDialog(isOpen, onClose, !isSubmitting);
 
     useEffect(() => {
         if (isOpen) {
@@ -50,8 +53,9 @@ export const ScheduleChapterDialog: React.FC<ScheduleChapterDialogProps> = ({
     };
 
     return (
-        <div className="ww-schedule-backdrop" role="presentation" onMouseDown={event => event.target === event.currentTarget && onClose()}>
-            <form className="ww-schedule-dialog" role="dialog" aria-modal="true" aria-labelledby="schedule-title" onSubmit={handleSubmit}>
+        <div ref={dialogRef} tabIndex={-1} className="ww-schedule-backdrop" role="dialog" aria-modal="true" aria-labelledby="schedule-title" onMouseDown={event => event.target === event.currentTarget && !isSubmitting && onClose()}>
+            <form className="ww-schedule-dialog" onSubmit={handleSubmit}>
+                <button type="button" className="ww-studio-dialog-close" onClick={onClose} disabled={isSubmitting} aria-label="Close scheduling"><X size={20} /></button>
                 <span className="ww-schedule-eyebrow">Release planning</span>
                 <h2 id="schedule-title">Schedule {chapterTitle.trim() || 'this chapter'}</h2>
                 <p>WordWeft will publish it automatically and notify your followers once.</p>

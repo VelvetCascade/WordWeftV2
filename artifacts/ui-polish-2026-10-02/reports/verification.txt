@@ -1,0 +1,16 @@
+WordWeft UI verification — 2026-10-02
+
+Final browser run: npm run test:e2e — 90 passed (6.3m).
+Frontend: npm run typecheck — passed.
+Frontend: npm test — 84 passed, zero failures.
+Production: npm run build — passed, including SSR/static page generation.
+Bundle: npm run check:bundle — 156.71 kB gzip initial JavaScript; budget 350 kB.
+SEO: npm run test:seo — 22 passed (also part of the frontend unit total).
+Backend (unchanged since original redesign checkpoint): Maven tests/package — 183 tests, zero failures/errors/skips; BUILD SUCCESS.
+Real local API verification: 139 assertions across 90 API requests, including cleanup.
+
+The browser suite used the real Spring Boot backend and MongoDB fixture accounts.
+Live AdSense script endpoints were fulfilled with empty JavaScript by the browser test fixture; production advertising code is unchanged. This isolates unrelated external ad promise failures while retaining application error assertions.
+Google sign-in, ImageKit/R2 uploads, live email, DOCX embedded-image storage and founding-writer sheet synchronization need configured provider credentials. Their live success paths were not verified.
+
+The final UI run covers 22 targeted regressions, including fluid desktop workspaces, shared navigation, contained mobile overlays, keyboard focus restoration, current-chapter navigation, configured catalog API usage, profile initials, circle title wrapping and analytics columns/story labels.

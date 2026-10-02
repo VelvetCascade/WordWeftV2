@@ -1,6 +1,7 @@
 import React from 'react';
 import { WordWeftLogo } from './icons/WordWeftLogo';
 
+
 const footerGroups = [
   {
     title: 'Explore',
@@ -46,7 +47,7 @@ export const Footer: React.FC = () => {
       <div className="ww-footer-inner container mx-auto px-6">
         <div className="ww-footer-intro">
           <a href="/" className="ww-footer-brand" aria-label="WordWeft home">
-            <span className="ww-footer-mark"><WordWeftLogo className="w-9 h-9" /></span>
+            <span className="ww-footer-mark"><WordWeftLogo /></span>
             <span>WordWeft</span>
           </a>
           <p>A quiet corner of the internet for bold stories, thoughtful readers, and writers building worlds one line at a time.</p>

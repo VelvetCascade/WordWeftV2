@@ -1,3 +1,5 @@
+import { CalendarDays as CalendarIcon, MapPin as MapPinIcon, Link as LinkIcon, Feather as QuillIcon, Search } from 'lucide-react';
+import '../styles/account-v2.css';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Author, Book, User } from '../types';
@@ -15,39 +17,6 @@ import { ReportModal } from '../components/ReportModal';
 import { applyAuthorMetadata } from '../utils/entityMetadata';
 import { authorPath, isPublicBook, parseRoute, publicChapters } from '../seo/metadata.mjs';
 import { ResilientImage } from '../components/ResilientImage';
-
-// ── Inline icons not in the shared set ──
-
-const CalendarIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-);
-
-const MapPinIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-        <circle cx="12" cy="10" r="3" />
-    </svg>
-);
-
-const LinkIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-);
-
-const QuillIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
-        <line x1="16" y1="8" x2="2" y2="22" />
-        <line x1="17.5" y1="15" x2="9" y2="15" />
-    </svg>
-);
 
 // ── Helper Components ──
 
@@ -87,7 +56,10 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [isFollowLoading, setIsFollowLoading] = useState(false);
     const [followError, setFollowError] = useState('');
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
-    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>('published');
+    const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>(() => {
+        const saved = window.history.state?.wordWeftAuthor;
+        return saved?.authorId === authorId && ['published', 'about', 'posts'].includes(saved.tab) ? saved.tab : 'published';
+    });
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const page = parseRoute(window.location.pathname + window.location.search).page || 1;
@@ -124,7 +96,14 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         if (author) applyAuthorMetadata(author, pageBooks);
     }, [author, pageBooks, page]);
 
-    useEffect(() => { setActiveTab('published'); }, [authorId, page]);
+    useEffect(() => {
+        const saved = window.history.state?.wordWeftAuthor;
+        setActiveTab(saved?.authorId === authorId && ['published', 'about', 'posts'].includes(saved.tab) ? saved.tab : 'published');
+    }, [authorId, page]);
+    useEffect(() => {
+        if (!window.location.pathname.startsWith(`/author/${encodeURIComponent(authorId)}`)) return;
+        window.history.replaceState({ ...window.history.state, wordWeftAuthor: { authorId, tab: activeTab } }, '');
+    }, [authorId, activeTab]);
 
     const handleFollowToggle = async () => {
         if (!author || isFollowLoading) return;
@@ -203,7 +182,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     if (!author) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <div className="text-6xl">🔍</div>
+                <Search className="h-12 w-12 text-accent" aria-hidden="true" />
                 <h2 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich">Author Not Found</h2>
                 <p className="text-text-body dark:text-dark-text-body">This profile doesn't exist or may have been removed.</p>
                 <button onClick={() => window.location.hash = '/'} className="mt-4 bg-accent text-white px-6 py-2.5 rounded-xl font-sans font-bold hover:bg-primary transition-colors">
@@ -221,13 +200,10 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const isOwnProfile = currentUser?.id === author.id;
 
     return (
-        <div className="ww-author-page">
+        <div className="account-v2-author ww-author-page">
             {/* ═══════════  Hero Header  ═══════════ */}
             <div className="ww-author-hero relative overflow-hidden">
-                {/* Background gradient banner */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent dark:from-primary/20 dark:via-accent/10 dark:to-transparent" />
-                <div className="absolute top-0 right-0 w-96 h-96 bg-accent/8 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary/6 rounded-full translate-y-1/2 -translate-x-1/3 blur-3xl" />
+                <div className="ww-account-profile-banner"><img src="/design-v2/assets/met-45294.jpg" alt="" /></div>
 
                 <div className="ww-author-hero-inner relative container mx-auto px-6 pt-12 pb-8">
                     <div className="ww-author-identity flex flex-col md:flex-row items-center md:items-start gap-8">
@@ -251,7 +227,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
 
                         {/* Profile Info */}
                         <div className="ww-author-info flex-1 text-center md:text-left min-w-0">
-                            <p className="ww-author-eyebrow">Author portfolio</p>
+                            <p className="ww-author-eyebrow">Writer profile</p>
                             {(author.communityBadges?.length || author.communityInterests?.length) ? <div className="community-author-identity">{author.communityBadges?.map(badge => <span key={badge}>{badge === 'VERIFIED_CREATOR' ? 'Verified creator' : badge === 'EDITORIAL_STAFF' ? 'Editorial staff' : 'Community moderator'}</span>)}{author.communityInterests?.map(interest => <span key={interest}>{({ READING: 'Reader', WEBNOVEL_WRITING: 'Web-novel writer', EBOOK_PUBLISHING: 'E-book writer', WRITING_CRAFT: 'Writing craft', CRITIQUE: 'Critique' })[interest]}</span>)}</div> : null}
                             <div className="ww-author-title-row flex flex-col md:flex-row items-center md:items-start gap-4 mb-3">
                                 <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich tracking-tight leading-tight">
@@ -335,7 +311,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                         </a>
                                     )}
                                     {author.socials?.instagram && (
-                                        <a href={author.socials.instagram} target="_blank" rel="noreferrer" className="p-2.5 bg-white/80 dark:bg-dark-surface-alt rounded-xl hover:bg-gradient-to-tr hover:from-yellow-400 hover:via-red-500 hover:to-purple-500 hover:text-white transition-all shadow-sm hover:shadow-md" title="Instagram">
+                                        <a href={author.socials.instagram} target="_blank" rel="noreferrer" className="p-2.5 bg-white/80 dark:bg-dark-surface-alt rounded-xl hover:bg-accent/10 transition-all shadow-sm hover:shadow-md" title="Instagram">
                                             <InstagramIcon className="w-5 h-5" />
                                         </a>
                                     )}
@@ -381,8 +357,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                     )}
                 </div>
 
-                {/* Bottom border with gradient */}
-                <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-dark-border to-transparent" />
+
             </div>
 
             {/* ═══════════  Tab Navigation  ═══════════ */}
@@ -397,12 +372,12 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                     : 'text-gray-500 dark:text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'
                             }`}
                         >
-                            Published Works
+                            Stories
                             {activeTab === 'published' && (
                                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
                             )}
                         </button>
-                        <button onClick={() => setActiveTab('posts')} className={`relative px-6 py-4 font-sans font-semibold text-sm transition-colors ${activeTab === 'posts' ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}>Community posts{activeTab === 'posts' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />}</button>
+                        <button onClick={() => setActiveTab('posts')} className={`relative px-6 py-4 font-sans font-semibold text-sm transition-colors ${activeTab === 'posts' ? 'text-accent' : 'text-gray-500 dark:text-gray-400'}`}>Activity{activeTab === 'posts' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />}</button>
                         {hasAboutContent && (
                             <button
                                 onClick={() => setActiveTab('about')}
@@ -444,7 +419,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                         )}
 
                         {pageBooks.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
+                            <div className="ww-account-story-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
                                 {pageBooks.map(book => (
                                     <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`}/>
                                 ))}
@@ -569,6 +544,8 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                 onClose={() => setConnectionModalType(null)}
                 title={connectionModalType === 'followers' ? 'Followers' : 'Following'}
                 userId={author.id}
+                viewerId={currentUser?.id}
+                onSignIn={onSignIn}
                 type={connectionModalType || 'followers'}
             />
             
