@@ -307,6 +307,8 @@ export const HomePage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [rankedGenres, setRankedGenres] = useState<{ name: string; bookCount: number; readCount: number }[]>([]);
   const [rankedGenresLoading, setRankedGenresLoading] = useState(true);
+  const [rankedGenresError, setRankedGenresError] = useState('');
+  const [genresAttempt, setGenresAttempt] = useState(0);
   const [genreBooks, setGenreBooks] = useState<Record<string, Book[]>>({});
   const [loadGenreShelves, setLoadGenreShelves] = useState(false);
   const genreShelfRef = useRef<HTMLDivElement>(null);
@@ -335,10 +337,12 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     let active = true;
     setRankedGenresLoading(true);
-    api.getGenresRanked().then(value => { if (active) setRankedGenres(value); }).catch(() => {})
+    setRankedGenresError('');
+    api.getGenresRanked().then(value => { if (active) setRankedGenres(value); })
+      .catch(error => { if (active) setRankedGenresError(error instanceof Error ? error.message : 'Genres could not be loaded.'); })
       .finally(() => { if (active) setRankedGenresLoading(false); });
     return () => { active = false; };
-  }, [attempt]);
+  }, [attempt, genresAttempt]);
   useEffect(() => {
     if (isLoading || rankedGenresLoading || loadGenreShelves) return;
     const target = genreShelfRef.current;
@@ -376,8 +380,10 @@ export const HomePage: React.FC = () => {
         <div className="v2-feature-info"><p className="ww-page-eyebrow">{book.genres[0] || 'Original story'} · {book.readingStatus}</p><h3><a href={`/book/${encodeURIComponent(book.id)}`}>{book.title}</a></h3><a className="v2-feature-author" href={`/author/${encodeURIComponent(book.author.id)}`}>{book.author.name}</a><p className="v2-feature-summary">{book.summary || book.description}</p><div className="v2-feature-meta"><span><BookOpen size={15} />{book.chapters?.length || 0} chapters</span><span><StarIcon className="w-4 h-4" />{book.rating || 'New'}</span><a href={`/book/${encodeURIComponent(book.id)}`} aria-label={`Read ${book.title}`}>Read <ArrowRight size={16} /></a></div></div>
       </article>)}</div>}
     </section>
-    {!!featuredGenres.length && <section className="v2-discovery-section" aria-labelledby="genres-heading">
+    {(!!featuredGenres.length || !!rankedGenresError || rankedGenresLoading) && <section className="v2-discovery-section" aria-labelledby="genres-heading" aria-busy={rankedGenresLoading}>
       <div className="v2-section-heading"><div><p className="ww-page-eyebrow">Explore</p><h2 id="genres-heading">Stories across genres.</h2></div><a href="/category">All genres <ArrowRight size={18} /></a></div>
+      {rankedGenresLoading && <p role="status">Loading genres…</p>}
+      {rankedGenresError && <div className="ww-section-retry" role="alert"><p>{rankedGenresError}</p><button type="button" className="v2-button secondary" onClick={() => setGenresAttempt(value => value + 1)}>Retry genres</button></div>}
       <div className="v2-genre-strip">{featuredGenres.map(genre => {
         const art = getGenreArtwork(genre.name);
         return <a className={`v2-genre-tile ${art ? '' : 'v2-genre-tile-unillustrated'}`} href={`/genre/${encodeURIComponent(genre.name)}`} key={genre.name} onClick={() => trackEvent('navigation','genre_card_click',genre.name)}>

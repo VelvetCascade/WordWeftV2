@@ -208,6 +208,9 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
 
     const [allReviews, setAllReviews] = useState<Review[]>([]);
+    const [reviewsLoading, setReviewsLoading] = useState(true);
+    const [reviewsError, setReviewsError] = useState('');
+    const [reviewsAttempt, setReviewsAttempt] = useState(0);
     const [activeTab, setActiveTab] = useState<'Chapters' | 'Characters' | 'Reviews'>('Chapters');
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
@@ -311,9 +314,13 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     useEffect(() => {
         let active = true;
         setAllReviews([]);
-        api.getBookReviews(bookId).then(result => { if (active) setAllReviews(result); }).catch(() => {});
+        setReviewsLoading(true);
+        setReviewsError('');
+        api.getBookReviews(bookId).then(result => { if (active) setAllReviews(result); })
+            .catch(error => { if (active) setReviewsError(error instanceof Error ? error.message : 'Reviews could not be loaded.'); })
+            .finally(() => { if (active) setReviewsLoading(false); });
         return () => { active = false; };
-    }, [bookId, loadAttempt]);
+    }, [bookId, loadAttempt, reviewsAttempt]);
 
     useEffect(() => {
         let active = true;
@@ -641,12 +648,13 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     )}
 
                     {activeTab === 'Reviews' && (
-                        <section className="animate-fade-in">
+                        <section className="animate-fade-in" aria-busy={reviewsLoading}>
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Community Reviews</h3>
-
-                            <div className="ww-story-review-entry">
+                            {reviewsLoading && <p role="status">Loading reviews…</p>}
+                            {reviewsError && <div className="ww-section-retry" role="alert"><p>{reviewsError}</p><button type="button" className="v2-button secondary" onClick={() => setReviewsAttempt(value => value + 1)}>Retry reviews</button></div>}
+                            {!reviewsLoading && !reviewsError && <div className="ww-story-review-entry">
                                 {!currentUser ? <div><p>Sign in to share your thoughts on this story.</p><button onClick={() => window.location.hash = '/auth'}>Sign in to review</button></div> : currentUserReview ? <div><div className="ww-story-own-review-heading"><h4>Your review</h4><div><button onClick={() => { setIsEditingReview(true); setIsReviewComposeOpen(true); }} aria-label="Edit your review"><PencilIcon className="w-4 h-4" /></button><button onClick={() => setConfirmation('review')} aria-label="Delete your review"><TrashIcon className="w-4 h-4" /></button></div></div><div className="flex items-center">{[...Array(5)].map((_, index) => <StarIcon key={index} className={`w-4 h-4 ${index < currentUserReview.rating ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600'}`} />)}</div><p>{currentUserReview.comment}</p></div> : <div><p>What stayed with you?</p><button onClick={() => { setIsEditingReview(false); setIsReviewComposeOpen(true); }}>Write a review<PencilIcon className="w-4 h-4" /></button></div>}
-                            </div>
+                            </div>}
 
                             {/* Other Reviews */}
                             <div className="space-y-6">

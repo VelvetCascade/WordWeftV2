@@ -43,6 +43,13 @@ test('styled manuscript blocks render without the page error and retain authored
     await expect(page.getByRole('alert').filter({ hasText: 'This screen could not open' })).toHaveCount(0);
 });
 
+test('corrupted optional reading tips cannot interrupt a chapter', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('ww_reader_coach_dismissed', '{broken'));
+    await page.goto(`/book/${storyId}/chapter/${chapterId}`);
+    await expect(page.locator('.reader-copy')).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: 'This screen could not open' })).toHaveCount(0);
+});
+
 test('a phone reader can open a styled chapter and return through story details on one tap', async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const page = await context.newPage();

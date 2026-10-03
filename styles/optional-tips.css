@@ -1,0 +1,27 @@
+/* Discovery decoration passes input through; only explicit dismiss controls act. */
+.sparkle-wrapper .sparkle-indicator {
+    pointer-events: none;
+    cursor: inherit;
+}
+
+.reader-coach-nudge.reader-coach-nudge {
+    pointer-events: none;
+}
+
+.sparkle-wrapper .sparkle-tooltip-dismiss,
+.reader-coach-nudge .reader-coach-nudge-dismiss {
+    pointer-events: auto;
+}
+
+.reader-focus-mode .reader-coach-nudge .reader-coach-nudge-dismiss {
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sparkle-wrapper .sparkle-ring,
+    .sparkle-wrapper .sparkle-tooltip,
+    .reader-coach-nudge .reader-coach-dot {
+        animation: none;
+        transition: none;
+    }
+}

@@ -614,11 +614,11 @@ const App: React.FC = () => {
 
         {isWriterPage ? (
           <WriterLayout currentUser={currentUser ?? undefined}>
-            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={routeSurfaceKey}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
+            <PageErrorBoundary route={routeSurfaceKey}><RouteSurface key={routeSurfaceKey}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </WriterLayout>
         ) : (
           <main id="main-content" tabIndex={-1} className={`ww-app-main ww-page-${page.name} ${showNavbar ? 'ww-app-main-with-nav pb-24 xl:pb-0' : ''}`}>
-            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={routeSurfaceKey} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
+            <PageErrorBoundary route={routeSurfaceKey}><RouteSurface key={routeSurfaceKey} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </main>
         )}
 

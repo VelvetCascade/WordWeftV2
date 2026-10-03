@@ -1,5 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { consumeNavigationScroll } from '../utils/navigation';
+import React, { useEffect, useRef, useState } from 'react';
+import { consumeNavigationScroll, isNavigationLocked } from '../utils/navigation';
+import { isPageAssetFailure, recoverPageLoad } from '../utils/pageLoadRecovery';
+import { createPageErrorDetails, retainPageError, type PageErrorDetails } from '../utils/pageErrorDetails';
+import '../styles/recovery.css';
 
 /** Wait for lazy content before moving focus or restoring a catalogue position. */
 export const RouteSurface: React.FC<{ children: React.ReactNode; reader?: boolean }> = ({ children, reader }) => {
@@ -47,14 +50,64 @@ export const RouteSurface: React.FC<{ children: React.ReactNode; reader?: boolea
   return <div ref={ref} className="v2-route-surface">{children}</div>;
 };
 
-export class PageErrorBoundary extends React.Component<{ children: React.ReactNode; route: string }, { failed: boolean }> {
-  state = { failed: false };
+const ErrorRecovery: React.FC<{ details: PageErrorDetails | null; assetFailure: boolean; onRetry: () => void }> = ({ details, assetFailure, onRetry }) => {
+  const [copyStatus, setCopyStatus] = useState('');
+  const [copying, setCopying] = useState(false);
+  const reload = () => {
+    if (isNavigationLocked()) {
+      window.dispatchEvent(new CustomEvent('wordweft:navigation-blocked', { detail: 'Save your changes before reloading.' }));
+      return;
+    }
+    window.location.reload();
+  };
+  const copyDetails = async () => {
+    if (!details || copying) return;
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(details, null, 2));
+      setCopyStatus('Error details copied.');
+    } catch { setCopyStatus('Select the details below to copy them.'); }
+    finally { setCopying(false); }
+  };
+  return <section className="v2-load-state ww-error-recovery" role="alert">
+    <h1>Let’s get you back to your story.</h1>
+    <p>{assetFailure ? 'The connection interrupted this screen. Reload to load the latest app.' : 'This screen could not open. Try again, or return to your stories.'}</p>
+    <div className="v2-hero-actions">
+      <button type="button" className="v2-button" onClick={assetFailure ? reload : onRetry}>{assetFailure ? 'Reload screen' : 'Try again'}</button>
+      <a href="/category" className="v2-button secondary">Browse stories</a>
+      {!assetFailure && <button type="button" className="ww-recovery-reload" onClick={reload}>Reload page</button>}
+    </div>
+    {details && <details className="ww-error-details"><summary>Error details</summary>
+      <p>Includes the error, screen and app version. Review before sharing.</p>
+      <button type="button" className="v2-button secondary" onClick={() => void copyDetails()} disabled={copying}>Copy error details</button>
+      {copyStatus && <p role="status">{copyStatus}</p>}
+      <pre tabIndex={0}>{JSON.stringify(details, null, 2)}</pre>
+    </details>}
+  </section>;
+};
+
+export class PageErrorBoundary extends React.Component<{ children: React.ReactNode; route: string }, {
+  failed: boolean; details: PageErrorDetails | null; assetFailure: boolean;
+}> {
+  state = { failed: false, details: null as PageErrorDetails | null, assetFailure: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  componentDidUpdate(previous: Readonly<{ children: React.ReactNode; route: string }>) {
-    if (previous.route !== this.props.route && this.state.failed) this.setState({ failed: false });
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    const details = createPageErrorDetails(error, info.componentStack || '', {
+      route: this.props.route,
+      build: import.meta.env.WORDWEFT_BUILD_ID || 'development',
+      online: navigator.onLine,
+    });
+    console.error('WordWeft screen failed:', details);
+    try { retainPageError(details, window.sessionStorage); } catch { /* Optional diagnostics only. */ }
+    this.setState({ details, assetFailure: isPageAssetFailure(error) });
+    recoverPageLoad(error);
   }
+  componentDidUpdate(previous: Readonly<{ children: React.ReactNode; route: string }>) {
+    if (previous.route !== this.props.route && this.state.failed) this.retry();
+  }
+  private retry = () => this.setState({ failed: false, details: null, assetFailure: false });
   render() {
-    if (this.state.failed) return <section className="v2-load-state" role="alert" style={{ maxWidth: 640, margin: '60px auto' }}><h1>Let’s get you back to your story.</h1><p>This screen could not open. Reload to try again, or return to the library.</p><div className="v2-hero-actions"><button className="v2-button" onClick={() => window.location.reload()}>Reload screen</button><a href="/category" className="v2-button secondary">Browse stories</a></div></section>;
+    if (this.state.failed) return <ErrorRecovery details={this.state.details} assetFailure={this.state.assetFailure} onRetry={this.retry} />;
     return this.props.children;
   }
 }

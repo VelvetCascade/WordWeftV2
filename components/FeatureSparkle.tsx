@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { readOptionalTip, writeOptionalTip } from '../utils/optionalStorage';
+import '../styles/optional-tips.css';
 
 interface FeatureSparkleProps {
     featureId: string;
@@ -21,23 +23,26 @@ export const FeatureSparkle: React.FC<FeatureSparkleProps> = ({
     const [showTooltip, setShowTooltip] = useState(false);
 
     useEffect(() => {
-        const dismissed = localStorage.getItem(`${STORAGE_PREFIX}${featureId}`);
+        setVisible(false);
+        setShowTooltip(false);
+        const dismissed = readOptionalTip(`${STORAGE_PREFIX}${featureId}`) === 'true';
         if (dismissed) return;
 
-        const timer = setTimeout(() => setVisible(true), delay);
+        const timer = setTimeout(() => {
+            if (readOptionalTip(`${STORAGE_PREFIX}${featureId}`) !== 'true') setVisible(true);
+        }, delay);
         return () => clearTimeout(timer);
     }, [featureId, delay]);
 
     const handleDismiss = () => {
         setVisible(false);
-        localStorage.setItem(`${STORAGE_PREFIX}${featureId}`, 'true');
+        setShowTooltip(false);
+        writeOptionalTip(`${STORAGE_PREFIX}${featureId}`, 'true');
     };
 
     const handleChildClick = () => {
         handleDismiss();
     };
-
-    if (!visible) return <>{children}</>;
 
     const positionClasses: Record<string, string> = {
         top: 'sparkle-pos-top',
@@ -47,12 +52,19 @@ export const FeatureSparkle: React.FC<FeatureSparkleProps> = ({
     };
 
     return (
-        <div className="sparkle-wrapper" onClick={handleChildClick}>
+        <div
+            className="sparkle-wrapper"
+            onClick={handleChildClick}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onFocus={() => setShowTooltip(true)}
+            onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setShowTooltip(false);
+            }}
+        >
             {children}
-            <div
+            {visible && <div
                 className={`sparkle-indicator ${positionClasses[position]}`}
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
             >
                 {/* Pulsing rings */}
                 <span className="sparkle-ring sparkle-ring-1" />
@@ -64,7 +76,9 @@ export const FeatureSparkle: React.FC<FeatureSparkleProps> = ({
                     <div className={`sparkle-tooltip sparkle-tooltip-${position}`}>
                         <span>{tooltip}</span>
                         <button
+                            type="button"
                             className="sparkle-tooltip-dismiss"
+                            aria-label="Dismiss tip"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleDismiss();
@@ -74,7 +88,7 @@ export const FeatureSparkle: React.FC<FeatureSparkleProps> = ({
                         </button>
                     </div>
                 )}
-            </div>
+            </div>}
         </div>
     );
 };
