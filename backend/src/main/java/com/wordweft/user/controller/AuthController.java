@@ -299,10 +299,7 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        User user = userRepository.findAll().stream()
-                .filter(u -> request.getToken().equals(u.getResetPasswordToken()))
-                .findFirst()
-                .orElse(null);
+        User user = userRepository.findFirstByResetPasswordToken(request.getToken()).orElse(null);
 
         if (user == null || user.getResetPasswordTokenExpiry() == null || user.getResetPasswordTokenExpiry().isBefore(Instant.now())) {
             return ResponseEntity.badRequest().body("Invalid or expired reset link. Please request a new one.");

@@ -17,6 +17,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.bson.Document;
 
 import java.time.Instant;
 import java.util.*;
@@ -131,17 +135,19 @@ public class BookService {
     public Map<String, Object> getAllBooks(String sort, String genre, int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, Math.min(size, 50));
-        Query query = discoverableBooksQuery(genre).with(discoverySort(sort));
+        Set<AgeRating> allowed = contentAccessService.allowedRatings();
+        Query query = discoverableBooksQuery(genre, allowed).with(discoverySort(sort));
         long totalElements = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Book.class);
         query.skip((long) safePage * safeSize).limit(safeSize);
-        List<Book> pageBooks = mongoTemplate.find(query, Book.class).stream()
-                .filter(contentAccessService::canDiscover)
+        List<Book> pageBooks = mongoTemplate.find(BookMetadataProjection.apply(query), Book.class).stream()
+                .filter(book -> allowed.contains(contentAccessService.effectiveRating(book)))
                 .toList();
         int totalPages = (int) Math.ceil((double) totalElements / safeSize);
 
         String currentUserId = getCurrentUserId();
+        Map<String, User> authors = loadAuthors(pageBooks);
         List<Map<String, Object>> content = pageBooks.stream()
-                .map(b -> enrichBook(b, currentUserId))
+                .map(b -> enrichBook(b, currentUserId, allowed, authors))
                 .collect(Collectors.toList());
 
         Map<String, Object> result = new HashMap<>();
@@ -154,37 +160,12 @@ public class BookService {
         return result;
     }
 
-    private Query discoverableBooksQuery(String genre) {
-        return discoverableBooksQuery(genre, contentAccessService.allowedRatings());
-    }
-
     private Query discoverableBooksQuery(String genre, Set<AgeRating> allowedRatings) {
         return new Query(discoverableBooksCriteria(genre, allowedRatings));
     }
 
     private Criteria discoverableBooksCriteria(String genre, Set<AgeRating> allowedRatings) {
-        List<Criteria> filters = new ArrayList<>();
-        filters.add(Criteria.where("publicationStatus").is("published"));
-        filters.add(new Criteria().orOperator(
-                Criteria.where("ageRating").in(allowedRatings),
-                Criteria.where("ageRating").exists(false),
-                Criteria.where("ageRating").is(null)));
-
-        if (!allowedRatings.contains(AgeRating.MATURE_18)) {
-            filters.add(Criteria.where("isMature").ne(true));
-        }
-
-        Set<String> disallowedWarnings = new HashSet<>();
-        if (!allowedRatings.contains(AgeRating.TEEN_13)) {
-            disallowedWarnings.addAll(ContentAccessService.TEEN_13_WARNINGS);
-        }
-        if (!allowedRatings.contains(AgeRating.MATURE_18)) {
-            disallowedWarnings.addAll(ContentAccessService.MATURE_18_WARNINGS);
-        }
-        if (!disallowedWarnings.isEmpty()) {
-            filters.add(Criteria.where("contentWarnings").nin(disallowedWarnings));
-            filters.add(Criteria.where("chapters.contentWarnings").nin(disallowedWarnings));
-        }
+        List<Criteria> filters = new ArrayList<>(List.of(ContentAccessService.discoverableCriteria(allowedRatings)));
         if (genre != null && !genre.isBlank()) {
             filters.add(Criteria.where("genres").regex("^" + Pattern.quote(genre.trim()) + "$", "i"));
         }
@@ -197,14 +178,7 @@ public class BookService {
 
     /** Public HTML always uses anonymous visibility, regardless of caller identity. */
     public Map<String, List<Map<String, Object>>> getPublicDiscoveryHero() {
-        Map<String, List<Map<String, Object>>> groups = discoveryHero(EnumSet.of(AgeRating.ALL_AGES, AgeRating.TEEN_13), null);
-        groups.values().forEach(cards -> cards.forEach(card -> {
-            // Selection above has already applied the anonymous ratings. Avoid inheriting
-            // narrower viewer flags from the shared catalog card projection.
-            card.put("isDiscoverable", true);
-            card.put("isRestricted", false);
-        }));
-        return groups;
+        return discoveryHero(EnumSet.of(AgeRating.ALL_AGES, AgeRating.TEEN_13), null);
     }
 
     private static final Pattern HERO_NOVEL_FORMAT = Pattern.compile(
@@ -246,20 +220,24 @@ public class BookService {
         // A sparse catalog can still show three real stories: novels are stories too.
         Set<String> storyIds = stories.stream().map(Book::getId).collect(Collectors.toSet());
         for (Book novel : novels) if (stories.size() < 3 && storyIds.add(novel.getId())) stories.add(novel);
+        List<Book> selectedBooks = new ArrayList<>(stories);
+        selectedBooks.addAll(novels);
+        selectedBooks.addAll(poems);
+        Map<String, User> authors = loadAuthors(selectedBooks);
         Map<String, List<Map<String, Object>>> groups = new LinkedHashMap<>();
-        groups.put("stories", stories.stream().map(book -> enrichBook(book, viewerId)).toList());
-        groups.put("novels", novels.stream().map(book -> enrichBook(book, viewerId)).toList());
-        groups.put("poems", poems.stream().map(book -> enrichBook(book, viewerId)).toList());
+        groups.put("stories", stories.stream().map(book -> enrichBook(book, viewerId, allowed, authors)).toList());
+        groups.put("novels", novels.stream().map(book -> enrichBook(book, viewerId, allowed, authors)).toList());
+        groups.put("poems", poems.stream().map(book -> enrichBook(book, viewerId, allowed, authors)).toList());
         return groups;
     }
 
     private List<Book> heroCandidates(Set<AgeRating> allowed, Criteria format, java.util.function.Predicate<Book> matchesFormat) {
         Query query = Query.query(new Criteria().andOperator(discoverableBooksCriteria(null, allowed), format,
-                Criteria.where("chapters").elemMatch(Criteria.where("status").is("published"))))
-                .with(discoverySort("most_read"));
-        // Covers need metadata, never manuscripts. A cursor stops once three eligible matches exist,
-        // so a less common format cannot disappear behind an arbitrary first-page cutoff.
-        query.fields().exclude("chapters.content").exclude("chapters.publishedContent");
+                Criteria.where("chapters").elemMatch(Criteria.where("status").is("published")),
+                Criteria.where("title").regex("\\S"), Criteria.where("coverUrl").regex("\\S")))
+                .with(discoverySort("most_read")).limit(3);
+        // Each format is filtered before its own limit, so rare formats never have a catalog cutoff.
+        BookMetadataProjection.apply(query);
         try (java.util.stream.Stream<Book> candidates = mongoTemplate.stream(query, Book.class)) {
             Set<String> seen = new HashSet<>();
             return candidates.filter(book -> "published".equals(book.getPublicationStatus()))
@@ -282,36 +260,47 @@ public class BookService {
 
     public Map<String, Object> getBookById(String id, boolean incrementView) {
         String currentUserId = getCurrentUserId();
-        Optional<Book> bookOpt = bookRepository.findById(id);
+        Book book = mongoTemplate.findOne(BookMetadataProjection.apply(
+                Query.query(Criteria.where("_id").is(id))), Book.class);
 
-        if (bookOpt.isPresent()) {
-            Book book = bookOpt.get();
+        if (book != null) {
             if (!"published".equals(book.getPublicationStatus()) && !(currentUserId != null && currentUserId.equals(book.getAuthorId()))) {
                 return null;
             }
-            if (!contentAccessService.canAccess(book)) {
+            Set<AgeRating> allowed = contentAccessService.allowedRatings();
+            if (!(currentUserId != null && currentUserId.equals(book.getAuthorId()))
+                    && !allowed.contains(contentAccessService.effectiveRating(book))) {
                 AgeRating rating = contentAccessService.effectiveRating(book);
                 throw new ContentRestrictedException("This story is rated " + rating.getMinimumAge() + "+. Sign in and enable mature content in your profile if you are eligible.");
             }
             if (incrementView) {
-                // Track page loads
+                // Track the same counters atomically; replacing a metadata book would erase its bodies.
+                Document increments = new Document();
+                for (String field : List.of("viewCount", "readCount", "readCountLast7Days")) {
+                    increments.put(field, new Document("$add", List.of(
+                            new Document("$ifNull", List.of("$" + field, 0)), 1)));
+                }
+                mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(id)),
+                        AggregationUpdate.from(List.of(context -> new Document("$set", increments))), Book.class);
                 book.setViewCount((book.getViewCount() == null ? 0 : book.getViewCount()) + 1);
                 book.setReadCount((book.getReadCount() == null ? 0 : book.getReadCount()) + 1);
                 book.setReadCountLast7Days(
                         (book.getReadCountLast7Days() == null ? 0 : book.getReadCountLast7Days()) + 1);
-                bookRepository.save(book);
             }
-            return enrichBook(book, currentUserId);
+            return enrichBook(book, currentUserId, allowed, loadAuthors(List.of(book)));
         }
         return null;
     }
 
     public List<Map<String, Object>> getBooksByAuthor(String authorId) {
         String currentUserId = getCurrentUserId();
-        // Use repository method for efficient filtering
-        return bookRepository.findByAuthorIdAndPublicationStatus(authorId, "published").stream()
-                .filter(contentAccessService::canDiscover)
-                .map(b -> enrichBook(b, currentUserId))
+        Set<AgeRating> allowed = contentAccessService.allowedRatings();
+        Query query = discoverableBooksQuery(null, allowed).addCriteria(Criteria.where("authorId").is(authorId));
+        List<Book> books = mongoTemplate.find(BookMetadataProjection.apply(query), Book.class).stream()
+                .filter(book -> allowed.contains(contentAccessService.effectiveRating(book))).toList();
+        Map<String, User> authors = loadAuthors(books);
+        return books.stream()
+                .map(b -> enrichBook(b, currentUserId, allowed, authors))
                 .collect(Collectors.toList());
     }
 
@@ -322,12 +311,44 @@ public class BookService {
 
     public Map<String, Object> enrichBookForProfileById(String bookId, String currentUserId) {
         if (bookId == null) return null;
-        return bookRepository.findById(bookId)
-                .map(b -> enrichBook(b, currentUserId))
-                .orElse(null);
+        return findMetadataByIds(List.of(bookId)).stream().findFirst()
+                .map(book -> enrichBook(book, currentUserId)).orElse(null);
+    }
+
+    public List<Book> findMetadataByIds(Collection<String> bookIds) {
+        if (bookIds == null || bookIds.isEmpty()) return List.of();
+        List<String> ids = bookIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (ids.isEmpty()) return List.of();
+        return mongoTemplate.find(BookMetadataProjection.apply(Query.query(Criteria.where("_id").in(ids))), Book.class);
+    }
+
+    public List<Book> findMetadataByAuthorId(String authorId) {
+        return mongoTemplate.find(BookMetadataProjection.apply(Query.query(Criteria.where("authorId").is(authorId))), Book.class);
+    }
+
+    public List<Map<String, Object>> enrichBooksForProfile(Collection<Book> books, String currentUserId) {
+        if (books == null || books.isEmpty()) return List.of();
+        Set<AgeRating> allowed = contentAccessService == null ? EnumSet.allOf(AgeRating.class) : contentAccessService.allowedRatings();
+        Map<String, User> authors = loadAuthors(books);
+        return books.stream().filter(Objects::nonNull).map(book -> enrichBook(book, currentUserId, allowed, authors)).toList();
     }
 
     public Map<String, Object> enrichBook(Book book, String currentUserId) {
+        Set<AgeRating> allowed = contentAccessService == null ? EnumSet.allOf(AgeRating.class) : contentAccessService.allowedRatings();
+        return enrichBook(book, currentUserId, allowed, loadAuthors(List.of(book)));
+    }
+
+    private Map<String, User> loadAuthors(Collection<Book> books) {
+        Set<String> authorIds = books.stream().filter(Objects::nonNull).map(Book::getAuthorId)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        if (authorIds.isEmpty()) return Map.of();
+        Query query = Query.query(Criteria.where("_id").in(authorIds));
+        query.fields().include("username", "avatarUrl", "bio");
+        return mongoTemplate.find(query, User.class).stream().collect(Collectors.toMap(User::getId,
+                java.util.function.Function.identity(), (first, ignored) -> first));
+    }
+
+    private Map<String, Object> enrichBook(Book book, String currentUserId, Set<AgeRating> allowed, Map<String, User> authors) {
         boolean isOwner = currentUserId != null && currentUserId.equals(book.getAuthorId());
         List<Chapter> allChapters = book.getChapters() != null ? book.getChapters() : List.of();
         List<Chapter> visibleChapters = isOwner
@@ -429,7 +450,7 @@ public class BookService {
         if (effective == null) {
             effective = book.getAgeRating() != null ? book.getAgeRating() : AgeRating.ALL_AGES;
         }
-        boolean canDiscover = contentAccessService == null || contentAccessService.canDiscover(book);
+        boolean canDiscover = contentAccessService == null || allowed.contains(effective);
         map.put("isMature", book.isMature() || (effective != null && effective.getMinimumAge() >= 18));
         map.put("ageRating", effective);
         map.put("isDiscoverable", canDiscover);
@@ -439,7 +460,7 @@ public class BookService {
         map.put("isAIGenerated", book.isAIGenerated());
 
         // Enrich Author
-        User author = userRepository.findById(book.getAuthorId()).orElse(new User());
+        User author = book.getAuthorId() == null ? new User() : authors.getOrDefault(book.getAuthorId(), new User());
         Map<String, Object> authorMap = new HashMap<>();
         authorMap.put("id", author.getId());
         authorMap.put("name", author.getUsername());
@@ -465,79 +486,58 @@ public class BookService {
                 "Supernatural", "Suspense", "Thriller", "Tragedy",
                 "Urban Fantasy", "War", "Western", "Wuxia",
                 "Young Adult"));
-        // Also include any custom genres from existing books
-        bookRepository.findByPublicationStatus("published").stream().filter(contentAccessService::canDiscover)
-                .forEach(b -> genres.addAll(b.getGenres()));
+        // Distinct returns only visible genre names, irrespective of manuscript/catalog size.
+        mongoTemplate.findDistinct(discoverableBooksQuery(null, contentAccessService.allowedRatings()),
+                "genres", Book.class, String.class).stream().filter(Objects::nonNull).forEach(genres::add);
         return new ArrayList<>(genres);
     }
 
     public List<Map<String, Object>> getGenresRanked() {
-        List<Book> publishedBooks = bookRepository.findByPublicationStatus("published").stream()
-                .filter(contentAccessService::canDiscover)
-                .collect(Collectors.toList());
-        Map<String, Long> genreBookCount = new HashMap<>();
-        Map<String, Long> genreReadCount = new HashMap<>();
-        for (Book b : publishedBooks) {
-            for (String g : b.getGenres()) {
-                genreBookCount.merge(g, 1L, Long::sum);
-                genreReadCount.merge(g, (long) (b.getReadCount() != null ? b.getReadCount() : 0), Long::sum);
-            }
-        }
-        return genreBookCount.keySet().stream()
-                .sorted((a, b) -> {
-                    long scoreA = genreBookCount.getOrDefault(a, 0L) * 100 + genreReadCount.getOrDefault(a, 0L);
-                    long scoreB = genreBookCount.getOrDefault(b, 0L) * 100 + genreReadCount.getOrDefault(b, 0L);
-                    return Long.compare(scoreB, scoreA);
-                })
-                .map(g -> {
+        return genreRows(contentAccessService.allowedRatings(), true, 0).stream()
+                .map(row -> {
                     Map<String, Object> m = new HashMap<>();
-                    m.put("name", g);
-                    m.put("bookCount", genreBookCount.getOrDefault(g, 0L));
-                    m.put("readCount", genreReadCount.getOrDefault(g, 0L));
+                    m.put("name", row.getString("_id"));
+                    m.put("bookCount", ((Number) row.get("bookCount")).longValue());
+                    m.put("readCount", ((Number) row.get("readCount")).longValue());
                     return m;
                 })
                 .collect(Collectors.toList());
     }
 
     public Map<String, List<Map<String, Object>>> getHomeGenres() {
-        List<Book> publishedBooks = bookRepository.findByPublicationStatus("published").stream()
-                .filter(contentAccessService::canDiscover).toList();
+        Set<AgeRating> allowed = contentAccessService.allowedRatings();
         String currentUserId = getCurrentUserId();
-
-        // Collect top 5 genres by frequency
-        Map<String, Long> genreCount = new HashMap<>();
-        for (Book b : publishedBooks) {
-            for (String g : b.getGenres()) {
-                genreCount.merge(g, 1L, Long::sum);
-            }
+        Map<String, List<Book>> shelves = new LinkedHashMap<>();
+        for (Document row : genreRows(allowed, false, 5)) {
+            String genre = row.getString("_id");
+            Query query = discoverableBooksQuery(null, allowed)
+                    .addCriteria(Criteria.where("genres").regex("^" + Pattern.quote(genre) + "$", "i"))
+                    .with(discoverySort("most_read")).limit(6);
+            List<Book> books = mongoTemplate.find(BookMetadataProjection.apply(query), Book.class).stream()
+                    .filter(book -> allowed.contains(contentAccessService.effectiveRating(book))).toList();
+            shelves.put(genre, books);
         }
-        List<String> topGenres = genreCount.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
-                .limit(5)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
+        Map<String, User> authors = loadAuthors(shelves.values().stream().flatMap(Collection::stream).toList());
         Map<String, List<Map<String, Object>>> result = new java.util.LinkedHashMap<>();
-        for (String genre : topGenres) {
-            List<Book> genreBooks = publishedBooks.stream()
-                    .filter(b -> b.getGenres().stream().anyMatch(g -> g.equalsIgnoreCase(genre)))
-                    .sorted((a, b) -> {
-                        int cmp = Integer.compare(
-                                b.getReadCountLast7Days() != null ? b.getReadCountLast7Days() : 0,
-                                a.getReadCountLast7Days() != null ? a.getReadCountLast7Days() : 0);
-                        if (cmp != 0)
-                            return cmp;
-                        return Integer.compare(
-                                b.getReadCount() != null ? b.getReadCount() : 0,
-                                a.getReadCount() != null ? a.getReadCount() : 0);
-                    })
-                    .limit(6)
-                    .collect(Collectors.toList());
-            result.put(genre, genreBooks.stream()
-                    .map(b -> enrichBook(b, currentUserId))
-                    .collect(Collectors.toList()));
-        }
+        shelves.forEach((genre, books) -> result.put(genre, books.stream()
+                .map(book -> enrichBook(book, currentUserId, allowed, authors)).toList()));
         return result;
+    }
+
+    private List<Document> genreRows(Set<AgeRating> allowed, boolean rankByReads, int limit) {
+        List<AggregationOperation> pipeline = new ArrayList<>();
+        pipeline.add(Aggregation.match(discoverableBooksCriteria(null, allowed)));
+        pipeline.add(Aggregation.project("genres", "readCount"));
+        pipeline.add(Aggregation.unwind("genres"));
+        pipeline.add(Aggregation.match(Criteria.where("genres").ne(null)));
+        pipeline.add(Aggregation.group("genres").count().as("bookCount").sum("readCount").as("readCount"));
+        if (rankByReads) {
+            pipeline.add(context -> new Document("$addFields", new Document("score", new Document("$add", List.of(
+                    new Document("$multiply", List.of("$bookCount", 100)), "$readCount")))));
+        }
+        pipeline.add(context -> new Document("$sort", new Document(rankByReads ? "score" : "bookCount", -1).append("_id", 1)));
+        if (limit > 0) pipeline.add(Aggregation.limit(limit));
+        return mongoTemplate.aggregate(Aggregation.newAggregation(pipeline), Book.class, Document.class).getMappedResults();
     }
 
     public Map<String, Object> getBooksByGenre(String genre, String sort, int page, int size) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, BookOpen, Check, Cloud, Heart, MessageCircle, NotebookPen, Plus, Search, Share2, Users } from 'lucide-react';
-import type { User, Book, Chapter, Comment } from '../types';
+import type { User, Book, Chapter } from '../types';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { WriterQuickStart } from '../components/WriterQuickStart';
@@ -9,10 +9,10 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ResilientImage } from '../components/ResilientImage';
 import { DisclosureMenu } from '../components/DisclosureMenu';
 import { navigatePath } from '../utils/navigation';
+import { loadWriterComments, writerCommentTargets, type ReaderComment } from '../utils/writerComments';
 
 interface WriterDashboardProps { currentUser: User; onUserUpdate: (user: User) => void; }
 type StudioView = 'overview' | 'stories' | 'comments';
-type ReaderComment = Comment & { bookTitle: string; chapterTitle: string };
 const readView = (): StudioView => {
     const value = new URLSearchParams(window.location.search).get('view');
     return value === 'stories' || value === 'comments' ? value : 'overview';
@@ -38,6 +38,8 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
     const { trackEvent } = useAnalytics();
     const allBooks = currentUser.writtenBooks || [];
     const published = allBooks.filter(book => book.publicationStatus === 'published');
+    const commentTargets = writerCommentTargets(allBooks);
+    const commentsSourceKey = JSON.stringify(commentTargets);
     const drafts = allBooks.filter(book => book.publicationStatus === 'draft');
     const totalViews = published.reduce((total, book) => total + (book.viewCount || 0), 0);
     const totalComments = published.reduce((total, book) => total + (book.commentCount || 0), 0);
@@ -66,15 +68,14 @@ export const WriterDashboardPage: React.FC<WriterDashboardProps> = ({ currentUse
         let active = true;
         setCommentsLoading(true);
         setCommentsError('');
-        const chapters = published.flatMap(book => book.chapters.filter(chapter => chapter.status === 'published' && chapter.commentCount > 0).map(chapter => ({ book, chapter })));
-        Promise.allSettled(chapters.map(async ({ book, chapter }) => (await api.getChapterComments(book.id, chapter.id)).map(comment => ({ ...comment, bookTitle: book.title, chapterTitle: chapter.title })))).then(results => {
+        loadWriterComments(commentTargets, api.getChapterComments, () => active).then(result => {
             if (!active) return;
-            setComments(results.flatMap(result => result.status === 'fulfilled' ? result.value : []).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)));
-            if (results.some(result => result.status === 'rejected')) setCommentsError('Some chapter comments could not load. Try again to fetch the rest.');
+            setComments(result.comments);
+            if (result.partialFailure) setCommentsError('Some chapter comments could not load. Try again to fetch the rest.');
             setCommentsLoading(false);
         });
         return () => { active = false; };
-    }, [view, currentUser.writtenBooks, commentsRefresh]);
+    }, [view, currentUser.id, commentsSourceKey, commentsRefresh]);
 
     const handleUnpublish = async () => {
         if (!unpublishTarget || pendingBookId) return;

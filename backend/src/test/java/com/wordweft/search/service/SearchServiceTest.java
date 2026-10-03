@@ -6,7 +6,10 @@ import com.wordweft.book.service.ContentAccessService;
 import com.wordweft.user.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Query;
+import org.bson.Document;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -40,7 +43,8 @@ class SearchServiceTest {
         ReflectionTestUtils.setField(service, "mongoTemplate", mongo);
         ReflectionTestUtils.setField(service, "contentAccessService", mock(ContentAccessService.class));
         when(mongo.find(any(Query.class), eq(Book.class))).thenReturn(List.of());
-        when(mongo.getCollection("books")).thenThrow(new IllegalStateException("Atlas Search is unavailable"));
+        when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Document.class)))
+                .thenThrow(new IllegalStateException("Atlas Search is unavailable"));
 
         Map<String, Object> result = service.fullSearch("missing", "books", 0, 12);
         @SuppressWarnings("unchecked")
@@ -95,21 +99,37 @@ class SearchServiceTest {
         MongoTemplate mongo = mock(MongoTemplate.class);
         SearchService service = new SearchService();
         ReflectionTestUtils.setField(service, "mongoTemplate", mongo);
-        ReflectionTestUtils.setField(service, "contentAccessService", new ContentAccessService());
+        ContentAccessService access = new ContentAccessService();
+        ReflectionTestUtils.setField(service, "contentAccessService", access);
         when(mongo.find(any(Query.class), eq(Book.class))).thenAnswer(invocation -> {
             Query query = invocation.getArgument(0);
-            Pattern titlePattern = (Pattern) query.getQueryObject().get("title");
-            String publicationStatus = query.getQueryObject().getString("publicationStatus");
+            Pattern titlePattern = (Pattern) criterionValue(query.getQueryObject(), "title");
+            String publicationStatus = (String) criterionValue(query.getQueryObject(), "publicationStatus");
             // Apply the real query's literal regex/status to a small in-memory collection.
             return storedBooks.stream()
                     .filter(book -> book.getPublicationStatus().equals(publicationStatus))
                     .filter(book -> titlePattern.matcher(book.getTitle()).find())
+                    .filter(access::canDiscover)
+                    .limit(query.getLimit())
                     .toList();
         });
         when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of());
-        when(mongo.getCollection("books")).thenThrow(new IllegalStateException("Atlas Search is unavailable"));
-        when(mongo.getCollection("users")).thenThrow(new IllegalStateException("Atlas Search is unavailable"));
+        when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Document.class)))
+                .thenThrow(new IllegalStateException("Atlas Search is unavailable"));
+        when(mongo.aggregate(any(Aggregation.class), eq(User.class), eq(Document.class)))
+                .thenReturn(new AggregationResults<>(List.of(), new Document()));
         return service;
+    }
+
+    private Object criterionValue(Document criteria, String field) {
+        if (criteria.containsKey(field)) return criteria.get(field);
+        for (String operator : List.of("$and", "$or")) {
+            for (Document nested : criteria.getList(operator, Document.class, List.of())) {
+                Object found = criterionValue(nested, field);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private Book book(String id, String title, String status) {

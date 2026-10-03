@@ -41,7 +41,7 @@ class BookServiceCatalogPaginationTest {
         when(access.allowedRatings()).thenReturn(EnumSet.allOf(AgeRating.class));
         when(access.canDiscover(any(Book.class))).thenReturn(true);
         when(access.effectiveRating(any(Book.class))).thenReturn(AgeRating.ALL_AGES);
-        when(users.findById("author-1")).thenReturn(Optional.of(author()));
+        when(mongoTemplate.find(any(Query.class), eq(User.class))).thenReturn(List.of(author()));
     }
 
     @Test

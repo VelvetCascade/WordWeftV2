@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -40,7 +41,8 @@ public class CommentController {
     @GetMapping("/{bookId}/chapters/{chapterId}/comments")
     public ResponseEntity<?> getComments(@PathVariable String bookId, @PathVariable String chapterId) {
         List<Comment> comments = commentRepository.findByChapterIdOrderByCreatedAtDesc(chapterId);
-        return ResponseEntity.ok(comments.stream().map(this::enrichComment).collect(Collectors.toList()));
+        Map<String, User> authors = commentAuthors(comments);
+        return ResponseEntity.ok(comments.stream().map(comment -> enrichComment(comment, authors)).collect(Collectors.toList()));
     }
 
     @PostMapping("/{bookId}/chapters/{chapterId}/comments")
@@ -64,7 +66,8 @@ public class CommentController {
         bookRepository.save(book);
 
         // --- Notification Triggers ---
-        User commenter = userRepository.findById(userDetails.getId()).orElse(null);
+        Map<String, User> authors = commentAuthors(List.of(comment));
+        User commenter = authors.get(userDetails.getId());
         String commenterName = commenter != null ? commenter.getUsername() : "Someone";
 
         // If this is a reply, notify the parent commenter
@@ -97,10 +100,19 @@ public class CommentController {
                     chapterId, commenterName + " commented on \"" + PublishedChapterView.of(chapter).title() + "\"", meta);
         }
 
-        return ResponseEntity.ok(enrichComment(comment));
+        return ResponseEntity.ok(enrichComment(comment, authors));
     }
 
-    private Map<String, Object> enrichComment(Comment comment) {
+    private Map<String, User> commentAuthors(List<Comment> comments) {
+        List<String> userIds = comments.stream().map(Comment::getUserId).filter(Objects::nonNull).distinct().toList();
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+        return userRepository.findPublicCardsByIdIn(userIds).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+    }
+
+    private Map<String, Object> enrichComment(Comment comment, Map<String, User> authors) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", comment.getId());
         map.put("bookId", comment.getBookId());
@@ -111,7 +123,7 @@ public class CommentController {
         map.put("createdAt", comment.getCreatedAt());
         map.put("userId", comment.getUserId());
 
-        User user = userRepository.findById(comment.getUserId()).orElse(new User());
+        User user = comment.getUserId() == null ? new User() : authors.getOrDefault(comment.getUserId(), new User());
         Map<String, String> userMap = new HashMap<>();
         userMap.put("id", user.getId());
         userMap.put("name", user.getUsername());

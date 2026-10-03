@@ -31,7 +31,7 @@ class BookServiceDiscoveryHeroTest {
         service.contentAccessService = new ContentAccessService();
         service.userRepository = mock(UserRepository.class);
         User writer = new User(); writer.setId("writer"); writer.setUsername("A writer");
-        when(service.userRepository.findById("writer")).thenReturn(Optional.of(writer));
+        when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of(writer));
     }
 
     @Test void groupsUseActualFormatsAndPublishedProjection() {
@@ -69,7 +69,8 @@ class BookServiceDiscoveryHeroTest {
             assertTrue(filters.contains("contentWarnings"));
             assertTrue(filters.contains("ageRating"));
             assertTrue(value.getSortObject().containsKey("id"));
-            assertTrue(value.getFieldsObject().containsKey("chapters.content"));
+            assertTrue(value.getFieldsObject().containsKey("chapters"));
+            assertEquals(3, value.getLimit());
         }
     }
 

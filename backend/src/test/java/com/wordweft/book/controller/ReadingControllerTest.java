@@ -48,13 +48,17 @@ class ReadingControllerTest {
         book.setId("book");
         book.setPublicationStatus("published");
         book.setChapters(List.of(published, draft));
-        when(books.findById("book")).thenReturn(Optional.of(book));
-        when(books.findById("missing")).thenReturn(Optional.empty());
+        MongoTemplate mongo = mock(MongoTemplate.class);
+        when(mongo.findOne(org.mockito.ArgumentMatchers.any(org.springframework.data.mongodb.core.query.Query.class),
+                org.mockito.ArgumentMatchers.eq(Book.class))).thenAnswer(invocation -> {
+            org.springframework.data.mongodb.core.query.Query query = invocation.getArgument(0);
+            return "book".equals(query.getQueryObject().getString("_id")) ? book : null;
+        });
         ContentAccessService access = mock(ContentAccessService.class);
         when(access.canAccess(org.mockito.ArgumentMatchers.any(Book.class))).thenReturn(true);
         ReadingController controller = new ReadingController();
         ReflectionTestUtils.setField(controller, "progressService", new ReadingProgressService(
-                mock(MongoTemplate.class), books, mock(ReadingProgressRepository.class), access));
+                mongo, books, mock(ReadingProgressRepository.class), access));
         mvc = MockMvcBuilders.standaloneSetup(controller).build();
         UserDetailsImpl principal = new UserDetailsImpl("reader", "Reader", "reader@example.test", "", List.of());
         SecurityContextHolder.getContext().setAuthentication(

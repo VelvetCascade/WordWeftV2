@@ -5,8 +5,10 @@ import App from './App';
 import './styles/design-system.css';
 import './styles/discovery-v2.css';
 import './styles/app-layout.css';
-import { installNavigation } from './utils/navigation';
+import { installNavigation, isNavigationLocked } from './utils/navigation';
+import { installPageLoadRecovery } from './utils/pageLoadRecovery';
 installNavigation();
+installPageLoadRecovery(isNavigationLocked);
 import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');

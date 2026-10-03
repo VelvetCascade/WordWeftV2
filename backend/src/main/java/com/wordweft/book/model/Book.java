@@ -4,6 +4,8 @@ package com.wordweft.book.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
@@ -18,6 +20,17 @@ import jakarta.validation.constraints.Pattern;
 @Data
 @NoArgsConstructor
 @Document(collection = "books")
+@CompoundIndexes({
+    @CompoundIndex(name = "books_published_most_read", def = "{'publicationStatus': 1, 'readCountLast7Days': -1, 'readCount': -1, '_id': 1}"),
+    @CompoundIndex(name = "books_published_most_viewed", def = "{'publicationStatus': 1, 'viewCountLast7Days': -1, 'viewCount': -1, '_id': 1}"),
+    @CompoundIndex(name = "books_published_recent_update", def = "{'publicationStatus': 1, 'lastUpdatedAt': -1, 'publishedDate': -1, '_id': 1}"),
+    @CompoundIndex(name = "books_published_new", def = "{'publicationStatus': 1, 'createdAt': -1, 'publishedDate': -1, '_id': 1}"),
+    @CompoundIndex(name = "books_author_publication_cursor", def = "{'authorId': 1, 'publicationStatus': 1, '_id': 1}"),
+    @CompoundIndex(name = "books_publication_cursor", def = "{'publicationStatus': 1, '_id': 1}"),
+    @CompoundIndex(name = "books_publication_genre_cursor", def = "{'publicationStatus': 1, 'genres': 1, '_id': 1}"),
+    @CompoundIndex(name = "books_publication_tag_cursor", def = "{'publicationStatus': 1, 'tags': 1, '_id': 1}"),
+    @CompoundIndex(name = "books_due_chapters", def = "{'chapters.status': 1, 'chapters.scheduledAt': 1}")
+})
 public class Book {
     @Id
     private String id;

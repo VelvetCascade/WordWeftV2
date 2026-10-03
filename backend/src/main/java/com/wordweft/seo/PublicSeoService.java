@@ -4,6 +4,8 @@ import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.service.ChapterPreviewService;
+import com.wordweft.book.service.BookMetadataProjection;
+import com.wordweft.book.service.ContentAccessService;
 import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.user.model.User;
 import org.bson.Document;
@@ -36,13 +38,15 @@ public class PublicSeoService {
     public static boolean isPublic(Book book) {
         return book != null && "published".equals(book.getPublicationStatus()) && !book.isMature()
                 && (book.getAgeRating() == null || book.getAgeRating() == AgeRating.ALL_AGES || book.getAgeRating() == AgeRating.TEEN_13)
+                && ContentAccessService.requiredRatingForWarnings(book.getContentWarnings()).getMinimumAge() < 18
+                && ContentAccessService.computeMinimumRatingFromChapters(book).getMinimumAge() < 18
                 && book.getChapters() != null && book.getChapters().stream().anyMatch(ch -> "published".equals(ch.getStatus()));
     }
 
     private Criteria publicCriteria() {
-        return Criteria.where("publicationStatus").is("published").and("isMature").ne(true)
-                .and("ageRating").in(null, AgeRating.ALL_AGES, AgeRating.TEEN_13)
-                .and("chapters").elemMatch(Criteria.where("status").is("published"));
+        return new Criteria().andOperator(
+                ContentAccessService.discoverableCriteria(EnumSet.of(AgeRating.ALL_AGES, AgeRating.TEEN_13)),
+                Criteria.where("chapters").elemMatch(Criteria.where("status").is("published")));
     }
 
     public Map<String, Object> book(String id) {
@@ -50,7 +54,8 @@ public class PublicSeoService {
     }
 
     public Map<String, Object> book(String id, String chapterId) {
-        Book book = mongo.findById(id, Book.class);
+        Query query = Query.query(new Criteria().andOperator(Criteria.where("_id").is(id), publicCriteria()));
+        Book book = mongo.findOne(BookMetadataProjection.apply(query, false), Book.class);
         if (!isPublic(book)) return null;
         Map<String, Object> result = bookDto(book);
         if (chapterId != null) {
@@ -61,11 +66,13 @@ public class PublicSeoService {
                         .filter(ch -> chapterId.equals(ch.getId()) && "published".equals(ch.getStatus()))
                         .findFirst()
                         .ifPresent(ch -> {
-                            ChapterPreviewService.Preview preview = chapterPreviewService.preview(
-                                    PublishedChapterView.of(ch).content());
-                            chapter.put("content", preview.html());
-                            chapter.put("previewWordCount", preview.previewWordCount());
-                            chapter.put("fullWordCount", preview.fullWordCount());
+                            String content = firstChapterContent(id, chapterId);
+                            if (content != null) {
+                                ChapterPreviewService.Preview preview = chapterPreviewService.preview(content);
+                                chapter.put("content", preview.html());
+                                chapter.put("previewWordCount", preview.previewWordCount());
+                                chapter.put("fullWordCount", preview.fullWordCount());
+                            }
                         });
             }
         }
@@ -73,6 +80,10 @@ public class PublicSeoService {
     }
 
     public Map<String, Object> catalog(String genre, String tag, String authorId, int page) {
+        return catalog(genre, tag, authorId, page, Map.of());
+    }
+
+    private Map<String, Object> catalog(String genre, String tag, String authorId, int page, Map<String, User> knownAuthors) {
         if (page < 1 || page > 100000) throw new IllegalArgumentException("Invalid page");
         List<Criteria> filters = new ArrayList<>(List.of(publicCriteria()));
         // Exact matching prevents wildcard/regex URLs and keeps the sitemap and visible listings aligned.
@@ -83,19 +94,27 @@ public class PublicSeoService {
         Query query = Query.query(criteria).with(Sort.by(Sort.Direction.ASC, "_id"))
                 .skip((long) (page - 1) * PAGE_SIZE).limit(PAGE_SIZE + 1);
         // Never load complete manuscripts for listing pages.
-        query.fields().exclude("chapters.content").exclude("chapters.likes").exclude("likes");
-        List<Book> matches = mongo.find(query, Book.class);
+        List<Book> matches = mongo.find(BookMetadataProjection.apply(query, false), Book.class);
         boolean hasMore = matches.size() > PAGE_SIZE;
-        List<Map<String, Object>> books = matches.stream().limit(PAGE_SIZE).map(this::bookDto).toList();
+        List<Book> pageBooks = matches.stream().limit(PAGE_SIZE).toList();
+        Map<String, User> authors = new HashMap<>(knownAuthors);
+        Set<String> authorIds = new HashSet<>();
+        pageBooks.stream().map(Book::getAuthorId).filter(Objects::nonNull).filter(id -> !authors.containsKey(id)).forEach(authorIds::add);
+        if (!authorIds.isEmpty()) {
+            Query authorQuery = Query.query(Criteria.where("_id").in(authorIds));
+            authorQuery.fields().include("username", "bio", "avatarUrl");
+            mongo.find(authorQuery, User.class).forEach(author -> authors.put(author.getId(), author));
+        }
+        List<Map<String, Object>> books = pageBooks.stream().map(book -> bookDto(book, authors.get(book.getAuthorId()))).toList();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("books", books); result.put("page", page); result.put("hasMore", hasMore);
         return result;
     }
 
     public Map<String, Object> author(String id, int page) {
-        User user = mongo.findById(id, User.class);
+        User user = findAuthor(id);
         if (user == null) return null;
-        Map<String, Object> result = catalog(null, null, id, page);
+        Map<String, Object> result = catalog(null, null, id, page, Map.of(id, user));
         result.put("author", authorDto(user, id));
         return result;
     }
@@ -110,6 +129,17 @@ public class PublicSeoService {
     }
 
     Map<String, Object> bookDto(Book book) {
+        return bookDto(book, findAuthor(book.getAuthorId()));
+    }
+
+    private User findAuthor(String id) {
+        if (id == null) return null;
+        Query query = Query.query(Criteria.where("_id").is(id));
+        query.fields().include("username", "bio", "avatarUrl");
+        return mongo.findOne(query, User.class);
+    }
+
+    private Map<String, Object> bookDto(Book book, User author) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", book.getId()); result.put("title", book.getTitle());
         result.put("summary", book.getSummary()); result.put("description", book.getDescription());
@@ -121,7 +151,7 @@ public class PublicSeoService {
         result.put("lastUpdatedAt", book.getLastUpdatedAt() == null ? null : book.getLastUpdatedAt().toString());
         result.put("contentWarnings", book.getContentWarnings()); result.put("customDisclaimer", book.getCustomDisclaimer());
         result.put("authorId", book.getAuthorId());
-        result.put("author", authorDto(mongo.findById(book.getAuthorId(), User.class), book.getAuthorId()));
+        result.put("author", authorDto(author, book.getAuthorId()));
         List<Chapter> publishedChapters = book.getChapters().stream()
                 .filter(ch -> "published".equals(ch.getStatus()))
                 .toList();
@@ -136,6 +166,23 @@ public class PublicSeoService {
             return dto;
         }).toList());
         return result;
+    }
+
+    /** Fetch only the released copy of the one chapter whose anonymous preview is shown. */
+    private String firstChapterContent(String bookId, String chapterId) {
+        Document chapterFilter = new Document("$filter", new Document("input", new Document("$ifNull", List.of("$chapters", List.of())))
+                .append("as", "chapter").append("cond", new Document("$and", List.of(
+                        new Document("$eq", List.of(new Document("$toString", new Document("$ifNull", List.of("$$chapter._id", "$$chapter.id"))),
+                                new Document("$literal", chapterId))),
+                        new Document("$eq", List.of("$$chapter.status", "published"))))));
+        Document content = new Document("$let", new Document("vars", new Document("chapter", new Document("$arrayElemAt", List.of(chapterFilter, 0))))
+                .append("in", new Document("$ifNull", List.of("$$chapter.publishedContent", new Document("$ifNull", List.of("$$chapter.content", ""))))));
+        Criteria criteria = new Criteria().andOperator(Criteria.where("_id").is(bookId), publicCriteria());
+        Document row = mongo.aggregate(Aggregation.newAggregation(Aggregation.match(criteria),
+                context -> new Document("$project", new Document("_id", 0).append("content", content)
+                        .append("chapterExists", new Document("$gt", List.of(new Document("$size", chapterFilter), 0))))),
+                Book.class, Document.class).getUniqueMappedResult();
+        return row != null && Boolean.TRUE.equals(row.getBoolean("chapterExists")) ? row.getString("content") : null;
     }
 
     private List<AggregationOperation> sitemapPipeline(String kind) {

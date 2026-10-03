@@ -306,7 +306,10 @@ const HeroSearch: React.FC<HeroSearchProps> = ({ onScrolledPast }) => {
 export const HomePage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [rankedGenres, setRankedGenres] = useState<{ name: string; bookCount: number; readCount: number }[]>([]);
+  const [rankedGenresLoading, setRankedGenresLoading] = useState(true);
   const [genreBooks, setGenreBooks] = useState<Record<string, Book[]>>({});
+  const [loadGenreShelves, setLoadGenreShelves] = useState(false);
+  const genreShelfRef = useRef<HTMLDivElement>(null);
   const [sortMode, setSortMode] = useState<'most_read' | 'most_viewed' | 'recent_update' | 'new'>('most_read');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -321,7 +324,7 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     let active = true;
     setIsLoading(true); setLoadError('');
-    api.getBooks({ sort: sortMode, page: 0, size: 12 }).then(response => {
+    api.getBooks({ sort: sortMode, page: 0, size: 7 }).then(response => {
       if (!active) return;
       setBooks(response.content);
       if (window.location.pathname === '/home' || window.location.pathname === '/') applyMetadata(metadataFor(parseRoute('/home'), { books: response.content.filter(isPublicBook) }));
@@ -331,10 +334,28 @@ export const HomePage: React.FC = () => {
   }, [sortMode, attempt]);
   useEffect(() => {
     let active = true;
-    api.getGenresRanked().then(value => { if (active) setRankedGenres(value); }).catch(() => {});
-    api.getHomeGenres().then(value => { if (active) setGenreBooks(value); }).catch(() => {});
+    setRankedGenresLoading(true);
+    api.getGenresRanked().then(value => { if (active) setRankedGenres(value); }).catch(() => {})
+      .finally(() => { if (active) setRankedGenresLoading(false); });
     return () => { active = false; };
   }, [attempt]);
+  useEffect(() => {
+    if (isLoading || rankedGenresLoading || loadGenreShelves) return;
+    const target = genreShelfRef.current;
+    if (!target) return;
+    if (typeof IntersectionObserver === 'undefined') { setLoadGenreShelves(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting) { setLoadGenreShelves(true); observer.disconnect(); }
+    }, { rootMargin: '300px 0px' });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isLoading, rankedGenresLoading, loadGenreShelves]);
+  useEffect(() => {
+    if (!loadGenreShelves) return;
+    let active = true;
+    api.getHomeGenres().then(value => { if (active) setGenreBooks(value); }).catch(() => {});
+    return () => { active = false; };
+  }, [loadGenreShelves, attempt]);
   useEffect(() => {
     let active = true;
     setHeroLoading(true); setHeroError('');
@@ -367,6 +388,7 @@ export const HomePage: React.FC = () => {
       {!!featuredArtwork.length && <details className="v2-artwork-credits"><summary>Artwork credits</summary><ul>{featuredArtwork.map(art => <li key={art.file}><a href={art.source} target="_blank" rel="noopener noreferrer">{art.title}</a><span>{art.artist}{art.date ? `, ${art.date}` : ''} · {art.genre}</span></li>)}</ul><p>The Metropolitan Museum of Art, Open Access. Public domain images (<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a>).</p></details>}
     </section>}
     {books.length > 3 && <section className="v2-discovery-section v2-shelf" aria-labelledby="shelf-heading"><div className="v2-section-heading"><div><p className="ww-page-eyebrow">Your next read</p><h2 id="shelf-heading">A little more to discover.</h2></div><SortDropdown options={SORT_OPTIONS} value={sortMode} onChange={value => setSortMode(value as typeof sortMode)} /></div><div className="v2-shelf-grid" aria-busy={isLoading}>{books.slice(3,7).map(book => <BookCard book={book} key={book.id} onClick={() => window.location.hash = `/book/${book.id}`} />)}</div></section>}
+    <div ref={genreShelfRef} aria-hidden="true" />
     {!!Object.keys(genreBooks).length && <section className="v2-discovery-section"><div className="v2-section-heading"><h2>Choose a shelf.</h2><a href={`/genre/${encodeURIComponent(activeShelf || Object.keys(genreBooks)[0])}`}>Explore genre <ArrowRight size={18} /></a></div><div className="v2-genre-tabs" role="group" aria-label="Explore a genre shelf">{Object.keys(genreBooks).map(genre => <button type="button" key={genre} aria-pressed={(activeShelf || Object.keys(genreBooks)[0]) === genre} onClick={() => setActiveShelf(genre)}>{genre}</button>)}</div><div className="v2-scroll-shelf">{(genreBooks[activeShelf || Object.keys(genreBooks)[0]] || []).map(book => <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />)}</div></section>}
     {books[0]?.author && <section className="v2-author-spotlight"><ResilientImage src={books[0].author.avatarUrl} alt={books[0].author.name} fallbackLabel={books[0].author.name} /><div><p className="ww-page-eyebrow">Meet a storyteller</p><h2>{books[0].author.name}</h2>{books[0].author.bio && <p>{books[0].author.bio}</p>}<a href={`/author/${encodeURIComponent(books[0].author.id)}`}>Visit their writing room <ArrowRight size={16} /></a></div></section>}
     <Footer />

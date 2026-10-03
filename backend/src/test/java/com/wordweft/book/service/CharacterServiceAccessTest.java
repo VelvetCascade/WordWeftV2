@@ -237,7 +237,7 @@ class CharacterServiceAccessTest {
     private void signIn(String id, int birthYear, boolean matureOptIn) {
         User user = new User(); user.setId(id); user.setDateOfBirth(LocalDate.of(birthYear, 1, 1));
         user.setAllowMatureContent(matureOptIn);
-        when(users.findById(id)).thenReturn(Optional.of(user));
+        when(users.findAccessPreferencesById(id)).thenReturn(Optional.of(user));
         UserDetailsImpl principal = new UserDetailsImpl(id, id, id + "@example.test", "hash", List.of());
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(principal, null, List.of()));
     }

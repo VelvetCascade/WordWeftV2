@@ -6,6 +6,10 @@ import com.wordweft.user.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.bson.Document;
 import java.util.List;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +35,7 @@ class PublicSeoServiceTest {
     @Test void publicProjectionWhitelistsFieldsAndExcludesDraftAndScheduledText() {
         MongoTemplate mongo = mock(MongoTemplate.class); PublicSeoService service = service(mongo);
         User user = new User(); user.setId("author"); user.setUsername("Writer"); user.setEmail("private@example.com");
-        when(mongo.findById("author", User.class)).thenReturn(user);
+        when(mongo.findOne(any(Query.class), eq(User.class))).thenReturn(user);
         Map<String, Object> dto = service.bookDto(story());
         assertFalse(dto.toString().contains("SECRET")); assertFalse(dto.toString().contains("PRIVATE"));
         assertFalse(dto.toString().contains("private@example.com")); assertFalse(dto.containsKey("likes"));
@@ -42,8 +46,11 @@ class PublicSeoServiceTest {
     @Test void chapterSeoReturnsOnlyFirstPreviewAndLocksLaterContent() {
         MongoTemplate mongo = mock(MongoTemplate.class); PublicSeoService service = service(mongo);
         Book book = story();
-        when(mongo.findById("book", Book.class)).thenReturn(book);
-        when(mongo.findById("author", User.class)).thenReturn(new User());
+        when(mongo.findOne(any(Query.class), eq(Book.class))).thenReturn(book);
+        when(mongo.findOne(any(Query.class), eq(User.class))).thenReturn(new User());
+        when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Document.class)))
+                .thenReturn(new AggregationResults<>(List.of(new Document("chapterExists", true)
+                        .append("content", book.getChapters().get(0).getContent())), new Document()));
 
         Map<String, Object> first = service.book("book", "chapter");
         Map<String, Object> second = service.book("book", "second");
@@ -59,7 +66,7 @@ class PublicSeoServiceTest {
     }
     @Test void directSeoLookupCannotReturnDraftOrRestrictedContent() {
         MongoTemplate mongo = mock(MongoTemplate.class); PublicSeoService service = service(mongo);
-        Book book = story(); book.setPublicationStatus("draft"); when(mongo.findById("book", Book.class)).thenReturn(book);
+        Book book = story(); book.setPublicationStatus("draft"); when(mongo.findOne(any(Query.class), eq(Book.class))).thenReturn(book);
         assertNull(service.book("book")); book.setPublicationStatus("published"); book.setAgeRating(AgeRating.ADULT_21); assertNull(service.book("book"));
     }
     @Test void sitemapUsesTheActualMongoFieldForEmbeddedChapterIds() {

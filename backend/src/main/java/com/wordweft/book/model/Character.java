@@ -3,6 +3,7 @@ package com.wordweft.book.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.Pattern;
 public class Character {
     @Id
     private String id;
+    @Indexed
     private String bookId;
     
     @NotBlank(message = "Character name is required")

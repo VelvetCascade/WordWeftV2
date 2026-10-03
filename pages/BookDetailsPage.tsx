@@ -196,6 +196,10 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loadAttempt, setLoadAttempt] = useState(0);
+    // Library and profile mutations replace the user object. Only changes to
+    // the viewer's access should reload the story's account-specific data.
+    const bookAccessKey = JSON.stringify([bookId, currentUser?.id ?? null, currentUser?.dateOfBirth ?? null, currentUser?.allowMatureContent ?? false]);
+    const [loadedBookAccessKey, setLoadedBookAccessKey] = useState<string | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
@@ -287,23 +291,38 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     useEffect(() => {
         let active = true;
+        setBook(null);
+        setAuthorBooks([]);
         setIsLoading(true);
         setLoadError(null);
         api.getBookById(bookId).then(fetchedBook => {
             if (!active) return;
             setBook(fetchedBook);
+            setLoadedBookAccessKey(bookAccessKey);
             if (fetchedBook) {
                 trackEvent('content', 'book_view', fetchedBook.title, undefined, { bookId, authorId: fetchedBook.author.id, genre: fetchedBook.genres[0] });
                 api.getBooksByAuthor(fetchedBook.author.id, fetchedBook.id).then(result => { if (active) setAuthorBooks(result); }).catch(() => {});
             }
             setIsLoading(false);
-        }).catch((error) => { if (active) { setBook(null); setLoadError(error instanceof Error ? error.message : 'This story could not be loaded.'); setIsLoading(false); } });
+        }).catch((error) => { if (active) { setBook(null); setLoadedBookAccessKey(bookAccessKey); setLoadError(error instanceof Error ? error.message : 'This story could not be loaded.'); setIsLoading(false); } });
+        return () => { active = false; };
+    }, [bookAccessKey, loadAttempt]);
+
+    useEffect(() => {
+        let active = true;
+        setAllReviews([]);
         api.getBookReviews(bookId).then(result => { if (active) setAllReviews(result); }).catch(() => {});
+        return () => { active = false; };
+    }, [bookId, loadAttempt]);
+
+    useEffect(() => {
+        let active = true;
+        setReadingProgress(null);
         if (currentUser) {
             api.getReadingProgressForBook(currentUser.id, bookId).then(result => { if (active) setReadingProgress(result); }).catch(() => {});
         }
         return () => { active = false; };
-    }, [currentUser, bookId, loadAttempt]);
+    }, [currentUser?.id, bookId, loadAttempt]);
 
     useEffect(() => book ? applyBookMetadata(book) : undefined, [book]);
 
@@ -488,7 +507,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         }
     };
 
-    if (isLoading) {
+    if (isLoading || loadedBookAccessKey !== bookAccessKey) {
         return <div className="min-h-screen flex items-center justify-center" role="status">Loading story details…</div>;
     }
 

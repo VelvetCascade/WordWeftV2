@@ -20,7 +20,8 @@ import java.util.List;
 @CompoundIndexes({
     @CompoundIndex(name = "community_feed_cursor", def = "{'status':1,'createdAt':-1,'_id':-1}"),
     @CompoundIndex(name = "community_author_cursor", def = "{'authorId':1,'status':1,'createdAt':-1,'_id':-1}"),
-    @CompoundIndex(name = "community_circle_cursor", def = "{'circleId':1,'status':1,'createdAt':-1,'_id':-1}")
+    @CompoundIndex(name = "community_circle_cursor", def = "{'circleId':1,'status':1,'createdAt':-1,'_id':-1}"),
+    @CompoundIndex(name = "community_post_author_created", def = "{'authorId':1,'createdAt':-1}")
 })
 public class CommunityPost {
     @Id private String id;

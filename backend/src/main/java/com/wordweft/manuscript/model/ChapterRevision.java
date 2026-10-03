@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -16,6 +17,7 @@ public class ChapterRevision {
     @Id
     private String id;
     private String authorId;
+    @Indexed
     private String bookId;
     private String chapterId;
     private String title;
