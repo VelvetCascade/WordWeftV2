@@ -111,6 +111,9 @@ const PageLoadingFallback: React.FC = () => (
 
 const App: React.FC = () => {
   const [page, setPage] = useState<Page>({ name: 'home' });
+  // Reader chapter changes replace the URL locally. Account updates must not
+  // remount that reader with the last page parsed by the app router.
+  const [routeSurfaceKey, setRouteSurfaceKey] = useState(() => window.location.pathname + window.location.search);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Hash events may run before React commits a successful login. Keep the guard current.
   const sessionAuthenticated = useRef(false);
@@ -424,6 +427,7 @@ const App: React.FC = () => {
       }
 
       setPage(targetPage);
+      setRouteSurfaceKey(window.location.pathname + window.location.search);
       updateRouteMetadata();
     };
 
@@ -610,11 +614,11 @@ const App: React.FC = () => {
 
         {isWriterPage ? (
           <WriterLayout currentUser={currentUser ?? undefined}>
-            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={window.location.pathname + window.location.search}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
+            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={routeSurfaceKey}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </WriterLayout>
         ) : (
           <main id="main-content" tabIndex={-1} className={`ww-app-main ww-page-${page.name} ${showNavbar ? 'ww-app-main-with-nav pb-24 xl:pb-0' : ''}`}>
-            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={window.location.pathname + window.location.search} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
+            <PageErrorBoundary route={JSON.stringify(page)}><RouteSurface key={routeSurfaceKey} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </main>
         )}
 

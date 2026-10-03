@@ -18,7 +18,7 @@ import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
 import { ChapterDisclaimerModal } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
-import parse, { domToReact } from 'html-react-parser';
+import parse, { attributesToProps, domToReact } from 'html-react-parser';
 import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 import { readReaderPreferences } from '../utils/runtimeLifecycle';
 import { manuscriptProgress } from '../utils/readerProgress';
@@ -156,11 +156,14 @@ const CommentDrawer: React.FC<{
     isOpen: boolean;
     onClose: () => void;
     comments: Comment[];
+    commentsLoading: boolean;
+    commentsError: string;
+    onRetryComments: () => void;
     paragraphIndex: number | null;
     paragraphText?: string;
     onAddComment: (content: string, parentId?: string | null) => Promise<void>;
     onReportComment: (comment: Comment) => void;
-}> = ({ isOpen, onClose, comments, paragraphIndex, paragraphText, onAddComment, onReportComment }) => {
+}> = ({ isOpen, onClose, comments, commentsLoading, commentsError, onRetryComments, paragraphIndex, paragraphText, onAddComment, onReportComment }) => {
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
@@ -205,7 +208,9 @@ const CommentDrawer: React.FC<{
                         </div>
                     )}
 
-                    {topLevelComments.length === 0 ? (
+                    {commentsError && <div role="alert" className="reader-thread-error">{commentsError}<button type="button" onClick={onRetryComments}>Retry comments</button></div>}
+                    {commentsLoading && <p role="status">Loading comments…</p>}
+                    {topLevelComments.length === 0 && !commentsError && !commentsLoading ? (
                         <div className="text-center py-8 text-gray-500">No comments yet. Be the first!</div>
                     ) : (
                         topLevelComments.map(c => (
@@ -288,6 +293,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [reportTarget, setReportTarget] = useState<{ type: 'CHAPTER' | 'COMMENT'; id: string; title: string } | null>(null);
 
     const [comments, setComments] = useState<Comment[]>([]);
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentsError, setCommentsError] = useState('');
+    const [commentsRefresh, setCommentsRefresh] = useState(0);
     const [activeParagraphIndex, setActiveParagraphIndex] = useState<number | null>(null);
     const [revealedCommentIndex, setRevealedCommentIndex] = useState<number | null>(null);
     const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false);
@@ -309,6 +317,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const observedProgressRef = useRef(new Map<string, { progress: number; scrollPosition: number; revision: number; dirty: boolean }>());
     const activeChapterRef = useRef<string | undefined>(undefined);
     const readerMountedRef = useRef(true);
+    const commentsRequestRef = useRef<{ chapterId: string; additions: Comment[] } | null>(null);
     const refreshedReadingAccountRef = useRef(new Set<string>());
     const trackedAccessEventsRef = useRef(new Set<string>());
     const appearanceAnchorRef = useRef<{ element: HTMLElement; top: number } | null>(null);
@@ -443,9 +452,32 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     }, [chapter?.id, disclaimerRequired, disclaimerKey]);
 
     useEffect(() => {
-        if (book && chapter && chapterContent?.access === 'FULL') {
-            api.getChapterComments(bookId, chapter.id).then(setComments);
+        if (!chapter || chapterContent?.access !== 'FULL') return;
+        let active = true;
+        const request = { chapterId: chapter.id, additions: [] as Comment[] };
+        commentsRequestRef.current = request;
+        setCommentsLoading(true);
+        setCommentsError('');
+        api.getChapterComments(bookId, chapter.id)
+            .then(result => {
+                if (!active) return;
+                // Keep comments posted while this older server snapshot was in flight.
+                const returnedIds = new Set(result.map(item => item.id));
+                setComments([...request.additions.filter(item => !returnedIds.has(item.id)), ...result]);
+            })
+            .catch(error => { if (active) setCommentsError(error instanceof Error ? error.message : 'Comments could not load. Please try again.'); })
+            .finally(() => {
+                if (active) setCommentsLoading(false);
+                if (commentsRequestRef.current === request) commentsRequestRef.current = null;
+            });
+        return () => {
+            active = false;
+            if (commentsRequestRef.current === request) commentsRequestRef.current = null;
+        };
+    }, [bookId, chapter?.id, chapterContent?.access, commentsRefresh]);
 
+    useEffect(() => {
+        if (book && chapter && chapterContent?.access === 'FULL') {
             if ((!disclaimerRequired || sessionStorage.getItem(disclaimerKey) === 'accepted') && hasRecordedView.current !== chapter.id) {
                 api.recordChapterView(bookId, chapter.id);
                 trackEvent('reading', 'chapter_read_start', chapter.title, undefined, { bookId, chapterId: chapter.id, chapterIndex: currentChapterIndex });
@@ -673,7 +705,10 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const handleAddComment = async (content: string, parentId: string | null = null) => {
         if (!book || !chapter) return;
         const newComment = await api.addChapterComment(bookId, chapter.id, activeParagraphIndex, content, parentId);
-        setComments(prev => [newComment, ...prev]);
+        if (readerMountedRef.current && activeChapterRef.current === chapter.id) {
+            if (commentsRequestRef.current?.chapterId === chapter.id) commentsRequestRef.current.additions.unshift(newComment);
+            setComments(prev => [newComment, ...prev]);
+        }
         triggerFeedback('COMMENT_SYSTEM', 3000);
     };
 
@@ -697,28 +732,33 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         const prevIsLiked = chapter.isLiked;
         const prevLikes = chapter.likesCount;
 
-        const updatedChapters = book.chapters.map(c =>
-            c.id === chapter.id
-                ? { ...c, isLiked: !prevIsLiked, likesCount: prevIsLiked ? prevLikes - 1 : prevLikes + 1 }
-                : c
-        );
-
         const likeDiff = prevIsLiked ? -1 : 1;
 
         setReaderActionError('');
         setChapterLikeSaving(true);
-        setBook({
-            ...book,
-            chapters: updatedChapters,
-            likesCount: book.likesCount + likeDiff
-        });
+        setBook(current => current ? {
+            ...current,
+            chapters: current.chapters.map(item => item.id === chapter.id
+                ? { ...item, isLiked: !prevIsLiked, likesCount: prevLikes + likeDiff }
+                : item),
+            likesCount: current.likesCount + likeDiff,
+        } : current);
 
         try {
             await api.toggleChapterLike(book.id, chapter.id);
         } catch (e) {
             console.error(e);
-            setBook(book);
-            setReaderActionError(e instanceof Error ? e.message : 'Your chapter like could not be updated.');
+            // Revert only this reaction, preserving chapter bodies loaded while it was pending.
+            setBook(current => current ? {
+                ...current,
+                chapters: current.chapters.map(item => item.id === chapter.id
+                    ? { ...item, isLiked: prevIsLiked, likesCount: prevLikes }
+                    : item),
+                likesCount: current.likesCount - likeDiff,
+            } : current);
+            if (readerMountedRef.current && activeChapterRef.current === chapter.id) {
+                setReaderActionError(e instanceof Error ? e.message : 'Your chapter like could not be updated.');
+            }
         } finally {
             setChapterLikeSaving(false);
         }
@@ -870,6 +910,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             if (domNode.type === 'tag' && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'pre'].includes(domNode.name)) {
                 const index = blockIndex++;
                 const count = paragraphCommentCount(index);
+                const blockProps = attributesToProps(domNode.attribs);
 
                 return (
                     <div
@@ -880,7 +921,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     >
                         {React.createElement(
                             domNode.name,
-                            { ...domNode.attribs, className: `${domNode.attribs.className || ''} relative z-10` },
+                            { ...blockProps, className: `${blockProps.className || ''} relative z-10` },
                             domToReact(domNode.children, parseOptions)
                         )}
                         {chapterContent.access === 'FULL' ? (
@@ -1067,7 +1108,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 </div>
 
                 <div className="space-y-6">
-                    {comments.filter(c => !c.parentId && c.paragraphIndex === null).length === 0 ? (
+                    {commentsError && <div role="alert" className="reader-thread-error">{commentsError}<button type="button" onClick={() => setCommentsRefresh(value => value + 1)}>Retry comments</button></div>}
+                    {commentsLoading && <p role="status">Loading comments…</p>}
+                    {comments.filter(c => !c.parentId && c.paragraphIndex === null).length === 0 && !commentsError && !commentsLoading ? (
                         <p className="text-center text-gray-500 py-8">No general comments yet.</p>
                     ) : (
                         comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
@@ -1189,6 +1232,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 isOpen={isCommentDrawerOpen}
                 onClose={() => setIsCommentDrawerOpen(false)}
                 comments={activeParagraphIndex !== null ? paragraphComments(activeParagraphIndex) : comments.filter(c => c.paragraphIndex === null)}
+                commentsLoading={commentsLoading}
+                commentsError={commentsError}
+                onRetryComments={() => setCommentsRefresh(value => value + 1)}
                 paragraphIndex={activeParagraphIndex}
                 paragraphText={activeParagraphIndex !== null && !chapterContent.obfuscated ? document.getElementById(`paragraph-${activeParagraphIndex}`)?.querySelector('p,h1,h2,h3,h4,h5,h6,blockquote,ul,ol,pre')?.textContent ?? undefined : undefined}
                 onAddComment={handleAddComment}
