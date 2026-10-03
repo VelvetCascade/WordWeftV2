@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installPageLoadRecovery } from '../utils/pageLoadRecovery.ts';
+import { installPageLoadRecovery, recoverPageLoad } from '../utils/pageLoadRecovery.ts';
 
 function browser() {
   const events = new EventTarget();
@@ -63,5 +63,24 @@ test('disposing removes the page recovery listener', () => {
   const { target, reloads } = browser();
   installPageLoadRecovery(() => false, target)();
   failure(target);
+  assert.equal(reloads(), 0);
+});
+
+test('an actual lazy import rejection can recover without a Vite preload event', () => {
+  const { target, reloads } = browser();
+  installPageLoadRecovery(() => false, target);
+  assert.equal(recoverPageLoad(new TypeError('Failed to fetch dynamically imported module: /assets/page.js'), target), true);
+  assert.equal(reloads(), 1);
+  assert.equal(recoverPageLoad(new TypeError('Failed to fetch dynamically imported module: /assets/page.js'), target), false);
+  assert.equal(reloads(), 1);
+});
+
+test('boundary recovery respects unsaved work and excludes ordinary render errors', () => {
+  const { target, reloads } = browser();
+  installPageLoadRecovery(() => true, target);
+  assert.equal(recoverPageLoad(new TypeError('Importing a module script failed.'), target), false);
+  assert.equal(reloads(), 0);
+  installPageLoadRecovery(() => false, target);
+  assert.equal(recoverPageLoad(new TypeError('Cannot read properties of undefined'), target), false);
   assert.equal(reloads(), 0);
 });

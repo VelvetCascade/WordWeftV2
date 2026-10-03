@@ -3,6 +3,7 @@ import { build } from 'esbuild';
 
 test.describe('delayed route restoration', () => {
     let script = '';
+    let stylesheet = '';
     test.beforeAll(async () => {
         // Bundle the real route surface and navigation helper; only the destination's loading time is controlled.
         const result = await build({ stdin: { resolveDir: process.cwd(), sourcefile: 'route-restoration-fixture.tsx', loader: 'tsx', contents: `
@@ -16,14 +17,16 @@ test.describe('delayed route restoration', () => {
                 window.releaseRoute = () => resolve({ default: () => <section style={{ height: 2400 }}><h1>The restored shelf</h1><p>Your previous place.</p></section> });
             }));
             createRoot(document.getElementById('fixture')).render(<RouteSurface><Suspense fallback={<p>Loading the destination…</p>}><Destination /></Suspense></RouteSurface>);
-        ` }, bundle: true, write: false, format: 'iife', platform: 'browser', define: { 'process.env.NODE_ENV': '"test"' } });
-        script = result.outputFiles[0].text;
+        ` }, bundle: true, write: false, outdir: 'route-restoration-fixture', format: 'iife', platform: 'browser', define: { 'process.env.NODE_ENV': '"test"', 'import.meta.env.WORDWEFT_BUILD_ID': '"route-restoration-fixture"' } });
+        script = result.outputFiles.find(file => file.path.endsWith('.js'))!.text;
+        stylesheet = result.outputFiles.find(file => file.path.endsWith('.css'))?.text || '';
     });
 
     for (const interacting of [false, true]) test(`a destination loading beyond three seconds ${interacting ? 'keeps the user’s chosen control and scroll' : 'restores the saved Back position'}`, async ({ page, context }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await context.route('**/__route-surface-regression', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><title>Route restoration regression</title></head><body><button type="button">Search while loading</button><div id="fixture"></div></body></html>' }));
         await page.goto('/__route-surface-regression');
+        if (stylesheet) await page.addStyleTag({ content: stylesheet });
         await page.addScriptTag({ content: script });
         await expect(page.getByText('Loading the destination…', { exact: true })).toBeVisible();
         const control = page.getByRole('button', { name: 'Search while loading', exact: true });

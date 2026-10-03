@@ -94,7 +94,12 @@ const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}
 // Keep every API request bounded without repeating timeout plumbing at each call site.
 const fetch = fetchWithTimeout;
 
-const handleResponse = async (response: Response) => {
+const handleResponse = async (response: Response, options: {
+    allowEmpty?: boolean;
+    allowNull?: boolean;
+    format?: 'json' | 'text';
+    requireArray?: boolean;
+} = {}) => {
     if (!response.ok) {
         const errorText = await response.text();
         let message = errorText || response.statusText;
@@ -121,10 +126,16 @@ const handleResponse = async (response: Response) => {
         }
         throw new ApiError(message, response.status, errorCode);
     }
-    try {        return await response.json();
-    } catch (e) {
-        // Some endpoints might return empty body on success
-        return null;
+    try {
+        const responseText = await response.text();
+        if (!responseText.trim() && options.allowEmpty) return null;
+        if (options.format === 'text' && responseText.trim()) return responseText;
+        const data = JSON.parse(responseText);
+        if (data === null && !options.allowNull) throw new Error('Expected response data.');
+        if (options.requireArray && !Array.isArray(data)) throw new Error('Expected a response array.');
+        return data;
+    } catch {
+        throw new ApiError('The server returned an unreadable response. Please try again.', response.status, 'invalid_response');
     }
 };
 
@@ -275,7 +286,7 @@ export async function resendOtp(email: string): Promise<string> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
     });
-    return await handleResponse(response);
+    return await handleResponse(response, { format: 'text' });
 }
 
 export async function forgotPassword(email: string): Promise<string> {
@@ -284,7 +295,7 @@ export async function forgotPassword(email: string): Promise<string> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
     });
-    return await handleResponse(response);
+    return await handleResponse(response, { format: 'text' });
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<string> {
@@ -293,7 +304,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword })
     });
-    return await handleResponse(response);
+    return await handleResponse(response, { format: 'text' });
 }
 
 export async function googleLogin(idToken: string): Promise<{ user: User; needsProfileCompletion: boolean } | null> {
@@ -355,7 +366,7 @@ export async function changePassword(userId: string, oldPassword_unused: string,
         headers: getHeaders(),
         body: JSON.stringify({ oldPassword: oldPassword_unused, newPassword: newPassword_unused })
     });
-    await handleResponse(response);
+    await handleResponse(response, { format: 'text' });
     return (await getMe())!;
 }
 
@@ -418,12 +429,12 @@ export async function getUserFollowing(userId: string): Promise<Author[]> {
 
 export async function getGenres(): Promise<string[]> {
     const response = await fetch(`${API_BASE_URL}/books/genres`);
-    return await handleResponse(response);
+    return await handleResponse(response, { requireArray: true });
 }
 
 export async function getGenresRanked(): Promise<{ name: string; bookCount: number; readCount: number }[]> {
     const response = await fetch(`${API_BASE_URL}/books/genres/ranked`);
-    return await handleResponse(response);
+    return await handleResponse(response, { requireArray: true });
 }
 
 export async function getDiscoveryHero(): Promise<DiscoveryHeroGroups> {
@@ -548,7 +559,7 @@ export async function recordChapterView(bookId: string, chapterId: string): Prom
             referrer: document.referrer || ''
         })
     });
-    await handleResponse(response);
+    await handleResponse(response, { allowEmpty: true, allowNull: true });
 }
 
 export async function submitFoundingWriterApplication(
@@ -788,7 +799,8 @@ function enqueueProgress(userId: string, bookId: string, state: ProgressState, s
                 chapterData: { id: snapshot.chapterId, progress: snapshot.progress, scroll: snapshot.scrollPosition } }),
         });
         if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the story in your current account.', 409, 'session_changed');
-        const saved = await handleResponse(response);
+        // Older progress acknowledgements return JSON null; merge the saved snapshot.
+        const saved = await handleResponse(response, { allowNull: true });
         state.version++;
         state.server = saved || mergeReadingSnapshots(state.server, [snapshot], state.chapters);
         if (state.server) state.server = { ...state.server, pendingSync: false };
@@ -826,7 +838,7 @@ export async function getReadingProgressForBook(userId: string, bookId: string):
     try {
         const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, { headers });
         if (headers.Authorization !== getHeaders().Authorization) return null;
-        const saved = await handleResponse(response);
+        const saved = await handleResponse(response, { allowEmpty: true, allowNull: true });
         if (headers.Authorization !== getHeaders().Authorization) return null;
         if (state.version === version && !state.clearing) state.server = saved;
     } catch (error) {
@@ -900,7 +912,7 @@ export async function clearReadingProgress(userId: string, bookId: string): Prom
         if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the library in your current account.', 409, 'session_changed');
         const response = await fetch(`${API_BASE_URL}/reading/progress/${bookId}`, { method: 'DELETE', headers });
         if (headers.Authorization !== getHeaders().Authorization) throw new ApiError('Your account changed. Reopen the library in your current account.', 409, 'session_changed');
-        await handleResponse(response);
+        await handleResponse(response, { allowEmpty: true, allowNull: true });
         state.version++;
         state.server = null;
         state.pending.clear();
@@ -1093,7 +1105,7 @@ export async function deleteChapter(bookId: string, chapterId: string): Promise<
 
 export async function getBookReviews(bookId: string): Promise<Review[]> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/reviews`);
-    return await handleResponse(response);
+    return await handleResponse(response, { requireArray: true });
 }
 
 export async function submitReview(userId: string, bookId: string, rating: number, comment: string): Promise<Review[]> {
@@ -1126,7 +1138,7 @@ export async function deleteReview(userId: string, bookId: string): Promise<Revi
 
 export async function getChapterComments(bookId: string, chapterId: string): Promise<Comment[]> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comments`);
-    return await handleResponse(response);
+    return await handleResponse(response, { requireArray: true });
 }
 
 export async function addChapterComment(bookId: string, chapterId: string, paragraphIndex: number | null, content: string, parentId: string | null = null): Promise<Comment> {
@@ -1169,7 +1181,7 @@ export async function deleteCharacter(id: string): Promise<void> {
         method: 'DELETE',
         headers: getHeaders()
     });
-    await handleResponse(response);
+    await handleResponse(response, { allowEmpty: true, allowNull: true });
 }
 
 // --- Scene API ---
@@ -1207,7 +1219,7 @@ export async function deleteScene(id: string): Promise<void> {
         method: 'DELETE',
         headers: getHeaders()
     });
-    await handleResponse(response);
+    await handleResponse(response, { allowEmpty: true, allowNull: true });
 }
 
 // --- Note API ---
@@ -1245,7 +1257,7 @@ export async function deleteNote(id: string): Promise<void> {
         method: 'DELETE',
         headers: getHeaders()
     });
-    await handleResponse(response);
+    await handleResponse(response, { allowEmpty: true, allowNull: true });
 }
 
 
@@ -1335,7 +1347,7 @@ export async function reportImageUploadDiagnostic(event: ImageUploadDiagnostic):
         headers: getHeaders(),
         body: JSON.stringify(event),
     });
-    await handleResponse(response);
+    await handleResponse(response, { allowEmpty: true, allowNull: true });
 }
 
 function mapBackendUserToFrontend(backendData: any): User {

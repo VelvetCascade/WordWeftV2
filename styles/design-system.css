@@ -23,6 +23,11 @@ html body .ww-app{background:var(--ww-canvas)!important;color:var(--ww-copy)}
 html body .ww-app .ww-app-main.ww-app-main-with-nav{padding-top:0!important}
 html body :is(button,input,textarea,select){font-family:Rubik,system-ui,sans-serif}
 html body :is(button,a){-webkit-tap-highlight-color:transparent}
+/* Remove double-tap delay on controls while retaining scrolling and pinch zoom. */
+html body :is(button,a[href],summary){touch-action:manipulation}
+@media (hover: none), (pointer: coarse) {
+  html body :is(button,a[href],summary){-webkit-tap-highlight-color:color-mix(in srgb,var(--ww-brand) 18%,transparent)}
+}
 html body button{cursor:pointer}
 html body button:disabled{cursor:not-allowed;opacity:.55}
 html body :is(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--ww-gold);outline-offset:4px}

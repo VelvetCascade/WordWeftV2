@@ -25,7 +25,7 @@ if (!template.includes('<!--SEO_HEAD-->') || !template.includes('<!--SEO_BODY-->
 const bodies = Object.fromEntries(Object.keys(staticPages).map(path => [path, renderStatic(path)]));
 await writeFile(join(functions, 'template.html'), template);
 await writeFile(join(functions, 'static-bodies.json'), JSON.stringify(bodies));
-await writeFile(join(functions, 'build-config.json'), JSON.stringify({ apiBase, preview }));
+await writeFile(join(functions, 'build-config.json'), JSON.stringify({ apiBase, preview, clientApiBase: env.VITE_API_BASE_URL || '/api' }));
 for (const file of ['handler.mjs', 'render.mjs', 'metadata.mjs', 'content.mjs']) await cp(`seo/${file}`, join(functions, file));
 await cp('dist-ssr/static.mjs', join(functions, 'static.mjs'));
 await writeFile(join(functions, 'package.json'), JSON.stringify({ type: 'module' }));

@@ -327,6 +327,8 @@
 .reader-experience.reader-v2 .reader-thread-panel button[type='submit'] { background: #28675E; color: white; font: 500 12px Rubik, sans-serif; border-radius: 7px; }
 .reader-experience.reader-v2 .reader-thread-input-label { display: block; font: 500 11px Rubik, sans-serif; margin-bottom: 8px; }
 .reader-experience.reader-v2 .reader-thread-error { font-size: 12px; color: #A5403B !important; margin-bottom: 10px; }
+.reader-experience.reader-v2.reader-theme-dark .reader-thread-error { color: #EFABA5 !important; }
+.reader-experience.reader-v2 .reader-thread-error > button { display: block; min-height: 44px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 .reader-experience.reader-v2 .reader-sign-in-gate { background: var(--reader-panel-solid) !important; border: 1px solid var(--reader-line) !important; box-shadow: none !important; border-radius: 12px !important; }
 .reader-experience.reader-v2 .reader-sign-in-gate h2 { color: var(--reader-ink) !important; font: 700 30px/1.25 'WordWeft Serif', Georgia, serif !important; }
 .reader-experience.reader-v2 .reader-sign-in-gate button { border-radius: 7px; font-family: Rubik, sans-serif; min-height: 44px; }
@@ -511,6 +513,12 @@
 .reader-experience.reader-v2 .reader-conversation-rail h2 { font-family: Rubik, sans-serif !important; }
 .ww-story-page.ww-story-v2 .ww-story-stats-v2 > div:first-child dd { flex-wrap: wrap; }
 .ww-story-page.ww-story-v2 .ww-story-stats-v2 > div:first-child small { flex-basis: 100%; font-weight: 400; }
+/* Touch readers need stable controls while scrolling; focus mode still hides them. */
+@media (hover: none), (pointer: coarse) {
+  .reader-experience.reader-v2 .reader-dock { transform: translate(-50%, 0); opacity: 1; }
+  .reader-experience.reader-v2 .reader-dock button::after { display: none; }
+  .reader-experience.reader-v2 .reader-dock button:active:not(:disabled) { color: var(--reader-accent); background: var(--reader-accent-soft); }
+}
 .ww-character-preview-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: #191C1C40; font-family: Rubik, sans-serif; }
 .ww-character-preview-panel { width: min(490px, 100%); max-height: calc(100dvh - 48px); overflow-y: auto; padding: 28px; border: 1px solid var(--reader-line, #E6E0D7); border-radius: 14px; background: var(--reader-panel-solid, #FFFEFC); color: var(--reader-ink, #191C1C); }
 .ww-character-preview-panel > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }

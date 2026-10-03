@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { readOptionalTip, writeOptionalTip } from '../utils/optionalStorage';
+import '../styles/optional-tips.css';
 
 interface CoachNudge {
     id: string;
@@ -77,6 +79,25 @@ const NUDGES: CoachNudge[] = [
 
 const STORAGE_KEY = 'ww_reader_coach_session';
 const DISMISSED_KEY = 'ww_reader_coach_dismissed';
+const COMPLETED_SESSION = Math.max(...NUDGES.map(nudge => nudge.session)) + 1;
+const NUDGE_IDS = new Set(NUDGES.map(nudge => nudge.id));
+
+function readSession(): number {
+    const stored = readOptionalTip(STORAGE_KEY);
+    if (!stored || !/^\d+$/.test(stored)) return 0;
+    const session = Number(stored);
+    return Number.isFinite(session) ? Math.min(session, COMPLETED_SESSION) : 0;
+}
+
+function readDismissed(): Set<string> {
+    try {
+        const parsed: unknown = JSON.parse(readOptionalTip(DISMISSED_KEY) || '[]');
+        if (!Array.isArray(parsed)) return new Set();
+        return new Set(parsed.filter((id): id is string => typeof id === 'string' && NUDGE_IDS.has(id)));
+    } catch {
+        return new Set();
+    }
+}
 
 interface ReaderDiscoveryCoachProps {
     hasMentions?: boolean;
@@ -88,28 +109,23 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
     hasSpoilers = false,
 }) => {
     const [activeNudge, setActiveNudge] = useState<CoachNudge | null>(null);
-    const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-
-    const getCurrentSession = useCallback(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? parseInt(stored, 10) : 0;
-    }, []);
+    const session = useRef<number | null>(null);
+    const dismissed = useRef<Set<string>>(new Set());
+    const reduceMotion = useReducedMotion();
 
     useEffect(() => {
-        // Increment session count
-        const currentSession = getCurrentSession();
-        const newSession = currentSession + 1;
-        localStorage.setItem(STORAGE_KEY, String(newSession));
-
-        // Load dismissed nudges
-        const dismissedStr = localStorage.getItem(DISMISSED_KEY);
-        const dismissedSet = dismissedStr ? new Set<string>(JSON.parse(dismissedStr)) : new Set<string>();
-        setDismissed(dismissedSet);
+        // Effect replay restarts timers for the same mount. A real remount starts
+        // the next reading session, capped once all discovery sessions are over.
+        if (session.current === null) {
+            session.current = Math.min(readSession() + 1, COMPLETED_SESSION);
+            writeOptionalTip(STORAGE_KEY, String(session.current));
+            dismissed.current = readDismissed();
+        }
 
         // Filter nudges for current session
         const sessionNudges = NUDGES.filter(n => {
-            if (n.session !== newSession) return false;
-            if (dismissedSet.has(n.id)) return false;
+            if (n.session !== session.current) return false;
+            if (dismissed.current.has(n.id)) return false;
             if (n.requiresFeature === 'mentions' && !hasMentions) return false;
             if (n.requiresFeature === 'spoilers' && !hasSpoilers) return false;
             return true;
@@ -121,7 +137,7 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
         const timers: number[] = [];
         sessionNudges.forEach((nudge) => {
             const showTimer = window.setTimeout(() => {
-                setActiveNudge(nudge);
+                if (!dismissed.current.has(nudge.id)) setActiveNudge(nudge);
             }, nudge.delayMs);
             timers.push(showTimer);
 
@@ -136,10 +152,8 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
 
     const handleDismiss = (nudgeId: string) => {
         setActiveNudge(null);
-        const newDismissed = new Set(dismissed);
-        newDismissed.add(nudgeId);
-        setDismissed(newDismissed);
-        localStorage.setItem(DISMISSED_KEY, JSON.stringify(Array.from(newDismissed)));
+        dismissed.current.add(nudgeId);
+        writeOptionalTip(DISMISSED_KEY, JSON.stringify(Array.from(dismissed.current)));
     };
 
     return (
@@ -147,10 +161,10 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
             {activeNudge && (
                 <motion.div
                     key={activeNudge.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    initial={reduceMotion ? false : { opacity: 0, y: 20, scale: 0.9 }}
+                    animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.95 }}
+                    transition={reduceMotion ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 300 }}
                     className={`reader-coach-nudge reader-coach-${activeNudge.position}`}
                     style={{
                         position: 'fixed',
@@ -161,6 +175,7 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
                         <span className="reader-coach-nudge-icon">{activeNudge.icon}</span>
                         <p className="reader-coach-nudge-text">{activeNudge.message}</p>
                         <button
+                            type="button"
                             className="reader-coach-nudge-dismiss"
                             onClick={() => handleDismiss(activeNudge.id)}
                             aria-label="Dismiss tip"
