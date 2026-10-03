@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,7 +15,10 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @Document(collection = "community_reactions")
-@CompoundIndex(name = "unique_community_reaction", def = "{'userId': 1, 'targetType': 1, 'targetId': 1, 'reactionType': 1}", unique = true)
+@CompoundIndexes({
+    @CompoundIndex(name = "unique_community_reaction", def = "{'userId': 1, 'targetType': 1, 'targetId': 1, 'reactionType': 1}", unique = true),
+    @CompoundIndex(name = "community_reaction_target_totals", def = "{'targetType': 1, 'targetId': 1, 'reactionType': 1}")
+})
 public class CommunityReaction {
     @Id private String id;
     @Indexed private String userId;

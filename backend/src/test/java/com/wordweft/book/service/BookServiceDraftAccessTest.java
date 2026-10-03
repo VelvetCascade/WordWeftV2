@@ -7,6 +7,9 @@ import com.wordweft.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import com.wordweft.book.model.AgeRating;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,9 +23,13 @@ class BookServiceDraftAccessTest {
         SecurityContextHolder.clearContext();
         Book draft = new Book(); draft.setId("draft"); draft.setAuthorId("writer"); draft.setPublicationStatus("draft");
         BookRepository repository = mock(BookRepository.class);
-        when(repository.findById("draft")).thenReturn(Optional.of(draft));
+        MongoTemplate mongo = mock(MongoTemplate.class);
+        when(mongo.findOne(any(Query.class), eq(Book.class))).thenReturn(draft);
         BookService service = new BookService(); ReflectionTestUtils.setField(service, "bookRepository", repository);
+        ReflectionTestUtils.setField(service, "mongoTemplate", mongo);
         assertNull(service.getBookById("draft", true)); verify(repository, never()).save(any(Book.class));
+        verify(mongo, never()).updateFirst(any(Query.class),
+                any(org.springframework.data.mongodb.core.query.UpdateDefinition.class), eq(Book.class));
     }
 
     @Test void publicBookProjectionContainsMetadataButNoChapterContent() {
@@ -40,14 +47,17 @@ class BookServiceDraftAccessTest {
         BookRepository repository = mock(BookRepository.class);
         UserRepository users = mock(UserRepository.class);
         ContentAccessService access = mock(ContentAccessService.class);
-        when(repository.findById("book")).thenReturn(Optional.of(book));
-        when(users.findById("writer")).thenReturn(Optional.empty());
-        when(access.canAccess(book)).thenReturn(true);
+        MongoTemplate mongo = mock(MongoTemplate.class);
+        when(mongo.findOne(any(Query.class), eq(Book.class))).thenReturn(book);
+        when(mongo.find(any(Query.class), eq(com.wordweft.user.model.User.class))).thenReturn(List.of());
+        when(access.allowedRatings()).thenReturn(java.util.EnumSet.allOf(AgeRating.class));
+        when(access.effectiveRating(book)).thenReturn(AgeRating.ALL_AGES);
 
         BookService service = new BookService();
         ReflectionTestUtils.setField(service, "bookRepository", repository);
         ReflectionTestUtils.setField(service, "userRepository", users);
         ReflectionTestUtils.setField(service, "contentAccessService", access);
+        ReflectionTestUtils.setField(service, "mongoTemplate", mongo);
 
         Map<String, Object> dto = service.getBookById("book", false);
         List<?> chapters = (List<?>) dto.get("chapters");

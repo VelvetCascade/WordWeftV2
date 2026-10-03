@@ -14,6 +14,10 @@ const JWT_KEY = JWT_STORAGE_KEY;
 let verifiedSession: { authorization: string; userId: string } | null = null;
 const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
 const DEFAULT_JSON_TIMEOUT_MS = 30_000;
+const inFlightReads = new Map<string, Promise<Response>>();
+let inFlightSessionToken: string | null | undefined;
+let requestSessionVersion = 0;
+const responseSessions = new WeakMap<Response, { token: string | null; version: number }>();
 
 // --- Helper Functions ---
 
@@ -32,12 +36,19 @@ export class ApiError extends Error {
     }
 }
 
-const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = DEFAULT_JSON_TIMEOUT_MS) => {
-    if (init.signal) return globalThis.fetch(input, init);
+const performFetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = DEFAULT_JSON_TIMEOUT_MS) => {
+    const session = { token: localStorage.getItem(JWT_KEY), version: requestSessionVersion };
+    if (init.signal) {
+        const response = await globalThis.fetch(input, init);
+        responseSessions.set(response, session);
+        return response;
+    }
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
     try {
-        return await globalThis.fetch(input, { ...init, signal: controller.signal });
+        const response = await globalThis.fetch(input, { ...init, signal: controller.signal });
+        responseSessions.set(response, session);
+        return response;
     } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
             throw new ApiError('The server took too long to respond. Check your connection and retry.', 408, 'request_timeout');
@@ -46,6 +57,38 @@ const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}
     } finally {
         window.clearTimeout(timeoutId);
     }
+};
+
+// Share only overlapping metadata reads. Completed responses are never cached,
+// and book details, chapter content, progress and views get their own request.
+const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = DEFAULT_JSON_TIMEOUT_MS): Promise<Response> => {
+    const token = localStorage.getItem(JWT_KEY);
+    if (inFlightSessionToken !== token) {
+        inFlightReads.clear();
+        inFlightSessionToken = token;
+        requestSessionVersion++;
+    }
+    if ((init.method ?? 'GET').toUpperCase() !== 'GET') {
+        inFlightReads.clear();
+        try { return await performFetchWithTimeout(input, init, timeoutMs); }
+        finally { inFlightReads.clear(); }
+    }
+    const path = typeof input === 'string' && input.startsWith(API_BASE_URL) ? input.slice(API_BASE_URL.length) : '';
+    const metadataRead = /^\/books(?:\?.*)?$|^\/books\/(?:genres(?:\/ranked)?|hero|home-genres)(?:\?.*)?$|^\/books\/(?:genre|author)\/[^/]+(?:\?.*)?$|^\/books\/[^/?]+\/reviews$|^\/users\/me$|^\/users\/[^/]+\/profile$/.test(path);
+    if (!metadataRead || init.signal) return performFetchWithTimeout(input, init, timeoutMs);
+    const key = JSON.stringify([input, token, init.headers ?? null, init.cache ?? null, init.credentials ?? null, init.mode ?? null, timeoutMs]);
+    let pending = inFlightReads.get(key);
+    if (!pending) {
+        pending = performFetchWithTimeout(input, init, timeoutMs);
+        inFlightReads.set(key, pending);
+    }
+    try {
+        const response = await pending;
+        const copy = response.clone();
+        responseSessions.set(copy, responseSessions.get(response)!);
+        return copy;
+    }
+    finally { if (inFlightReads.get(key) === pending) inFlightReads.delete(key); }
 };
 
 // Keep every API request bounded without repeating timeout plumbing at each call site.
@@ -71,7 +114,11 @@ const handleResponse = async (response: Response) => {
         } catch {
             // Non-JSON response, keep errorText
         }
-        if (shouldInvalidateAuthSession(response.status, errorCode)) invalidateAuthSession();
+        const session = responseSessions.get(response);
+        if (shouldInvalidateAuthSession(response.status, errorCode) && session?.token === localStorage.getItem(JWT_KEY) && session?.version === requestSessionVersion) {
+            inFlightReads.clear();
+            invalidateAuthSession();
+        }
         throw new ApiError(message, response.status, errorCode);
     }
     try {        return await response.json();
@@ -160,6 +207,9 @@ const uploadFormData = <T>(
 // --- Auth & User API ---
 
 async function establishSession(token: string): Promise<User> {
+    inFlightReads.clear();
+    inFlightSessionToken = token;
+    requestSessionVersion++;
     localStorage.setItem(JWT_KEY, token);
     const user = await getMe();
     if (!user) {
@@ -263,6 +313,10 @@ export async function googleLogin(idToken: string): Promise<{ user: User; needsP
 }
 
 export async function logout(): Promise<void> {
+    inFlightReads.clear();
+    inFlightSessionToken = null;
+    requestSessionVersion++;
+    verifiedSession = null;
     localStorage.removeItem(JWT_KEY);
 }
 

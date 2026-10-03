@@ -86,7 +86,7 @@ class ContentAccessServiceTest {
         teenUser.setDateOfBirth(LocalDate.now().minusYears(14));
         teenUser.setAllowMatureContent(true); // even if true, age gate applies!
 
-        when(userRepository.findById("teen-1")).thenReturn(Optional.of(teenUser));
+        when(userRepository.findAccessPreferencesById("teen-1")).thenReturn(Optional.of(teenUser));
 
         ContentAccessService spyService = spy(service);
         doReturn("teen-1").when(spyService).currentUserId();
@@ -111,7 +111,7 @@ class ContentAccessServiceTest {
         author.setId("author-1");
         author.setDateOfBirth(LocalDate.now().minusYears(15)); // 15 years old
 
-        when(userRepository.findById("author-1")).thenReturn(Optional.of(author));
+        when(userRepository.findAccessPreferencesById("author-1")).thenReturn(Optional.of(author));
 
         ContentAccessService spyService = spy(service);
         doReturn("author-1").when(spyService).currentUserId();

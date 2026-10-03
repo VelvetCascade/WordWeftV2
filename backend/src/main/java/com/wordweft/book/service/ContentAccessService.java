@@ -8,13 +8,14 @@ import com.wordweft.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.wordweft.book.model.Chapter;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -36,7 +37,7 @@ public class ContentAccessService {
         AgeRating highest = AgeRating.ALL_AGES;
         for (String w : warnings) {
             if (w == null) continue;
-            String normalized = w.trim().toUpperCase();
+            String normalized = w.trim().toUpperCase(Locale.ROOT);
             if (MATURE_18_WARNINGS.contains(normalized)) {
                 return AgeRating.MATURE_18;
             } else if (TEEN_13_WARNINGS.contains(normalized)) {
@@ -95,7 +96,11 @@ public class ContentAccessService {
         String userId = currentUserId();
         if (userId == null) return EnumSet.of(AgeRating.ALL_AGES, AgeRating.TEEN_13);
 
-        User user = userRepository.findById(userId).orElse(null);
+        return allowedRatings(userRepository.findAccessPreferencesById(userId).orElse(null));
+    }
+
+    /** Reuses a request-local viewer preference projection, with no additional user query. */
+    public Set<AgeRating> allowedRatings(User user) {
         if (user == null || user.getDateOfBirth() == null) {
             return EnumSet.of(AgeRating.ALL_AGES, AgeRating.TEEN_13);
         }
@@ -111,6 +116,29 @@ public class ContentAccessService {
 
     public boolean canDiscover(Book book) {
         return allowedRatings().contains(effectiveRating(book));
+    }
+
+    /** Shared pre-pagination visibility predicate; callers capture viewer ratings once per request. */
+    public static Criteria discoverableCriteria(Set<AgeRating> allowedRatings) {
+        List<Criteria> filters = new ArrayList<>();
+        filters.add(Criteria.where("publicationStatus").is("published"));
+        filters.add(new Criteria().orOperator(
+                Criteria.where("ageRating").in(allowedRatings),
+                Criteria.where("ageRating").exists(false),
+                Criteria.where("ageRating").is(null)));
+        if (!allowedRatings.contains(AgeRating.MATURE_18)) filters.add(Criteria.where("isMature").ne(true));
+
+        Set<String> disallowedWarnings = new TreeSet<>();
+        if (!allowedRatings.contains(AgeRating.TEEN_13)) disallowedWarnings.addAll(TEEN_13_WARNINGS);
+        if (!allowedRatings.contains(AgeRating.MATURE_18)) disallowedWarnings.addAll(MATURE_18_WARNINGS);
+        if (!disallowedWarnings.isEmpty()) {
+            // Java warning ratings use trim + case normalization; match that same legacy data here.
+            List<Pattern> patterns = disallowedWarnings.stream().map(warning -> Pattern.compile(
+                    "^[\\x00-\\x20]*" + warning + "[\\x00-\\x20]*$", Pattern.CASE_INSENSITIVE)).toList();
+            filters.add(Criteria.where("contentWarnings").nin(patterns));
+            filters.add(Criteria.where("chapters.contentWarnings").nin(patterns));
+        }
+        return new Criteria().andOperator(filters);
     }
 
     public boolean canAccess(Book book) {

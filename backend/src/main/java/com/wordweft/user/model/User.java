@@ -59,6 +59,7 @@ public class User {
     private Instant emailVerificationOtpExpiry;
 
     // Password Reset
+    @Indexed(sparse = true)
     private String resetPasswordToken;
     private Instant resetPasswordTokenExpiry;
 

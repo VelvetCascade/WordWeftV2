@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -13,7 +14,10 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @Document(collection = "community_comments")
-@CompoundIndex(name = "community_comment_cursor", def = "{'postId':1,'createdAt':1,'_id':1}")
+@CompoundIndexes({
+    @CompoundIndex(name = "community_comment_cursor", def = "{'postId':1,'createdAt':1,'_id':1}"),
+    @CompoundIndex(name = "community_comment_author_created", def = "{'authorId':1,'createdAt':-1}")
+})
 public class CommunityComment {
     @Id private String id;
     @Indexed private String postId;

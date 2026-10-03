@@ -111,10 +111,10 @@ public class WriterGrowthService {
 
     private List<Book> selectBooks(String authorId, String bookId) {
         if (bookId == null || bookId.isBlank()) {
-            List<Book> owned = books.findByAuthorId(authorId);
+            List<Book> owned = books.findAnalyticsMetadataByAuthorId(authorId);
             return owned != null ? owned : List.of();
         }
-        Book selected = books.findById(bookId)
+        Book selected = books.findAnalyticsMetadataById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Story not found."));
         if (!authorId.equals(selected.getAuthorId())) {
             throw new AccessDeniedException("You do not have permission to view this story's analytics.");

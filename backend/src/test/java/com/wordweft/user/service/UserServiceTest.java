@@ -1,5 +1,6 @@
 package com.wordweft.user.service;
 
+import com.wordweft.book.model.Book;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.LibraryRepository;
 import com.wordweft.book.service.ReadingProgressService;
@@ -27,7 +28,7 @@ class UserServiceTest {
         service.bookService = mock(BookService.class);
         User user = new User("storyperson", "private@example.com", "hash");
         user.setId("user-1"); user.setBio("Public bio"); user.setLocation("Public place");
-        when(service.userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(service.userRepository.findPublicProfileById("user-1")).thenReturn(Optional.of(user));
 
         Map<String, Object> profile = service.getPublicProfile("user-1", null);
 
@@ -65,16 +66,18 @@ class UserServiceTest {
         when(service.libraryRepository.findByUserId("user-young")).thenReturn(java.util.List.of(entry));
         when(service.shelfRepository.findByUserId("user-young")).thenReturn(java.util.List.of());
         when(service.readingProgressService.getAllProgress("user-young")).thenReturn(java.util.Map.of());
-        when(service.bookRepository.findByAuthorId("user-young")).thenReturn(java.util.List.of());
+        when(service.bookService.findMetadataByAuthorId("user-young")).thenReturn(java.util.List.of());
 
-        // enrichBookForProfileById returns a map safely (with isRestricted: true)
+        // The batch enrichment returns restricted metadata safely for the shelf filter.
         java.util.Map<String, Object> matureBookMap = new java.util.HashMap<>();
         matureBookMap.put("id", "book-mature-21");
         matureBookMap.put("title", "A 21+ Story");
         matureBookMap.put("isMature", true);
         matureBookMap.put("ageRating", com.wordweft.book.model.AgeRating.ADULT_21);
         matureBookMap.put("isRestricted", true);
-        when(service.bookService.enrichBookForProfileById("book-mature-21", "user-young")).thenReturn(matureBookMap);
+        Book matureBook = new Book(); matureBook.setId("book-mature-21");
+        when(service.bookService.findMetadataByIds(List.of("book-mature-21"))).thenReturn(List.of(matureBook));
+        when(service.bookService.enrichBooksForProfile(anyCollection(), eq("user-young"))).thenReturn(List.of(matureBookMap));
 
         // This MUST NOT throw ContentRestrictedException
         Map<String, Object> enriched = service.enrichUser(user, "user-young");
@@ -118,14 +121,16 @@ class UserServiceTest {
         when(service.libraryRepository.findByUserId("user-adult")).thenReturn(java.util.List.of(entry));
         when(service.shelfRepository.findByUserId("user-adult")).thenReturn(java.util.List.of());
         when(service.readingProgressService.getAllProgress("user-adult")).thenReturn(java.util.Map.of());
-        when(service.bookRepository.findByAuthorId("user-adult")).thenReturn(java.util.List.of());
+        when(service.bookService.findMetadataByAuthorId("user-adult")).thenReturn(java.util.List.of());
 
         java.util.Map<String, Object> matureBookMap = new java.util.HashMap<>();
         matureBookMap.put("id", "book-mature-21");
         matureBookMap.put("title", "A 21+ Story");
         matureBookMap.put("isMature", true);
         matureBookMap.put("ageRating", com.wordweft.book.model.AgeRating.MATURE_18);
-        when(service.bookService.enrichBookForProfileById("book-mature-21", "user-adult")).thenReturn(matureBookMap);
+        Book matureBook = new Book(); matureBook.setId("book-mature-21");
+        when(service.bookService.findMetadataByIds(List.of("book-mature-21"))).thenReturn(List.of(matureBook));
+        when(service.bookService.enrichBooksForProfile(anyCollection(), eq("user-adult"))).thenReturn(List.of(matureBookMap));
 
         Map<String, Object> enriched = service.enrichUser(user, "user-adult");
         assertNotNull(enriched);

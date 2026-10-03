@@ -57,7 +57,7 @@ class WriterGrowthServiceTest {
 
     @Test
     void continuationUsesReadersWhoReachedTheNextChapter() {
-        when(books.findById("book")).thenReturn(Optional.of(book));
+        when(books.findAnalyticsMetadataById("book")).thenReturn(Optional.of(book));
         when(events.findByBookIdInAndOccurredAtBetween(anyCollection(), any(), any()))
                 .thenReturn(List.of(
                         event("chapter-1", "reader-a"),
@@ -86,7 +86,7 @@ class WriterGrowthServiceTest {
         other.setId("other");
         other.setAuthorId("author");
         other.setTitle("Second Story");
-        when(books.findByAuthorId("author")).thenReturn(List.of(book, other));
+        when(books.findAnalyticsMetadataByAuthorId("author")).thenReturn(List.of(book, other));
         when(events.findByBookIdInAndOccurredAtBetween(anyCollection(), any(), any())).thenReturn(List.of());
         when(progress.findByBookIdIn(anyCollection())).thenReturn(List.of());
 
@@ -97,7 +97,7 @@ class WriterGrowthServiceTest {
 
     @Test
     void anotherAuthorsStoryIsRejected() {
-        when(books.findById("book")).thenReturn(Optional.of(book));
+        when(books.findAnalyticsMetadataById("book")).thenReturn(Optional.of(book));
 
         assertThrows(AccessDeniedException.class,
                 () -> service.getAnalytics("intruder", "book", NOW));

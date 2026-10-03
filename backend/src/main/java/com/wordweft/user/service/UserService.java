@@ -29,12 +29,12 @@ public class UserService {
     BookService bookService;
 
     public Map<String, Object> getUserProfile(String userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findProfileById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return enrichUser(user, userId);
     }
 
     public Map<String, Object> getPublicProfile(String targetUserId, String currentUserId) {
-        User user = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findPublicProfileById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
         // Public profiles must not hydrate a member's private library. Besides leaking
         // reading history, that made an otherwise public profile fail when a shelf
         // contained a story the viewer was not old enough to access.
@@ -135,17 +135,29 @@ public class UserService {
         // nested `author` object (id, name, avatarUrl, bio) is included.
         // Raw Book entities only store authorId, not the resolved author object.
         boolean isSelf = user.getId().equals(currentViewerId);
-        List<Book> written = bookRepository.findByAuthorId(user.getId());
-        List<Map<String, Object>> writtenEnriched = written.stream()
-                .filter(b -> isSelf || ("published".equals(b.getPublicationStatus()) && (contentAccessService == null || contentAccessService.canDiscover(b))))
-                .map(b -> bookService.enrichBookForProfile(b, currentViewerId))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        map.put("writtenBooks", writtenEnriched);
+        List<Book> written = bookService.findMetadataByAuthorId(user.getId());
 
         // Populate Library
         List<LibraryEntry> entries = libraryRepository.findByUserId(user.getId());
         List<com.wordweft.book.model.Shelf> customShelves = shelfRepository.findByUserId(user.getId());
+
+        // Written stories and saved stories share one author batch and one viewer preference snapshot.
+        // Only chapter metadata crosses Mongo; the projection retains owner editing flags.
+        Map<String, Book> profileBooks = new LinkedHashMap<>();
+        written.forEach(book -> profileBooks.put(book.getId(), book));
+        bookService.findMetadataByIds(entries.stream().map(LibraryEntry::getBookId).filter(Objects::nonNull).distinct().toList())
+                .forEach(book -> profileBooks.putIfAbsent(book.getId(), book));
+        Map<String, Map<String, Object>> enrichedById = bookService.enrichBooksForProfile(profileBooks.values(), currentViewerId)
+                .stream().collect(Collectors.toMap(book -> (String) book.get("id"), book -> book));
+        List<Map<String, Object>> writtenEnriched = written.stream()
+                .filter(book -> isSelf || ("published".equals(book.getPublicationStatus())
+                        && enrichedById.containsKey(book.getId())
+                        && Boolean.TRUE.equals(enrichedById.get(book.getId()).get("isDiscoverable"))))
+                .map(book -> enrichedById.get(book.getId()))
+                .filter(Objects::nonNull)
+                .map(book -> (Map<String, Object>) new HashMap<>(book))
+                .collect(Collectors.toList());
+        map.put("writtenBooks", writtenEnriched);
 
         // Fetch all reading progress
         Map<String, com.wordweft.book.model.ReadingProgress> progressMap = readingProgressService.getAllProgress(user.getId());
@@ -171,7 +183,8 @@ public class UserService {
         boolean allowMature = user.isAllowMatureContent() && (user.getDateOfBirth() == null || java.time.Period.between(user.getDateOfBirth(), java.time.LocalDate.now()).getYears() >= 18);
 
         for (LibraryEntry e : entries) {
-            Map<String, Object> b = bookService.enrichBookForProfileById(e.getBookId(), currentViewerId);
+            Map<String, Object> original = enrichedById.get(e.getBookId());
+            Map<String, Object> b = original == null ? null : new HashMap<>(original);
             if (b != null) {
                 Boolean isMature = (Boolean) b.get("isMature");
                 Object ratingObj = b.get("ageRating");
@@ -280,21 +293,21 @@ public class UserService {
     }
 
     public List<Map<String, Object>> getFollowersList(String userId, String currentViewerId) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findFollowersById(userId).orElseThrow();
         return getUsersFromIds(user.getFollowers(), currentViewerId);
     }
 
     public List<Map<String, Object>> getFollowingList(String userId, String currentViewerId) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findFollowingById(userId).orElseThrow();
         return getUsersFromIds(user.getFollowing(), currentViewerId);
     }
 
     private List<Map<String, Object>> getUsersFromIds(Set<String> ids, String currentViewerId) {
         if (ids.isEmpty())
             return new ArrayList<>();
-        List<User> users = userRepository.findAllById(ids);
+        List<User> users = userRepository.findPublicCardsByIdIn(ids);
 
-        User viewer = (currentViewerId != null) ? userRepository.findById(currentViewerId).orElse(null) : null;
+        User viewer = (currentViewerId != null) ? userRepository.findFollowingById(currentViewerId).orElse(null) : null;
         Set<String> viewerFollowing = (viewer != null) ? viewer.getFollowing() : new HashSet<>();
 
         return users.stream().map(u -> {

@@ -35,9 +35,9 @@ class PublicSeoAggregationMappingTest {
             verify(mongo).aggregate(capture.capture(), eq(Book.class), eq(Document.class));
             List<Document> stages = assertDoesNotThrow(() -> capture.getValue().toPipeline(context), kind);
             Document guard = stages.get(0).get("$match", Document.class);
-            assertEquals("published", guard.get("publicationStatus"));
-            assertEquals(new Document("$ne", true), guard.get("isMature"));
-            assertEquals(new Document("$elemMatch", new Document("status", "published")), guard.get("chapters"));
+            assertEquals("published", criterionValue(guard, "publicationStatus"));
+            assertEquals(new Document("$ne", true), criterionValue(guard, "isMature"));
+            assertEquals(new Document("$elemMatch", new Document("status", "published")), criterionValue(guard, "chapters"));
             assertEquals(new Document("$skip", 1000L), stages.get(stages.size() - 2));
             assertEquals(new Document("$limit", 1000L), stages.get(stages.size() - 1));
             if (kind.equals("chapters")) {
@@ -47,5 +47,16 @@ class PublicSeoAggregationMappingTest {
                 assertTrue(stages.contains(new Document("$match", new Document("chapters.status", "published"))));
             }
         }
+    }
+
+    private Object criterionValue(Document criteria, String field) {
+        if (criteria.containsKey(field)) return criteria.get(field);
+        for (String operator : List.of("$and", "$or")) {
+            for (Document nested : criteria.getList(operator, Document.class, List.of())) {
+                Object found = criterionValue(nested, field);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 }

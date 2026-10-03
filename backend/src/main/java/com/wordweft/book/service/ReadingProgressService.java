@@ -44,13 +44,14 @@ public class ReadingProgressService {
 
     public ReadingProgress getProgress(String userId, String bookId) {
         ReadingProgress progress = progressRepository.findByUserIdAndBookId(userId, bookId).orElse(null);
-        return progress == null ? null : books.findById(bookId).map(book -> normalize(progress, book)).orElse(null);
+        return progress == null ? null : books.findProgressMetadataById(bookId).map(book -> normalize(progress, book)).orElse(null);
     }
 
     public Map<String, ReadingProgress> getAllProgress(String userId) {
         List<ReadingProgress> records = progressRepository.findByUserId(userId);
+        if (records.isEmpty()) return Map.of();
         Map<String, Book> bookMap = new HashMap<>();
-        books.findAllById(records.stream().map(ReadingProgress::getBookId).toList())
+        books.findProgressMetadataByIdIn(records.stream().map(ReadingProgress::getBookId).distinct().toList())
                 .forEach(book -> bookMap.put(book.getId(), book));
         Map<String, ReadingProgress> result = new HashMap<>();
         for (ReadingProgress progress : records) {
@@ -61,8 +62,9 @@ public class ReadingProgressService {
     }
 
     public ReadingProgress saveProgress(String userId, SaveRequest request) {
-        Book book = books.findById(request.bookId()).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found."));
+        // Progress updates need released metadata, never either chapter manuscript.
+        Book book = mongo.findOne(BookMetadataProjection.apply(Query.query(Criteria.where("_id").is(request.bookId()))), Book.class);
+        if (book == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found.");
         if (!Objects.equals(book.getAuthorId(), userId) && !"published".equals(book.getPublicationStatus())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Story not found.");
         }

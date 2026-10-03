@@ -2,50 +2,57 @@ package com.wordweft.discovery.service;
 
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
-import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.model.AgeRating;
 import com.wordweft.book.service.ContentAccessService;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.discovery.dto.HookFeedResponse;
 import com.wordweft.user.model.User;
-import com.wordweft.user.repository.UserRepository;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.ArrayList;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HookFeedServiceTest {
-    @Mock BookRepository books;
-    @Mock UserRepository users;
+    @Mock MongoTemplate mongo;
     @Mock ContentAccessService access;
     private HookFeedService service;
 
     @BeforeEach
     void setUp() {
-        service = new HookFeedService(books, users, access);
-        when(access.canDiscover(any(Book.class))).thenReturn(true);
+        service = new HookFeedService(mongo, access);
+        lenient().when(access.allowedRatings()).thenReturn(Set.of(AgeRating.ALL_AGES, AgeRating.TEEN_13));
+        lenient().when(access.allowedRatings(any())).thenReturn(Set.of(AgeRating.ALL_AGES, AgeRating.TEEN_13));
     }
 
     @Test
-    void ranksExplicitGenreMatchesBeforePopularFallbacks() {
+    void retainsTasteAndGenreLabelsForDatabaseRankedStories() {
         User reader = user("reader", "Reader", List.of("Fantasy"));
         Book popularMystery = story("mystery", "Mystery", List.of("Mystery"), 500,
                 chapter("m1", "published", "<p>A locked room.</p>"));
         Book fantasy = story("fantasy", "Fantasy", List.of("Fantasy", "Adventure"), 5,
                 chapter("f1", "published", "<p>A dragon woke beneath the city.</p>"));
-        when(users.findById("reader")).thenReturn(Optional.of(reader));
-        when(users.findById("author")).thenReturn(Optional.of(user("author", "Mira Vale", List.of())));
-        when(books.findByPublicationStatus("published")).thenReturn(List.of(popularMystery, fantasy));
+        when(mongo.findOne(any(Query.class), eq(User.class))).thenReturn(reader);
+        when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of(user("author", "Mira Vale", List.of())));
+        rankedOpenings(fantasy, popularMystery);
 
         HookFeedResponse result = service.getFeed("reader", Set.of(), 10);
 
@@ -56,15 +63,11 @@ class HookFeedServiceTest {
 
     @Test
     void exposesOnlyPublishedOpeningsAndHonorsSeenStories() {
-        Book seen = story("seen", "Seen", List.of("Fantasy"), 1,
-                chapter("seen-1", "published", "Visible"));
-        Book draftOpening = story("draft-opening", "Draft", List.of("Fantasy"), 2,
-                chapter("draft-1", "draft", "Secret"));
         Book mixed = story("mixed", "Mixed", List.of("Fantasy"), 3,
                 chapter("private", "draft", "Do not leak"),
                 chapter("public", "published", "<p>The public beginning.</p>"));
-        when(books.findByPublicationStatus("published")).thenReturn(List.of(seen, draftOpening, mixed));
-        when(users.findById("author")).thenReturn(Optional.empty());
+        rankedOpenings(mixed);
+        when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of());
 
         HookFeedResponse result = service.getFeed(null, Set.of("seen"), 10);
 
@@ -80,8 +83,8 @@ class HookFeedServiceTest {
         String repeated = "<p>" + "A very long opening sentence. ".repeat(40) + "</p>";
         Book book = story("long", "Long", List.of("Literary"), 1,
                 chapter("chapter", "published", repeated));
-        when(books.findByPublicationStatus("published")).thenReturn(List.of(book));
-        when(users.findById("author")).thenReturn(Optional.empty());
+        rankedOpenings(book);
+        when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of());
 
         String excerpt = service.getFeed(null, Set.of(), 10).items().get(0).excerpt();
 
@@ -93,14 +96,27 @@ class HookFeedServiceTest {
     void includesTheCurrentReadersLikeState() {
         Chapter opening = chapter("chapter", "published", "Opening");
         opening.getLikes().add("reader");
-        when(books.findByPublicationStatus("published")).thenReturn(List.of(
-                story("book", "Story", List.of("Literary"), 1, opening)));
-        when(users.findById("author")).thenReturn(Optional.empty());
+        rankedOpenings(story("book", "Story", List.of("Literary"), 1, opening));
+        when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of());
 
         HookFeedResponse.Hook hook = service.getFeed("reader", List.of(), Set.of(), 10).items().get(0);
 
         assertTrue(hook.liked());
         assertEquals(1, hook.likesCount());
+    }
+
+    private void rankedOpenings(Book... books) {
+        List<String> labels = List.of(books).stream().flatMap(book -> book.getGenres().stream()).distinct().toList();
+        lenient().when(mongo.findDistinct(any(Query.class), eq("genres"), eq(Book.class), eq(String.class))).thenReturn(labels);
+        when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Book.class)))
+                .thenReturn(new AggregationResults<>(List.of(books), new Document()));
+        List<Document> bodies = new ArrayList<>();
+        for (Book book : books) {
+            Chapter opening = book.getChapters().stream().filter(chapter -> "published".equalsIgnoreCase(chapter.getStatus())).findFirst().orElseThrow();
+            bodies.add(new Document("_id", book.getId()).append("openingContent", PublishedChapterView.of(opening).content()));
+        }
+        when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Document.class)))
+                .thenReturn(new AggregationResults<>(bodies, new Document()));
     }
 
     private Book story(String id, String title, List<String> genres, int recentReads, Chapter... chapters) {

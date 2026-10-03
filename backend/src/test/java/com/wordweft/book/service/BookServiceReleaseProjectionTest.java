@@ -8,6 +8,8 @@ import com.wordweft.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 class BookServiceReleaseProjectionTest {
     private BookService service;
@@ -33,14 +37,16 @@ class BookServiceReleaseProjectionTest {
         BookRepository books = mock(BookRepository.class);
         UserRepository users = mock(UserRepository.class);
         ContentAccessService access = mock(ContentAccessService.class);
+        MongoTemplate mongo = mock(MongoTemplate.class);
         ReflectionTestUtils.setField(service, "bookRepository", books);
         ReflectionTestUtils.setField(service, "userRepository", users);
         ReflectionTestUtils.setField(service, "contentAccessService", access);
+        ReflectionTestUtils.setField(service, "mongoTemplate", mongo);
 
         User author = new User();
         author.setId("author");
         author.setUsername("Writer");
-        when(users.findById("author")).thenReturn(Optional.of(author));
+        when(mongo.find(any(Query.class), eq(User.class))).thenReturn(List.of(author));
 
         published = new Chapter();
         published.setId("published");

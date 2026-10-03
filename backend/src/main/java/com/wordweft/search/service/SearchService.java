@@ -1,343 +1,132 @@
-
 package com.wordweft.search.service;
 
+import com.wordweft.book.model.AgeRating;
+import com.wordweft.book.model.Book;
+import com.wordweft.book.service.ContentAccessService;
+import com.wordweft.user.model.User;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import com.wordweft.book.model.AgeRating;
-import com.wordweft.book.model.Book;
-import com.wordweft.book.service.ContentAccessService;
-import com.wordweft.user.model.User;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class SearchService {
+    @Autowired private MongoTemplate mongoTemplate;
+    @Autowired private ContentAccessService contentAccessService;
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
-    @Autowired
-    private ContentAccessService contentAccessService;
-
-    private static final String BOOKS_COLLECTION = "books";
-    private static final String USERS_COLLECTION = "users";
     private static final String BOOKS_INDEX = "booksSearchIndex";
     private static final String USERS_INDEX = "userSearchIndex";
-
-    // ─── Autocomplete ─────────────────────────────────────────────────
+    private static final String[] BOOK_RESULT_FIELDS = {
+            "title", "coverUrl", "genres", "tags", "summary", "description", "rating", "reviewsCount",
+            "readingStatus", "authorId", "publishedDate"
+    };
 
     public Map<String, Object> autocomplete(String query) {
+        // Preferences belong to this request; never retain them between accounts or requests.
+        Set<AgeRating> allowedRatings = contentAccessService.allowedRatings();
         Map<String, Object> result = new HashMap<>();
-        result.put("books", searchBooksAutocomplete(query));
+        result.put("books", searchBooksAutocomplete(query, allowedRatings));
         result.put("authors", searchAuthorsAutocomplete(query));
         return result;
     }
 
-    private List<Map<String, Object>> searchBooksAutocomplete(String query) {
-        List<Map<String, Object>> prefixMatches = searchBookPrefixes(query, 5);
-        if (prefixMatches.size() >= 5) return prefixMatches;
-        List<Document> pipeline = List.of(
-                new Document("$search", new Document("index", BOOKS_INDEX)
-                        .append("compound", new Document("must", List.of(
-                                new Document("text", new Document("query", query)
-                                        .append("path", List.of("title", "summary", "genres", "tags", "description"))
-                                        .append("fuzzy", new Document("maxEdits", 1)
-                                                .append("prefixLength", 2)))))
-                                .append("filter", List.of(
-                                        new Document("text", new Document("query", "published")
-                                                .append("path", "publicationStatus")))))),
-                new Document("$limit", 5),
-                new Document("$project", new Document("_id", 0)
-                        .append("id", new Document("$toString", "$_id"))
-                        .append("title", 1)
-                        .append("coverUrl", 1)
-                        .append("genres", 1)
-                        .append("authorId", 1)
-                        .append("ageRating", 1)
-                        .append("isMature", 1)
-                        .append("rating", 1)
-                        .append("score", new Document("$meta", "searchScore"))));
-
-        List<Document> results;
+    private List<Map<String, Object>> searchBooksAutocomplete(String query, Set<AgeRating> allowedRatings) {
+        List<BookHit> prefix = searchBookTitles(prefixPattern(query), 5, allowedRatings);
+        if (prefix.size() >= 5) return enrichBooks(prefix);
+        List<BookHit> additional;
         try {
-            results = mongoTemplate.getCollection(BOOKS_COLLECTION)
-                    .aggregate(pipeline).into(new ArrayList<>());
+            List<AggregationOperation> stages = new ArrayList<>();
+            stages.add(context -> atlasBooksStage(query));
+            stages.add(Aggregation.match(ContentAccessService.discoverableCriteria(allowedRatings)));
+            stages.add(Aggregation.limit(5));
+            stages.add(context -> bookProjection(false));
+            additional = bookDocuments(stages).stream().map(doc -> bookHit(doc, false)).toList();
         } catch (RuntimeException unavailableAtlasSearch) {
-            Pattern titleContains = Pattern.compile(Pattern.quote(query == null ? "" : query.trim()),
-                    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-            return mergeById(prefixMatches, searchBookTitles(titleContains, 5), 5);
+            // Standalone Mongo supports the same literal substring fallback as before.
+            additional = searchBookTitles(containsPattern(query), 5, allowedRatings);
         }
-
-        // Enrich with author names
-        List<Map<String, Object>> fuzzyMatches = results.stream().filter(this::isAllowedBookResult).map(doc -> {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", doc.getString("id"));
-            map.put("title", doc.getString("title"));
-            map.put("coverUrl", doc.getString("coverUrl"));
-            map.put("genres", doc.getList("genres", String.class));
-            map.put("rating", doc.getDouble("rating"));
-            map.put("score", doc.getDouble("score"));
-
-            // Resolve author name
-            String authorId = doc.getString("authorId");
-            if (authorId != null) {
-                Document user = mongoTemplate.getCollection(USERS_COLLECTION)
-                        .find(new Document("_id", new org.bson.types.ObjectId(authorId)))
-                        .projection(new Document("username", 1).append("avatarUrl", 1))
-                        .first();
-                if (user != null) {
-                    Map<String, String> author = new HashMap<>();
-                    author.put("id", authorId);
-                    author.put("name", user.getString("username"));
-                    author.put("avatarUrl", user.getString("avatarUrl"));
-                    map.put("author", author);
-                }
-            }
-            return map;
-        }).collect(Collectors.toList());
-        return mergeById(prefixMatches, fuzzyMatches, 5);
+        return enrichBooks(mergeBooks(prefix, additional, 5));
     }
 
     private List<Map<String, Object>> searchAuthorsAutocomplete(String query) {
-        List<Map<String, Object>> prefixMatches = searchAuthorPrefixes(query, 3);
-        if (prefixMatches.size() >= 3) return prefixMatches;
-        List<Document> pipeline = List.of(
-                new Document("$search", new Document("index", USERS_INDEX)
-                        .append("text", new Document("query", query)
-                                .append("path", List.of("username", "bio"))
-                                .append("fuzzy", new Document("maxEdits", 1)
-                                        .append("prefixLength", 2)))),
-                new Document("$limit", 3),
-                new Document("$project", new Document("_id", 0)
-                        .append("id", new Document("$toString", "$_id"))
-                        .append("name", "$username")
-                        .append("avatarUrl", 1)
-                        .append("bio", 1)
-                        .append("followers", 1)
-                        .append("score", new Document("$meta", "searchScore"))));
-
-        List<Document> results;
+        List<Map<String, Object>> prefix = authorDocuments(Criteria.where("username").regex(prefixPattern(query)), 0, 3);
+        if (prefix.size() >= 3) return prefix;
         try {
-            results = mongoTemplate.getCollection(USERS_COLLECTION)
-                    .aggregate(pipeline).into(new ArrayList<>());
+            List<Document> fuzzy = mongoTemplate.aggregate(Aggregation.newAggregation(
+                    context -> atlasAuthorsStage(query), Aggregation.limit(3), context -> authorProjection()),
+                    User.class, Document.class).getMappedResults();
+            return mergeById(prefix, fuzzy.stream().map(this::authorResult).toList(), 3);
         } catch (RuntimeException unavailableAtlasSearch) {
-            return prefixMatches;
+            return prefix;
         }
-
-        List<Map<String, Object>> fuzzyMatches = results.stream().map(doc -> {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", doc.getString("id"));
-            map.put("name", doc.getString("name"));
-            map.put("avatarUrl", doc.getString("avatarUrl"));
-            map.put("bio", doc.getString("bio"));
-            List<?> followers = doc.getList("followers", String.class);
-            map.put("followersCount", followers != null ? followers.size() : 0);
-            return map;
-        }).collect(Collectors.toList());
-        return mergeById(prefixMatches, fuzzyMatches, 3);
     }
 
-    // ─── Full Search ──────────────────────────────────────────────────
-
     public Map<String, Object> fullSearch(String query, String type, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 50));
+        Set<AgeRating> allowedRatings = contentAccessService.allowedRatings();
         Map<String, Object> result = new HashMap<>();
-
-        if ("all".equals(type) || "books".equals(type)) {
-            result.put("books", searchBooksFull(query, page, size));
-        }
-        if ("all".equals(type) || "authors".equals(type)) {
-            result.put("authors", searchAuthorsFull(query, page, size));
-        }
-
+        if ("all".equals(type) || "books".equals(type))
+            result.put("books", searchBooksFull(query, safePage, safeSize, allowedRatings));
+        if ("all".equals(type) || "authors".equals(type))
+            result.put("authors", searchAuthorsFull(query, safePage, safeSize));
         return result;
     }
 
-    private Map<String, Object> searchBooksFull(String query, int page, int size) {
-        Map<String, Object> prefixMatches = searchBookPrefixesPage(query, page, size);
-        if (((Number) prefixMatches.get("total")).longValue() > 0) return prefixMatches;
-        int skip = page * size;
-
+    private Map<String, Object> searchBooksFull(String query, int page, int size, Set<AgeRating> allowedRatings) {
+        Criteria criteria = new Criteria().andOperator(ContentAccessService.discoverableCriteria(allowedRatings),
+                new Criteria().orOperator(Criteria.where("title").regex(containsPattern(query)),
+                        Criteria.where("genres").regex(prefixPattern(query)), Criteria.where("tags").regex(prefixPattern(query))));
+        long total = mongoTemplate.count(Query.query(criteria), Book.class);
+        if (total > 0) {
+            Query data = bookQuery(criteria).skip((long) page * size).limit(size);
+            return page(enrichBooks(mongoTemplate.find(data, Book.class).stream().map(this::bookHit).toList()), total, page, size);
+        }
+        Map<String, Object> empty = page(List.of(), 0, page, size);
         try {
-
-            // Count pipeline
-            List<Document> countPipeline = List.of(
-                new Document("$search", new Document("index", BOOKS_INDEX)
-                        .append("compound", new Document("must", List.of(
-                                new Document("text", new Document("query", query)
-                                        .append("path", List.of("title", "summary", "genres", "tags", "description"))
-                                        .append("fuzzy", new Document("maxEdits", 1)
-                                                .append("prefixLength", 2)))))
-                                .append("filter", List.of(
-                                        new Document("text", new Document("query", "published")
-                                                .append("path", "publicationStatus")))))),
-                new Document("$count", "total"));
-
-            List<Document> countResult = mongoTemplate.getCollection(BOOKS_COLLECTION)
-                    .aggregate(countPipeline).into(new ArrayList<>());
-            long total = countResult.isEmpty() ? 0 : countResult.get(0).getInteger("total", 0);
-
-        // Data pipeline
-            List<Document> dataPipeline = List.of(
-                new Document("$search", new Document("index", BOOKS_INDEX)
-                        .append("compound", new Document("must", List.of(
-                                new Document("text", new Document("query", query)
-                                        .append("path", List.of("title", "summary", "genres", "tags", "description"))
-                                        .append("fuzzy", new Document("maxEdits", 1)
-                                                .append("prefixLength", 2)))))
-                                .append("filter", List.of(
-                                        new Document("text", new Document("query", "published")
-                                                .append("path", "publicationStatus")))))),
-                new Document("$skip", skip),
-                new Document("$limit", size),
-                new Document("$project", new Document("_id", 0)
-                        .append("id", new Document("$toString", "$_id"))
-                        .append("title", 1)
-                        .append("coverUrl", 1)
-                        .append("genres", 1)
-                        .append("tags", 1)
-                        .append("summary", 1)
-                        .append("description", 1)
-                        .append("rating", 1)
-                        .append("reviewsCount", 1)
-                        .append("readingStatus", 1)
-                        .append("authorId", 1)
-                        .append("publishedDate", 1)
-                        .append("ageRating", 1)
-                        .append("isMature", 1)
-                        .append("score", new Document("$meta", "searchScore"))));
-
-            List<Document> results = mongoTemplate.getCollection(BOOKS_COLLECTION)
-                    .aggregate(dataPipeline).into(new ArrayList<>());
-
-            List<Map<String, Object>> enriched = results.stream().filter(this::isAllowedBookResult).map(doc -> {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", doc.getString("id"));
-            map.put("title", doc.getString("title"));
-            map.put("coverUrl", doc.getString("coverUrl"));
-            map.put("genres", doc.getList("genres", String.class));
-            map.put("tags", doc.getList("tags", String.class));
-            map.put("summary", doc.getString("summary"));
-            map.put("description", doc.getString("description"));
-            map.put("rating", doc.getDouble("rating"));
-            map.put("reviewsCount", doc.getInteger("reviewsCount", 0));
-            map.put("readingStatus", doc.getString("readingStatus"));
-            map.put("publishedDate", doc.get("publishedDate"));
-            map.put("score", doc.getDouble("score"));
-
-            // Resolve author
-            String authorId = doc.getString("authorId");
-            if (authorId != null) {
-                try {
-                    Document user = mongoTemplate.getCollection(USERS_COLLECTION)
-                            .find(new Document("_id", new org.bson.types.ObjectId(authorId)))
-                            .projection(new Document("username", 1).append("avatarUrl", 1).append("bio", 1))
-                            .first();
-                    if (user != null) {
-                        Map<String, String> author = new HashMap<>();
-                        author.put("id", authorId);
-                        author.put("name", user.getString("username"));
-                        author.put("avatarUrl", user.getString("avatarUrl"));
-                        author.put("bio", user.getString("bio"));
-                        map.put("author", author);
-                    }
-                } catch (Exception e) {
-                    // Author not found, skip enrichment
-                }
-            }
-            return map;
-        }).collect(Collectors.toList());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("items", enriched);
-            response.put("total", total);
-            response.put("page", page);
-            response.put("totalPages", (int) Math.ceil((double) total / size));
-            return response;
+            List<AggregationOperation> guards = List.of(context -> atlasBooksStage(query),
+                    Aggregation.match(ContentAccessService.discoverableCriteria(allowedRatings)));
+            List<AggregationOperation> countStages = new ArrayList<>(guards);
+            countStages.add(Aggregation.count().as("total"));
+            total = count(bookDocuments(countStages));
+            if (total == 0) return empty;
+            List<AggregationOperation> dataStages = new ArrayList<>(guards);
+            dataStages.add(Aggregation.skip((long) page * size));
+            dataStages.add(Aggregation.limit(size));
+            dataStages.add(context -> bookProjection(true));
+            List<BookHit> hits = bookDocuments(dataStages).stream().map(doc -> bookHit(doc, true)).toList();
+            return page(enrichBooks(hits), total, page, size);
         } catch (RuntimeException unavailableAtlasSearch) {
-            return prefixMatches;
+            return empty;
         }
-    }
-
-    private boolean isAllowedBookResult(Document doc) {
-        String value = doc.getString("ageRating");
-        AgeRating rating;
-        try {
-            rating = value != null ? AgeRating.valueOf(value) : (Boolean.TRUE.equals(doc.getBoolean("isMature")) ? AgeRating.MATURE_18 : AgeRating.ALL_AGES);
-        } catch (IllegalArgumentException ignored) {
-            rating = AgeRating.ALL_AGES;
-        }
-        return contentAccessService.allowedRatings().contains(rating);
     }
 
     private Map<String, Object> searchAuthorsFull(String query, int page, int size) {
-        Map<String, Object> prefixMatches = searchAuthorPrefixesPage(query, page, size);
-        if (((Number) prefixMatches.get("total")).longValue() > 0) return prefixMatches;
-        int skip = page * size;
-
+        Criteria criteria = new Criteria().orOperator(Criteria.where("username").regex(prefixPattern(query)),
+                Criteria.where("bio").regex(containsPattern(query)));
+        long total = mongoTemplate.count(Query.query(criteria), User.class);
+        if (total > 0) return page(authorDocuments(criteria, (long) page * size, size), total, page, size);
+        Map<String, Object> empty = page(List.of(), 0, page, size);
         try {
-
-            // Count pipeline
-            List<Document> countPipeline = List.of(
-                new Document("$search", new Document("index", USERS_INDEX)
-                        .append("text", new Document("query", query)
-                                .append("path", List.of("username", "bio"))
-                                .append("fuzzy", new Document("maxEdits", 1)
-                                        .append("prefixLength", 2)))),
-                new Document("$count", "total"));
-
-            List<Document> countResult = mongoTemplate.getCollection(USERS_COLLECTION)
-                    .aggregate(countPipeline).into(new ArrayList<>());
-            long total = countResult.isEmpty() ? 0 : countResult.get(0).getInteger("total", 0);
-
-        // Data pipeline
-            List<Document> dataPipeline = List.of(
-                new Document("$search", new Document("index", USERS_INDEX)
-                        .append("text", new Document("query", query)
-                                .append("path", List.of("username", "bio"))
-                                .append("fuzzy", new Document("maxEdits", 1)
-                                        .append("prefixLength", 2)))),
-                new Document("$skip", skip),
-                new Document("$limit", size),
-                new Document("$project", new Document("_id", 0)
-                        .append("id", new Document("$toString", "$_id"))
-                        .append("name", "$username")
-                        .append("avatarUrl", 1)
-                        .append("bio", 1)
-                        .append("followers", 1)
-                        .append("following", 1)
-                        .append("favoriteGenres", 1)
-                        .append("score", new Document("$meta", "searchScore"))));
-
-            List<Document> results = mongoTemplate.getCollection(USERS_COLLECTION)
-                    .aggregate(dataPipeline).into(new ArrayList<>());
-
-            List<Map<String, Object>> enriched = results.stream().map(doc -> {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", doc.getString("id"));
-            map.put("name", doc.getString("name"));
-            map.put("avatarUrl", doc.getString("avatarUrl"));
-            map.put("bio", doc.getString("bio"));
-            List<?> followers = doc.getList("followers", String.class);
-            List<?> following = doc.getList("following", String.class);
-            map.put("followersCount", followers != null ? followers.size() : 0);
-            map.put("followingCount", following != null ? following.size() : 0);
-            map.put("favoriteGenres", doc.getList("favoriteGenres", String.class));
-            return map;
-        }).collect(Collectors.toList());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("items", enriched);
-            response.put("total", total);
-            response.put("page", page);
-            response.put("totalPages", (int) Math.ceil((double) total / size));
-            return response;
+            List<Document> countRows = mongoTemplate.aggregate(Aggregation.newAggregation(
+                    context -> atlasAuthorsStage(query), Aggregation.count().as("total")), User.class, Document.class).getMappedResults();
+            total = count(countRows);
+            if (total == 0) return empty;
+            List<Document> rows = mongoTemplate.aggregate(Aggregation.newAggregation(
+                    context -> atlasAuthorsStage(query), Aggregation.skip((long) page * size), Aggregation.limit(size),
+                    context -> authorProjection()), User.class, Document.class).getMappedResults();
+            return page(rows.stream().map(this::authorResult).toList(), total, page, size);
         } catch (RuntimeException unavailableAtlasSearch) {
-            return prefixMatches;
+            return empty;
         }
     }
 
@@ -345,104 +134,129 @@ public class SearchService {
         return Pattern.compile("^" + Pattern.quote(query == null ? "" : query.trim()), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 
-    private List<Map<String, Object>> searchBookPrefixes(String query, int limit) {
-        return searchBookTitles(prefixPattern(query), limit);
+    private static Pattern containsPattern(String query) {
+        return Pattern.compile(Pattern.quote(query == null ? "" : query.trim()), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 
-    private List<Map<String, Object>> searchBookTitles(Pattern titlePattern, int limit) {
-        Query mongoQuery = Query.query(Criteria.where("publicationStatus").is("published")
-                .and("title").regex(titlePattern)).limit(limit * 3);
-        mongoQuery.fields().exclude("chapters.content");
-        return mongoTemplate.find(mongoQuery, Book.class).stream()
-                .filter(contentAccessService::canDiscover)
-                .limit(limit)
-                .map(this::bookResult)
-                .toList();
+    private List<BookHit> searchBookTitles(Pattern pattern, int limit, Set<AgeRating> allowedRatings) {
+        Criteria criteria = new Criteria().andOperator(ContentAccessService.discoverableCriteria(allowedRatings),
+                Criteria.where("title").regex(pattern));
+        return mongoTemplate.find(bookQuery(criteria).limit(limit), Book.class).stream().map(this::bookHit).toList();
     }
 
-    private List<Map<String, Object>> searchAuthorPrefixes(String query, int limit) {
-        Query mongoQuery = Query.query(Criteria.where("username").regex(prefixPattern(query))).limit(limit);
-        return mongoTemplate.find(mongoQuery, User.class).stream().map(this::authorResult).toList();
+    private Query bookQuery(Criteria criteria) {
+        Query query = Query.query(criteria).with(Sort.by("_id"));
+        query.fields().include(BOOK_RESULT_FIELDS);
+        return query;
     }
 
-    private Map<String, Object> searchBookPrefixesPage(String query, int page, int size) {
-        Query mongoQuery = Query.query(new Criteria().andOperator(
-                Criteria.where("publicationStatus").is("published"),
-                new Criteria().orOperator(
-                        Criteria.where("title").regex(Pattern.compile(Pattern.quote(query), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
-                        Criteria.where("genres").regex(prefixPattern(query)),
-                        Criteria.where("tags").regex(prefixPattern(query))))).limit(500);
-        mongoQuery.fields().exclude("chapters.content");
-        List<Map<String, Object>> allowed = mongoTemplate.find(mongoQuery, Book.class).stream()
-                .filter(contentAccessService::canDiscover).map(this::bookResult).toList();
-        return page(allowed, page, size);
+    private List<Document> bookDocuments(List<AggregationOperation> stages) {
+        return mongoTemplate.aggregate(Aggregation.newAggregation(stages), Book.class, Document.class).getMappedResults();
     }
 
-    private Map<String, Object> searchAuthorPrefixesPage(String query, int page, int size) {
-        Query mongoQuery = Query.query(new Criteria().orOperator(
-                Criteria.where("username").regex(prefixPattern(query)),
-                Criteria.where("bio").regex(Pattern.compile(Pattern.quote(query), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE))))
-                .limit(500);
-        return page(mongoTemplate.find(mongoQuery, User.class).stream().map(this::authorResult).toList(), page, size);
+    private List<Map<String, Object>> authorDocuments(Criteria criteria, long skip, int limit) {
+        return mongoTemplate.aggregate(Aggregation.newAggregation(Aggregation.match(criteria), Aggregation.sort(Sort.by("_id")),
+                Aggregation.skip(skip), Aggregation.limit(limit), context -> authorProjection()), User.class, Document.class)
+                .getMappedResults().stream().map(this::authorResult).toList();
     }
 
-    private Map<String, Object> bookResult(Book book) {
+    private static Document atlasBooksStage(String query) {
+        Document text = new Document("query", query).append("path", List.of("title", "summary", "genres", "tags", "description"))
+                .append("fuzzy", new Document("maxEdits", 1).append("prefixLength", 2));
+        Document compound = new Document("must", List.of(new Document("text", text)))
+                .append("filter", List.of(new Document("text", new Document("query", "published").append("path", "publicationStatus"))));
+        return new Document("$search", new Document("index", BOOKS_INDEX).append("compound", compound));
+    }
+
+    private static Document atlasAuthorsStage(String query) {
+        return new Document("$search", new Document("index", USERS_INDEX).append("text", new Document("query", query)
+                .append("path", List.of("username", "bio")).append("fuzzy", new Document("maxEdits", 1).append("prefixLength", 2))));
+    }
+
+    private static Document bookProjection(boolean full) {
+        Document fields = new Document("_id", 0).append("id", new Document("$toString", "$_id"))
+                .append("title", 1).append("coverUrl", 1).append("genres", 1).append("rating", 1).append("authorId", 1)
+                .append("score", new Document("$meta", "searchScore"));
+        if (full) for (String field : BOOK_RESULT_FIELDS) fields.put(field, 1);
+        return new Document("$project", fields);
+    }
+
+    private static Document authorProjection() {
+        return new Document("$project", new Document("_id", 0).append("id", new Document("$toString", "$_id"))
+                .append("name", "$username").append("avatarUrl", 1).append("bio", 1).append("favoriteGenres", 1)
+                .append("followersCount", new Document("$size", new Document("$ifNull", List.of("$followers", List.of()))))
+                .append("followingCount", new Document("$size", new Document("$ifNull", List.of("$following", List.of())))));
+    }
+
+    private record BookHit(Map<String, Object> item, String authorId) {}
+
+    private BookHit bookHit(Book book) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("id", book.getId());
-        map.put("title", book.getTitle());
-        map.put("coverUrl", book.getCoverUrl());
-        map.put("genres", book.getGenres());
-        map.put("tags", book.getTags());
-        map.put("summary", book.getSummary());
-        map.put("description", book.getDescription());
-        map.put("rating", book.getRating());
-        map.put("reviewsCount", book.getReviewsCount());
-        map.put("readingStatus", book.getReadingStatus());
-        map.put("publishedDate", book.getPublishedDate());
-        usersForBook(map, book.getAuthorId());
-        return map;
+        map.put("id", book.getId()); map.put("title", book.getTitle()); map.put("coverUrl", book.getCoverUrl());
+        map.put("genres", book.getGenres()); map.put("tags", book.getTags()); map.put("summary", book.getSummary());
+        map.put("description", book.getDescription()); map.put("rating", book.getRating()); map.put("reviewsCount", book.getReviewsCount());
+        map.put("readingStatus", book.getReadingStatus()); map.put("publishedDate", book.getPublishedDate());
+        return new BookHit(map, book.getAuthorId());
     }
 
-    private void usersForBook(Map<String, Object> map, String authorId) {
-        if (authorId == null) return;
-        User user = mongoTemplate.findById(authorId, User.class);
-        if (user == null) return;
-        Map<String, String> author = new LinkedHashMap<>();
-        author.put("id", authorId);
-        author.put("name", user.getUsername());
-        author.put("avatarUrl", user.getAvatarUrl());
-        author.put("bio", user.getBio());
-        map.put("author", author);
-    }
-
-    private Map<String, Object> authorResult(User user) {
+    private BookHit bookHit(Document doc, boolean full) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("id", user.getId());
-        map.put("name", user.getUsername());
-        map.put("avatarUrl", user.getAvatarUrl());
-        map.put("bio", user.getBio());
-        map.put("followersCount", user.getFollowers() == null ? 0 : user.getFollowers().size());
-        map.put("followingCount", user.getFollowing() == null ? 0 : user.getFollowing().size());
-        map.put("favoriteGenres", user.getFavoriteGenres());
-        return map;
+        for (String key : List.of("id", "title", "coverUrl", "genres", "rating", "score")) map.put(key, doc.get(key));
+        if (full) {
+            for (String key : List.of("tags", "summary", "description", "readingStatus", "publishedDate")) map.put(key, doc.get(key));
+            map.put("reviewsCount", doc.getOrDefault("reviewsCount", 0));
+        }
+        return new BookHit(map, doc.getString("authorId"));
     }
 
-    private Map<String, Object> page(List<Map<String, Object>> items, int page, int size) {
-        int from = Math.min(page * size, items.size());
-        int to = Math.min(from + size, items.size());
-        Map<String, Object> response = new HashMap<>();
-        response.put("items", items.subList(from, to));
-        response.put("total", (long) items.size());
-        response.put("page", page);
-        response.put("totalPages", (int) Math.ceil((double) items.size() / size));
-        return response;
+    private List<Map<String, Object>> enrichBooks(List<BookHit> hits) {
+        Set<String> ids = hits.stream().map(BookHit::authorId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<String, User> authors = new HashMap<>();
+        if (!ids.isEmpty()) {
+            Query query = Query.query(Criteria.where("_id").in(ids));
+            query.fields().include("username", "avatarUrl", "bio");
+            mongoTemplate.find(query, User.class).forEach(author -> authors.put(author.getId(), author));
+        }
+        return hits.stream().map(hit -> {
+            User user = authors.get(hit.authorId());
+            if (user != null) {
+                Map<String, Object> author = new LinkedHashMap<>();
+                author.put("id", user.getId()); author.put("name", user.getUsername());
+                author.put("avatarUrl", user.getAvatarUrl()); author.put("bio", user.getBio());
+                hit.item().put("author", author);
+            }
+            return hit.item();
+        }).toList();
     }
 
-    private List<Map<String, Object>> mergeById(
-            List<Map<String, Object>> first,
-            List<Map<String, Object>> second,
-            int limit) {
-        LinkedHashMap<Object, Map<String, Object>> merged = new LinkedHashMap<>();
+    private Map<String, Object> authorResult(Document doc) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (String field : List.of("id", "name", "avatarUrl", "bio", "favoriteGenres")) result.put(field, doc.get(field));
+        result.put("followersCount", doc.getOrDefault("followersCount", 0));
+        result.put("followingCount", doc.getOrDefault("followingCount", 0));
+        return result;
+    }
+
+    private static long count(List<Document> rows) {
+        return rows.isEmpty() ? 0 : ((Number) rows.get(0).getOrDefault("total", 0)).longValue();
+    }
+
+    private static Map<String, Object> page(List<Map<String, Object>> items, long total, int page, int size) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", items); result.put("total", total); result.put("page", page);
+        result.put("totalPages", (int) Math.ceil((double) total / size));
+        return result;
+    }
+
+    private static List<BookHit> mergeBooks(List<BookHit> first, List<BookHit> second, int limit) {
+        Map<Object, BookHit> merged = new LinkedHashMap<>();
+        first.forEach(hit -> merged.put(hit.item().get("id"), hit));
+        second.forEach(hit -> merged.putIfAbsent(hit.item().get("id"), hit));
+        return merged.values().stream().limit(limit).toList();
+    }
+
+    private static List<Map<String, Object>> mergeById(List<Map<String, Object>> first, List<Map<String, Object>> second, int limit) {
+        Map<Object, Map<String, Object>> merged = new LinkedHashMap<>();
         first.forEach(item -> merged.put(item.get("id"), item));
         second.forEach(item -> merged.putIfAbsent(item.get("id"), item));
         return merged.values().stream().limit(limit).toList();

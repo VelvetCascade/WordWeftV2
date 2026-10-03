@@ -4,6 +4,7 @@ package com.wordweft.book.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -15,6 +16,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @Document(collection = "feedback")
+@CompoundIndex(name = "feedback_user_submitted", def = "{'userId': 1, 'submittedAt': -1}")
 public class Feedback {
     @Id
     private String id;

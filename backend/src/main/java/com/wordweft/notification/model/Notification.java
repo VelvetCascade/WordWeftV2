@@ -4,6 +4,8 @@ package com.wordweft.notification.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,6 +16,12 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @Document(collection = "notifications")
+@CompoundIndexes({
+    @CompoundIndex(name = "notifications_user_created", def = "{'userId': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "notifications_user_type_created", def = "{'userId': 1, 'type': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "notifications_user_unread", def = "{'userId': 1, 'read': 1}"),
+    @CompoundIndex(name = "notifications_user_type_entity_created", def = "{'userId': 1, 'type': 1, 'entityId': 1, 'createdAt': -1}")
+})
 public class Notification {
     @Id
     private String id;

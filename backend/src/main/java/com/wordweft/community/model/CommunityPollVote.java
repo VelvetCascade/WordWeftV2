@@ -15,7 +15,8 @@ import java.time.Instant;
 @Document(collection = "community_poll_votes")
 @CompoundIndexes({
         @CompoundIndex(name = "unique_poll_voter", def = "{'userId': 1, 'postId': 1}", unique = true),
-        @CompoundIndex(name = "poll_option_totals", def = "{'postId': 1, 'optionId': 1}")
+        @CompoundIndex(name = "poll_option_totals", def = "{'postId': 1, 'optionId': 1}"),
+        @CompoundIndex(name = "community_vote_user_created", def = "{'userId': 1, 'createdAt': -1}")
 })
 public class CommunityPollVote {
     @Id private String id;

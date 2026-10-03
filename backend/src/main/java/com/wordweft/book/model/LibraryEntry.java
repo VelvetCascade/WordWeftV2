@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ public class LibraryEntry {
     @Id
     private String id;
     private String userId;
+    @Indexed
     private String bookId;
     @Deprecated
     private String shelfName = "My List"; // Default shelf
