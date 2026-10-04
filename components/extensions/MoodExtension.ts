@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { isMood } from '../../utils/atmosphere';
 import { TextSelection } from '@tiptap/pm/state';
 
 /**
@@ -64,7 +65,8 @@ export const MoodBlock = Node.create({
 
                 // Only handle if at the end of the block and current paragraph is empty
                 const parentNode = $from.parent;
-                if (parentNode.textContent.length === 0 && parentNode.type.name === 'paragraph') {
+                if (parentNode.textContent.length === 0 && parentNode.type.name === 'paragraph' && $from.index(moodDepth) === $from.node(moodDepth).childCount - 1) {
+                    if ($from.node(moodDepth).childCount === 1) return editor.commands.lift(this.name);
                     // Delete the empty paragraph and insert one after the mood block
                     const endPos = $from.end(moodDepth) + 1;
                     const { tr } = state;
@@ -99,8 +101,7 @@ export const MoodBlock = Node.create({
                 if (moodDepth < 0) return false;
 
                 // Only act if cursor is at the very beginning of the mood block's content
-                const startOfMood = $from.start(moodDepth);
-                if ($from.pos === startOfMood) {
+                if ($from.parentOffset === 0 && $from.index(moodDepth) === 0) {
                     return editor.commands.lift(this.name);
                 }
 
@@ -111,10 +112,27 @@ export const MoodBlock = Node.create({
 
     addCommands() {
         return {
-            setMoodBlock: (mood: string) => ({ commands }) => {
-                return commands.wrapIn(this.name, { mood });
+            unsetMoodBlock: () => ({ commands }) => commands.lift(this.name),
+            endMoodBlock: () => ({ state, dispatch }) => {
+                const { $from } = state.selection;
+                for (let depth = $from.depth; depth > 0; depth--) {
+                    if ($from.node(depth).type.name !== this.name) continue;
+                    const position = $from.after(depth);
+                    if (dispatch) {
+                        const tr = state.tr.insert(position, state.schema.nodes.paragraph.create());
+                        tr.setSelection(TextSelection.near(tr.doc.resolve(position + 1)));
+                        dispatch(tr.scrollIntoView());
+                    }
+                    return true;
+                }
+                return false;
+            },
+            setMoodBlock: (mood: string) => ({ commands, editor }) => {
+                if (!isMood(mood)) return false;
+                return editor.isActive(this.name) ? commands.updateAttributes(this.name, { mood }) : commands.wrapIn(this.name, { mood });
             },
             insertMoodBlock: (mood: string) => ({ commands }) => {
+                if (!isMood(mood)) return false;
                 return commands.insertContent({
                     type: this.name,
                     attrs: { mood },

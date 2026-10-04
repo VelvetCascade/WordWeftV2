@@ -1,5 +1,6 @@
 import { navigatePath } from '../utils/navigation';
 import { useDialog } from '../hooks/useDialog';
+import { useDelayedFlag, usePresence } from '../hooks/usePresence';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { SearchBookResult, SearchAuthorResult } from '../types';
@@ -20,23 +21,23 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     const [books, setBooks] = useState<SearchBookResult[]>([]);
     const [authors, setAuthors] = useState<SearchAuthorResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [resultQuery, setResultQuery] = useState('');
+    const present = usePresence(isOpen);
+    const showLoading = useDelayedFlag(isLoading);
     const [searchError, setSearchError] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const overlayRef = useDialog(isOpen, onClose);
-    const previousFocusRef = useRef<HTMLElement | null>(null);
     const requestGateRef = useRef<ReturnType<typeof createLatestRequestGate> | null>(null);
     if (!requestGateRef.current) requestGateRef.current = createLatestRequestGate();
 
     const totalResults = books.length + authors.length;
+    const suggestionsPending = isLoading || resultQuery !== query.trim();
 
     // Focus input when overlay opens
     useEffect(() => {
         if (isOpen) {
-            previousFocusRef.current = document.activeElement as HTMLElement | null;
-            focusTimer.current = setTimeout(() => inputRef.current?.focus(), 100);
             // Keep the current query and suggestions when closing or visiting a story.
             setSelectedIndex(-1);
             setSearchError('');
@@ -44,26 +45,13 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
             requestGateRef.current?.invalidate();
             setIsLoading(false);
             if (debounceTimer.current) clearTimeout(debounceTimer.current);
-            previousFocusRef.current?.focus();
         }
-        return () => {
-            if (focusTimer.current) clearTimeout(focusTimer.current);
-        };
     }, [isOpen]);
 
     useEffect(() => () => {
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         requestGateRef.current?.invalidate();
     }, []);
-
-    // Escape key to close
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        if (isOpen) window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, [isOpen, onClose]);
 
     const fetchAutocomplete = useCallback(async (q: string) => {
         if (!isOpen || q.trim().length < 2) {
@@ -80,6 +68,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
             if (!requestGateRef.current?.isLatest(requestId)) return;
             setBooks(result.books || []);
             setAuthors(result.authors || []);
+            setResultQuery(q.trim());
         } catch (e) {
             if (requestGateRef.current?.isLatest(requestId)) {
                 console.error('Autocomplete error:', e);
@@ -96,12 +85,12 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         const val = e.target.value;
         requestGateRef.current?.invalidate();
         setQuery(val);
-        setBooks([]);
-        setAuthors([]);
+        if (val.trim().length < 2) { setBooks([]); setAuthors([]); }
+        setSearchError('');
         setIsLoading(val.trim().length >= 2);
         setSelectedIndex(-1);
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
-        debounceTimer.current = setTimeout(() => fetchAutocomplete(val), 300);
+        if (val.trim().length >= 2) debounceTimer.current = setTimeout(() => fetchAutocomplete(val), 250);
     };
 
     const navigateToBook = (bookId: string) => {
@@ -124,13 +113,15 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowDown') {
             e.preventDefault();
+            if (suggestionsPending) return;
             setSelectedIndex(prev => Math.min(prev + 1, totalResults - 1));
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
+            if (suggestionsPending) return;
             setSelectedIndex(prev => Math.max(prev - 1, -1));
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            if (selectedIndex >= 0) {
+            if (!suggestionsPending && selectedIndex >= 0 && selectedIndex < totalResults) {
                 if (selectedIndex < books.length) {
                     navigateToBook(books[selectedIndex].id);
                 } else {
@@ -149,10 +140,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         }
     };
 
-    if (!isOpen) return null;
+    if (!present) return null;
 
     return (
-        <div className="search-overlay-backdrop" onClick={onClose} ref={overlayRef} role="dialog" aria-modal="true" aria-labelledby="search-overlay-title">
+        <div className="search-overlay-backdrop ww-presence" data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined} onClick={onClose} ref={overlayRef} role="dialog" aria-modal="true" aria-labelledby="search-overlay-title">
             <div className="search-overlay-container" onClick={(e) => e.stopPropagation()}>
                 <h2 id="search-overlay-title" className="sr-only">Search WordWeft</h2>
                 {/* Search Input */}
@@ -174,6 +165,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                         autoComplete="off"
                         spellCheck={false}
                         aria-label="Search stories and people"
+                        aria-busy={isLoading}
                         data-dialog-focus
                     />
                     <button type="button" onClick={onClose} className="search-overlay-close-btn" aria-label="Close search">
@@ -182,16 +174,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                     <button type="submit" className="ww-overlay-submit" disabled={query.trim().length < 2}>Search</button>
                 </form>
                 <p className="ww-search-scope">Quick suggestions: story titles and usernames. Full search also checks genres, tags, summaries and descriptions, plus people’s bios.</p>
+                <div className="ww-search-progress" role="status">{showLoading && <><span className="search-overlay-spinner" aria-hidden="true" /><span>Searching…</span></>}</div>
 
                 {/* Results */}
                 {(books.length > 0 || authors.length > 0 || isLoading) && (
-                    <div className="search-overlay-results" id="search-overlay-results">
-                        {isLoading && (
-                            <div className="search-overlay-loading">
-                                <div className="search-overlay-spinner" />
-                                <span>Searching...</span>
-                            </div>
-                        )}
+                    <div className="search-overlay-results" id="search-overlay-results" aria-busy={isLoading}>
 
                         {/* Books Section */}
                         {books.length > 0 && (
@@ -206,6 +193,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                     <button
                                         type="button"
                                         key={book.id}
+                                        disabled={suggestionsPending}
                                         className={`search-overlay-item ${selectedIndex === i ? 'search-overlay-item-active' : ''}`}
                                         onClick={() => navigateToBook(book.id)}
                                         onMouseEnter={() => setSelectedIndex(i)}
@@ -259,7 +247,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                     return (
                                         <button
                                             type="button"
-                                            key={author.id}
+                                        key={author.id}
+                                        disabled={suggestionsPending}
                                             className={`search-overlay-item ${selectedIndex === idx ? 'search-overlay-item-active' : ''}`}
                                             onClick={() => navigateToAuthor(author.id)}
                                             onMouseEnter={() => setSelectedIndex(idx)}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDialog } from '../hooks/useDialog';
+import { usePresence } from '../hooks/usePresence';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -25,13 +26,15 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     onConfirm,
 }) => {
     const dialogRef = useDialog(isOpen, onCancel, !isProcessing);
+    const present = usePresence(isOpen);
 
-    if (!isOpen) return null;
+    if (!present) return null;
 
     return (
         <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-            onMouseDown={(event) => { if (event.target === event.currentTarget && !isProcessing) onCancel(); }}
+            className="ww-presence fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined}
+            onClick={(event) => { if (event.target === event.currentTarget && !isProcessing) onCancel(); }}
         >
             <div
                 ref={dialogRef}

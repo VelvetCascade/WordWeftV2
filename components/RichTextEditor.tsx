@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X, Flower2, Wind, CloudRain, Sunrise, Moon, Waves } from 'lucide-react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -12,6 +12,7 @@ import { BubbleMenuPlugin } from '@tiptap/extension-bubble-menu';
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
 import { PluginKey } from '@tiptap/pm/state';
+import { closeHistory } from '@tiptap/pm/history';
 
 import { Character } from '../types';
 import { MentionList } from './MentionList';
@@ -91,57 +92,42 @@ const ToolbarGroup: React.FC<{ label: string; primary?: boolean; children: React
 
 // ─── Mood Picker — Immersive Grid ──────────────────────────────────
 const MOOD_OPTIONS = [
-    { mood: 'romantic', emoji: '🌹', label: 'Romantic' },
-    { mood: 'tense', emoji: '⚡', label: 'Tense' },
-    { mood: 'melancholy', emoji: '🌧️', label: 'Melancholy' },
-    { mood: 'triumphant', emoji: '🎉', label: 'Triumphant' },
-    { mood: 'eerie', emoji: '👻', label: 'Eerie' },
-    { mood: 'serene', emoji: '🍃', label: 'Serene' },
+    { mood: 'romantic', Icon: Flower2, label: 'Romantic', detail: 'Drifting petals' },
+    { mood: 'tense', Icon: Wind, label: 'Tense', detail: 'Gathering storm' },
+    { mood: 'melancholy', Icon: CloudRain, label: 'Melancholy', detail: 'Falling rain' },
+    { mood: 'triumphant', Icon: Sunrise, label: 'Triumphant', detail: 'Rising light' },
+    { mood: 'eerie', Icon: Moon, label: 'Eerie', detail: 'Drifting mist' },
+    { mood: 'serene', Icon: Waves, label: 'Serene', detail: 'Quiet haze' },
 ] as const;
 
 const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const selectionRef = useRef({ from: 0, to: 0 });
     const dialogRef = useDialog(isOpen, () => setIsOpen(false));
-
-    return (
-        <>
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className={`rte-toolbar-btn ${editor.isActive('moodBlock') || isOpen ? 'rte-toolbar-btn-active' : ''}`}
-                title="Set atmosphere"
-                aria-label="Set atmosphere"
-                aria-haspopup="dialog"
-                aria-expanded={isOpen}
-            >
-                <MoodIcon />
-            </button>
-            {isOpen && createPortal(<div className="rte-mood-backdrop" onMouseDown={event => event.target === event.currentTarget && setIsOpen(false)}>
-                <div className="rte-mood-dialog" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="rte-mood-title" tabIndex={-1}>
-                <header><h2 id="rte-mood-title">Set chapter atmosphere</h2><button type="button" aria-label="Close atmosphere picker" onClick={() => setIsOpen(false)}><X size={20} aria-hidden="true" /></button></header>
-                <p>Insert a section with a mood. Write inside it, then check the effect in the reader preview.</p>
-                <div className="rte-mood-options">
-                    {MOOD_OPTIONS.map(({ mood, emoji, label }) => (
-                        <button
-                            key={mood}
-                            type="button"
-                            className={`rte-mood-option rte-mood-option--${mood}`}
-                            aria-label={label}
-                            onClick={() => {
-                                (editor.chain().focus() as any).insertMoodBlock(mood).run();
-                                setIsOpen(false);
-                                requestAnimationFrame(() => editor.commands.focus());
-                            }}
-                        >
-                            <span aria-hidden="true">{emoji}</span>
-                            <span>{label}</span>
-                        </button>
-                    ))}
-                </div>
-                </div>
-            </div>, document.body)}
-        </>
-    );
+    const inMood = editor.isActive('moodBlock');
+    const currentMood = editor.getAttributes('moodBlock').mood;
+    const apply = (action: 'set' | 'remove' | 'end', mood?: string) => {
+        const chain = editor.chain().focus().setTextSelection(selectionRef.current).command(({ tr }) => { closeHistory(tr); return true; });
+        if (action === 'remove') chain.unsetMoodBlock().run();
+        else if (action === 'end') chain.endMoodBlock().run();
+        else if (inMood || selectionRef.current.from !== selectionRef.current.to) chain.setMoodBlock(mood!).run();
+        else chain.insertMoodBlock(mood!).run();
+        setIsOpen(false);
+        requestAnimationFrame(() => editor.commands.focus());
+    };
+    return <>
+        <button type="button" onClick={() => { selectionRef.current = { from: editor.state.selection.from, to: editor.state.selection.to }; setIsOpen(!isOpen); }}
+            className={`rte-toolbar-btn ${inMood || isOpen ? 'rte-toolbar-btn-active' : ''}`} title="Set atmosphere" aria-label="Set atmosphere" aria-haspopup="dialog" aria-expanded={isOpen}><MoodIcon /></button>
+        {isOpen && createPortal(<div className="rte-mood-backdrop" onMouseDown={event => event.target === event.currentTarget && setIsOpen(false)}>
+            <div className="rte-mood-dialog" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="rte-mood-title" tabIndex={-1}>
+                <header><h2 id="rte-mood-title">Passage atmosphere</h2><button type="button" aria-label="Close atmosphere picker" onClick={() => setIsOpen(false)}><X size={20} aria-hidden="true" /></button></header>
+                <p>{inMood ? 'Change the atmosphere of this entire section, or continue writing outside it.' : selectionRef.current.from !== selectionRef.current.to ? 'Apply an atmosphere to the selected paragraphs. Your words stay unchanged.' : 'Start a mood section at your cursor. Write several paragraphs inside it; each chapter can have different moods.'}</p>
+                <div className="rte-mood-options">{MOOD_OPTIONS.map(({ mood, Icon: Symbol, label, detail }) => <button key={mood} type="button" className={`rte-mood-option rte-mood-option--${mood}`} aria-label={label} aria-pressed={inMood && currentMood === mood} onClick={() => apply('set', mood)}><Symbol size={24} aria-hidden="true" /><span>{label}</span><small>{detail}</small></button>)}</div>
+                {inMood && <div className="rte-mood-section-actions"><button type="button" onClick={() => apply('end')}>Continue without a mood</button><button type="button" onClick={() => apply('remove')}>Remove this atmosphere</button></div>}
+                <p className="rte-mood-help">Select whole paragraphs for a passage. To finish a section, press Enter on an empty final paragraph. Check the motion in Reader preview.</p>
+            </div>
+        </div>, document.body)}
+    </>;
 };
 
 // ─── Menu Bar ──────────────────────────────────────────────────────

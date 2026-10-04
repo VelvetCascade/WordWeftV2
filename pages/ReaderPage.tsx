@@ -13,6 +13,7 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
+import { readAtmosphereIntensity, type AtmosphereIntensity } from '../utils/atmosphere';
 import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
@@ -28,6 +29,8 @@ import { ReaderSignInGate } from '../components/ReaderSignInGate';
 import { consumeReaderResumeIntent, readerChapterPath, saveReaderAuthIntent, type ReaderAuthView } from '../utils/readerAuthIntent';
 import { ensureCipherFontLoaded, preloadCipherFonts } from '../utils/cipherFont';
 import { useDialog } from '../hooks/useDialog';
+import { usePresence } from '../hooks/usePresence';
+import { ReaderPlaceholder } from '../components/ContentPlaceholder';
 import '../styles/reader-v2.css';
 import { ReaderPassageTools } from '../components/ReaderPassageTools';
 import { authoredPassageTexts, discussionComments, resolvePassageIndex, type DiscussionScope } from '../utils/readingTools';
@@ -175,19 +178,22 @@ const CommentDrawer: React.FC<{
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const dialogRef = useDialog(isOpen, onClose);
+    const present = usePresence(isOpen);
+    const submittingRef = useRef(false);
     useEffect(() => {
         if (!isOpen || !initialCommentId || commentsLoading) return;
         const target = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('[data-comment-id]') ?? []).find(element => element.dataset.commentId === initialCommentId);
         if (target) { target.tabIndex = -1; target.scrollIntoView({ block: 'center' }); target.focus({ preventScroll: true }); }
     }, [isOpen, initialCommentId, commentsLoading, comments.length]);
-    if (!isOpen) return null;
+    if (!present) return null;
 
     const scopedComments = discussionComments(comments, scope, paragraphIndex);
     const topLevelComments = scopedComments.filter(c => !c.parentId);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || submittingRef.current) return;
+        submittingRef.current = true;
         setIsSubmitting(true);
         setSubmitError('');
         try {
@@ -195,11 +201,11 @@ const CommentDrawer: React.FC<{
             setNewComment('');
         } catch (error) {
             setSubmitError(error instanceof Error ? error.message : 'Your comment could not be posted. Please try again.');
-        } finally { setIsSubmitting(false); }
+        } finally { submittingRef.current = false; setIsSubmitting(false); }
     };
 
     return (
-        <div className="reader-thread-overlay fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+        <div className="reader-thread-overlay ww-presence fixed inset-0 z-50 flex justify-end" data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined} onClick={onClose}>
             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
             <div
                 className="reader-thread-panel relative w-full max-w-md h-full flex flex-col"
@@ -255,6 +261,7 @@ const CommentDrawer: React.FC<{
                         <button
                             type="submit"
                             disabled={isSubmitting || !newComment.trim()}
+                            aria-busy={isSubmitting}
                             className="w-full bg-accent text-white font-sans font-semibold py-2 rounded-lg hover:bg-primary transition-colors disabled:opacity-50"
                         >
                             {isSubmitting ? 'Posting...' : 'Post Comment'}
@@ -286,6 +293,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [resumedChapterId, setResumedChapterId] = useState<string | null>(null);
     const [resumeAnnouncement, setResumeAnnouncement] = useState('');
     const [fontSize, setFontSize] = useState(initialReaderPreferences.fontSize);
+    const [atmosphereIntensity, setAtmosphereIntensity] = useState<AtmosphereIntensity>(() => { try { return readAtmosphereIntensity(localStorage.getItem('ww_reader_atmosphere')); } catch { return 'full'; } });
+    useEffect(() => { try { localStorage.setItem('ww_reader_atmosphere', atmosphereIntensity); } catch { /* Reading remains available without storage. */ } }, [atmosphereIntensity]);
     const [contentTheme, setContentTheme] = useState<ContentTheme>(initialReaderPreferences.contentTheme);
     const [readerFont, setReaderFont] = useState<ReaderFont>(initialReaderPreferences.readerFont);
     const [readerWidth, setReaderWidth] = useState<ReaderWidth>(initialReaderPreferences.readerWidth);
@@ -361,6 +370,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const moreDialogRef = useDialog(isReaderMoreOpen, () => setIsReaderMoreOpen(false));
     const contentsDialogRef = useDialog(isTocVisible, () => setIsTocVisible(false));
     const preferencesDialogRef = useDialog(isSettingsPanelVisible, () => setIsSettingsPanelVisible(false));
+    const contentsPresent = usePresence(isTocVisible);
+    const preferencesPresent = usePresence(isSettingsPanelVisible);
+    const morePresent = usePresence(isReaderMoreOpen);
 
     const { triggerFeedback, startReadingTimer, checkReadingDuration } = useFeedback();
     const { trackEvent } = useAnalytics();
@@ -822,7 +834,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         if (!book) return null;
         return (
             <div
-                className="reader-toc-overlay reader-toc-overlay-open fixed inset-0 z-40"
+                className="reader-toc-overlay reader-toc-overlay-open ww-presence fixed inset-0 z-40"
+                data-state={isTocVisible ? 'open' : 'closed'} inert={!isTocVisible} aria-hidden={!isTocVisible || undefined}
                 onClick={() => setIsTocVisible(false)}
             >
                 <div
@@ -900,7 +913,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         return () => window.clearTimeout(timer);
     }, [chapterContent?.chapterId, chapterContent?.access, isChapterLoading]);
 
-    if (isLoading || isChapterLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
+    if (isLoading || isChapterLoading) return <ReaderPlaceholder theme={contentTheme} width={readerWidth} fontSize={fontSize} lineHeight={lineHeight} focusMode={isFocusMode} title={chapter?.title} />;
     if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
     if (!chapterContent) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 
@@ -1027,9 +1040,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             ) : null}
 
             {/* Mood Atmosphere — page-level immersive overlay */}
-            <MoodAtmosphere contentRef={moodContentRef} active={chapterContent.access !== 'AUTH_REQUIRED'} />
+            <MoodAtmosphere contentRef={moodContentRef} intensity={atmosphereIntensity} active={chapterContent.access !== 'AUTH_REQUIRED'} />
 
-            {isTocVisible && renderTableOfContents()}
+            {contentsPresent && renderTableOfContents()}
 
             {readerActionError && <div className="reader-action-error" role="alert">{readerActionError}<button type="button" onClick={() => setReaderActionError('')} aria-label="Dismiss message"><XMarkIcon className="w-4 h-4" /></button></div>}
 
@@ -1061,7 +1074,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 </div>
             </header>
 
-            {isReaderMoreOpen && <div className="reader-more-overlay" onClick={event => { if (event.target === event.currentTarget) setIsReaderMoreOpen(false); }}><div className="reader-more-panel" ref={moreDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="reader-more-title"><div><h2 id="reader-more-title">Reader actions</h2><button aria-label="Close reader actions" onClick={() => setIsReaderMoreOpen(false)}><XMarkIcon className="w-5 h-5" /></button></div><button onClick={() => { setIsReaderMoreOpen(false); void handleToggleBookmark(); }} disabled={bookmarkSaving}><BookmarkIcon className="w-5 h-5" />{isBookmarked ? 'Remove from library' : 'Save to library'}</button><button onClick={() => { setIsReaderMoreOpen(false); setPassageIndex(null); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-5 h-5" />Passages & find</button><button onClick={() => { setIsReaderMoreOpen(false); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" />Share chapter</button><button onClick={() => { setIsReaderMoreOpen(false); setIsFocusMode(true); }}><EyeIcon className="w-5 h-5" />Focus mode</button><button onClick={() => { setIsReaderMoreOpen(false); if (currentUser) setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }); else window.location.hash = '/auth'; }}><Flag className="w-5 h-5" />Report chapter</button></div></div>}
+            {morePresent && <div className="reader-more-overlay ww-presence" data-state={isReaderMoreOpen ? 'open' : 'closed'} inert={!isReaderMoreOpen} aria-hidden={!isReaderMoreOpen || undefined} onClick={event => { if (event.target === event.currentTarget) setIsReaderMoreOpen(false); }}><div className="reader-more-panel" ref={moreDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="reader-more-title"><div><h2 id="reader-more-title">Reader actions</h2><button aria-label="Close reader actions" onClick={() => setIsReaderMoreOpen(false)}><XMarkIcon className="w-5 h-5" /></button></div><button onClick={() => { setIsReaderMoreOpen(false); void handleToggleBookmark(); }} disabled={bookmarkSaving}><BookmarkIcon className="w-5 h-5" />{isBookmarked ? 'Remove from library' : 'Save to library'}</button><button onClick={() => { setIsReaderMoreOpen(false); setPassageIndex(null); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-5 h-5" />Passages & find</button><button onClick={() => { setIsReaderMoreOpen(false); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" />Share chapter</button><button onClick={() => { setIsReaderMoreOpen(false); setIsFocusMode(true); }}><EyeIcon className="w-5 h-5" />Focus mode</button><button onClick={() => { setIsReaderMoreOpen(false); if (currentUser) setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }); else window.location.hash = '/auth'; }}><Flag className="w-5 h-5" />Report chapter</button></div></div>}
 
             {isFocusMode && (
                 <button className="reader-focus-exit" onClick={() => setIsFocusMode(false)}>
@@ -1244,7 +1257,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             </section> : null}
 
             {/* Reader Settings Sheet */}
-            {isSettingsPanelVisible && <><div className="reader-settings-backdrop reader-settings-backdrop-open" onClick={() => setIsSettingsPanelVisible(false)} />
+            {preferencesPresent && <div className="ww-presence fixed inset-0 z-[36]" data-state={isSettingsPanelVisible ? 'open' : 'closed'} inert={!isSettingsPanelVisible} aria-hidden={!isSettingsPanelVisible || undefined}><div className="reader-settings-backdrop reader-settings-backdrop-open" onClick={() => setIsSettingsPanelVisible(false)} />
             <div ref={preferencesDialogRef} tabIndex={-1} className="reader-settings-panel reader-settings-panel-open" role="dialog" aria-modal="true" aria-label="Reading preferences">
                 <div className="reader-settings-heading">
                     <div><span>Reading preferences</span><p>Saved automatically on this device</p></div>
@@ -1259,6 +1272,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             <button onClick={() => changeAppearance(() => setContentTheme('sepia'))} aria-pressed={contentTheme === 'sepia'} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
                             <button onClick={() => changeAppearance(() => setContentTheme('dark'))} aria-pressed={contentTheme === 'dark'} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
                         </div>
+                    </div>
+                    <div className="reader-setting-group reader-setting-group-wide">
+                        <label>Passage atmospheres</label>
+                        <div className="reader-segmented" role="group" aria-label="Atmosphere intensity">{(['full', 'subtle', 'off'] as const).map(value => <button key={value} type="button" aria-pressed={atmosphereIntensity === value} className={atmosphereIntensity === value ? 'active' : ''} onClick={() => setAtmosphereIntensity(value)}>{value === 'full' ? 'Full' : value === 'subtle' ? 'Subtle' : 'Off'}</button>)}</div>
+                        <p>Follows the writer’s passage moods. Reduced motion keeps the atmosphere still.</p>
                     </div>
                     <div className="reader-setting-group">
                         <label>Type size</label>
@@ -1278,7 +1296,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     </div>
                 </div>
                 <div className="reader-shortcuts"><span><kbd>F</kbd> Focus</span><span><kbd>[</kbd><kbd>]</kbd> Text size</span><span><kbd>Esc</kbd> Close panels</span></div>
-            </div></>}
+            </div></div>}
 
             {/* Keep the primary authentication actions unobstructed on a locked chapter. */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? <nav className={`reader-dock ${isToolbarVisible ? 'reader-dock-visible' : 'reader-dock-hidden'}`} aria-label="Reader controls">

@@ -1,216 +1,145 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { usePresence } from '../hooks/usePresence';
+import { MOODS, moodAtReadingLine, type MoodType, type AtmosphereIntensity } from '../utils/atmosphere';
+import '../styles/atmospheres.css';
+export type { MoodType } from '../utils/atmosphere';
 
-/**
- * MoodAtmosphere — The Atmospheric Engine
- *
- * Watches [data-mood] blocks in the viewport via IntersectionObserver.
- * When a mood block enters view, the entire page environment shifts:
- *   - Background gradient layer
- *   - A restrained environmental texture
- *   - A small number of deterministic ambient details
- *
- * All effects are pure CSS, pointer-events:none, and respect prefers-reduced-motion.
- */
-
-export type MoodType = 'romantic' | 'tense' | 'melancholy' | 'triumphant' | 'eerie' | 'serene';
-
-interface MoodAtmosphereProps {
-    /** Ref to the scrollable content container that holds mood blocks */
-    contentRef: React.RefObject<HTMLElement | null>;
-    /** Whether the atmosphere is active (e.g. reader is reading) */
-    active?: boolean;
+function scrollRoot(content: HTMLElement): HTMLElement | null {
+    return content.closest<HTMLElement>('.ww-reading-preview-canvas');
 }
 
-const MOOD_PARTICLES: Record<MoodType, { count: number; className: string }> = {
-    romantic: { count: 9, className: 'mood-particle--petal' },
-    tense: { count: 12, className: 'mood-particle--spark' },
-    melancholy: { count: 14, className: 'mood-particle--raindrop' },
-    triumphant: { count: 10, className: 'mood-particle--sparkle' },
-    eerie: { count: 8, className: 'mood-particle--wisp' },
-    serene: { count: 9, className: 'mood-particle--orb' },
-};
-
-const seededValue = (index: number, salt: number) => {
-    const value = Math.sin((index + 1) * (salt + 11) * 12.9898) * 43758.5453;
-    return value - Math.floor(value);
-};
-
-const particleStyle = (index: number): React.CSSProperties => ({
-    '--particle-index': index,
-    '--particle-delay': `${seededValue(index, 1) * 4}s`,
-    '--particle-duration': `${10 + seededValue(index, 2) * 12}s`,
-    '--particle-x': `${4 + seededValue(index, 3) * 92}%`,
-    '--particle-y': `${6 + seededValue(index, 4) * 88}%`,
-    '--particle-scale': `${0.65 + seededValue(index, 5) * 0.75}`,
-    '--particle-opacity': `${0.16 + seededValue(index, 6) * 0.22}`,
-} as React.CSSProperties);
-
-export const MoodAtmosphere: React.FC<MoodAtmosphereProps> = ({ contentRef, active = true }) => {
-    const [activeMood, setActiveMood] = useState<MoodType | null>(null);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const activeMoodRef = useRef<MoodType | null>(null);
-    const observerRef = useRef<IntersectionObserver | null>(null);
-    const visibleMoodsRef = useRef<Map<Element, { mood: MoodType; ratio: number }>>(new Map());
-    const transitionTimeoutRef = useRef<number | null>(null);
-
-    const determineDominantMood = useCallback(() => {
-        let best: { mood: MoodType; ratio: number } | null = null;
-        visibleMoodsRef.current.forEach((entry) => {
-            if (!best || entry.ratio > best.ratio) {
-                best = entry;
-            }
-        });
-        return best?.mood || null;
-    }, []);
-
-    // Setup IntersectionObserver
+/** One measured reading line, shared by the live reader and its scrollable preview. */
+export function useMoodDetector(contentRef: React.RefObject<HTMLElement | null>, active = true): MoodType | null {
+    const [mood, setMood] = useState<MoodType | null>(null);
     useEffect(() => {
-        if (!active || !contentRef.current) return;
-
-        const container = contentRef.current;
-
-        observerRef.current = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    const moodAttr = entry.target.getAttribute('data-mood') as MoodType | null;
-                    if (!moodAttr) return;
-
-                    if (entry.isIntersecting && entry.intersectionRatio > 0) {
-                        visibleMoodsRef.current.set(entry.target, {
-                            mood: moodAttr,
-                            ratio: entry.intersectionRatio,
-                        });
-                    } else {
-                        visibleMoodsRef.current.delete(entry.target);
-                    }
-                });
-
-                const dominant = determineDominantMood();
-
-                if (dominant !== activeMoodRef.current) {
-                    activeMoodRef.current = dominant;
-                    setIsTransitioning(true);
-                    setActiveMood(dominant);
-
-                    if (transitionTimeoutRef.current) {
-                        clearTimeout(transitionTimeoutRef.current);
-                    }
-                    transitionTimeoutRef.current = window.setTimeout(() => {
-                        setIsTransitioning(false);
-                    }, 1200);
-                }
-            },
-            {
-                threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0],
-            }
-        );
-
-        // Observe all mood blocks
-        const moodBlocks = container.querySelectorAll('[data-mood]');
-        moodBlocks.forEach((block) => observerRef.current?.observe(block));
-
-        // Also set up a MutationObserver to watch for new mood blocks
-        const mutationObserver = new MutationObserver(() => {
-            const newBlocks = container.querySelectorAll('[data-mood]');
-            observerRef.current?.disconnect();
-            newBlocks.forEach((block) => observerRef.current?.observe(block));
-        });
-        mutationObserver.observe(container, { childList: true, subtree: true });
-
-        return () => {
-            observerRef.current?.disconnect();
-            mutationObserver.disconnect();
-            if (transitionTimeoutRef.current) {
-                clearTimeout(transitionTimeoutRef.current);
-            }
+        const content = contentRef.current;
+        if (!active || !content) { setMood(null); return; }
+        const root = scrollRoot(content);
+        let blocks: HTMLElement[] = [];
+        let frame = 0;
+        let observed = false;
+        const visible = new Set<HTMLElement>();
+        const measure = () => {
+            frame = 0;
+            const bounds = root?.getBoundingClientRect();
+            const top = bounds?.top ?? 0;
+            const height = root?.clientHeight ?? window.innerHeight;
+            const line = top + Math.min(height * .32, 260);
+            const passages = (observed ? Array.from(visible) : blocks).map(block => {
+                const rect = block.getBoundingClientRect();
+                return { mood: block.dataset.mood ?? null, top: rect.top, bottom: rect.bottom };
+            });
+            const next = moodAtReadingLine(passages, line);
+            setMood(previous => {
+                // A small dead band prevents touch-scroll jitter at an exact boundary.
+                if (previous && previous !== next && (moodAtReadingLine(passages, line - 10) === previous || moodAtReadingLine(passages, line + 10) === previous)) return previous;
+                return previous === next ? previous : next;
+            });
         };
-    }, [active, contentRef, determineDominantMood]);
-
-    // Apply global body class for immersive full-page styling overrides
-    useEffect(() => {
-        if (activeMood) {
-            document.body.setAttribute('data-active-mood', activeMood);
-        } else {
-            document.body.removeAttribute('data-active-mood');
-        }
-
-        return () => {
-            document.body.removeAttribute('data-active-mood');
+        const schedule = () => { if (!frame) frame = requestAnimationFrame(measure); };
+        // Only measure visible sections during scroll; do not scan a long chapter each frame.
+        const observer = new IntersectionObserver(entries => {
+            observed = true;
+            entries.forEach(entry => { if (entry.isIntersecting) visible.add(entry.target as HTMLElement); else visible.delete(entry.target as HTMLElement); });
+            schedule();
+        }, { root, threshold: [0, 1] });
+        const refresh = () => {
+            observer.disconnect(); visible.clear(); observed = false;
+            blocks = Array.from(content.querySelectorAll<HTMLElement>('[data-mood]'));
+            blocks.forEach(block => observer.observe(block));
+            schedule();
         };
-    }, [activeMood]);
+        const mutations = new MutationObserver(refresh);
+        mutations.observe(content, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-mood'] });
+        const resize = new ResizeObserver(schedule); resize.observe(content);
+        if (root) resize.observe(root);
+        const scroller = root ?? window;
+        scroller.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule, { passive: true });
+        refresh();
+        return () => { cancelAnimationFrame(frame); observer.disconnect(); mutations.disconnect(); resize.disconnect(); scroller.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule); };
+    }, [contentRef, active]);
+    return active ? mood : null;
+}
 
-    if (!active || !activeMood) return null;
-
-    const particleConfig = MOOD_PARTICLES[activeMood];
-
-    return (
-        <div
-            className={`mood-atmosphere ${activeMood ? `mood-atmosphere--${activeMood}` : ''} ${isTransitioning ? 'mood-atmosphere--transitioning' : ''}`}
-            aria-hidden="true"
-        >
-            {/* Layer 1: Full-page gradient background */}
-            <div className={`mood-atmosphere__gradient mood-atmosphere__gradient--${activeMood}`} />
-
-            {/* Layer 2: A quiet paper/light texture that gives the palette depth */}
-            <div className={`mood-atmosphere__texture mood-atmosphere__texture--${activeMood}`} />
-
-            {/* Layer 3: Sparse ambient details */}
-            <div className="mood-atmosphere__particles">
-                {Array.from({ length: particleConfig.count }).map((_, i) => (
-                    <div
-                        key={`${activeMood}-${i}`}
-                        className={`mood-particle ${particleConfig.className}`}
-                        style={particleStyle(i)}
-                    />
-                ))}
-            </div>
-
-            {/* Layer 4: Edge light keeps the manuscript as the visual anchor */}
-            <div className={`mood-atmosphere__vignette mood-atmosphere__vignette--${activeMood}`} />
+// Artwork supplies the atmosphere; movement never uses mood icons as particles.
+const PARTICLES: Record<MoodType, { image: string; count: number; duration: number }> = {
+    melancholy: { image: 'rain-streak', count: 28, duration: 2.7 },
+    romantic: { image: 'petal', count: 12, duration: 14 },
+    eerie: { image: 'light-mote', count: 0, duration: 24 },
+    tense: { image: 'rain-streak', count: 18, duration: 1.8 },
+    triumphant: { image: 'light-mote', count: 18, duration: 12 },
+    serene: { image: 'light-mote', count: 7, duration: 26 },
+};
+const Layer: React.FC<{ mood: MoodType; open: boolean }> = ({ mood, open }) => {
+    const present = usePresence(open, 1000);
+    if (!present) return null;
+    const particles = PARTICLES[mood];
+    return <div className={`ww-atmosphere-layer ww-atmosphere-${mood}`} data-state={open ? 'open' : 'closed'} data-mood-layer={mood}>
+        <div className="ww-atmosphere-scenery">
+            {['left', 'right'].map(side => <div key={side} className={`ww-atmosphere-cloudbank ww-atmosphere-cloudbank-${side}`}>
+                {[0, 1].map(index => <img key={index} className={`ww-atmosphere-veil ww-atmosphere-veil-${index}`} src="/assets/atmospheres/fog-veil.webp" alt="" width="960" height="960" decoding="async" />)}
+            </div>)}
         </div>
-    );
+        {['left', 'right'].map(side => <div key={side} className={`ww-atmosphere-edge ww-atmosphere-edge-${side}`}>
+            {Array.from({ length: particles.count }, (_, index) => <div key={index} className="ww-ambient-detail" style={{ '--detail-x': `${4 + (((index + (side === 'right' ? 3 : 0)) * 19) % 76)}%`, '--detail-y': `${6 + ((index * 17) % 82)}%`, '--detail-delay': `${-(index + (side === 'right' ? .7 : 0)) * 2.3}s`, '--detail-duration': `${particles.duration + (index % 7) * (mood === 'melancholy' || mood === 'tense' ? .18 : 1.7)}s`, '--detail-rotation': `${index * 37}deg` } as React.CSSProperties}>
+                <img src={`/assets/atmospheres/${particles.image}.webp`} alt="" width="24" height="64" decoding="async" />
+            </div>)}
+        </div>)}
+    </div>;
 };
 
-/**
- * useMoodDetector — Hook to detect the currently active mood in a content area.
- * For use in contexts where you want to read the mood but not render the atmosphere.
- */
-export function useMoodDetector(contentRef: React.RefObject<HTMLElement | null>): MoodType | null {
-    const [activeMood, setActiveMood] = useState<MoodType | null>(null);
-
+export const MoodAtmosphere: React.FC<{ contentRef: React.RefObject<HTMLElement | null>; active?: boolean; intensity?: AtmosphereIntensity }> = ({ contentRef, active = true, intensity = 'full' }) => {
+    const mood = useMoodDetector(contentRef, active && intensity !== 'off');
+    const frameRef = useRef<HTMLDivElement>(null);
+    const [paused, setPaused] = useState(typeof document !== 'undefined' && document.hidden);
     useEffect(() => {
-        if (!contentRef.current) return;
-
-        const container = contentRef.current;
-        const visibleMoods = new Map<Element, { mood: MoodType; ratio: number }>();
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    const moodAttr = entry.target.getAttribute('data-mood') as MoodType | null;
-                    if (!moodAttr) return;
-
-                    if (entry.isIntersecting && entry.intersectionRatio > 0) {
-                        visibleMoods.set(entry.target, { mood: moodAttr, ratio: entry.intersectionRatio });
-                    } else {
-                        visibleMoods.delete(entry.target);
-                    }
-                });
-
-                let best: { mood: MoodType; ratio: number } | null = null;
-                visibleMoods.forEach((entry) => {
-                    if (!best || entry.ratio > best.ratio) best = entry;
-                });
-                setActiveMood(best?.mood || null);
-            },
-            { threshold: [0, 0.25, 0.5, 0.75, 1.0] }
-        );
-
-        const moodBlocks = container.querySelectorAll('[data-mood]');
-        moodBlocks.forEach((block) => observer.observe(block));
-
-        return () => observer.disconnect();
+        const visibility = () => setPaused(document.hidden);
+        document.addEventListener('visibilitychange', visibility);
+        return () => document.removeEventListener('visibilitychange', visibility);
+    }, []);
+    useEffect(() => {
+        const content = contentRef.current;
+        const frame = frameRef.current;
+        if (!content || !frame) return;
+        const root = scrollRoot(content);
+        const measure = () => {
+            const rootRect = root?.getBoundingClientRect();
+            const viewportWidth = root?.clientWidth ?? document.documentElement.clientWidth;
+            const rect = content.getBoundingClientRect();
+            const origin = rootRect?.left ?? 0;
+            const reader = content.closest('.reader-experience');
+            const railRect = (selector: string) => {
+                const rail = reader?.querySelector<HTMLElement>(selector);
+                if (!rail || getComputedStyle(rail).display === 'none') return null;
+                const bounds = rail.getBoundingClientRect();
+                return bounds.width > 0 && bounds.height > 0 ? bounds : null;
+            };
+            const outline = railRect('.reader-outline-rail');
+            const conversation = railRect('.reader-conversation-rail');
+            // Use the gaps beside the words, not the viewport edges hidden under sidebars.
+            const textLeft = Math.max(0, rect.left - origin - 4);
+            const textRight = Math.min(viewportWidth, rect.right - origin + 4);
+            const leftLimit = outline ? Math.max(0, outline.right - origin + 12) : 0;
+            const rightLimit = conversation ? Math.min(viewportWidth, conversation.left - origin - 12) : viewportWidth;
+            const leftWidth = Math.max(0, Math.min(320, textLeft - leftLimit));
+            const rightWidth = Math.max(0, Math.min(320, rightLimit - textRight));
+            frame.style.setProperty('--atmosphere-copy-left', `${textLeft}px`);
+            frame.style.setProperty('--atmosphere-copy-right', `${textRight}px`);
+            frame.style.setProperty('--atmosphere-left-start', `${textLeft - leftWidth}px`);
+            frame.style.setProperty('--atmosphere-left-width', `${leftWidth}px`);
+            frame.style.setProperty('--atmosphere-right-start', `${viewportWidth - textRight - rightWidth}px`);
+            frame.style.setProperty('--atmosphere-right-width', `${rightWidth}px`);
+            frame.style.setProperty('--atmosphere-height', `${root?.clientHeight ?? window.innerHeight}px`);
+        };
+        const resize = new ResizeObserver(measure); resize.observe(content); resize.observe(content.closest('.reader-manuscript') ?? content); if (root) resize.observe(root);
+        const reader = content.closest('.reader-experience');
+        reader?.querySelectorAll('.reader-outline-rail, .reader-conversation-rail').forEach(rail => resize.observe(rail));
+        const appearance = new MutationObserver(measure); if (reader) appearance.observe(reader, { attributes: true, attributeFilter: ['class'] });
+        window.addEventListener('resize', measure, { passive: true }); measure();
+        return () => { resize.disconnect(); appearance.disconnect(); window.removeEventListener('resize', measure); };
     }, [contentRef]);
-
-    return activeMood;
-}
+    return <div ref={frameRef} className="ww-atmospheres" data-active-atmosphere={mood ?? 'none'} data-intensity={intensity} data-paused={paused || undefined} aria-hidden="true">
+        {MOODS.map(value => <Layer key={value} mood={value} open={active && mood === value && intensity !== 'off'} />)}
+    </div>;
+};
