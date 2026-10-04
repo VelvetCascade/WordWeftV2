@@ -12,7 +12,7 @@ async function api(request: APIRequestContext, path: string, data?: unknown, met
 }
 async function story(request: APIRequestContext, name: string) {
     const title = `${name} ${crypto.randomUUID()}`;
-    const user = await api(request, '/books', { title, description: 'Disposable publication review test.', summary: 'A local manuscript.', genres: ['Fantasy'], ageRating: 'ALL_AGES', coverUrl: 'http://localhost:3005/design-v2/assets/met-53681.jpg' });
+    const user = await api(request, '/books', { title, description: 'Disposable publication review test.', summary: 'A local manuscript.', genres: ['Fantasy'], ageRating: 'ALL_AGES', coverUrl: 'http://127.0.0.1:3000/design-v2/assets/met-53681.jpg' });
     const book = user.writtenBooks.find((item: any) => item.title === title); books.push(book.id); return book;
 }
 async function chapter(request: APIRequestContext, bookId: string, title: string, warnings: string[] = [], content = '<p>Before the train arrived we waited beside the quiet river.</p>') {
@@ -154,6 +154,195 @@ test('phone and theme preview use reader prose interactions and closing preserve
     expect(await page.evaluate(() => getSelection()?.toString())).toBe('quiet');
 });
 
+test('phone preview matches the live reader typography and paper without visiting the reader first', async ({ page, context, request }) => {
+    const book = await story(request, 'Preview fidelity');
+    const id = await chapter(request, book.id, 'The house beside the river', [], '<p>Before the train arrived, Mara waited beside the quiet river. The evening light settled on the water, and every window in the village began to glow.</p><p>She unfolded the letter again. Between its familiar lines was a promise she had almost forgotten.</p>');
+    await editor(page, book.id, id);
+    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    const preview = page.getByRole('dialog', { name: 'Reader preview', exact: true });
+    await preview.getByRole('combobox', { name: 'Viewport', exact: true }).selectOption('phone');
+    const reader = await context.newPage();
+    try {
+        await reader.setViewportSize({ width: 390, height: 844 });
+        await reader.goto('/book/local-story-spring/chapter/local-story-spring-chapter-1');
+        await expect(reader.locator('.reader-chapter-intro h1')).toBeVisible();
+        const liveType = await reader.locator('.reader-chapter-intro h1').evaluate(element => ({ size: getComputedStyle(element).fontSize, align: getComputedStyle(element).textAlign }));
+        await expect(preview.locator('.reader-chapter-intro h1')).toHaveCSS('font-size', liveType.size);
+        await expect(preview.locator('.reader-chapter-intro h1')).toHaveCSS('text-align', liveType.align);
+        await reader.getByRole('button', { name: 'Reading appearance and themes', exact: true }).click();
+        for (const [theme, label] of [['light', 'Paper'], ['sepia', 'Sepia'], ['dark', 'Night']]) {
+            await preview.getByRole('combobox', { name: 'Appearance', exact: true }).selectOption(theme);
+            await reader.getByRole('button', { name: label, exact: true }).click();
+            await expect(reader.locator('.reader-experience')).toHaveClass(new RegExp(`reader-theme-${theme}`));
+            // The live reader has a short theme transition; wait for its paper
+            // to settle before comparing the two independently mounted screens.
+            const previewPaper = await preview.locator('.ww-reading-preview-canvas').evaluate(element => getComputedStyle(element).backgroundColor);
+            await expect(reader.locator('.reader-experience')).toHaveCSS('background-color', previewPaper);
+            const livePaper = await reader.locator('.reader-experience').evaluate(element => getComputedStyle(element).backgroundColor);
+            await expect(preview.locator('.ww-reading-preview-canvas')).toHaveCSS('background-color', livePaper);
+        }
+        const bodyGap = await preview.evaluate(element => element.querySelector('.reader-copy')!.getBoundingClientRect().top - element.querySelector('h1')!.getBoundingClientRect().bottom);
+        expect(bodyGap).toBeLessThanOrEqual(72);
+        await preview.getByRole('combobox', { name: 'Appearance', exact: true }).selectOption('sepia');
+        await page.screenshot({ path: 'test-results/evidence/publishing/editor-refined-phone-preview.png', fullPage: true });
+        await preview.getByRole('combobox', { name: 'Viewport', exact: true }).selectOption('desktop');
+        await page.screenshot({ path: 'test-results/evidence/publishing/editor-refined-desktop-preview.png', fullPage: true });
+    } finally { await reader.close(); }
+});
+
+test('preview footnotes stay inside the phone canvas and Escape closes the note before the preview', async ({ page, request }) => {
+    const book = await story(request, 'Footnote edges');
+    const id = await chapter(request, book.id, 'A letter at dusk', [], '<p>At dusk, Mara followed the river home. Every turn brought her closer to the house she remembered.</p><p style="text-align: right">A small detail<span data-footnote="This note belongs to the last words on the line." data-footnote-index="1"></span></p><p>Morning would bring another letter.</p>');
+    await editor(page, book.id, id);
+    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    const preview = page.getByRole('dialog', { name: 'Reader preview', exact: true });
+    await preview.getByRole('combobox', { name: 'Viewport', exact: true }).selectOption('phone');
+    await preview.getByRole('button', { name: 'Footnote 1', exact: true }).click();
+    await expect(preview.locator('.footnote-popup')).toHaveCSS('opacity', '1');
+    const bounds = await preview.evaluate(element => { const canvas = element.querySelector('.ww-reading-preview-canvas')!.getBoundingClientRect(); const note = element.querySelector('.footnote-popup')!.getBoundingClientRect(); return { left: note.left - canvas.left, right: canvas.right - note.right }; });
+    expect(bounds.left).toBeGreaterThanOrEqual(8);
+    expect(bounds.right).toBeGreaterThanOrEqual(8);
+    await page.keyboard.press('Escape');
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('.footnote-popup')).toHaveCount(0);
+    await preview.getByRole('button', { name: 'Footnote 1', exact: true }).click();
+    await preview.getByRole('combobox', { name: 'Appearance', exact: true }).click();
+    await preview.getByRole('combobox', { name: 'Appearance', exact: true }).selectOption('dark');
+    await expect(preview.locator('.footnote-popup')).toHaveCount(0);
+    await preview.getByRole('button', { name: 'Footnote 1', exact: true }).click();
+    await expect(preview.locator('.footnote-popup')).toHaveCSS('opacity', '1');
+    const accessibility = await new AxeBuilder({ page }).include('.ww-editor-reader-preview').withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(accessibility.violations.map(item => ({ id: item.id, nodes: item.nodes.map(node => ({ target: node.target, html: node.html, failure: node.failureSummary })) }))).toEqual([]);
+    await preview.getByRole('button', { name: 'Close reader preview', exact: true }).click();
+    await expect(preview).toHaveCount(0);
+});
+
+test('published reader footnotes remain readable and tappable above following paragraphs', async ({ page, request }) => {
+    const book = await story(request, 'Reader notes');
+    const id = await chapter(request, book.id, 'At the river', [], `<p>Mara waited at the river. The evening light settled on the water.</p><p style="text-align:right">A final detail<span data-footnote="${'A letter sent home in spring, before the river rose. '.repeat(4)}" data-footnote-index="1"></span></p><p>${'She followed the path along the river and thought of home. '.repeat(12)}</p>`);
+    await publish(request, book.id, id);
+    const login = await request.post('/api/auth/login', { data: { email: 'reader@example.test', password: 'WordWeftLocal123!' }, headers: { 'X-Forwarded-For': testAddress } });
+    expect(login.ok()).toBeTruthy();
+    await page.addInitScript(value => localStorage.setItem('wordweft_jwt', value), (await login.json()).token);
+    await page.setViewportSize({ width: 390, height: 1000 });
+    await page.goto(`/book/${book.id}/chapter/${id}`);
+    await expect(page.locator('.reader-copy')).toBeVisible();
+    await page.getByRole('button', { name: 'Footnote 1', exact: true }).click();
+    const note = page.getByRole('note', { name: 'Footnote 1', exact: true });
+    await expect(note).toContainText('A letter sent home in spring');
+    expect(await note.evaluate(element => { const rect = element.getBoundingClientRect(); const header = element.querySelector('.footnote-popup-header')!.getBoundingClientRect(); return element.contains(document.elementFromPoint(rect.left + 20, header.bottom + 20)); })).toBeTruthy();
+    // Older backend deployments can still use the cipher typography scope;
+    // note attributes are ordinary text and must retain their own fonts.
+    await page.locator('.reader-copy').evaluate(element => { element.classList.add('has-cipher-font'); (element as HTMLElement).style.setProperty('--reader-cipher-font', 'WW-Cipher-Serif-1'); });
+    for (const selector of ['.footnote-popup-body', '.footnote-popup-badge']) {
+        expect(await note.locator(selector).evaluate(element => getComputedStyle(element).fontFamily)).not.toMatch(/Cipher/i);
+    }
+    await page.locator('.reader-copy').evaluate(element => { element.classList.remove('has-cipher-font'); (element as HTMLElement).style.removeProperty('--reader-cipher-font'); });
+    const bounds = await note.boundingBox(); expect(bounds!.x).toBeGreaterThanOrEqual(8); expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(382);
+    await page.screenshot({ path: 'test-results/evidence/publishing/reader-refined-footnote.png', fullPage: true });
+    const close = note.getByRole('button', { name: 'Close footnote', exact: true });
+    expect(await close.evaluate(element => { const rect = element.getBoundingClientRect(); const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2; return [[x, y], [rect.left + 4, y], [rect.right - 4, y], [x, rect.top + 4], [x, rect.bottom - 4]].every(([px, py]) => element.contains(document.elementFromPoint(px, py))); })).toBeTruthy();
+    await close.click(); await expect(note).toHaveCount(0);
+    await page.getByRole('button', { name: 'Footnote 1', exact: true }).click();
+    await page.keyboard.press('Escape'); await expect(note).toHaveCount(0);
+    await page.getByRole('button', { name: 'Footnote 1', exact: true }).click();
+    const appearance = page.getByRole('button', { name: 'Reading appearance and themes', exact: true });
+    await appearance.focus(); await page.keyboard.press('Enter');
+    const preferences = page.getByRole('dialog', { name: 'Reading preferences', exact: true });
+    await expect(preferences).toBeVisible();
+    await expect(note).toHaveCount(0);
+    expect(await preferences.evaluate(element => element.contains(document.activeElement))).toBeTruthy();
+    await page.keyboard.press('Escape'); await expect(preferences).toHaveCount(0); await expect(appearance).toBeFocused();
+});
+
+test('preview preserves paragraph rhythm and formatting inside mood and disclosure blocks', async ({ page, request }) => {
+    const book = await story(request, 'Formatted preview');
+    const id = await chapter(request, book.id, 'The rain begins', [], '<p>The first letter arrived on a quiet morning.</p><p>The second came with the rain.</p><div data-mood="serene"><p>A river can carry a thousand stories.</p><p style="text-align:right">This one was hers.</p></div><details><summary>Another detail</summary><p>A memory worth keeping.</p><p>A promise worth remembering.</p></details>');
+    await editor(page, book.id, id);
+    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    const preview = page.getByRole('dialog', { name: 'Reader preview', exact: true });
+    await expect(preview.locator('.reader-copy .reader-comment-block')).toHaveCount(6);
+    await preview.locator('summary').click();
+    for (const selector of ['.reader-copy > .reader-comment-block', '[data-mood] .reader-comment-block', 'details .reader-comment-block']) {
+        const gap = await preview.locator(selector).evaluateAll(elements => elements[1].getBoundingClientRect().top - elements[0].getBoundingClientRect().bottom);
+        expect(gap).toBeGreaterThanOrEqual(24);
+    }
+    await expect(preview.locator('[data-mood] p').last()).toHaveCSS('text-align', 'right');
+    await expect(preview.locator('[data-mood]')).toHaveAttribute('data-mood', 'serene');
+    await preview.getByRole('button', { name: 'Close reader preview', exact: true }).click();
+    await expect(page.locator('.rte-content')).toContainText('A promise worth remembering.');
+});
+
+test.describe('preview on touch screens', () => {
+    test.use({ hasTouch: true });
+    for (const width of [320, 390]) {
+        test(`table actions stay inside their cell beside tappable notes at ${width} px`, async ({ page, request }) => {
+            const book = await story(request, 'Table annotations');
+            const id = await chapter(request, book.id, 'Letters along the river', [], '<p>Mara kept a list of the places she had visited.</p><table><tbody><tr><td><p>Harbor</p></td><td><p>River<span data-footnote="A quiet village beside the water." data-footnote-index="3"></span></p></td></tr></tbody></table>');
+            await publish(request, book.id, id);
+            await page.setViewportSize({ width, height: 844 });
+            await page.goto(`/book/${book.id}/chapter/${id}`);
+            const cells = page.locator('.reader-copy td');
+            await expect(cells).toHaveCount(2);
+            const header = await page.locator('.reader-header').evaluate(element => {
+                const back = element.querySelector('.reader-back-button')!.getBoundingClientRect(), actions = element.querySelector('.reader-header-actions')!.getBoundingClientRect();
+                return { separate: back.right <= actions.left, actionWidths: Array.from(element.querySelectorAll('.reader-header-actions button')).filter(button => button.getClientRects().length).map(button => button.getBoundingClientRect().width) };
+            });
+            expect(header.separate).toBeTruthy(); expect(header.actionWidths.every(width => width >= 44)).toBeTruthy();
+            await cells.first().locator('p').tap();
+            const comment = cells.first().locator('.reader-comment-button');
+            const action = await comment.boundingBox(), cell = await cells.first().boundingBox();
+            expect(action!.x).toBeGreaterThanOrEqual(cell!.x); expect(action!.x + action!.width).toBeLessThanOrEqual(cell!.x + cell!.width);
+            const marker = cells.last().getByRole('button', { name: 'Footnote 3', exact: true });
+            expect(await marker.evaluate(element => { const rect = element.getBoundingClientRect(); return element.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)); })).toBeTruthy();
+            await marker.tap();
+            const note = page.getByRole('note', { name: 'Footnote 3', exact: true }); await expect(note).toBeVisible();
+            await note.getByRole('button', { name: 'Close footnote', exact: true }).tap();
+            await expect(note).toHaveCount(0);
+            await page.screenshot({ path: `test-results/evidence/publishing/reader-table-touch-${width}.png`, fullPage: true });
+            await marker.tap(); await expect(note).toBeVisible();
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+        });
+    }
+    for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 568 }, { width: 844, height: 390 }]) {
+        test(`preview controls and long notes remain reachable at ${viewport.width} × ${viewport.height}`, async ({ page, request }) => {
+            await page.setViewportSize(viewport);
+            const book = await story(request, 'Touch preview');
+            const id = await chapter(request, book.id, 'The letter she left beside the river at the end of a long summer', [], `<p>Mara opened the window and listened to the rain. The river had carried a thousand stories past this house, but tonight it felt as though it was waiting for hers.</p><p style="text-align:right">A detail worth keeping<span data-footnote="${'A longer note should stay readable, with its close control in reach. '.repeat(18)}" data-footnote-index="1"></span></p><p>${'She followed the path toward the water and thought of home. '.repeat(14)}</p>`);
+            await editor(page, book.id, id);
+            await page.getByRole('button', { name: 'Preview', exact: true }).tap();
+            const preview = page.getByRole('dialog', { name: 'Reader preview', exact: true });
+            await preview.getByRole('combobox', { name: 'Viewport', exact: true }).selectOption('phone');
+            await page.evaluate(() => document.documentElement.classList.add('dark'));
+            await preview.getByRole('combobox', { name: 'Appearance', exact: true }).selectOption('light');
+            await expect(preview.locator('.ww-reading-preview-canvas')).toHaveCSS('background-color', 'rgb(251, 250, 247)');
+            const layout = await preview.evaluate(element => {
+                const box = element.getBoundingClientRect();
+                const canvas = element.querySelector('.ww-reading-preview-canvas') as HTMLElement;
+                return { dialogFits: box.left >= 0 && box.right <= innerWidth && box.bottom <= innerHeight, horizontalOverflow: element.scrollWidth > element.clientWidth || canvas.scrollWidth > canvas.clientWidth, canvasHeight: canvas.clientHeight, closeHeight: element.querySelector('[aria-label="Close reader preview"]')!.getBoundingClientRect().height };
+            });
+            expect(layout.dialogFits).toBeTruthy(); expect(layout.horizontalOverflow).toBeFalsy(); expect(layout.canvasHeight).toBeGreaterThan(140); expect(layout.closeHeight).toBeGreaterThanOrEqual(44);
+            await preview.getByRole('button', { name: 'Footnote 1', exact: true }).tap();
+            await expect(preview.getByRole('note', { name: 'Footnote 1', exact: true })).toBeVisible();
+            const note = preview.locator('.footnote-popup');
+            expect(await note.evaluate(element => element.scrollHeight > element.clientHeight)).toBeTruthy();
+            await note.evaluate(element => { element.scrollTop = element.scrollHeight; });
+            await preview.getByRole('button', { name: 'Close footnote', exact: true }).tap();
+            await expect(note).toHaveCount(0);
+            await preview.locator('.ww-reading-preview-canvas').evaluate(element => { element.scrollTop = 0; });
+            await page.screenshot({ path: `test-results/evidence/publishing/editor-preview-touch-${viewport.width}.png`, fullPage: true });
+            const accessibility = await new AxeBuilder({ page }).include('.ww-editor-reader-preview').withTags(['wcag2a', 'wcag2aa']).analyze(); expect(accessibility.violations.map(item => item.id)).toEqual([]);
+            await preview.getByRole('button', { name: 'Close reader preview', exact: true }).tap();
+            await expect(preview).toHaveCount(0);
+            await page.getByRole('button', { name: 'Publish', exact: true }).tap();
+            const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true });
+            await expect(review).toBeVisible();
+            expect(await review.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
+            await page.screenshot({ path: `test-results/evidence/publishing/editor-review-touch-${viewport.width}.png`, fullPage: true });
+        });
+    }
+});
+
 test('chapter manager releases also require the complete impact review', async ({ page, request }) => {
     const book = await story(request, 'Manager release'); const first = await chapter(request, book.id, 'Earlier manager draft', ['VIOLENCE']); const second = await chapter(request, book.id, 'Later manager draft');
     await page.goto(`/write/book/${book.id}/manage`);
@@ -161,7 +350,9 @@ test('chapter manager releases also require the complete impact review', async (
     await row.getByLabel('Actions for Later manager draft', { exact: true }).click();
     await row.getByRole('button', { name: 'Publish', exact: true }).click();
     const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true }); await expect(review).toContainText('Earlier manager draft'); await expect(review).toContainText('This private story becomes public'); await expect(review).toContainText('violence');
-    await approveRelease(page); expect((await api(request, `/books/${book.id}/chapters/${first}/edit-session`)).status).toBe('published'); expect((await api(request, `/books/${book.id}/chapters/${second}/edit-session`)).status).toBe('published');
+    await approveRelease(page);
+    await expect.poll(async () => (await api(request, `/books/${book.id}/chapters/${first}/edit-session`)).status).toBe('published');
+    expect((await api(request, `/books/${book.id}/chapters/${second}/edit-session`)).status).toBe('published');
 });
 
 test('inline story guide saves refresh mentions without moving the manuscript cursor', async ({ page, request }) => {
