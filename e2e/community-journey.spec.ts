@@ -18,7 +18,7 @@ test('opening a workshop and returning preserves the community format filter', a
   await page.getByRole('link', { name: 'Does this opening promise enough?', exact: true }).click();
   await expect(page.locator('.community-detail-layout')).toBeVisible();
   await expect(page.getByText('The conversation', { exact: true })).toBeVisible();
-  await page.goBack();
+  await page.getByRole('button', { name: /Back to community|Back$/, exact: false }).click();
   await expect(page).toHaveURL(/\/community$/);
   await expect(page.getByRole('combobox', { name: 'Filter by post format' })).toHaveValue('WORKSHOP');
   await expect(page.locator('.community-feed .community-post')).toHaveCount(1);

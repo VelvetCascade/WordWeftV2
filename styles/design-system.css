@@ -56,3 +56,15 @@ html body .ww-page-eyebrow{font:500 11px/1.5 Rubik,sans-serif;letter-spacing:.15
 .v2-search-heading{margin-bottom:28px}.ww-app .v2-search-heading h1{font:700 clamp(32px,4vw,44px)/1.2 Rubik,sans-serif!important;letter-spacing:-1.4px!important;color:var(--ww-ink)!important}.v2-search-heading>p:last-child{font-size:15px;color:var(--ww-muted);margin-top:14px}.v2-search-start{max-width:680px;display:flex;flex-direction:column;align-items:center;text-align:center;margin:44px auto;gap:16px;padding:32px;border:1px solid var(--ww-line);border-radius:8px}.v2-search-start h2{font:400 26px/1.3 'WordWeft Serif',serif;color:var(--ww-ink)}.v2-search-start p{max-width:450px;font-size:13px;line-height:1.7}
 .v2-route-surface h1[tabindex='-1']:focus,.ww-app-main[tabindex='-1']:focus{outline:none}.ww-app .ww-page-eyebrow:before{display:none!important}
 .ww-app .ww-book-rating{color:#7c592c!important}.dark .ww-app .ww-book-rating{color:#dfb56e!important}.ww-app .ww-library-filter .text-gray-500{color:var(--ww-muted)!important}
+
+/* Keep touch targets stable; state changes never move a control under a finger. */
+:where(.ww-app,.reader-experience) :is(button,a[href],summary){transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s}
+:where(.ww-app,.reader-experience) button:not(:disabled):active{filter:brightness(.94)}
+.v2-route-surface{animation:ww-route-arrive .14s ease-out}
+@keyframes ww-route-arrive{from{opacity:.8}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.v2-route-surface{animation:none}:where(.ww-app,.reader-experience) :is(button,a[href],summary){transition:none}}
+
+/* Sheets appear without moving their touch targets; keyboard height stays scoped to each dialog. */
+:where([role=dialog][aria-modal=true],[role=alertdialog][aria-modal=true]){animation:ww-dialog-reveal .14s ease-out;max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
+@keyframes ww-dialog-reveal{from{opacity:.65}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){[role=dialog][aria-modal=true],[role=alertdialog][aria-modal=true]{animation:none}}

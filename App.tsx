@@ -1,11 +1,13 @@
 
-import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { Navbar } from './components/Navbar';
 import { WriterLayout } from './components/WriterLayout';
-import { PageErrorBoundary, RouteSurface } from './components/RouteSurface';
+import { OptionalSurfaceBoundary, PageErrorBoundary, RouteSurface } from './components/RouteSurface';
+import { readOptionalValue, writeOptionalValue, removeOptionalValue } from './utils/optionalStorage';
+import { isQuietJourney } from './utils/onboarding';
 const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
 const CategoryPage = lazy(() => import('./pages/CategoryPage').then(module => ({ default: module.CategoryPage })));
 const BookDetailsPage = lazy(() => import('./pages/BookDetailsPage').then(module => ({ default: module.BookDetailsPage })));
@@ -117,14 +119,21 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Hash events may run before React commits a successful login. Keep the guard current.
   const sessionAuthenticated = useRef(false);
+  const sessionEpoch = useRef(0);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [intendedPage, setIntendedPage] = useState<Page | null>(null);
-  const [showForYouModal, setShowForYouModal] = useState(false);
   const [showWelcomeJourney, setShowWelcomeJourney] = useState(false);
   const [authInitialView, setAuthInitialView] = useState<ReaderAuthView>('login');
-  const notif = useNotifications(isAuthenticated);
+  const notif = useNotifications(isAuthenticated, currentUser?.id || 'guest');
   const [isInitialAuthCheckDone, setIsInitialAuthCheckDone] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const accountUpdateEpoch = sessionEpoch.current;
+  const handleAccountUpdate = useCallback((updatedUser: User) => {
+    // A late mutation belongs to the session that submitted it, not a later login.
+    if (accountUpdateEpoch !== sessionEpoch.current) return;
+    setCurrentUser(current => accountUpdateEpoch === sessionEpoch.current && sessionAuthenticated.current && current?.id === updatedUser.id ? updatedUser : current);
+  }, [accountUpdateEpoch]);
 
   // Preserve the complete intended destination through sign-in and onboarding.
   const navigateTo = (target: Page) => {
@@ -165,13 +174,14 @@ const App: React.FC = () => {
     }
   };
 
-  const feedback = useFeedbackTriggers(isAuthenticated);
+  const feedback = useFeedbackTriggers(isAuthenticated && !showWelcomeJourney && !isQuietJourney(page.name));
 
   // API calls can discover an expired/rejected token after the initial load.
   // Clear every in-memory auth signal together so the UI never looks signed in
   // while the backend is serving anonymous reader access.
   useEffect(() => {
     const handleInvalidSession = () => {
+      sessionEpoch.current++;
       sessionAuthenticated.current = false;
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -184,9 +194,10 @@ const App: React.FC = () => {
   // Check for existing session on initial load
   useEffect(() => {
     const checkSession = async () => {
+      const epoch = sessionEpoch.current;
       try {
         const user = await api.getMe();
-        if (user) {
+        if (user && epoch === sessionEpoch.current) {
           sessionAuthenticated.current = true;
           setIsAuthenticated(true);
           setCurrentUser(user);
@@ -201,6 +212,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (user: User) => {
+    sessionEpoch.current++;
     sessionAuthenticated.current = true;
     setIsAuthenticated(true);
     setCurrentUser(user);
@@ -220,8 +232,8 @@ const App: React.FC = () => {
         accessState: 'FULL',
         authChoice: readerIntent.authView,
       });
-      if (!localStorage.getItem('ww_welcomeJourneyCompleted')) {
-        localStorage.setItem('ww_welcomeJourneyPending', 'true');
+      if (!readOptionalValue('ww_welcomeJourneyCompleted')) {
+        writeOptionalValue('ww_welcomeJourneyPending', 'true');
       }
       navigateTo({
         name: 'reader',
@@ -234,7 +246,7 @@ const App: React.FC = () => {
     }
 
     // Check if user should see the Welcome Journey
-    const hasCompletedJourney = localStorage.getItem('ww_welcomeJourneyCompleted');
+    const hasCompletedJourney = readOptionalValue('ww_welcomeJourneyCompleted');
     if (!hasCompletedJourney) {
       setShowWelcomeJourney(true);
       // Keep the intended route until onboarding completes or is skipped.
@@ -261,6 +273,7 @@ const App: React.FC = () => {
       ]);
     } finally {
       await api.logout();
+      sessionEpoch.current++;
       sessionAuthenticated.current = false;
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -272,14 +285,14 @@ const App: React.FC = () => {
   const handleUpdateProfile = async (updatedData: Partial<User>) => {
     if (currentUser) {
       const updatedUser = await api.updateUserProfile(currentUser.id, updatedData);
-      setCurrentUser(updatedUser);
+      handleAccountUpdate(updatedUser);
     }
   };
 
   const handleChangePassword = async (oldPassword_unused: string, newPassword_unused: string) => {
     if (!currentUser) throw new Error("Not logged in");
     const updatedUser = await api.changePassword(currentUser.id, oldPassword_unused, newPassword_unused);
-    setCurrentUser(updatedUser);
+    handleAccountUpdate(updatedUser);
   };
 
 
@@ -419,9 +432,9 @@ const App: React.FC = () => {
         sessionAuthenticated.current
         && targetPage.name !== 'reader'
         && targetPage.name !== 'auth'
-        && localStorage.getItem('ww_welcomeJourneyPending') === 'true'
+        && readOptionalValue('ww_welcomeJourneyPending') === 'true'
       ) {
-        localStorage.removeItem('ww_welcomeJourneyPending');
+        removeOptionalValue('ww_welcomeJourneyPending');
         setIntendedPage(targetPage);
         setShowWelcomeJourney(true);
       }
@@ -496,31 +509,31 @@ const App: React.FC = () => {
       case 'home':
         return <HomePage />;
       case 'category':
-        return <CategoryPage genre={page.genre} />;
+        return <CategoryPage genre={page.genre} favoriteGenres={currentUser?.favoriteGenres} />;
       case 'book-details':
-        return <BookDetailsPage bookId={page.bookId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
+        return <BookDetailsPage bookId={page.bookId} currentUser={currentUser} onUserUpdate={handleAccountUpdate} />;
       case 'reader':
-        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} chapterId={page.chapterId} currentUser={currentUser} onUserUpdate={setCurrentUser} />;
+        return <ReaderPage bookId={page.bookId} chapterIndex={page.chapterIndex} chapterId={page.chapterId} currentUser={currentUser} onUserUpdate={handleAccountUpdate} />;
       case 'writer-dashboard':
-        return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
+        return <WriterDashboardPage currentUser={currentUser!} onUserUpdate={handleAccountUpdate} />;
       case 'writer-create-book':
-        return <CreateBookPage currentUser={currentUser!} onUserUpdate={setCurrentUser} />;
+        return <CreateBookPage currentUser={currentUser!} onUserUpdate={handleAccountUpdate} />;
       case 'writer-manage-book':
-        return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUserUpdate={setCurrentUser} />;
+        return <ManageChaptersPage currentUser={currentUser!} bookId={page.bookId} onUserUpdate={handleAccountUpdate} />;
       case 'writer-edit-chapter':
-        return <ChapterEditorPage key={`${page.bookId}:${page.chapterId}`} currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={setCurrentUser} />;
+        return <ChapterEditorPage key={`${page.bookId}:${page.chapterId}`} currentUser={currentUser!} bookId={page.bookId} chapterId={page.chapterId} onUserUpdate={handleAccountUpdate} />;
       case 'writer-analytics':
         return <WriterAnalyticsPage />;
       case 'writer-settings':
         return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'hook-feed':
-        return <HookFeedPage currentUser={currentUser} onUserUpdate={setCurrentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
+        return <HookFeedPage currentUser={currentUser} onUserUpdate={handleAccountUpdate} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'reading-growth':
         return <ReadingGrowthPage currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'profile':
         return <ProfilePage user={currentUser!} />;
       case 'library':
-        return <LibraryPage user={currentUser!} onUserUpdate={setCurrentUser} />;
+        return <LibraryPage user={currentUser!} onUserUpdate={handleAccountUpdate} />;
       case 'edit-profile':
         return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'auth':
@@ -544,7 +557,7 @@ const App: React.FC = () => {
       case 'notifications':
         return <NotificationsPage
           currentUser={currentUser}
-          onPreferencesChange={preferences => setCurrentUser(user => user ? { ...user, notificationPreferences: preferences } : user)}
+          onPreferencesChange={preferences => setCurrentUser(user => accountUpdateEpoch === sessionEpoch.current && user?.id === currentUser?.id && user ? { ...user, notificationPreferences: preferences } : user)}
           navigateTo={navigateTo}
           onLogout={handleLogout}
           notifications={notif.notifications}
@@ -566,7 +579,7 @@ const App: React.FC = () => {
       case 'about':
         return <AboutPage />;
       case 'founding-writers':
-        return <FoundingWritersPage />;
+        return <FoundingWritersPage key={currentUser?.id || 'guest'} currentUser={currentUser} />;
       case 'admin-founding-writers':
         return <FoundingWriterAdminPage isAdmin={currentUser?.roles?.includes('ROLE_ADMIN') === true} />;
       case 'reset-password':
@@ -607,18 +620,18 @@ const App: React.FC = () => {
               />
             ) : undefined
           }
-          onForYouClick={() => setShowForYouModal(true)}
+          onForYouClick={() => navigateTo({ name: 'hook-feed' })}
           unreadCount={notif.unreadCount}
           currentUser={currentUser}
         />}
 
         {isWriterPage ? (
           <WriterLayout currentUser={currentUser ?? undefined}>
-            <PageErrorBoundary route={routeSurfaceKey}><RouteSurface key={routeSurfaceKey}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
+            <PageErrorBoundary key={`${routeSurfaceKey}:${currentUser?.id || 'guest'}`} route={routeSurfaceKey}><RouteSurface key={routeSurfaceKey}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </WriterLayout>
         ) : (
           <main id="main-content" tabIndex={-1} className={`ww-app-main ww-page-${page.name} ${showNavbar ? 'ww-app-main-with-nav pb-24 xl:pb-0' : ''}`}>
-            <PageErrorBoundary route={routeSurfaceKey}><RouteSurface key={routeSurfaceKey} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
+            <PageErrorBoundary key={`${routeSurfaceKey}:${currentUser?.id || 'guest'}`} route={routeSurfaceKey}><RouteSurface key={routeSurfaceKey} reader={page.name === 'reader'}><Suspense fallback={<PageLoadingFallback />}>{renderPage()}</Suspense></RouteSurface></PageErrorBoundary>
           </main>
         )}
 
@@ -643,7 +656,7 @@ const App: React.FC = () => {
           onDismiss={notif.dismissToast}
           onNavigate={navigateTo}
         />
-        {isAuthenticated && <WhatsNewPopup />}
+        {isAuthenticated && page.name === 'writer-dashboard' && !showWelcomeJourney && <OptionalSurfaceBoundary key={currentUser?.id}><WhatsNewPopup /></OptionalSurfaceBoundary>}
 
         {/* Welcome Journey - Full-screen onboarding for new users */}
         {showWelcomeJourney && currentUser && (
@@ -651,7 +664,8 @@ const App: React.FC = () => {
             userName={currentUser.name}
             onComplete={(role) => {
               setShowWelcomeJourney(false);
-              localStorage.setItem('ww_userRole', role);
+              writeOptionalValue('ww_userRole', role);
+              if (currentUser) writeOptionalValue(`ww_userRole:${currentUser.id}`, role);
               const destination = intendedPage;
               const communityReturn = communityReturnLink(intendedPage);
               setIntendedPage(null);
@@ -669,24 +683,7 @@ const App: React.FC = () => {
           />
         )}
 
-        {/* Personalized / For You Modal */}
-        {showForYouModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForYouModal(false)}>
-            <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-md w-full p-8 text-center" onClick={e => e.stopPropagation()}>
-              <div className="text-4xl mb-4"></div>
-              <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-3">Personalized Discovery</h3>
-              <p className="text-text-body dark:text-dark-text-body mb-6">
-                Explore stories by genre, trending rankings, and curated collections to find your next great read.
-              </p>
-              <button
-                onClick={() => setShowForYouModal(false)}
-                className="bg-accent text-white font-sans font-semibold px-6 py-3 rounded-xl hover:bg-primary transition-colors"
-              >
-                Back to Explore
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
       <Analytics />
       <SpeedInsights />

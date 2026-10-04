@@ -19,10 +19,10 @@ public class Note {
     @Indexed
     private String chapterId; // Optional, can be null if note is for the whole book
     
-    @NotBlank(message = "Note title is required")
     @Size(max = 100, message = "Title must be less than 100 characters")
     private String title;
     
+    @NotBlank(message = "Note content is required")
     @Size(max = 10000)
     private String content;
 }

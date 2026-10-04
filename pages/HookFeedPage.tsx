@@ -1,12 +1,16 @@
+import { navigatePath } from '../utils/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, Heart, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import type { HookCard, User } from '../types';
 import * as api from '../api/client';
 import { appendSeenStory, toggleTasteGenre } from '../utils/hookFeed';
+import { MAX_FAVORITE_GENRES } from '../utils/onboarding';
 import { clearHookFeedJourney, readHookFeedJourney, writeHookFeedJourney, type HookFeedJourney } from '../utils/hookFeedJourney';
 import { Footer } from '../components/Footer';
 import { ResilientImage } from '../components/ResilientImage';
 import '../styles/support-v2.css';
+import '../styles/discovery-controls.css';
+import { searchGenreCatalog } from '../utils/discoveryFilters';
 
 const SEEN_KEY = 'ww_hook_feed_seen';
 
@@ -53,6 +57,7 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
     const [genres, setGenres] = useState<string[]>([]);
     const [appliedTaste, setAppliedTaste] = useState<string[]>(initialJourney?.taste ?? currentUser?.favoriteGenres ?? []);
     const [taste, setTaste] = useState<string[]>(appliedTaste);
+    const [genreQuery, setGenreQuery] = useState('');
     const [editingTaste, setEditingTaste] = useState(false);
     const [loading, setLoading] = useState(true);
     const [savingTaste, setSavingTaste] = useState(false);
@@ -177,7 +182,7 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
     const openStory = useCallback(() => {
         if (!current) return;
         rememberSeen(current.bookId);
-        window.location.hash = `/book/${current.bookId}`;
+        navigatePath(`/book/${current.bookId}`);
     }, [current, rememberSeen]);
 
     useEffect(() => {
@@ -260,7 +265,7 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
         }
     };
 
-    const catalog = useMemo(() => genres, [genres]);
+    const catalog = useMemo(() => searchGenreCatalog(genres, taste, genreQuery), [genres, taste, genreQuery]);
 
     useEffect(() => {
         if (!editingTaste || !tasteDialog.current) return;
@@ -284,22 +289,22 @@ export const HookFeedPage: React.FC<HookFeedPageProps> = ({ currentUser, onUserU
             <main className="wv-support-shell">
                 <header className="wv-hook-header wv-pagehead">
                     <div><p className="wv-eyebrow">Hook Feed</p><h1>Find your next read.</h1><p className="wv-lead">Read a short opening, then open the story or move to the next one.</p></div>
-                    <button type="button" ref={tasteTrigger} onClick={() => { setTaste(appliedTaste); setEditingTaste(true); }} className="wv-button"><SlidersHorizontal size={17} /> Tune my feed</button>
+                    <button type="button" ref={tasteTrigger} onClick={() => { setTaste(appliedTaste); setGenreQuery(''); setEditingTaste(true); }} className="wv-button"><SlidersHorizontal size={17} /> Tune my feed</button>
                 </header>
                 {editingTaste && <dialog ref={tasteDialog} className="wv-taste-dialog" aria-labelledby="taste-heading" role="dialog" aria-modal="true" onCancel={event => { event.preventDefault(); setEditingTaste(false); }} onClick={event => { if (event.target === event.currentTarget) setEditingTaste(false); }}>
                     <section className="wv-taste-panel">
                         <div className="wv-taste-header"><div><p className="wv-eyebrow">Your reading taste</p><h2 id="taste-heading">Choose genres</h2><p>Pick up to eight. You can change these any time.</p></div><button type="button" onClick={() => setEditingTaste(false)} aria-label="Close taste settings" className="wv-icon-button"><X size={21} /></button></div>
-                        <div className="wv-taste-genres">{catalog.map(genre => { const selected = taste.some(value => value.toLowerCase() === genre.toLowerCase()); return <button type="button" key={genre} onClick={() => setTaste(previous => toggleTasteGenre(previous, genre))} aria-pressed={selected}>{genre}</button>; })}</div>
-                        <div className="wv-taste-footer"><span>{taste.length}/8 selected</span><button type="button" disabled={!taste.length || savingTaste} onClick={() => void saveTaste()} className="wv-button wv-button-primary">{savingTaste ? 'Saving…' : currentUser ? 'Save my taste' : 'Use these genres'}</button></div>
+                        <input type="search" className="ww-genre-search" aria-label="Search genres" placeholder="Find a genre" value={genreQuery} onChange={event => setGenreQuery(event.target.value)} /><div className="wv-taste-selected" role="group" aria-label="Selected genres">{taste.map(genre => <button type="button" key={genre} onClick={() => setTaste(previous => toggleTasteGenre(previous, genre))} aria-label={`Remove ${genre}`}>{genre} <X size={13} /></button>)}</div><div className="wv-taste-genres">{catalog.map(genre => { const selected = taste.some(value => value.toLowerCase() === genre.toLowerCase()); return <button type="button" key={genre} onClick={() => setTaste(previous => toggleTasteGenre(previous, genre))} aria-pressed={selected}>{genre}</button>; })}</div>{catalog.length === 0 && <p role="status">No genres match. Try another name.</p>}
+                        <div className="wv-taste-footer"><span>{taste.length}/{MAX_FAVORITE_GENRES} selected</span><button type="button" disabled={!taste.length || savingTaste} onClick={() => void saveTaste()} className="wv-button wv-button-primary">{savingTaste ? 'Saving…' : currentUser ? 'Save my taste' : 'Use these genres'}</button></div>
                         {error && <p className="wv-error" role="alert">{error}</p>}
                     </section>
                 </dialog>}
                 {error && <div role="alert" className="wv-error wv-hook-error">{error}<button type="button" className="wv-button" onClick={() => void loadFeed()}>Try again</button></div>}
-                {loading ? <section className="wv-hook-loading" role="status"><p>{likingChapterId ? 'Saving your like on the selected opening…' : 'Loading openings…'}</p><div className="wv-hook-loading-lines" aria-hidden="true"><span /><span /><span /></div></section> : current ? <article className="wv-hook-card" ref={cardRef}>
+                {loading ? <section className="wv-hook-loading" role="status"><p>{likingChapterId ? 'Saving your like on the selected opening…' : 'Loading openings…'}</p><div className="wv-hook-loading-lines" aria-hidden="true"><span /><span /><span /></div></section> : current ? <article className="wv-hook-card" ref={cardRef} tabIndex={0} aria-label={`${current.title}: opening preview`} aria-keyshortcuts="ArrowLeft ArrowRight Enter">
                     <div className="wv-hook-art">{current.coverUrl ? <ResilientImage src={current.coverUrl} alt={`Cover of ${current.title}`} fallbackLabel={current.title} variant="cover" className="wv-hook-cover" loading="eager" /> : <div className="wv-hook-art-empty"><BookOpen size={44} aria-hidden="true" /><span>Cover unavailable</span></div>}</div>
                     <div className="wv-hook-reading">
-                        <div className="wv-hook-meta"><span>{current.chapterTitle}</span><span>{current.readingMinutes} min chapter</span></div>
-                        <h2>{current.title}</h2><a className="wv-hook-author" href={`/author/${current.authorId}`}>by {current.authorName}</a>
+                        <div className="wv-hook-identity"><div className="wv-hook-meta"><span>{current.chapterTitle}</span><span>{current.readingMinutes} min chapter</span></div>
+                        <h2>{current.title}</h2><a className="wv-hook-author" href={`/author/${current.authorId}`}>by {current.authorName}</a></div>
                         {current.matchedGenres.length > 0 && <p className="wv-hook-match">Matched to {current.matchedGenres.join(' + ')}</p>}
                         <HookExcerpt key={current.chapterId} text={current.excerpt} />
                         <div className="wv-hook-bottom"><div className="wv-hook-tags"><div>{current.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}</div><button type="button" disabled={likingChapterId === current.chapterId} onClick={() => void toggleLike()} className={`wv-hook-like ${liked.has(current.chapterId) ? 'is-liked' : ''}`} aria-pressed={liked.has(current.chapterId)} aria-label={liked.has(current.chapterId) ? 'Unlike this opening' : 'Like this opening'}><Heart size={17} fill={liked.has(current.chapterId) ? 'currentColor' : 'none'} /> {current.likesCount}</button></div>

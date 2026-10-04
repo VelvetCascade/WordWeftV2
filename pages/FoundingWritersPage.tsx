@@ -3,9 +3,13 @@ import { ArrowRight, Check, ChevronDown, Upload } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { submitFoundingWriterApplication } from '../api/client';
 import { analytics } from '../utils/analyticsService';
-import type { FoundingWriterApplicationSubmission, FoundingWriterCompletionPeriod } from '../types';
+import type { User, FoundingWriterApplicationSubmission, FoundingWriterCompletionPeriod } from '../types';
 import '../styles/founding-writers.css';
 import '../styles/support-v2.css';
+import { useRecoverableForm } from '../hooks/useRecoverableForm';
+import { isCompatibleForm } from '../utils/formDrafts';
+import { FormDraftNotice } from '../components/FormDraftNotice';
+import '../styles/quality.css';
 
 const benefits = [
   'A permanent Founding Writer badge on your profile',
@@ -60,17 +64,30 @@ const initialForm: FormState = {
   earningsDisclaimerConfirmed: false, termsConfirmed: false, organizationName: '', website_ref_hp: '', chaptersConfirmed: false,
 };
 
-export const FoundingWritersPage: React.FC = () => {
+export const FoundingWritersPage: React.FC<{ currentUser?: User | null }> = ({ currentUser }) => {
   const formSection = useRef<HTMLElement>(null);
-  const [form, setForm] = useState<FormState>(initialForm);
+  const defaults = { ...initialForm, fullName: currentUser?.name || '', email: currentUser?.email || '' };
+  const recovery = useRecoverableForm(currentUser?.id || 'guest', 'founding-writer-application', defaults,
+    (value): value is FormState => isCompatibleForm(initialForm, value));
+  const form = recovery.value;
+  const setForm = recovery.setValue;
+  const [reviewing, setReviewing] = useState(false);
+  const reviewSection = useRef<HTMLDivElement>(null);
+  const [chapterFile, setChapterFile] = useState<File | null>(null);
+  const completedSections = [
+    !!(form.fullName && form.email && form.country),
+    !!(form.genre && form.storyTitle && form.storyDescription),
+    !!(chapterFile && form.chaptersConfirmed && Number(form.draftedChapterCount) >= 3 && Number(form.plannedChapterCount) >= 3 && form.expectedCompletionPeriod),
+    confirmations.every(([field]) => form[field]) && form.termsConfirmed,
+  ];
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [chapterFile, setChapterFile] = useState<File | null>(null);
   const [uploadPercent, setUploadPercent] = useState(0);
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm(previous => ({ ...previous, [field]: value }));
+    setReviewing(false);
     if (error) setError('');
   };
 
@@ -88,16 +105,20 @@ export const FoundingWritersPage: React.FC = () => {
       return;
     }
 
+    if (Number(form.plannedChapterCount) < Number(form.draftedChapterCount)) {
+      setError('Estimated total chapters must include the chapters you have already drafted.');
+      return;
+    }
+    if (!reviewing) {
+      setReviewing(true);
+      requestAnimationFrame(() => { reviewSection.current?.scrollIntoView({ block: 'center', behavior: 'auto' }); reviewSection.current?.focus(); });
+      return;
+    }
     setSubmitting(true);
     setUploadPercent(0);
     setError('');
 
-    analytics.trackEvent('founding_writers', 'submit_attempt', form.storyTitle || 'Untitled', undefined, {
-      email: form.email,
-      genre: form.genre,
-      fileName: chapterFile.name,
-      fileSize: chapterFile.size,
-    });
+    analytics.trackEvent('founding_writers', 'submit_attempt', 'Application');
 
     try {
       await submitFoundingWriterApplication({
@@ -106,16 +127,14 @@ export const FoundingWritersPage: React.FC = () => {
         draftedChapterCount: Number(form.draftedChapterCount),
         plannedChapterCount: Number(form.plannedChapterCount),
       }, chapterFile, setUploadPercent);
-      analytics.trackEvent('founding_writers', 'submit_success', form.storyTitle || 'Untitled');
+      analytics.trackEvent('founding_writers', 'submit_success', 'Application');
+      recovery.clear();
       setSubmitted(true);
       requestAnimationFrame(scrollToForm);
     } catch (failure) {
       const message = failure instanceof Error ? failure.message : 'We couldn\'t submit your application right now. Please try again shortly.';
       setError(message);
-      analytics.trackEvent('founding_writers', 'submit_error', message, undefined, {
-        email: form.email,
-        genre: form.genre,
-      });
+      analytics.trackEvent('founding_writers', 'submit_error', 'Application submission failed');
     } finally {
       setSubmitting(false);
       setUploadPercent(0);
@@ -215,6 +234,8 @@ export const FoundingWritersPage: React.FC = () => {
               </div>
             ) : (
               <form className="fw-form" onSubmit={handleSubmit} aria-busy={submitting}>
+                <fieldset className="ww-pending-fields" disabled={submitting} aria-label="Application details">
+                <p className="ww-form-progress" role="status">{completedSections.filter(Boolean).length} of 4 sections complete · Review everything before sending</p>
                 <fieldset>
                   <legend>Personal information</legend>
                   <div className="fw-field-grid">
@@ -234,8 +255,8 @@ export const FoundingWritersPage: React.FC = () => {
                     <label className="fw-field fw-field-wide">Synopsis <b>*</b><textarea required rows={5} maxLength={1000} value={form.storyDescription} onChange={event => setField('storyDescription', event.target.value)} /><em>{form.storyDescription.length}/1,000</em></label>
                     <div className="fw-sample-group fw-field-wide">
                       <div><strong><Upload size={17} aria-hidden="true" /> First three chapters <b>*</b></strong><p>Upload one PDF, DOCX or TXT file under 5 MB. Clearly label each chapter. The file is private and used only to review this application.</p></div>
-                      <label className="fw-field">Chapter file <b>*</b><input id="fw-chapter-file" required type="file" accept=".pdf,.docx,.txt" aria-describedby="fw-upload-help" onChange={event => { setChapterFile(event.target.files?.[0] || null); setError(''); }} /></label>
-                      <p id="fw-upload-help" role="status">{chapterFile ? `${chapterFile.name} · ${(chapterFile.size / 1024 / 1024).toFixed(2)} MB selected. Uploaded when you submit.` : 'Choose one file containing at least three chapters.'}</p>
+                      <label className="fw-field">Chapter file <b>*</b><input id="fw-chapter-file" required type="file" accept=".pdf,.docx,.txt" aria-describedby="fw-upload-help" onChange={event => { setChapterFile(event.target.files?.[0] || null); setReviewing(false); setError(''); }} /></label>
+                      <p id="fw-upload-help" role="status">{chapterFile ? `${chapterFile.name} · ${(chapterFile.size / 1024 / 1024).toFixed(2)} MB selected. Uploaded when you submit.` : recovery.restored ? 'Your form is restored. Please choose your manuscript again; files are not saved in browser drafts.' : 'Choose one file containing at least three chapters.'}</p>
                       <div className="fw-confirmations"><label><input required type="checkbox" checked={form.chaptersConfirmed} onChange={event => setField('chaptersConfirmed', event.target.checked)} /><span>I confirm that this file contains at least three chapters.</span></label></div>
                     </div>
                     <label className="fw-field fw-field-wide">Where do you currently publish? <small>Optional</small><input maxLength={300} placeholder="Platform, publication or website" value={form.existingPublishingPlatform} onChange={event => setField('existingPublishingPlatform', event.target.value)} /></label>
@@ -259,6 +280,13 @@ export const FoundingWritersPage: React.FC = () => {
                   <label>Leave this field empty<input type="text" name="website_ref_hp" tabIndex={-1} autoComplete="new-password" value={form.website_ref_hp || ''} onChange={event => setField('website_ref_hp', event.target.value)} /></label>
                 </div>
 
+                <FormDraftNotice {...recovery} onDiscard={() => { recovery.discard(); setChapterFile(null); setReviewing(false); }} guest={!currentUser} />
+                {reviewing && <div className="ww-form-review" ref={reviewSection} tabIndex={-1} aria-labelledby="fw-review-heading">
+                  <h3 id="fw-review-heading">Review your application</h3>
+                  <dl><dt>Writer</dt><dd>{form.fullName}{form.penName ? ` · ${form.penName}` : ''}</dd><dt>Reply email</dt><dd>{form.email}</dd><dt>Story</dt><dd>{form.storyTitle} · {form.genre}</dd><dt>Progress</dt><dd>{form.draftedChapterCount} of {form.plannedChapterCount} chapters drafted</dd><dt>Completion</dt><dd>{completionPeriods.find(period => period.value === form.expectedCompletionPeriod)?.label}</dd><dt>Manuscript</dt><dd>{chapterFile?.name}</dd></dl>
+                  <p>Your manuscript is private. Sending this application does not publish your story.</p>
+                  <button type="button" className="fw-secondary-button" onClick={() => { setReviewing(false); scrollToForm(); }}>Edit application</button>
+                </div>}
                 {error && <p className="fw-form-error" role="alert">{error}</p>}
 
                 {submitting ? (
@@ -273,9 +301,10 @@ export const FoundingWritersPage: React.FC = () => {
                 ) : (
                   <div className="fw-submit-row">
                     <p>We use this information only to review and respond to your application.</p>
-                    <button className="fw-primary-button" type="submit">Send application <ArrowRight size={17} /></button>
+                    <button className="fw-primary-button" type="submit">{reviewing ? 'Confirm and send application' : 'Review application'} <ArrowRight size={17} /></button>
                   </div>
                 )}
+                </fieldset>
               </form>
             )}
           </div>

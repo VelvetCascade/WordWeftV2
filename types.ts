@@ -13,6 +13,8 @@ export interface Author {
   website?: string;
   joinDate?: string;
   stats?: UserStats;
+  publicReadingStats?: boolean;
+  publicShelves?: PublicShelf[];
   socials?: UserSocials;
   favoriteGenres?: string[];
   followersCount?: number;
@@ -70,6 +72,7 @@ export interface Chapter {
   content: string;
   accessLabel?: 'FULL' | 'PREVIEW' | 'SIGN_IN';
   status: 'draft' | 'scheduled' | 'published';
+  editRevision?: number;
   scheduledAt?: string | null;
   publishedAt?: string | null;
   hasUnpublishedChanges?: boolean;
@@ -108,6 +111,8 @@ export interface ChapterRevision {
   content: string;
   wordCount: number;
   reason: string;
+  contentWarnings?: ContentWarning[];
+  disclaimerNote?: string;
   plainTextPreview: string;
   createdAt: string;
 }
@@ -161,6 +166,10 @@ export interface UserSocials {
   threads?: string;
 }
 
+export interface PublicShelf {
+  id: string; name: string; visibility: 'PUBLIC'; books: Book[];
+}
+
 export interface User {
   communityInterests?: Interest[];
   communityBadges?: Badge[];
@@ -189,6 +198,7 @@ export interface User {
   notificationPreferences?: NotificationPreferences;
   dateOfBirth?: string;
   allowMatureContent?: boolean;
+  publicReadingStats?: boolean;
   roles?: string[];
 }
 
@@ -368,11 +378,16 @@ export interface ContentReport {
   createdAt: string;
 }
 
+export interface PassageBookmark {
+  id: string; bookId: string; chapterId: string; paragraphIndex: number; quote: string; note: string; updatedAt: string;
+}
+
 export interface Shelf {
   id: string;
   name: string;
   books: LibraryBook[];
   type?: string;
+  visibility?: 'PUBLIC' | 'PRIVATE';
 }
 
 export interface LibraryBook extends Book {
@@ -382,6 +397,11 @@ export interface LibraryBook extends Book {
 
 
 export interface Character {
+  descriptionVisibility?: 'PUBLIC' | 'PRIVATE';
+  goalVisibility?: 'PUBLIC' | 'PRIVATE';
+  spoilerDetails?: string;
+  spoilerChapterId?: string;
+  spoilerAvailable?: boolean;
   id: string;
   bookId: string;
   name: string;

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { toUtcSchedule } from '../utils/publishing.ts';
+import { toUtcSchedule, publicationStatusLabel } from '../utils/publishing.ts';
 
 test('toUtcSchedule rejects an invalid local value', () => {
     assert.throws(() => toUtcSchedule('not-a-date'), /valid release time/i);
@@ -31,4 +31,14 @@ test('saving a draft revision does not silently unpublish an already public chap
     const controller = await readFile(new URL('../backend/src/main/java/com/wordweft/book/controller/BookController.java', import.meta.url), 'utf8');
 
     assert.match(controller, /"draft"\.equals\(status\) && !"published"\.equals\(chapter\.getStatus\(\)\)/);
+});
+
+
+test('one publication label includes the scheduled date timezone and relative timing', () => {
+    const label = publicationStatusLabel({ status: 'scheduled', scheduledAt: '2026-10-03T15:00:00Z' }, new Date('2026-10-03T14:00:00Z'));
+    assert.match(label, /^Scheduled ·/);
+    assert.match(label, /in 1 hour/);
+    assert.doesNotMatch(label, /Private draft/);
+    assert.equal(publicationStatusLabel({ status: 'draft' }), 'Private draft');
+    assert.match(publicationStatusLabel({ status: 'published', publishedAt: '2026-10-03T15:00:00Z' }), /^Published ·/);
 });

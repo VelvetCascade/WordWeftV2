@@ -65,6 +65,8 @@ public class UserController {
             user.setAvatarUrl(request.getAvatarUrl());
             user.setAvatarFileId(request.getAvatarFileId());
         }
+        if (request.getPublicReadingStats() != null)
+            user.setPublicReadingStats(request.getPublicReadingStats());
         if (request.getBio() != null)
             user.setBio(request.getBio());
         if (request.getLocation() != null)

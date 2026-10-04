@@ -16,6 +16,7 @@ import { AuthorShareModal } from '../components/AuthorShareModal';
 import { ReportModal } from '../components/ReportModal';
 import { applyAuthorMetadata } from '../utils/entityMetadata';
 import { authorPath, isPublicBook, parseRoute, publicChapters } from '../seo/metadata.mjs';
+import { authorRating, countLabel } from '../utils/profilePresentation';
 import { ResilientImage } from '../components/ResilientImage';
 
 // ── Helper Components ──
@@ -141,13 +142,10 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         const totalLikes = authorBooks.reduce((sum, b) => sum + (b.likesCount || 0), 0);
         const totalChapters = authorBooks.reduce((sum, b) => sum + (b.chapters?.filter(c => c.status === 'published').length || 0), 0);
         const totalWords = authorBooks.reduce((sum, b) => sum + (b.chapters?.reduce((ws, c) => ws + (c.wordCount || 0), 0) || 0), 0);
-        const avgRating = authorBooks.length > 0
-            ? authorBooks.reduce((sum, b) => sum + (b.rating || 0), 0) / authorBooks.length
-            : 0;
-        const totalReviews = authorBooks.reduce((sum, b) => sum + (b.reviewsCount || 0), 0);
+        const { average: avgRating, reviews: totalReviews } = authorRating(listedBooks);
         const genres = [...new Set(authorBooks.flatMap(b => b.genres || []))];
         return { totalViews, totalLikes, totalChapters, totalWords, avgRating, totalReviews, genres };
-    }, [authorBooks]);
+    }, [authorBooks, listedBooks]);
 
     // --- Loading skeleton ---
     if (isLoading) {
@@ -227,13 +225,13 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
 
                         {/* Profile Info */}
                         <div className="ww-author-info flex-1 text-center md:text-left min-w-0">
-                            <p className="ww-author-eyebrow">Writer profile</p>
+                            <p className="ww-author-eyebrow">{listedBooks.length ? 'Writer profile' : 'Public profile'}</p>
                             {(author.communityBadges?.length || author.communityInterests?.length) ? <div className="community-author-identity">{author.communityBadges?.map(badge => <span key={badge}>{badge === 'VERIFIED_CREATOR' ? 'Verified creator' : badge === 'EDITORIAL_STAFF' ? 'Editorial staff' : 'Community moderator'}</span>)}{author.communityInterests?.map(interest => <span key={interest}>{({ READING: 'Reader', WEBNOVEL_WRITING: 'Web-novel writer', EBOOK_PUBLISHING: 'E-book writer', WRITING_CRAFT: 'Writing craft', CRITIQUE: 'Critique' })[interest]}</span>)}</div> : null}
                             <div className="ww-author-title-row flex flex-col md:flex-row items-center md:items-start gap-4 mb-3">
                                 <h1 className="font-sans text-4xl md:text-5xl font-extrabold text-text-rich dark:text-dark-text-rich tracking-tight leading-tight">
                                     {author.name}
                                 </h1>
-                                {isOwnProfile ? <a href="/edit-profile" className="ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit portfolio</a> : <button
+                                {isOwnProfile ? <a href="/edit-profile" className="ww-author-action px-7 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 bg-accent text-white hover:bg-primary shadow-lg hover:shadow-xl transition-all">Edit profile</a> : <button
                                     onClick={handleFollowToggle}
                                     disabled={isFollowLoading}
                                     aria-busy={isFollowLoading}
@@ -297,7 +295,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                 )}
                                 {authorBooks.length > 0 && (
                                     <span className="flex items-center gap-1.5">
-                                        <QuillIcon className="w-4 h-4" /> {authorBooks.length} {authorBooks.length === 1 ? 'Book' : 'Books'} Published
+                                        <QuillIcon className="w-4 h-4" /> {countLabel(listedBooks.length, 'story', 'stories')} published
                                     </span>
                                 )}
                             </div>
@@ -330,7 +328,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                                     className="flex items-center gap-2 group"
                                 >
                                     <span className="font-extrabold text-2xl text-text-rich dark:text-dark-text-rich group-hover:text-accent transition-colors">{author.followersCount || 0}</span>
-                                    <span className="text-sm text-gray-500 group-hover:text-accent transition-colors">Followers</span>
+                                    <span className="text-sm text-gray-500 group-hover:text-accent transition-colors">{(author.followersCount || 0) === 1 ? 'Follower' : 'Followers'}</span>
                                 </button>
                                 <div className="w-px h-6 bg-gray-200 dark:bg-dark-border" />
                                 <button 
@@ -347,12 +345,12 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                     {/* ── Stats Row ── */}
                     {authorBooks.length > 0 && (
                         <div className="ww-author-stats grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mt-10">
-                            <StatPill icon={<BookOpenIcon className="w-5 h-5" />} value={authorBooks.length} label="Books" />
+                            <StatPill icon={<BookOpenIcon className="w-5 h-5" />} value={authorBooks.length} label="Stories" />
                             <StatPill icon={<DocumentPlusIcon className="w-5 h-5" />} value={bookStats.totalChapters} label="Chapters" />
                             <StatPill icon={<EyeIcon className="w-5 h-5" />} value={bookStats.totalViews.toLocaleString()} label="Total Views" />
                             <StatPill icon={<HeartIcon className="w-5 h-5" />} value={bookStats.totalLikes.toLocaleString()} label="Total Likes" />
-                            <StatPill icon={<StarIcon className="w-5 h-5 fill-amber-400 text-amber-400" />} value={bookStats.avgRating > 0 ? bookStats.avgRating.toFixed(1) : '—'} label="Avg Rating" />
-                            <StatPill icon={<ChatBubbleLeftIcon className="w-5 h-5" />} value={bookStats.totalReviews} label="Reviews" />
+                            <StatPill icon={<StarIcon className="w-5 h-5 fill-amber-400 text-amber-400" />} value={bookStats.avgRating !== null ? bookStats.avgRating.toFixed(1) : 'No reviews'} label="Review-weighted rating" />
+                            <StatPill icon={<ChatBubbleLeftIcon className="w-5 h-5" />} value={bookStats.totalReviews} label={bookStats.totalReviews === 1 ? "Review" : "Reviews"} />
                         </div>
                     )}
                 </div>
@@ -397,6 +395,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                 </div>
             </div>
 
+            {author.publicShelves && author.publicShelves.length > 0 && <section className="container mx-auto px-6 py-8" aria-label="Public shelves"><h2 className="font-sans text-2xl mb-4">Chosen public shelves</h2>{author.publicShelves.map(shelf => <div key={shelf.id} className="mb-8"><h3 className="text-lg mb-3 break-words">{shelf.name} · {countLabel(shelf.books.length, 'story', 'stories')}</h3><div className="ww-account-story-grid grid grid-cols-2 md:grid-cols-5 gap-6">{shelf.books.map(book => <BookCard key={book.id} book={book} onClick={() => { window.location.hash = `/book/${book.id}`; }} />)}</div></div>)}</section>}
             {/* ═══════════  Content  ═══════════ */}
             <div className="ww-author-content container mx-auto px-6 py-10">
                 {activeTab === 'posts' && <CommunitySession user={currentUser} onSignIn={onSignIn}><div className="community-author-feed"><div className="ww-author-tab-intro"><h2>Community posts</h2><p>Updates, releases, questions, and discussions shared by {author.name}.</p></div><CommunityFeed query={{ mode: 'discover', authorId }} /></div></CommunitySession>}
@@ -428,7 +427,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
                             <div className="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-dark-surface rounded-3xl border-2 border-dashed border-gray-200 dark:border-dark-border">
                                 <QuillIcon className="w-12 h-12 text-gray-300 dark:text-dark-border mb-4" />
                                 <p className="font-sans font-semibold text-text-body dark:text-dark-text-body text-lg mb-1">{page > 1 ? 'No stories on this page' : 'No published works yet'}</p>
-                                <p className="text-sm text-gray-400 dark:text-gray-500">{page > 1 ? <a href={authorPath(author.id)}>Return to the first page of this portfolio.</a> : "This author hasn't published any books yet. Check back later!"}</p>
+                                <p className="text-sm text-gray-400 dark:text-gray-500">{page > 1 ? <a href={authorPath(author.id)}>Return to the first page of this portfolio.</a> : "Explore this member’s public shelves or community activity."}</p>
                             </div>
                         )}
                         {(page > 1 || hasNextPage) && <nav className="seo-pagination" aria-label="Published stories pagination">

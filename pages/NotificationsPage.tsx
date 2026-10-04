@@ -7,7 +7,7 @@ import { communityNotificationPostId } from '../utils/community';
 import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ResilientImage } from '../components/ResilientImage';
-import { notificationCopy } from '../utils/notificationPresentation';
+import { notificationCopy, groupNotificationDays, notificationAction } from '../utils/notificationPresentation';
 import { ReturnNavigation } from '../components/ReturnNavigation';
 
 interface NotificationsPageProps {
@@ -70,7 +70,7 @@ const getNotificationTarget = (n: AppNotification): Page | null => {
         case 'NEW_COMMENT':
         case 'COMMENT_REPLY':
         case 'AUTHOR_NEW_CHAPTER':
-            return n.metadata?.bookId ? { name: 'book-details', bookId: n.metadata.bookId } : null;
+            return n.metadata?.bookId ? { name: 'reader', bookId: n.metadata.bookId, chapterId: n.metadata.chapterId || n.entityId, chapterIndex: -1 } : null;
         case 'AUTHOR_NEW_STORY':
         case 'BOOK_UPDATE':
             return { name: 'book-details', bookId: n.entityId };
@@ -158,14 +158,13 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         )}
                     </div>
                     <div className="flex gap-2">
-                        {unreadCount > 0 && (
-                            <button
+                        <button
+                                disabled={unreadCount === 0}
                                 onClick={onMarkAllRead}
                                 className="px-3.5 py-2 text-[13px] font-sans font-semibold bg-accent text-white rounded-lg hover:bg-primary transition-colors hover:shadow-md"
                             >
-                                <CheckCheck size={17} aria-hidden="true" /> Mark all read
+                                <CheckCheck size={17} aria-hidden="true" /> {unreadCount ? 'Mark all read' : 'All read'}
                             </button>
-                        )}
                         <button
                             onClick={() => setShowSettings(!showSettings)}
                             aria-expanded={showSettings}
@@ -275,13 +274,15 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                             </p>
                         </div>
                     ) : (
-                        filtered.map(n => (
+                        groupNotificationDays(filtered).map(group => <section key={group.day} aria-label={group.day}><h2 className="ww-notification-day">{group.day}</h2>{group.items.map(n => (
                             <button
                                 key={n.id}
                                 onClick={() => {
                                     if (!n.read) onMarkRead(n.id);
                                     const target = getNotificationTarget(n);
-                                    if (target) navigateTo(target);
+                                    if (target?.name === 'reader' && ['NEW_COMMENT', 'COMMENT_REPLY'].includes(n.type)) {
+                                        window.location.hash = `/book/${encodeURIComponent(target.bookId)}/chapter/${encodeURIComponent(target.chapterId || '')}?discussion=all${n.metadata?.commentId ? `&comment=${encodeURIComponent(n.metadata.commentId)}` : ''}`;
+                                    } else if (target) navigateTo(target);
                                 }}
                                 className={`ww-notification-row ${!n.read ? 'unread' : ''} flex items-start gap-4 w-full p-4 border-b border-gray-100 dark:border-dark-border last:border-0 text-left transition-colors ${!n.read ? 'bg-accent/5 dark:bg-accent/10 hover:bg-accent/10 dark:hover:bg-accent/20' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-dark-surface-alt'}`}
                             >
@@ -310,14 +311,14 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                     <span className="ww-notification-time font-sans text-xs font-medium text-gray-400 dark:text-gray-500 mt-1.5 block">
                                         {getTimeAgo(n.createdAt)}
                                     </span>
+                                    {getNotificationTarget(n) && <span className="ww-notification-action">{notificationAction(n.type)} →</span>}
                                 </div>
-
                                 {/* Unread dot */}
                                 {!n.read && (
                                     <span className="w-2.5 h-2.5 rounded-full bg-accent flex-shrink-0 mt-3"><span className="sr-only">Unread</span></span>
                                 )}
                             </button>
-                        ))
+                        ))}</section>)
                     )}
 
                     {/* Load More */}

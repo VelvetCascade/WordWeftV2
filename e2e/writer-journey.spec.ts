@@ -199,9 +199,10 @@ test('a failed character profile save keeps the review and chapter draft availab
   await scanner.getByRole('button', { name: 'Link 2 names', exact: true }).click();
   await expect(page.locator('.ww-editor-save-state')).toHaveText('All changes saved', { timeout: 15_000 });
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
-  const review = page.getByRole('dialog', { name: 'Review & publish', exact: true });
-  await review.getByRole('checkbox').check();
-  await review.getByRole('button', { name: 'Publish chapter', exact: true }).click();
+  const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true });
+  await review.getByRole('checkbox', { name: /I approve every chapter/ }).check();
+  await review.getByRole('checkbox', { name: /Artwork in this story/ }).check();
+  await review.getByRole('button', { name: 'Publish this release', exact: true }).click();
   const description = page.getByPlaceholder('Who are they? e.g. A rogue wizard from the eastern mountains...');
   await description.fill('A river archivist carrying the last letter.');
   await page.route('**/api/characters/*', route => route.request().method() === 'PUT' ? route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Profile save interrupted for the test.' }) }) : route.continue());

@@ -59,11 +59,11 @@ export const PrivacyPage: React.FC = () => {
                         By using WordWeft, you agree to this Privacy Policy.
                     </p>
                     <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                        <div className="bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
+                        <div className="ww-policy-badge bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
                             <span>Last Updated: </span>
                             <span className="font-semibold text-text-rich dark:text-dark-text-rich">February 15, 2026</span>
                         </div>
-                        <div className="bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
+                        <div className="ww-policy-badge bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
                             Contact: <a href="mailto:wordweftstudio@gmail.com" className="text-accent font-semibold hover:underline">wordweftstudio@gmail.com</a>
                         </div>
                     </div>

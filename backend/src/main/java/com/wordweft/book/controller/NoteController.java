@@ -4,6 +4,7 @@ import com.wordweft.book.model.Note;
 import com.wordweft.book.service.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -18,12 +19,16 @@ public class NoteController {
     private NoteService noteService;
 
     @GetMapping("/book/{bookId}")
-    public List<Note> getNotesByBookId(@PathVariable String bookId) {
+    public List<Note> getNotesByBookId(@PathVariable String bookId, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("Vary", "Authorization");
         return noteService.getNotesByBookId(bookId);
     }
 
     @GetMapping("/chapter/{chapterId}")
-    public List<Note> getNotesByChapterId(@PathVariable String chapterId) {
+    public List<Note> getNotesByChapterId(@PathVariable String chapterId, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("Vary", "Authorization");
         return noteService.getNotesByChapterId(chapterId);
     }
 
@@ -33,7 +38,9 @@ public class NoteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Note> getNoteById(@PathVariable String id) {
+    public ResponseEntity<Note> getNoteById(@PathVariable String id, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("Vary", "Authorization");
         return noteService.getNoteById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

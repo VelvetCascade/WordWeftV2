@@ -5,6 +5,7 @@ import com.wordweft.analytics.repository.ChapterReadEventRepository;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.service.BookActivityCounters;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,10 +28,12 @@ public class ChapterReadEventService {
 
     private final ChapterReadEventRepository events;
     private final BookRepository books;
+    private final BookActivityCounters counters;
 
-    public ChapterReadEventService(ChapterReadEventRepository events, BookRepository books) {
+    public ChapterReadEventService(ChapterReadEventRepository events, BookRepository books, BookActivityCounters counters) {
         this.events = events;
         this.books = books;
+        this.counters = counters;
     }
 
     public ChapterReadEvent record(
@@ -67,9 +70,7 @@ public class ChapterReadEventService {
         event.setExpiresAt(now.plus(RETENTION_DAYS, ChronoUnit.DAYS));
         ChapterReadEvent saved = events.save(event);
 
-        chapter.setViewCount(chapter.getViewCount() + 1);
-        book.setViewCountLast7Days((book.getViewCountLast7Days() == null ? 0 : book.getViewCountLast7Days()) + 1);
-        books.save(book);
+        counters.readerOpened(bookId, chapterId);
         return saved;
     }
 

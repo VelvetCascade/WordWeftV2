@@ -102,10 +102,11 @@ try {
   const storyId = 'local-story-spring';
   const chapterId = `${storyId}-chapter-1`;
   const first = await api(`/books/${storyId}/chapters/${chapterId}/content`);
-  check(first.access === 'PREVIEW' && first.obfuscated, 'Anonymous reading receives an obfuscated preview');
+  check(first.access === 'PREVIEW' && !first.obfuscated && first.content.includes('June') && !/[\uE000-\uF8FF]/u.test(first.content), 'Anonymous reading receives readable permitted preview text');
+  check(first.previewWordCount < first.fullWordCount, 'Anonymous preview remains shorter than the full chapter');
   await api(`/books/${storyId}/chapters/${storyId}-chapter-2/content`, { status: 401 });
   const full = await api(`/books/${storyId}/chapters/${chapterId}/content`, { token: reader });
-  check(full.access === 'FULL' && full.fullWordCount >= 300, 'Authenticated readers receive full chapter access');
+  check(full.access === 'FULL' && !full.obfuscated && full.fullWordCount >= 300 && full.content.includes('June') && !/[\uE000-\uF8FF]/u.test(full.content), 'Authenticated readers receive readable full chapter access');
   await api('/books/local-story-draft', { token: reader, status: 404 });
   await api(`/books/${storyId}/chapters/${chapterId}/content?mode=edit`, { token: reader, status: 403 });
   const editable = await api(`/books/${storyId}/chapters/${chapterId}/content?mode=edit`, { token: writer });

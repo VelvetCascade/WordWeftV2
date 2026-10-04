@@ -64,7 +64,9 @@ public class UserService {
                     : totalWords > 50000 ? "Bookworm" : totalWords > 10000 ? "Apprentice" : "Novice";
             stats.put("readerLevel", level);
         }
-        map.put("stats", stats);
+        if (user.isPublicReadingStats()) map.put("stats", stats);
+        map.put("publicReadingStats", user.isPublicReadingStats());
+        map.put("publicShelves", getPublicShelves(user.getId(), currentUserId));
         map.put("isFollowing", currentUserId != null && user.getFollowers().contains(currentUserId));
         return map;
     }
@@ -97,6 +99,7 @@ public class UserService {
         map.put("communityInterests", user.getCommunityInterests() == null ? Set.of() : user.getCommunityInterests());
         map.put("communityBadges", user.getCommunityBadges() == null ? Set.of() : user.getCommunityBadges());
         map.put("hasSeenWritingDemo", user.isHasSeenWritingDemo());
+        map.put("publicReadingStats", user.isPublicReadingStats());
         if (user.getId().equals(currentViewerId)) {
             map.put("dateOfBirth", user.getDateOfBirth());
             map.put("allowMatureContent", user.isAllowMatureContent());
@@ -244,6 +247,7 @@ public class UserService {
             Map<String, Object> shelfMap = new HashMap<>();
             shelfMap.put("id", s.getId());
             shelfMap.put("name", s.getName());
+            shelfMap.put("visibility", s.getVisibility() == null ? "PRIVATE" : s.getVisibility());
 
             List<Map<String, Object>> shelfBooks = new ArrayList<>();
             // LibraryEntry now has shelfIds
@@ -266,6 +270,29 @@ public class UserService {
         }
 
         return map;
+    }
+
+    public List<Map<String, Object>> getPublicShelves(String userId, String viewerId) {
+        List<com.wordweft.book.model.Shelf> shelves = shelfRepository.findByUserId(userId).stream()
+                .filter(shelf -> "PUBLIC".equals(shelf.getVisibility())).toList();
+        if (shelves.isEmpty()) return List.of();
+        List<LibraryEntry> entries = libraryRepository.findByUserId(userId);
+        Set<String> publicIds = shelves.stream().map(com.wordweft.book.model.Shelf::getId).collect(Collectors.toSet());
+        List<String> bookIds = entries.stream().filter(entry -> entry.getShelfIds() != null && entry.getShelfIds().stream().anyMatch(publicIds::contains))
+                .map(LibraryEntry::getBookId).filter(Objects::nonNull).distinct().toList();
+        Set<com.wordweft.book.model.AgeRating> allowed = contentAccessService.allowedRatings();
+        List<Book> books = bookService.findMetadataByIds(bookIds).stream()
+                .filter(book -> allowed.contains(contentAccessService.effectiveRating(book)))
+                .filter(book -> "published".equals(book.getPublicationStatus()) && book.getChapters() != null && book.getChapters().stream().anyMatch(chapter -> "published".equals(chapter.getStatus()))).toList();
+        Map<String, Map<String, Object>> visible = bookService.enrichBooksForProfile(books, null).stream()
+                .collect(Collectors.toMap(book -> (String) book.get("id"), book -> book));
+        return shelves.stream().map(shelf -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", shelf.getId()); result.put("name", shelf.getName()); result.put("visibility", "PUBLIC");
+            result.put("books", entries.stream().filter(entry -> entry.getShelfIds() != null && entry.getShelfIds().contains(shelf.getId()))
+                    .map(entry -> visible.get(entry.getBookId())).filter(Objects::nonNull).toList());
+            return result;
+        }).toList();
     }
 
     @Transactional

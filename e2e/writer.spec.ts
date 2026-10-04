@@ -112,11 +112,12 @@ test('chapter rails preserve the correct state and review, preview, schedule, an
   await expect(preview).toContainText('An unopened letter waited');
   await page.keyboard.press('Escape'); await expect(preview).not.toBeVisible();
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
-  const review = page.getByRole('dialog', { name: 'Review & publish', exact: true });
+  const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true });
   await expect(review).toContainText('The unopened letter');
-  await expect(review.getByRole('button', { name: 'Publish chapter', exact: true })).toBeDisabled();
-  await review.getByRole('checkbox').check();
-  await review.getByRole('button', { name: 'Publish chapter', exact: true }).click();
+  await expect(review.getByRole('button', { name: 'Publish this release', exact: true })).toBeDisabled();
+  await review.getByRole('checkbox', { name: /I approve every chapter/ }).check();
+  await review.getByRole('checkbox', { name: /Artwork in this story/ }).check();
+  await review.getByRole('button', { name: 'Publish this release', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Chapter Published!', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Back to studio', exact: true }).click();
   await openEditor(page, book.id, first);
@@ -130,7 +131,7 @@ test('chapter rails preserve the correct state and review, preview, schedule, an
   await schedule.getByLabel('Release date and time', { exact: true }).fill(`${future.getFullYear()}-${two(future.getMonth()+1)}-${two(future.getDate())}T${two(future.getHours())}:${two(future.getMinutes())}`);
   await schedule.getByRole('button', { name: 'Schedule chapter', exact: true }).click();
   await expect(schedule).not.toBeVisible();
-  await expect(page.locator('.ww-editor-detail-section').first()).toContainText('Scheduled for');
+  await expect(page.locator('.ww-editor-detail-section').first()).toContainText('Scheduled ·');
   await page.getByRole('button', { name: 'View revisions', exact: true }).click();
   const versions = page.getByRole('dialog', { name: 'Version history', exact: true });
   await expect(versions.getByRole('button', { name: 'Restore', exact: true }).first()).toBeVisible();

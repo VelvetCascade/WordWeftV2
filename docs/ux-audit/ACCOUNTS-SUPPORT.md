@@ -1,0 +1,43 @@
+# Reader identity, account activity and support
+
+Approved audit coverage: F09, F27, F28, F30, F31, F32, F33, F54, F57, F58, F59. Baseline 0890d00; backend checkpoint 20c3589. Preserve the premium account/support palette, existing account return drafts and eight-genre limit.
+
+| Finding | Implementation | Evidence / remaining verification |
+| --- | --- | --- |
+| F09 | Review-weighted author rating excludes unrated stories. No-review state and review count explain the figure. | Regression observed 2.67 versus expected 4.33 before fix; rated-only regression passes. |
+| F27 | Own reader profile leads with chosen public shelves and reading identity. Publication tools appear for existing writing or chosen writer/both intent. Visitors see explicit PUBLIC shelves, never private history. | Reader profile desktop/mobile screenshots captured; real Mongo test exercises default-private and PUBLIC shelves. |
+| F28 | Optional `publicReadingStats` defaults false on existing/new accounts. Privacy settings explain public identity, public shelves, aggregate statistics and private history; saved public-profile preview uses actual public response. | Backend tests verify hidden stats for anonymous/other/self preview, explicit consent and no credential/history fields. Privacy draft survives notifications return. Real API consent updates and shelf visibility changes passed on the rebuilt API. |
+| F30 | Account controls say Story preferences; reader font/theme/spacing are Reading appearance with an account explanation linking to the library. | Typechecked; existing settings-return test selectors updated. Reader appearance labels handled by reading workstream. |
+| F31 | Activity grouped by local day, story context retained, direct chapter/discussion/thread/profile actions. Individual chapter notices retain their distinct chapter destination. Immediate optimistic read/count changes, duplicate-read guard and rollback; account identity/generation guards reject stale requests/streams. Mark-all control stays mounted. | Grouping/helper tests pass. Browser account-switch late-response test passed; immediate rollback test was too short under resource contention and now holds the response explicitly. All three focused browser harness regressions pass, including immediate optimistic updates, duplicate-read guards, failure rollback, late responses and loaded-account switching. App must pass `useNotifications(!!currentUser, currentUser?.id || 'guest')`. |
+| F32 | Recovery Back occupies its own row beneath branding on mobile. Successful reset request shows Check your inbox, generic non-enumerating confirmation, 60-second resend timer and return-to-sign-in. | Mobile browser journey, bounds and opened form Axe passed before later scans were stopped. |
+| F33 | Preview gate and focused signup describe free account access, finish chapter/save place/follow writer, and retained story return. | Existing reader-auth intent tests remain green; complete auth return is an integration check. No future pricing claim. |
+| F54 | Searchable help covers progress, errors, repeated taps, failed image/manuscript uploads. Contact and feedback optionally attach only a bounded recent incident ID; diagnostics/content are not automatically submitted. | Incident parser rejects malformed/oversized records and private payloads; helper regression passes. Forms explain what details to share and exclude passwords/sign-in links/manuscripts. Physical touch causes remain unresolved. |
+| F57 | Policy badge text/link colors adjusted in light/dark to meet contrast. | Original Axe finding identified and corrected. Policy badge Axe scans pass at 390/1440px in both light and dark. |
+| F58 | Labeled opt-in controls, clear visibility save/feedback placement, existing 44px support/account controls and focus conventions preserved. | Opened security scan caught 4.23:1 inherited note contrast and 1.85:1 new dark links; scoped colors corrected. Security and contact form Axe scans pass at 390/1440px in both themes. Opened feedback controls pass in both themes. Public-reader preview scan additionally caught inherited empty-state contrast 2.85:1; muted author text corrected to the existing account copy token, final rerun waits for the backend restart. |
+| F59 | Shared `countLabel`, correct singular follower/review/story labels, full multilingual shelf/notification titles wrap naturally. | Plural regression passes; multilingual activity fixture included in browser suite. Other surface plurals belong to their workstreams. |
+
+## Additive integration contract
+
+- Mongo `User.publicReadingStats`: boolean, default false. `UpdateProfileRequest.publicReadingStats`: nullable Boolean; omission preserves current value. PUT /api/users/profile updates the authenticated user only. Public projection and own-account projection include the consent flag.
+- Public GET /api/users/{id}/profile omits `stats` without consent, including when viewed by its owner. With consent only existing aggregate statistics are exposed. `publicShelves` is an array of `{ id, name, visibility: 'PUBLIC', books }`.
+- Only custom shelves explicitly PUBLIC appear. Old/missing/null visibility remains PRIVATE. Publications must be published with at least one published chapter and pass effective viewer age/content access. Enrichment uses public released snapshots even when the viewer owns a story. No progress, library entry IDs, added dates, drafts or manuscript bodies are included.
+- Own library custom shelves now include `visibility`, coordinated with reading/library workstream's Shelf model and endpoints. Shelf.java getter dependency is deliberately excluded from account commit.
+- Frontend User/Author consent property is optional for old responses; Author adds optional publicShelves (PublicShelf books are ordinary Book metadata). API mappings normalize absent consent false and map public shelf books.
+- Support uses existing message/performanceDetails fields with explicit opt-in ID text; no extra telemetry or support endpoint/schema required.
+
+## Verification and limits
+
+Focused backend privacy + real disposable Mongo tests: 5/5 pass, including published snapshot, age exclusion and no private-reading state. Full frontend unit suite: 199/199 pass. Typecheck passes. Baseline shared backend was not restarted by this workstream.
+
+Chromium verification ran with one worker, using real disposable accounts and rebuilt API8080. Thirteen distinct focused tests passed across sequential runs: account/privacy/contact/policy desktop and mobile in light/dark (4), mobile recovery/Axe (1), grouped activity and actual chapter navigation (1), notification request/session/rollback harness (3), persistent real API consent and public/private shelves (1), opened feedback light/dark (2), chosen public shelf preview (1). Public preview's expanded Axe scan found and corrected the inherited dark empty-state hint; the final rerun awaits the coordinated backend restart. No full backend-suite completion is claimed: the broad run was stopped at root request during shared memory contention; root owns final integrated verification.
+
+Separate real API checks pass for anonymous/other/self public responses, authenticated-only privacy updates, explicit consent, default-private shelves, immediate visibility changes and rejection of cross-owner shelf writes. Fixtures are restored. Cleanup exposed the pre-existing missing DELETE /library/shelves/{id} mapping; the reading/library workstream is restoring that feature, and temporary public fixture shelves are hidden or removed by disposable reseeding.
+
+Screenshots were captured and viewed for mobile recovery/privacy, desktop help/activity/policy, dark privacy/help, opened feedback and chosen public-reader preview. Evidence lives in /workspace/wordweft-ux-quality-accounts-evidence after final copying. Re-run suites: e2e/quality-account-support.spec.ts, e2e/quality-notification-identity.spec.ts and the updated e2e/settings-return-brand.spec.ts.
+
+No physical iPhone, VoiceOver, native translation/read-aloud, OAuth/provider upload or production support-delivery validation is claimed. Incident references help correlate reports; they do not establish or fix the reported real-device root cause.
+
+
+## Final integration — 4 October 2026
+
+The integrated full-browser run passed all account/support privacy, policy, security/contact/feedback and public-reader preview cases, including the final corrected muted-text contrast. The focused connection flow also passed after its old plural selector was aligned with the singular label. Session-epoch guards and pending-form regressions are integrated. See [VALIDATION.md](VALIDATION.md) for complete execution accounting and physical-device/production-service limits.

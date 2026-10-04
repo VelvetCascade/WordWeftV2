@@ -31,23 +31,29 @@ public class CharacterService {
     private com.wordweft.support.ImageKitService imageKitService;
 
     public List<Map<String, Object>> getCharactersByBookId(String bookId) {
+        return getCharactersByBookId(bookId, null);
+    }
+
+    public List<Map<String, Object>> getCharactersByBookId(String bookId, String chapterId) {
         Book book = visibleBook(bookId);
         boolean owner = isOwner(book);
         return characterRepository.findByBookId(bookId).stream()
-                .map(character -> characterView(character, owner)).toList();
+                .map(character -> characterView(character, owner, book, chapterId)).toList();
     }
 
     public Character createCharacter(Character character) {
         requireOwner(character.getBookId(), requireAccount());
         // Creation must not become an upsert of an arbitrary existing character.
         character.setId(null);
+        if (character.getDescriptionVisibility() == null) character.setDescriptionVisibility("PUBLIC");
+        if (character.getGoalVisibility() == null) character.setGoalVisibility("PRIVATE");
         return characterRepository.save(character);
     }
 
     public Optional<Map<String, Object>> getCharacterById(String id) {
         return characterRepository.findById(id).map(character -> {
             Book book = visibleBook(character.getBookId());
-            return characterView(character, isOwner(book));
+            return characterView(character, isOwner(book), book, null);
         });
     }
 
@@ -59,6 +65,10 @@ public class CharacterService {
             character.setRole(characterDetails.getRole());
             character.setDescription(characterDetails.getDescription());
             character.setGoal(characterDetails.getGoal());
+            if (characterDetails.getDescriptionVisibility() != null) character.setDescriptionVisibility(characterDetails.getDescriptionVisibility());
+            if (characterDetails.getGoalVisibility() != null) character.setGoalVisibility(characterDetails.getGoalVisibility());
+            character.setSpoilerDetails(characterDetails.getSpoilerDetails());
+            character.setSpoilerChapterId(characterDetails.getSpoilerChapterId());
 
             if (characterDetails.getImageUrl() != null && !characterDetails.getImageUrl().isEmpty()) {
                 if (!characterDetails.getImageUrl().equals(character.getImageUrl()) && character.getImageFileId() != null) {
@@ -132,16 +142,31 @@ public class CharacterService {
         }
     }
 
-    private Map<String, Object> characterView(Character character, boolean owner) {
+    private boolean spoilerPermitted(Book book, String chapterId, String revealId) {
+        if (revealId == null || revealId.isBlank()) return true; // Manually revealed spoiler section.
+        if (chapterId == null || book.getChapters() == null) return false;
+        List<String> released = book.getChapters().stream().filter(c -> "published".equals(c.getStatus())).map(com.wordweft.book.model.Chapter::getId).toList();
+        int current = released.indexOf(chapterId), reveal = released.indexOf(revealId);
+        // Guests only have the first chapter preview. A later context must not bypass the sign-in gate.
+        return reveal >= 0 && current >= reveal && contentAccessService.currentUserId() != null;
+    }
+
+    private Map<String, Object> characterView(Character character, boolean owner, Book book, String chapterId) {
         Map<String, Object> view = new LinkedHashMap<>();
         view.put("id", character.getId());
         view.put("bookId", character.getBookId());
         view.put("name", character.getName());
         view.put("role", character.getRole());
-        view.put("description", character.getDescription());
+        if (owner || !"PRIVATE".equals(character.getDescriptionVisibility())) view.put("description", character.getDescription());
+        if (owner || "PUBLIC".equals(character.getGoalVisibility())) { view.put("goal", character.getGoal()); view.put("goalVisibility", character.getGoalVisibility()); }
+        boolean hasSpoiler = character.getSpoilerDetails() != null && !character.getSpoilerDetails().isBlank();
+        view.put("spoilerAvailable", hasSpoiler);
+        if (owner || spoilerPermitted(book, chapterId, character.getSpoilerChapterId())) view.put("spoilerDetails", character.getSpoilerDetails());
         view.put("imageUrl", character.getImageUrl());
         if (owner) {
-            view.put("goal", character.getGoal());
+            view.put("descriptionVisibility", character.getDescriptionVisibility() == null ? "PUBLIC" : character.getDescriptionVisibility());
+            view.put("goalVisibility", character.getGoalVisibility() == null ? "PRIVATE" : character.getGoalVisibility());
+            view.put("spoilerChapterId", character.getSpoilerChapterId());
             view.put("imageFileId", character.getImageFileId());
         }
         return view;

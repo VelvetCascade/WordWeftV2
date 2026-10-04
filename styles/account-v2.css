@@ -161,3 +161,14 @@
 .dark .account-v2-author .ww-author-share-action{background:#27302a;color:var(--account-ink)!important}
 
 .account-v2-profile .ww-profile-avatar>.resilient-image-fallback>span,.account-v2-author .ww-author-avatar>.resilient-image-fallback>span{font-size:34px;font-weight:500}
+/* Account recovery keeps branding and the return action in separate rows. */
+.account-v2-auth .ww-auth-back,.account-v2-auth .ww-reset-back{position:static!important;display:flex;align-items:center;gap:8px;width:fit-content;min-height:44px;margin:0 0 18px!important;padding:8px 0!important;border-radius:8px!important;background:transparent!important;font-size:13px!important;}
+.ww-policy-badge{color:#514c47!important}.dark .ww-policy-badge{color:#c7cdc8!important}.ww-policy-badge a{color:#246257!important}.dark .ww-policy-badge a{color:#9ccbbb!important}
+.account-v2-profile h1,.account-v2-author h1,.ww-notification-copy{overflow-wrap:anywhere;word-break:normal}
+.ww-notification-day{margin:0;padding:16px 20px 10px;font:600 14px/1.4 'WordWeft Sans',sans-serif;color:var(--account-ink);border-bottom:1px solid var(--account-line)}
+.ww-notification-action{display:block;margin-top:8px;color:var(--account-teal);font-weight:600;font-size:13px}
+.account-v2-settings input[type=checkbox]{width:18px;height:18px;min-height:18px;accent-color:var(--account-teal);flex-shrink:0}
+.account-v2-settings .ww-account-security-note{color:#514c47!important}.dark .account-v2-settings .ww-account-security-note{color:#c7cdc8!important}
+.account-v2-settings .ww-settings-panel a{color:#246257!important}.dark .account-v2-settings .ww-settings-panel a{color:#9ccbbb!important}
+.dark .account-v2-settings .ww-settings-panel h3{color:var(--account-ink)!important}
+.dark .account-v2-author :is(.text-gray-400,.text-gray-500){color:var(--account-copy)!important}

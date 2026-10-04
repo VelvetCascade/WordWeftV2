@@ -37,25 +37,23 @@ test('mobile genre search accepts slow typing and returns keyboard focus after d
 test('returning from a story restores the catalog genre, sort, view and both search fields', async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('/category');
-  await page.getByRole('button', { name: 'Adventure', exact: true }).click();
+  await page.getByRole('radio', { name: /^Adventure/ }).click();
   await page.getByRole('radio', { name: 'Newly Added', exact: true }).check();
   await page.getByRole('button', { name: 'List view' }).click();
   await page.getByLabel('Search the library').fill('Sea');
-  await page.getByRole('button', { name: 'Genre', exact: true }).click();
-  await page.getByPlaceholder('Search genres...').fill('advent');
+  await page.getByLabel('Search genres').fill('advent');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Open story →', exact: true }).first().click();
   await expect(page).toHaveURL(/\/book\//);
   await expect(page.locator('.ww-story-v2')).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(/\/category$/);
-  await expect(page.getByRole('radio', { name: 'Adventure', exact: true })).toBeChecked();
+  await expect(page.getByRole('radio', { name: /^Adventure/ })).toBeChecked();
   await expect(page.getByRole('radio', { name: 'Newly Added', exact: true })).toBeChecked();
   await expect(page.getByRole('button', { name: 'List view' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByLabel('Search the library')).toHaveValue('Sea');
   await expect(page.locator('.v2-story-list-item')).toHaveCount(2);
-  await page.getByRole('button', { name: 'Genre', exact: true }).click();
-  await expect(page.getByPlaceholder('Search genres...')).toHaveValue('advent');
+  await expect(page.getByLabel('Search genres')).toHaveValue('advent');
 });
 
 test('the loaded catalog pages remain available after opening a story and returning', async ({ page, request }) => {

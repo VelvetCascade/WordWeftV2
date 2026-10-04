@@ -1,3 +1,4 @@
+import { navigatePath } from '../utils/navigation';
 import { useDialog } from '../hooks/useDialog';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -5,6 +6,8 @@ import type { SearchBookResult, SearchAuthorResult } from '../types';
 import * as api from '../api/client';
 import { StarIcon } from './icons/Icons';
 import { createLatestRequestGate } from '../utils/runtimeLifecycle';
+import '../styles/discovery-controls.css';
+import { X } from 'lucide-react';
 import { ResilientImage } from './ResilientImage';
 
 interface SearchOverlayProps {
@@ -34,13 +37,13 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         if (isOpen) {
             previousFocusRef.current = document.activeElement as HTMLElement | null;
             focusTimer.current = setTimeout(() => inputRef.current?.focus(), 100);
-            setQuery('');
-            setBooks([]);
-            setAuthors([]);
+            // Keep the current query and suggestions when closing or visiting a story.
             setSelectedIndex(-1);
             setSearchError('');
         } else {
             requestGateRef.current?.invalidate();
+            setIsLoading(false);
+            if (debounceTimer.current) clearTimeout(debounceTimer.current);
             previousFocusRef.current?.focus();
         }
         return () => {
@@ -63,7 +66,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     }, [isOpen, onClose]);
 
     const fetchAutocomplete = useCallback(async (q: string) => {
-        if (q.trim().length < 2) {
+        if (!isOpen || q.trim().length < 2) {
             setBooks([]);
             setAuthors([]);
             setIsLoading(false);
@@ -85,12 +88,17 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
         } finally {
             if (requestGateRef.current?.isLatest(requestId)) setIsLoading(false);
         }
-    }, []);
+    }, [isOpen]);
+
+    useEffect(() => { if (isOpen && query.trim().length >= 2) void fetchAutocomplete(query); }, [isOpen, fetchAutocomplete]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         requestGateRef.current?.invalidate();
         setQuery(val);
+        setBooks([]);
+        setAuthors([]);
+        setIsLoading(val.trim().length >= 2);
         setSelectedIndex(-1);
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => fetchAutocomplete(val), 300);
@@ -98,18 +106,18 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
 
     const navigateToBook = (bookId: string) => {
         onClose();
-        window.location.hash = `/book/${bookId}`;
+        navigatePath(`/book/${bookId}`);
     };
 
     const navigateToAuthor = (authorId: string) => {
         onClose();
-        window.location.hash = `/author/${authorId}`;
+        navigatePath(`/author/${authorId}`);
     };
 
     const navigateToFullSearch = () => {
         if (query.trim().length >= 2) {
             onClose();
-            window.location.hash = `/search?q=${encodeURIComponent(query.trim())}`;
+            navigatePath(`/search?q=${encodeURIComponent(query.trim())}`);
         }
     };
 
@@ -148,35 +156,36 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
             <div className="search-overlay-container" onClick={(e) => e.stopPropagation()}>
                 <h2 id="search-overlay-title" className="sr-only">Search WordWeft</h2>
                 {/* Search Input */}
-                <div className="search-overlay-input-wrapper">
+                <form className="search-overlay-input-wrapper" onSubmit={event => { event.preventDefault(); navigateToFullSearch(); }}>
                     <svg className="search-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.35-4.35" />
                     </svg>
                     <input
                         ref={inputRef}
-                        type="text"
+                        type="search"
+                        enterKeyHint="search"
+                        maxLength={200}
                         value={query}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder="Search books, users, genres..."
+                        placeholder="Search story titles or people…"
                         className="search-overlay-input"
                         autoComplete="off"
                         spellCheck={false}
-                        role="combobox"
-                        aria-expanded={totalResults > 0}
-                        aria-controls="search-overlay-results"
                         aria-label="Search stories and people"
                         data-dialog-focus
                     />
-                    <button onClick={onClose} className="search-overlay-close-btn" aria-label="Close search">
-                        <span>ESC</span>
+                    <button type="button" onClick={onClose} className="search-overlay-close-btn" aria-label="Close search">
+                        <X size={20} aria-hidden="true" />
                     </button>
-                </div>
+                    <button type="submit" className="ww-overlay-submit" disabled={query.trim().length < 2}>Search</button>
+                </form>
+                <p className="ww-search-scope">Quick suggestions: story titles and usernames. Full search also checks genres, tags, summaries and descriptions, plus people’s bios.</p>
 
                 {/* Results */}
                 {(books.length > 0 || authors.length > 0 || isLoading) && (
-                    <div className="search-overlay-results" id="search-overlay-results" role="listbox">
+                    <div className="search-overlay-results" id="search-overlay-results">
                         {isLoading && (
                             <div className="search-overlay-loading">
                                 <div className="search-overlay-spinner" />
@@ -195,6 +204,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                 </div>
                                 {books.map((book, i) => (
                                     <button
+                                        type="button"
                                         key={book.id}
                                         className={`search-overlay-item ${selectedIndex === i ? 'search-overlay-item-active' : ''}`}
                                         onClick={() => navigateToBook(book.id)}
@@ -248,6 +258,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                     const idx = books.length + i;
                                     return (
                                         <button
+                                            type="button"
                                             key={author.id}
                                             className={`search-overlay-item ${selectedIndex === idx ? 'search-overlay-item-active' : ''}`}
                                             onClick={() => navigateToAuthor(author.id)}
@@ -286,7 +297,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                     <circle cx="11" cy="11" r="8" />
                                     <path d="m21 21-4.35-4.35" />
                                 </svg>
-                                <span>Press Enter to see all results for <strong>"{query}"</strong></span>
+                                <span>See all results for <strong>"{query}"</strong></span>
                             </button>
                         )}
                     </div>
@@ -309,8 +320,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                             <path d="m8 8 6 6" />
                             <path d="m14 8-6 6" />
                         </svg>
-                        <p className="text-text-body dark:text-dark-text-body">No results found for "{query}"</p>
-                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try different keywords or check spelling</p>
+                        <p className="text-text-body dark:text-dark-text-body">No quick suggestions for "{query}"</p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Full search also checks genres, tags and story summaries.</p>
+                        <button type="button" className="ww-recovery-action" onClick={navigateToFullSearch}>Search all fields</button>
+                        <a className="ww-recovery-action" href="/category" onClick={onClose}>Browse available genres</a>
                     </div>
                 )}
             </div>

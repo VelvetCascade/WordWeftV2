@@ -27,13 +27,14 @@ export function DiscoveryHero({ groups, books = emptyBooks, isLoading = false, l
   const [entering, setEntering] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [pressed, setPressed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [inView, setInView] = useState(true);
   const [visible, setVisible] = useState(true);
   const section = useRef<HTMLElement>(null);
   const currentBooks = catalog[activeGroup];
   const canRotate = available.length > 1 && !isLoading && !reducedMotion;
-  const autoRotate = canRotate && !hovered && !focused && inView && visible;
+  const autoRotate = canRotate && !hovered && !focused && !pressed && inView && visible;
   const phase = pendingGroup ? 'exit' : entering ? 'enter' : 'idle';
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export function DiscoveryHero({ groups, books = emptyBooks, isLoading = false, l
     return () => window.clearTimeout(timer);
   }, [entering]);
 
-  return <section ref={section} className="v2-home-hero" aria-labelledby="home-title" data-active-format={activeGroup} data-transition={phase} data-reduced-motion={reducedMotion || undefined}>
+  return <section ref={section} className="v2-home-hero" aria-labelledby="home-title" data-active-format={activeGroup} data-transition={phase} data-pressing={pressed || undefined} data-reduced-motion={reducedMotion || undefined}>
     <div className="v2-hero-copy">
       <p className="ww-page-eyebrow">A home for readers and writers</p>
       <h1 id="home-title"><span className="v2-hero-accessible-heading">Read stories. Write your own.</span><span aria-hidden="true">Read <span className="v2-story-word"><span className="v2-story-word-text" key={activeGroup}>{activeGroup}</span></span>.<br />Write your own.</span></h1>
@@ -83,6 +84,7 @@ export function DiscoveryHero({ groups, books = emptyBooks, isLoading = false, l
     </div>
     <div className="v2-hero-showcase">
       <div className="v2-hero-books" data-count={currentBooks.length} aria-label={`Featured published ${activeGroup}`} aria-busy={isLoading}
+        onPointerDown={() => setPressed(true)} onPointerUp={() => requestAnimationFrame(() => setPressed(false))} onPointerCancel={() => setPressed(false)}
         onPointerEnter={event => { if (event.pointerType !== 'touch') setHovered(true); }} onPointerLeave={() => setHovered(false)}
         onFocusCapture={event => setFocused(hasInteractiveFocus(event.target))} onBlurCapture={event => setFocused(event.currentTarget.contains(event.relatedTarget as Node) && hasInteractiveFocus(event.relatedTarget))}>
         {currentBooks.length ? currentBooks.map((book, index) => <a className={`v2-hero-book v2-hero-book-${index + 1}`} href={`/book/${encodeURIComponent(book.id)}`} key={book.id} aria-label={`Read ${book.title}`}>

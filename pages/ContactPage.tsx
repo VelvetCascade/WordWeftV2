@@ -1,3 +1,5 @@
+import { SupportIncidentReference } from '../components/SupportIncidentReference';
+import { latestSupportIncident } from '../utils/supportIncident';
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, LockKeyhole, Mail, Plus, Search } from 'lucide-react';
 import { Footer } from '../components/Footer';
@@ -9,6 +11,10 @@ import AdUnit from '../components/AdUnit';
 import '../styles/support-v2.css';
 
 const helpTopics = [
+    ['My reading progress is missing. What should I do?', 'Check that you are signed in to the same account. Reopen the story from your library and allow a moment for progress to sync. If you were offline, reconnect before retrying. Do not clear browser data while you have unsaved writing. Contact us with the story link and the chapter you expected to resume.'],
+    ['The app showed an error or a page will not load.', 'Use Try again on the error screen. If it persists, copy its incident reference and tell us the page, browser and what you were doing. Reload only after preserving unsaved work. Never include a password, sign-in link or manuscript in a report.'],
+    ['Why do I have to tap more than once?', 'Wait for the current action’s loading or saving state to finish before retrying. Check your connection and close any open menu or dialog. If taps still do not respond, tell us your device, browser and the control involved. Real-device touch issues are still being investigated.'],
+    ['An image or manuscript upload failed.', 'Keep your original file. Check the file type and size shown by the upload control and your connection, then retry once the previous attempt finishes. An upload is complete only after its success state appears. Tell support the file type, size and error message; do not send private manuscript content.'],
     ['How do I save a story to my library?', 'Sign in, open a story and use its library control to save it. You can find your saved stories in Your library.'],
     ['Can I publish a story somewhere else too?', 'Yes. Publishing on WordWeft is non-exclusive and you keep ownership of your original work. Read the Terms of Service for the licence needed to host and display your work.'],
     ['How do paragraph comments work?', 'Open the comment control beside a passage to discuss that part of the chapter. Chapter discussions are also available after the story text. Keep comments respectful and mark spoilers.'],
@@ -30,6 +36,8 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
     const [formData, setFormData] = useState({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '', ...initialDraft?.formData });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [incidentId] = useState(latestSupportIncident);
+    const [includeIncident, setIncludeIncident] = useState(false);
     const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         if (window.location.pathname !== '/contact' || submitted) return;
@@ -42,7 +50,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault(); setIsSubmitting(true); setError(null);
         try {
-            await api.submitGrievance(formData);
+            await api.submitGrievance({ ...formData, message: `${formData.message}${includeIncident && incidentId ? `\n\nIncident reference: ${incidentId}` : ''}` });
             const { wordWeftContact: discardedDraft, ...historyState } = window.history.state || {};
             window.history.replaceState(historyState, '');
             setSubmitted(true);
@@ -75,7 +83,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
                             <label className="wv-field" htmlFor="contact-category">What is this about? <span aria-hidden="true">*</span><select id="contact-category" name="category" value={formData.category} onChange={handleChange} required><option value="" disabled>Choose a topic</option>{categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
                             <label className="wv-field" htmlFor="contact-subject">Subject <span aria-hidden="true">*</span><input id="contact-subject" name="subject" value={formData.subject} onChange={handleChange} required placeholder="A short description" /></label>
                             <label className="wv-field" htmlFor="contact-message">Your message <span aria-hidden="true">*</span><textarea id="contact-message" name="message" value={formData.message} onChange={handleChange} required rows={6} placeholder="Tell us what happened. Include a story or chapter link if it helps." /></label>
-                            <button type="submit" disabled={isSubmitting} className="wv-button wv-button-primary">{isSubmitting ? 'Sending…' : 'Send message'} {!isSubmitting && <ArrowRight size={18} />}</button><p className="wv-hint">All fields are required. Your message is sent to the WordWeft support team.</p>
+                            <SupportIncidentReference incidentId={incidentId} selected={includeIncident} onChange={setIncludeIncident} /><button type="submit" disabled={isSubmitting} className="wv-button wv-button-primary">{isSubmitting ? 'Sending…' : 'Send message'} {!isSubmitting && <ArrowRight size={18} />}</button><p className="wv-hint">All fields are required. Your message is sent to the WordWeft support team.</p>
                         </form>}
                     </section>
                 </div>

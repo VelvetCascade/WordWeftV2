@@ -18,7 +18,7 @@ interface UseNotificationsReturn {
     refresh: () => void;
 }
 
-export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
+export function useNotifications(isLoggedIn: boolean, ownerId = 'current-account'): UseNotificationsReturn {
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
@@ -29,26 +29,40 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
     const eventSourceRef = useRef<EventSource | null>(null);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const notificationsRequestRef = useRef(false);
+    const notificationsRef = useRef(notifications);
+    notificationsRef.current = notifications;
+    const pendingRead = useRef(new Set<string>());
+    const pendingAllRead = useRef(false);
+
+    const identity = `${isLoggedIn}:${ownerId}`;
+    const identityRef = useRef(identity);
+    const stateOwnerRef = useRef(identity);
+    const generationRef = useRef(0);
+    if (identityRef.current !== identity) { identityRef.current = identity; generationRef.current += 1; }
 
     // Fetch unread count
     const fetchUnreadCount = useCallback(async () => {
         if (!isLoggedIn) return;
+        const generation = generationRef.current;
         try {
             const count = await api.getUnreadNotificationCount();
+            if (generation !== generationRef.current) return;
             setUnreadCount(count);
         } catch (e) {
-            setError('Notifications could not be refreshed.');
+            if (generation === generationRef.current) setError('Notifications could not be refreshed.');
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, ownerId]);
 
     // Fetch notifications
     const fetchNotifications = useCallback(async (pageNum: number, append = false) => {
         if (!isLoggedIn || notificationsRequestRef.current) return;
+        const generation = generationRef.current;
         notificationsRequestRef.current = true;
         setIsLoading(true);
         setError('');
         try {
             const data = await api.getNotifications(pageNum, 20);
+            if (generation !== generationRef.current) return;
             if (append) {
                 setNotifications(prev => [...prev, ...data.notifications]);
             } else {
@@ -56,15 +70,17 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             }
             setHasMore(data.hasNext);
         } catch (e) {
-            setError('Notifications could not be loaded. Please try again.');
+            if (generation === generationRef.current) setError('Notifications could not be loaded. Please try again.');
         } finally {
-            notificationsRequestRef.current = false;
-            setIsLoading(false);
+            if (generation === generationRef.current) { notificationsRequestRef.current = false; setIsLoading(false); }
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, ownerId]);
 
     // Initial load
     useEffect(() => {
+        stateOwnerRef.current = identity;
+        notificationsRequestRef.current = false; pendingRead.current.clear(); pendingAllRead.current = false;
+        setNotifications([]); notificationsRef.current = []; setUnreadCount(0); setPage(0); setHasMore(true); setToastNotification(null); setError('');
         if (isLoggedIn) {
             fetchUnreadCount();
             fetchNotifications(0);
@@ -73,12 +89,13 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             setUnreadCount(0);
             setError('');
         }
-    }, [isLoggedIn, fetchUnreadCount, fetchNotifications]);
+    }, [isLoggedIn, ownerId, fetchUnreadCount, fetchNotifications]);
 
     // SSE connection
     useEffect(() => {
         if (!isLoggedIn) return;
 
+        const generation = generationRef.current;
         let connectSSE: () => void;
         const reconnectController = createReconnectController(() => connectSSE(), 5000);
 
@@ -88,6 +105,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             eventSourceRef.current = es;
 
             es.addEventListener('notification', (event) => {
+                if (generation !== generationRef.current) return;
                 try {
                     const notification: AppNotification = JSON.parse(event.data);
                     setNotifications(prev => [notification, ...prev]);
@@ -105,6 +123,7 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
             });
 
             es.addEventListener('unread-count', (event) => {
+                if (generation !== generationRef.current) return;
                 try {
                     const data = JSON.parse(event.data);
                     setUnreadCount(data.count);
@@ -132,14 +151,14 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
                 clearTimeout(toastTimeoutRef.current);
             }
         };
-    }, [isLoggedIn]);
+    }, [isLoggedIn, ownerId]);
 
     // Periodic unread count poll as fallback (every 60s)
     useEffect(() => {
         if (!isLoggedIn) return;
         const interval = setInterval(fetchUnreadCount, 60000);
         return () => clearInterval(interval);
-    }, [isLoggedIn, fetchUnreadCount]);
+    }, [isLoggedIn, ownerId, fetchUnreadCount]);
 
     const loadMore = useCallback(() => {
         if (!notificationsRequestRef.current && !isLoading && hasMore) {
@@ -150,24 +169,39 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
     }, [isLoading, hasMore, page, fetchNotifications]);
 
     const markAsRead = useCallback(async (id: string) => {
+        if (pendingAllRead.current || pendingRead.current.has(id) || !notificationsRef.current.some(n => n.id === id && !n.read)) return;
+        const generation = generationRef.current;
+        pendingRead.current.add(id);
+        notificationsRef.current = notificationsRef.current.map(n => n.id === id ? { ...n, read: true } : n);
+        setNotifications(notificationsRef.current);
+        setUnreadCount(prev => Math.max(0, prev - 1));
         try {
             await api.markNotificationRead(id);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-            setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (e) {
-            setError('That notification could not be marked as read.');
-        }
+            if (generation !== generationRef.current) return;
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: false } : n));
+            setUnreadCount(prev => prev + 1);
+            setError('That notification could not be marked as read. Try again.');
+        } finally { if (generation === generationRef.current) pendingRead.current.delete(id); }
     }, []);
 
     const markAllAsRead = useCallback(async () => {
+        if (pendingAllRead.current || pendingRead.current.size) return;
+        const generation = generationRef.current;
+        pendingAllRead.current = true;
+        const changed = new Set(notificationsRef.current.filter(n => !n.read).map(n => n.id));
+        notificationsRef.current = notificationsRef.current.map(n => ({ ...n, read: true }));
+        setNotifications(notificationsRef.current);
+        setUnreadCount(0);
         try {
             await api.markAllNotificationsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-            setUnreadCount(0);
         } catch (e) {
-            setError('Notifications could not be marked as read.');
-        }
-    }, []);
+            if (generation !== generationRef.current) return;
+            setNotifications(prev => prev.map(n => changed.has(n.id) ? { ...n, read: false } : n));
+            await fetchUnreadCount();
+            setError('Notifications could not be marked as read. Try again.');
+        } finally { if (generation === generationRef.current) pendingAllRead.current = false; }
+    }, [fetchUnreadCount]);
 
     const dismissToast = useCallback(() => {
         setToastNotification(null);
@@ -182,13 +216,14 @@ export function useNotifications(isLoggedIn: boolean): UseNotificationsReturn {
         fetchUnreadCount();
     }, [fetchNotifications, fetchUnreadCount]);
 
+    const belongsToAccount = stateOwnerRef.current === identity;
     return {
-        notifications,
-        unreadCount,
+        notifications: belongsToAccount ? notifications : [],
+        unreadCount: belongsToAccount ? unreadCount : 0,
         isLoading,
         error,
         hasMore,
-        toastNotification,
+        toastNotification: belongsToAccount ? toastNotification : null,
         loadMore,
         markAsRead,
         markAllAsRead,

@@ -7,8 +7,11 @@ import './styles/discovery-v2.css';
 import './styles/app-layout.css';
 import { installNavigation, isNavigationLocked } from './utils/navigation';
 import { installPageLoadRecovery } from './utils/pageLoadRecovery';
+import { PageErrorBoundary } from './components/RouteSurface';
+import { installReliabilityDiagnostics } from './utils/reliabilityDiagnostics';
 installNavigation();
 installPageLoadRecovery(isNavigationLocked);
+installReliabilityDiagnostics();
 import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');
@@ -18,9 +21,9 @@ if (!rootElement) {
 
 const appContent = (
   <React.StrictMode>
-    <ThemeProvider>
+    <PageErrorBoundary route="application" global><ThemeProvider>
       <App />
-    </ThemeProvider>
+    </ThemeProvider></PageErrorBoundary>
   </React.StrictMode>
 );
 

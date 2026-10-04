@@ -242,4 +242,43 @@ class ChapterPublishingServiceTest {
         assertEquals("scheduled", chapter.getStatus());
         verifyNoInteractions(notifications);
     }
+    @Test
+    void impactIncludesEarlierDraftsSchedulesWarningsAndPrivateStory() {
+        Chapter earlier = new Chapter();
+        earlier.setId("earlier"); earlier.setTitle("Earlier"); earlier.setContent("Earlier text");
+        earlier.setStatus("scheduled"); earlier.setScheduledAt(NOW.plusSeconds(3600));
+        earlier.setContentWarnings(List.of("GORE"));
+        book.setPublicationStatus("draft"); book.setChapters(List.of(earlier, chapter));
+        var impact = service.reviewPublication("author-1", "book-1", "chapter-1");
+        assertTrue(impact.storyBecomesPublic());
+        assertEquals(List.of("earlier", "chapter-1"), impact.chapters().stream().map(c -> c.id()).toList());
+        assertEquals(NOW.plusSeconds(3600), impact.chapters().get(0).scheduledAt());
+        assertEquals(List.of("GORE"), impact.chapters().get(0).contentWarnings());
+        assertEquals("MATURE_18", impact.resultingAgeRating());
+    }
+
+    @Test
+    void stalePublicationReviewRejectsBeforeAnyChapterGoesLive() {
+        var impact = service.reviewPublication("author-1", "book-1", "chapter-1");
+        chapter.setContent("Changed after reviewing");
+        var error = assertThrows(ResponseStatusException.class, () ->
+            service.publishReviewed("author-1", "book-1", "chapter-1", impact.reviewToken()));
+        assertEquals(409, error.getStatusCode().value());
+        assertEquals("draft", chapter.getStatus());
+        verify(books, never()).save(any());
+        verifyNoInteractions(notifications);
+    }
+
+    @Test
+    void approvedReviewKeepsOrderedReleaseSemanticsAndClearsEarlierSchedule() {
+        Chapter earlier = new Chapter();
+        earlier.setId("earlier"); earlier.setTitle("Earlier"); earlier.setContent("Earlier text");
+        earlier.setStatus("scheduled"); earlier.setScheduledAt(NOW.plusSeconds(3600));
+        book.setChapters(List.of(earlier, chapter));
+        var impact = service.reviewPublication("author-1", "book-1", "chapter-1");
+        service.publishReviewed("author-1", "book-1", "chapter-1", impact.reviewToken());
+        assertEquals("published", earlier.getStatus()); assertNull(earlier.getScheduledAt());
+        assertEquals("published", chapter.getStatus());
+    }
+
 }

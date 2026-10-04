@@ -368,3 +368,5 @@ html .ww-app .wv-legal .wv-support-shell { width:calc(100% - 64px); max-width:11
 
 @media(max-width:760px){.wv-support :is(.wv-field,.wv-help-search,.wv-feedback-tag-input,.wv-demo-search) :is(input,select,textarea){font-size:16px}}
 .wv-catalog-cover > .resilient-image-fallback { width:100%; height:100%; aspect-ratio:3/4; }
+.ww-policy-badge{color:#514c47!important}.dark .ww-policy-badge{color:#c7cdc8!important}.ww-policy-badge a{color:#246257!important}.dark .ww-policy-badge a{color:#9ccbbb!important}
+.ww-support-incident{padding:16px;border:1px solid var(--wv-line,#dedbd2);border-radius:12px;margin:16px 0;line-height:1.6}.ww-support-incident input{width:18px;height:18px;min-height:18px;accent-color:#28675e;flex-shrink:0}.ww-support-incident small{font-size:12px}

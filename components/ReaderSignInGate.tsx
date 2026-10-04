@@ -31,6 +31,7 @@ export const ReaderSignInGate: React.FC<ReaderSignInGateProps> = ({
                     ? `Continue ${bookTitle} by signing in. Your place in the story will be kept for you.`
                     : 'Sign in to finish this chapter and continue through the story. Your place will be kept for you.'}
             </p>
+            <p>A free account lets you finish the chapter, save your place and follow the writer. We’ll return you to this story after sign-in.</p>
             <div className="reader-sign-in-gate-actions">
                 <button type="button" className="reader-sign-in-primary" onClick={() => onAuthenticate('login')}>Sign in</button>
                 <button type="button" className="reader-sign-in-secondary" onClick={() => onAuthenticate('signup')}>Create account</button>

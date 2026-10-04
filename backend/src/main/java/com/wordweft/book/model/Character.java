@@ -30,6 +30,15 @@ public class Character {
     
     @Size(max = 1000)
     private String goal;
+
+    @Pattern(regexp = "PUBLIC|PRIVATE")
+    private String descriptionVisibility;
+    @Pattern(regexp = "PUBLIC|PRIVATE")
+    private String goalVisibility;
+    @Size(max = 2000)
+    private String spoilerDetails;
+    @Size(max = 100)
+    private String spoilerChapterId;
     
     @Pattern(regexp = "^(https?://).*|", message = "Image URL must be a valid URL")
     private String imageUrl;

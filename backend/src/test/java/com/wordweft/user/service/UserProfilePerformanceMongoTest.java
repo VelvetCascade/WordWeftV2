@@ -128,8 +128,29 @@ class UserProfilePerformanceMongoTest {
         List<Map<String, Object>> followers = service.getFollowersList("reader", "reader");
         assertEquals("Writer", followers.get(0).get("name")); assertEquals(true, followers.get(0).get("isFollowing"));
         assertFalse(returned.toString().contains("PRIVATE_"));
-        assertTrue(reads.stream().allMatch(read -> read.containsKey("projection")));
+        assertTrue(reads.stream().filter(read -> "users".equals(read.get("find"))).allMatch(read -> read.containsKey("projection")));
         assertTrue(reads.stream().noneMatch(read -> "books".equals(read.get("find"))));
+    }
+
+    @Test void onlyConsentedShelvesExposePublishedAccessibleMetadataWithoutPrivateReadingState() {
+        Map<String, Object> privateProfile = service.getPublicProfile("reader", "writer");
+        assertEquals(List.of(), privateProfile.get("publicShelves"));
+        assertFalse(privateProfile.containsKey("stats"));
+        Shelf shelf = service.shelfRepository.findById("favorites").orElseThrow();
+        shelf.setVisibility("PUBLIC"); service.shelfRepository.save(shelf);
+        LibraryEntry draft = new LibraryEntry(); draft.setId("own-entry"); draft.setUserId("reader"); draft.setBookId("own");
+        draft.setShelfIds(new java.util.HashSet<>(Set.of("favorites"))); service.libraryRepository.save(draft);
+        for (String viewer : List.of("writer", "reader")) {
+            Map<String, Object> profile = service.getPublicProfile("reader", viewer);
+            List<?> shelves = (List<?>) profile.get("publicShelves"); assertEquals(1, shelves.size());
+            List<?> books = (List<?>) ((Map<?, ?>) shelves.get(0)).get("books"); assertEquals(1, books.size());
+            Map<?, ?> book = (Map<?, ?>) books.get(0); assertEquals("saved", book.get("id"));
+            assertFalse(book.containsKey("progress")); assertFalse(book.containsKey("addedDate")); assertFalse(book.containsKey("libraryEntryId"));
+            List<?> chapters = (List<?>) book.get("chapters"); assertEquals(1, chapters.size());
+            assertEquals("First released title", ((Map<?, ?>) chapters.get(0)).get("title"));
+            assertFalse(profile.containsKey("email")); assertFalse(profile.containsKey("library"));
+        }
+        assertFalse(returned.toString().contains("BODY_SECRET"));
     }
 
     private Document book(String id, String author, String status) {

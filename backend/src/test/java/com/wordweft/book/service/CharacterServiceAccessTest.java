@@ -234,6 +234,37 @@ class CharacterServiceAccessTest {
         assertTrue(service.getCharacterById("unknown").isEmpty());
     }
 
+    @Test
+    void explicitPrivacyAndPublicGoalsAreAppliedServerSide() {
+        character.setDescriptionVisibility("PRIVATE"); character.setGoalVisibility("PUBLIC");
+        var view = service.getCharactersByBookId("story").get(0);
+        assertFalse(view.containsKey("description")); assertEquals("AUTHOR_PRIVATE_PLAN", view.get("goal"));
+        assertEquals("PUBLIC", view.get("goalVisibility"));
+    }
+
+    @Test
+    void chapterRevealNeverExposesSpoilersBeforeTheReleasedContextOrToGuests() {
+        Chapter first = new Chapter(); first.setId("first"); first.setStatus("published");
+        Chapter second = new Chapter(); second.setId("second"); second.setStatus("published");
+        Chapter draft = new Chapter(); draft.setId("draft"); draft.setStatus("draft");
+        book.setChapters(List.of(first,second,draft));
+        character.setSpoilerDetails("SPOILER_SECRET"); character.setSpoilerChapterId("second");
+        assertFalse(service.getCharactersByBookId("story","second").get(0).containsKey("spoilerDetails"));
+        signIn("reader",1995,false);
+        assertFalse(service.getCharactersByBookId("story","first").get(0).containsKey("spoilerDetails"));
+        assertEquals("SPOILER_SECRET", service.getCharactersByBookId("story","second").get(0).get("spoilerDetails"));
+        character.setSpoilerChapterId("draft");
+        assertFalse(service.getCharactersByBookId("story","draft").get(0).containsKey("spoilerDetails"));
+    }
+
+    @Test
+    void legacyUpdatesDoNotResetExplicitVisibility() {
+        signIn("owner",1995,false); character.setDescriptionVisibility("PRIVATE"); character.setGoalVisibility("PUBLIC");
+        Character update = new Character(); update.setName("Elaria"); update.setImageUrl(character.getImageUrl());
+        var saved = service.updateCharacter("cast-member", update);
+        assertEquals("PRIVATE", saved.getDescriptionVisibility()); assertEquals("PUBLIC",saved.getGoalVisibility());
+    }
+
     private void signIn(String id, int birthYear, boolean matureOptIn) {
         User user = new User(); user.setId(id); user.setDateOfBirth(LocalDate.of(birthYear, 1, 1));
         user.setAllowMatureContent(matureOptIn);

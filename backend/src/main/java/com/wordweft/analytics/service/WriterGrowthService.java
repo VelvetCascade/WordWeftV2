@@ -82,16 +82,14 @@ public class WriterGrowthService {
         }
 
         Set<String> readers = readEvents.stream().map(this::readerIdentity).collect(Collectors.toSet());
-        if (readers.isEmpty()) {
-            readers.addAll(readingProgress.stream().map(this::progressIdentity).collect(Collectors.toSet()));
-        }
+        readers.addAll(readingProgress.stream().map(this::progressIdentity).collect(Collectors.toSet()));
         int views = selected.stream().flatMap(book -> chapters(book).stream())
                 .mapToInt(Chapter::getViewCount).sum();
         int likes = selected.stream().flatMap(book -> chapters(book).stream())
                 .mapToInt(chapter -> chapter.getLikes() == null ? 0 : chapter.getLikes().size()).sum();
         int comments = selected.stream().flatMap(book -> chapters(book).stream())
                 .mapToInt(Chapter::getCommentCount).sum();
-        int completed = (int) readingProgress.stream().filter(item -> item.getOverallProgress() >= 90).count();
+        int completed = (int) readingProgress.stream().filter(item -> item.getOverallProgress() >= 90).map(this::progressIdentity).distinct().count();
         int returning = returningReaders(readEvents, readingProgress);
         double averageCompletion = readingProgress.stream()
                 .mapToInt(ReadingProgress::getOverallProgress).average().orElse(0);
@@ -127,10 +125,8 @@ public class WriterGrowthService {
             List<ChapterReadEvent> bookEvents,
             List<ReadingProgress> bookProgress) {
         Set<String> readers = bookEvents.stream().map(this::readerIdentity).collect(Collectors.toSet());
-        if (readers.isEmpty()) {
-            readers.addAll(bookProgress.stream().map(this::progressIdentity).collect(Collectors.toSet()));
-        }
-        int completed = (int) bookProgress.stream().filter(item -> item.getOverallProgress() >= 90).count();
+        readers.addAll(bookProgress.stream().map(this::progressIdentity).collect(Collectors.toSet()));
+        int completed = (int) bookProgress.stream().filter(item -> item.getOverallProgress() >= 90).map(this::progressIdentity).distinct().count();
         int views = chapters(book).stream().mapToInt(Chapter::getViewCount).sum();
         int likes = chapters(book).stream()
                 .mapToInt(chapter -> chapter.getLikes() == null ? 0 : chapter.getLikes().size()).sum();

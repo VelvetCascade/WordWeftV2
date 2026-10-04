@@ -11,7 +11,9 @@ interface ChapterVersionHistoryDialogProps {
     bookId: string;
     chapterId: string;
     onClose: () => void;
-    onRestored: (user: User, revision: ChapterRevision) => void;
+    expectedRevision?: number;
+    affectedChapters?: string[];
+    onRestored: (user: api.ManuscriptWriteResult, revision: ChapterRevision) => void;
 }
 
 export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogProps> = ({
@@ -20,6 +22,8 @@ export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogPr
     chapterId,
     onClose,
     onRestored,
+    expectedRevision,
+    affectedChapters = [],
 }) => {
     const [revisions, setRevisions] = useState<ChapterRevision[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +50,7 @@ export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogPr
         setRestoringId(revision.id);
         setError('');
         try {
-            const user = await api.restoreChapterRevision(bookId, chapterId, revision.id);
+            const user = await api.restoreChapterRevision(bookId, chapterId, revision.id, expectedRevision);
             onRestored(user, revision);
             setRestoreTarget(null);
             onClose();
@@ -79,7 +83,7 @@ export const ChapterVersionHistoryDialog: React.FC<ChapterVersionHistoryDialogPr
             <ConfirmDialog
                 isOpen={!!restoreTarget}
                 title="Restore this version?"
-                message="Your current draft will be saved as a recovery point first, then replaced by the selected version. The restored chapter stays in draft."
+                message={`Your current draft will be saved as a recovery point first, then replaced by the selected version. The restored chapter stays in draft.${affectedChapters.length ? ` This also returns these released or scheduled chapters to private drafts and cancels their releases: ${affectedChapters.join(', ')}.` : ''}`}
                 confirmLabel="Restore version"
                 processingLabel="Restoring…"
                 isProcessing={!!restoringId}

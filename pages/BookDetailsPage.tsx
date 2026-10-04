@@ -23,6 +23,7 @@ import { ResilientImage } from '../components/ResilientImage';
 import { completedChapterCount, isReadingFinished, resumeChapterIndex } from '../utils/readingJourney';
 import '../styles/reader-v2.css';
 import { useDialog } from '../hooks/useDialog';
+import { ReturnNavigation } from '../components/ReturnNavigation';
 
 
 const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; index: number; onRead: () => void; progress: number; current?: boolean; onToggleLike: (chapterId: string) => void; isLikePending: boolean }> = ({ bookId, chapter, index, onRead, progress, current = false, onToggleLike, isLikePending }) => {
@@ -230,6 +231,26 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [isManageShelvesModalOpen, setIsManageShelvesModalOpen] = useState(false);
     const [selectedShelfIds, setSelectedShelfIds] = useState<Set<string>>(new Set());
     const [isSavingShelves, setIsSavingShelves] = useState(false);
+    const [shelfQuery, setShelfQuery] = useState('');
+    const [shelfSort, setShelfSort] = useState<'name'|'recent'>('name');
+    const [newShelfName, setNewShelfName] = useState('');
+    const [newShelfVisibility, setNewShelfVisibility] = useState<'PRIVATE'|'PUBLIC'>('PRIVATE');
+    const [shelfError, setShelfError] = useState('');
+    const [shelfStatus, setShelfStatus] = useState('');
+    const customShelves = (currentUser?.library ?? []).filter(shelf => !['all','reading','toread','completed','1'].includes(shelf.id) && shelf.name !== 'My List');
+    const pickerShelves = customShelves.filter(shelf => shelf.name.toLocaleLowerCase().includes(shelfQuery.trim().toLocaleLowerCase())).sort((a,b) => shelfSort === 'name' ? a.name.localeCompare(b.name) : 0);
+    const createShelfInline = async () => {
+        if (!currentUser || !newShelfName.trim() || isSavingShelves) return;
+        setIsSavingShelves(true); setShelfError('');
+        try {
+            const updated = await api.createShelf(currentUser.id, newShelfName.trim(), newShelfVisibility);
+            const created = updated.library.find(shelf => !currentUser.library.some(existing => existing.id === shelf.id));
+            onUserUpdate(updated);
+            if (created) setSelectedShelfIds(ids => new Set(ids).add(created.id));
+            setNewShelfName(''); setNewShelfVisibility('PRIVATE'); setShelfStatus('Shelf created and selected. Save changes to organize this story.');
+        } catch { setShelfError('The shelf could not be created. Your name and selections are still here.'); }
+        finally { setIsSavingShelves(false); }
+    };
     const [confirmation, setConfirmation] = useState<'library' | 'review' | null>(null);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -255,21 +276,13 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser) return;
         setIsSavingShelves(true);
         try {
-            // Preserve system shelves that already include this book
-            const systemShelfIds = new Set<string>();
-            currentUser.library.forEach(shelf => {
-                if (shelf.id === 'all' || shelf.id === 'reading' || shelf.id === 'toread' || shelf.id === 'completed' || shelf.id === '1' || shelf.name === 'My List') {
-                    if (shelf.books.some(b => b.id === bookId)) {
-                        systemShelfIds.add(shelf.id);
-                    }
-                }
-            });
-            const mergedShelves = new Set<string>([...systemShelfIds, ...selectedShelfIds]);
-            const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(mergedShelves));
+            setShelfError('');
+            const updatedUser = await api.updateBookShelves(currentUser.id, bookId, Array.from(selectedShelfIds));
             onUserUpdate(updatedUser);
             setIsManageShelvesModalOpen(false);
+            setShelfStatus('Shelves saved online.');
         } catch (e) {
-            console.error("Failed to update shelves:", e);
+            setShelfError('Your shelf choices could not be saved. Your selections are still here; try again.');
         } finally {
             setIsSavingShelves(false);
         }
@@ -519,11 +532,11 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     }
 
     if (loadError) {
-        return <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center"><h1 className="text-2xl font-bold">This story couldn’t be loaded.</h1><p className="max-w-md text-text-body dark:text-dark-text-body">{loadError}</p><button onClick={() => setLoadAttempt(value => value + 1)} className="rounded-xl bg-accent px-6 py-3 font-semibold text-white">Try again</button></div>;
+        return <section className="v2-load-state ww-error-recovery" role="alert"><ReturnNavigation fallbackPath="/category" fallbackLabel="Back to stories" /><h1>This story couldn’t be loaded.</h1><p>{loadError}</p><div className="v2-hero-actions"><button onClick={() => setLoadAttempt(value => value + 1)} className="v2-button">Try again</button><a href="/category" className="v2-button secondary">Browse stories</a></div></section>;
     }
 
     if (!book) {
-        return <div className="min-h-screen flex items-center justify-center">Book not found.</div>;
+        return <section className="v2-load-state ww-error-recovery"><ReturnNavigation fallbackPath="/category" fallbackLabel="Back to stories" /><h1>This story is unavailable</h1><p>It may have been removed or made private. Your other stories are still waiting for you.</p><div className="v2-hero-actions"><a href="/category" className="v2-button">Browse stories</a><button className="v2-button secondary" onClick={() => setLoadAttempt(value => value + 1)}>Check again</button></div></section>;
     }
 
     const hasStartedReading = Boolean(
@@ -568,19 +581,21 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                 <section className="ww-story-hero-v2">
                     <div className="ww-story-art-column">
                         <ResilientImage src={book.coverUrl} alt={book.title} fallbackLabel={book.title} variant="cover" className="ww-story-art" />
-                        <div className="ww-story-art-caption"><span className="ww-page-eyebrow">The story at a glance</span>{book.summary && book.summary.trim() !== storySummary.trim() && <p>{book.summary}</p>}</div>
+                        <div className="ww-story-art-caption"><span className="ww-page-eyebrow">The story at a glance</span></div>
                         <div className="ww-story-genre-tags"><AgeRatingBadge rating={book.ageRating} />{book.isAIGenerated && <AIBadge />}{book.genres.map(genre => <a key={genre} href={`/genre/${encodeURIComponent(genre)}`}>{genre}</a>)}<span>{book.readingStatus}</span></div>
                     </div>
                     <div className="ww-story-copy-column">
                         <span className="ww-page-eyebrow">A WordWeft story</span>
                         <h1>{book.title}</h1>
                         <a className="ww-story-author-v2" href={`/author/${encodeURIComponent(book.author.id)}`}><ResilientImage src={book.author.avatarUrl} alt="" fallbackLabel={book.author.name} className="w-11 h-11 rounded-full" /><span><strong>{book.author.name}</strong><small>Writer</small></span></a>
+                        <div className="ww-story-actions-v2"><button className={`ww-story-read-action ${hasStartedReading ? 'is-resume' : ''}`} onClick={handleReadClick} disabled={resumeIndex === null}>{mainButtonText}<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button><button className="ww-story-save-action" onClick={handleToggleLibrary} disabled={pendingAction === 'toggle-library'} aria-pressed={isBookInLibrary}>{pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In your library' : 'Add to library'}{isBookInLibrary ? <CheckCircleIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}</button><button className="ww-story-share-action" onClick={() => setIsShareModalOpen(true)}>Share<ShareIcon className="w-4 h-4" /></button>{isBookInLibrary && <button className="ww-story-share-action" onClick={openManageShelvesModal}>Organize shelves</button>}</div>
+                        {shelfStatus && !isManageShelvesModalOpen && <p role="status" className="ww-shelf-status">{shelfStatus}</p>}
                         <div className={`ww-story-summary ${isSummaryExpanded ? 'is-expanded' : ''}`}><p>{storySummary}</p>{storySummary.length > 240 && <button type="button" aria-expanded={isSummaryExpanded} onClick={() => setIsSummaryExpanded(value => !value)}>{isSummaryExpanded ? 'Show less' : 'Read full synopsis'}</button>}</div>
                         {book.tags?.filter(tag => !book.genres.includes(tag)).length > 0 && <div className="ww-story-tag-list">{book.tags.filter(tag => !book.genres.includes(tag)).map(tag => <a key={tag} href={`/tag/${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>}
-                        {hasStartedReading && <div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(readingProgress.overallProgress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, readingProgress.overallProgress)}%` }} /></div><p>{completedChapterCount(book.chapters, readingProgress)} chapters finished{isFinished ? ' · All released chapters read' : resumeIndex !== null ? ` · Continue with chapter ${resumeIndex + 1}` : ''}{readingProgress.pendingSync ? ' · Sync pending on this device' : ''}</p></div>}
-                        <div className="ww-story-actions-v2"><button className={`ww-story-read-action ${hasStartedReading ? 'is-resume' : ''}`} onClick={handleReadClick} disabled={resumeIndex === null}>{mainButtonText}<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button><button className="ww-story-save-action" onClick={handleToggleLibrary} disabled={pendingAction === 'toggle-library'} aria-pressed={isBookInLibrary}>{pendingAction === 'toggle-library' ? 'Updating…' : isBookInLibrary ? 'In your library' : 'Add to library'}{isBookInLibrary ? <CheckCircleIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}</button><button className="ww-story-share-action" onClick={() => setIsShareModalOpen(true)}>Share<ShareIcon className="w-4 h-4" /></button>{isBookInLibrary && hasCustomShelves && <button className="ww-story-share-action" onClick={openManageShelvesModal}>Organize shelves</button>}</div>
-                        <dl className="ww-story-stats-v2"><div><dt>Reader rating</dt><dd><StarIcon className="w-4 h-4" />{book.rating.toFixed(1)}<small>{book.reviewsCount.toLocaleString()} reviews</small></dd></div><div><dt>Reads</dt><dd>{book.viewCount.toLocaleString()}</dd></div><div><dt>Likes</dt><dd>{book.likesCount.toLocaleString()}</dd></div><div><dt>Comments</dt><dd>{book.commentCount.toLocaleString()}</dd></div></dl>
-                        <p className="ww-story-publication-meta">{book.chapters.length} chapters · {book.readingStatus}</p>
+                        {hasStartedReading && <div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(readingProgress.overallProgress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, readingProgress.overallProgress)}%` }} /></div><p>{completedChapterCount(book.chapters, readingProgress)} {completedChapterCount(book.chapters, readingProgress) === 1 ? 'chapter' : 'chapters'} finished{isFinished ? ' · All released chapters read' : resumeIndex !== null ? ` · Continue with chapter ${resumeIndex + 1}` : ''}{readingProgress.pendingSync ? ' · Sync pending on this device' : ''}</p></div>}
+
+                        <dl className="ww-story-stats-v2"><div><dt>Reader rating</dt><dd><StarIcon className="w-4 h-4" />{book.rating.toFixed(1)}<small>{book.reviewsCount.toLocaleString()} {book.reviewsCount === 1 ? 'review' : 'reviews'}</small></dd></div><div><dt>Reads</dt><dd>{book.viewCount.toLocaleString()}</dd></div><div><dt>Likes</dt><dd>{book.likesCount.toLocaleString()}</dd></div><div><dt>Comments</dt><dd>{book.commentCount.toLocaleString()}</dd></div></dl>
+                        <p className="ww-story-publication-meta">{book.chapters.length} {book.chapters.length === 1 ? 'chapter' : 'chapters'} · {book.readingStatus}</p>
                         {book.nextScheduledReleaseAt && <div className="ww-next-release"><span>Next chapter</span><strong>{new Date(book.nextScheduledReleaseAt).toLocaleString()}</strong><small>Scheduled by {book.author.name}</small></div>}
                         {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance"><strong>Content guidance</strong>{book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(warning => <span key={warning}>{warningLabel(warning)}</span>)}</div>}{book.customDisclaimer && <p>{book.customDisclaimer}</p>}</div>}
                         <a href={discussLink(book.id, null, currentUser?.id === book.author.id)} className="ww-story-community-link"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
@@ -694,13 +709,16 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                     <div ref={shelvesDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="manage-shelves-title" className="ww-story-shelves-panel bg-white dark:bg-dark-surface w-full max-w-md rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
                         <div className="flex justify-between items-center mb-6">
                             <h3 id="manage-shelves-title" className="text-xl font-bold font-sans text-text-rich dark:text-dark-text-rich">Manage shelves</h3>
-                            <button aria-label="Close manage shelves" onClick={() => setIsManageShelvesModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                            <button aria-label="Close manage shelves" disabled={isSavingShelves} onClick={() => setIsManageShelvesModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                                 <XMarkIcon className="w-6 h-6" />
                             </button>
                         </div>
 
+                        <p className="ww-shelf-help">Private shelves are visible only to you. Public shelves appear on your public profile.</p>
+                        <div className="ww-shelf-picker-tools"><label>Find a shelf<input type="search" value={shelfQuery} onChange={event => setShelfQuery(event.target.value)} /></label><label>Sort shelves<select value={shelfSort} onChange={event => setShelfSort(event.target.value as 'name'|'recent')}><option value="name">Name A–Z</option><option value="recent">Created order</option></select></label></div>
                         <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2">
-                            {currentUser?.library.filter(s => s.id !== 'all' && s.id !== 'reading' && s.id !== 'toread' && s.id !== 'completed' && s.id !== '1' && s.name !== 'My List').map(shelf => (
+                            {!pickerShelves.length && <p>{shelfQuery ? 'No matching shelves.' : 'Create your first shelf below.'}</p>}
+                            {pickerShelves.map(shelf => (
                                 <label key={shelf.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-surface-alt cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-dark-border">
                                     <input
                                         type="checkbox"
@@ -713,12 +731,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                                         }}
                                         className="w-5 h-5 text-accent rounded border-gray-300 focus:ring-accent"
                                     />
-                                    <span className="font-sans font-medium text-text-rich dark:text-dark-text-rich flex-1">{shelf.name}</span>
-                                    <span className="text-xs text-gray-400 bg-gray-100 dark:bg-dark-border px-2 py-0.5 rounded-full">{shelf.books.length} books</span>
+                                    <span className="font-sans font-medium text-text-rich dark:text-dark-text-rich flex-1">{shelf.name}<small className="block text-xs">{shelf.visibility === 'PUBLIC' ? 'Public · On your profile' : 'Private · Only you'}</small></span>
+                                    <span className="text-xs text-gray-400 bg-gray-100 dark:bg-dark-border px-2 py-0.5 rounded-full">{shelf.books.length} {shelf.books.length === 1 ? 'book' : 'books'}</span>
                                 </label>
                             ))}
                         </div>
 
+                        <details className="ww-shelf-inline-create"><summary>New shelf</summary><label>Shelf name<input maxLength={100} value={newShelfName} onChange={event => setNewShelfName(event.target.value)} placeholder="For example, Weekend reads" /></label><fieldset><legend>Who can see this shelf?</legend><label><input type="radio" name="inline-shelf-visibility" checked={newShelfVisibility === 'PRIVATE'} onChange={() => setNewShelfVisibility('PRIVATE')} />Private · Only you</label><label><input type="radio" name="inline-shelf-visibility" checked={newShelfVisibility === 'PUBLIC'} onChange={() => setNewShelfVisibility('PUBLIC')} />Public · On your profile</label></fieldset><button type="button" disabled={!newShelfName.trim() || isSavingShelves} onClick={createShelfInline}>{isSavingShelves ? 'Creating…' : 'Create and select shelf'}</button></details>
+                        {shelfError && <p role="alert" className="ww-shelf-error">{shelfError}</p>}{shelfStatus && <p role="status">{shelfStatus}</p>}
                         <div className="flex flex-col gap-3">
                             <button
                                 onClick={handleSaveShelves}

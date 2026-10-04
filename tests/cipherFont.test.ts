@@ -87,7 +87,10 @@ test('client and editor enforce pristine edit mode for authors', () => {
 
     assert.match(client, /getChapterContent\([^)]*mode:\s*'read'\s*\|\s*'edit'/);
     assert.match(client, /mode\s*===\s*'edit'\s*\?\s*'\?mode=edit'\s*:\s*''/);
-    assert.match(editor, /api\.getChapterContent\(bookId,\s*chapterId,\s*'edit'\)/);
+    assert.match(editor, /api\.getChapterEditSession\(bookId,\s*chapterId\)/);
+    assert.match(client, /getChapterEditSession[\s\S]*?edit-session[\s\S]*?headers: getHeaders\(\)/);
+    const controller = readFileSync(new URL('../backend/src/main/java/com/wordweft/book/controller/BookController.java', import.meta.url), 'utf8');
+    assert.match(controller, /editSession[\s\S]*?getAuthorId\(\)\.equals\(getCurrentUserId\(\)\)[\s\S]*?viewerScoped\(chapter\)/);
 });
 
 test('reader page integrates cipher font preloading and prose font family assignment', () => {

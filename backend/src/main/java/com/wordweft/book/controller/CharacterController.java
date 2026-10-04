@@ -20,9 +20,9 @@ public class CharacterController {
     private CharacterService characterService;
 
     @GetMapping("/book/{bookId}")
-    public ResponseEntity<List<Map<String, Object>>> getCharactersByBookId(@PathVariable String bookId) {
+    public ResponseEntity<List<Map<String, Object>>> getCharactersByBookId(@PathVariable String bookId, @RequestParam(required = false) String chapterId) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore().cachePrivate()).varyBy("Authorization")
-                .body(characterService.getCharactersByBookId(bookId));
+                .body(chapterId == null ? characterService.getCharactersByBookId(bookId) : characterService.getCharactersByBookId(bookId, chapterId));
     }
 
     @PostMapping

@@ -76,3 +76,6 @@ html .ww-app .v2-home-search .hero-search-wrapper:focus-within{border-color:var(
  html .ww-app .v2-discovery .v2-hero-copy h1{font-size:54px!important;letter-spacing:-2.3px!important}
  .v2-hero-books{height:345px}
 }
+.ww-discovery-shortcuts{display:flex;flex-wrap:wrap;gap:12px 28px;margin:0 0 28px}.ww-discovery-shortcuts a{display:inline-flex;align-items:center;gap:9px;min-height:44px;color:var(--ww-brand);font-size:13px}.ww-discovery-shortcuts a:hover{text-decoration:underline;text-underline-offset:4px}
+.v2-home-hero[data-pressing] :is(.v2-hero-books,.v2-hero-book){animation-play-state:paused!important}
+@media(hover:none){.v2-hero-book:hover .v2-hero-book-caption{opacity:0}.v2-hero-book:focus-visible .v2-hero-book-caption{opacity:1}}

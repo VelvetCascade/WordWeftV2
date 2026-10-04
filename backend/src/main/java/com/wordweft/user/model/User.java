@@ -49,6 +49,8 @@ public class User {
     private LocalDate joinDate;
     private LocalDate dateOfBirth;
     private boolean allowMatureContent = false;
+    // Explicit opt-in. Missing fields on existing documents remain private.
+    private boolean publicReadingStats = false;
 
     // Writing Demo State
     private boolean hasSeenWritingDemo = false;

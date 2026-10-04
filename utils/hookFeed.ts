@@ -1,4 +1,6 @@
-export function toggleTasteGenre(current: string[], genre: string, max = 8): string[] {
+import { MAX_FAVORITE_GENRES } from './onboarding.ts';
+
+export function toggleTasteGenre(current: string[], genre: string, max = MAX_FAVORITE_GENRES): string[] {
     const existing = current.findIndex(value => value.localeCompare(genre, undefined, { sensitivity: 'accent' }) === 0);
     if (existing >= 0) return current.filter((_, index) => index !== existing);
     if (current.length >= max) return current;

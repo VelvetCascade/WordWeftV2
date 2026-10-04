@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { consumeNavigationScroll, isNavigationLocked } from '../utils/navigation';
 import { isPageAssetFailure, recoverPageLoad } from '../utils/pageLoadRecovery';
 import { createPageErrorDetails, retainPageError, type PageErrorDetails } from '../utils/pageErrorDetails';
+import { recentInteractions } from '../utils/reliabilityDiagnostics';
 import '../styles/recovery.css';
 
 /** Wait for lazy content before moving focus or restoring a catalogue position. */
@@ -78,7 +79,7 @@ const ErrorRecovery: React.FC<{ details: PageErrorDetails | null; assetFailure: 
       {!assetFailure && <button type="button" className="ww-recovery-reload" onClick={reload}>Reload page</button>}
     </div>
     {details && <details className="ww-error-details"><summary>Error details</summary>
-      <p>Includes the error, screen and app version. Review before sharing.</p>
+      <p>Incident {details.incidentId}. Includes the screen, app version and anonymous interaction timing. Review before sharing.</p>
       <button type="button" className="v2-button secondary" onClick={() => void copyDetails()} disabled={copying}>Copy error details</button>
       {copyStatus && <p role="status">{copyStatus}</p>}
       <pre tabIndex={0}>{JSON.stringify(details, null, 2)}</pre>
@@ -86,17 +87,30 @@ const ErrorRecovery: React.FC<{ details: PageErrorDetails | null; assetFailure: 
   </section>;
 };
 
-export class PageErrorBoundary extends React.Component<{ children: React.ReactNode; route: string }, {
+export class PageErrorBoundary extends React.Component<{ children: React.ReactNode; route: string; global?: boolean }, {
   failed: boolean; details: PageErrorDetails | null; assetFailure: boolean;
 }> {
   state = { failed: false, details: null as PageErrorDetails | null, assetFailure: false };
   static getDerivedStateFromError() { return { failed: true }; }
+  componentDidMount() {
+    if (this.props.global) {
+      window.addEventListener('wordweft:navigate', this.retry);
+      window.addEventListener('popstate', this.retry);
+      window.addEventListener('hashchange', this.retry);
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('wordweft:navigate', this.retry);
+    window.removeEventListener('popstate', this.retry);
+    window.removeEventListener('hashchange', this.retry);
+  }
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     const details = createPageErrorDetails(error, info.componentStack || '', {
-      route: this.props.route,
+      route: this.props.global ? window.location.pathname : this.props.route,
       build: import.meta.env.WORDWEFT_BUILD_ID || 'development',
       online: navigator.onLine,
     });
+    details.interactions = recentInteractions();
     console.error('WordWeft screen failed:', details);
     try { retainPageError(details, window.sessionStorage); } catch { /* Optional diagnostics only. */ }
     this.setState({ details, assetFailure: isPageAssetFailure(error) });
@@ -110,4 +124,11 @@ export class PageErrorBoundary extends React.Component<{ children: React.ReactNo
     if (this.state.failed) return <ErrorRecovery details={this.state.details} assetFailure={this.state.assetFailure} onRetry={this.retry} />;
     return this.props.children;
   }
+}
+
+/** A dismissed/failed optional prompt cannot replace the reader or editor. */
+export class OptionalSurfaceBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? null : this.props.children; }
 }

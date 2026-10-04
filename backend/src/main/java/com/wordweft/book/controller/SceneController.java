@@ -4,6 +4,7 @@ import com.wordweft.book.model.Scene;
 import com.wordweft.book.service.SceneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -18,7 +19,9 @@ public class SceneController {
     private SceneService sceneService;
 
     @GetMapping("/book/{bookId}")
-    public List<Scene> getScenesByBookId(@PathVariable String bookId) {
+    public List<Scene> getScenesByBookId(@PathVariable String bookId, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("Vary", "Authorization");
         return sceneService.getScenesByBookId(bookId);
     }
 
@@ -28,7 +31,9 @@ public class SceneController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Scene> getSceneById(@PathVariable String id) {
+    public ResponseEntity<Scene> getSceneById(@PathVariable String id, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "private, no-store");
+        response.setHeader("Vary", "Authorization");
         return sceneService.getSceneById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

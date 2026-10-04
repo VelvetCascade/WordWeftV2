@@ -20,6 +20,26 @@ export function useDialog(open: boolean, onClose: () => void, dismissible = true
     const controls = () => Array.from(ref.current?.querySelectorAll<HTMLElement>(
       'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]'
     ) || []).filter(element => element.getClientRects().length && !element.closest('[hidden],[inert]'));
+    const dialog = ref.current;
+    const originalMaxHeight = dialog?.style.getPropertyValue('max-height') || '';
+    const originalPriority = dialog?.style.getPropertyPriority('max-height') || '';
+    const restoreMaxHeight = () => {
+      if (originalMaxHeight) dialog?.style.setProperty('max-height', originalMaxHeight, originalPriority);
+      else dialog?.style.removeProperty('max-height');
+    };
+    const updateAvailableHeight = () => {
+      if (!dialog) return;
+      // Re-read the component's responsive cap instead of enlarging every sheet
+      // to the shared viewport limit, or retaining a smaller keyboard-era cap.
+      restoreMaxHeight();
+      const componentCap = Number.parseFloat(getComputedStyle(dialog).maxHeight);
+      const height = window.visualViewport?.height || window.innerHeight;
+      const available = Math.max(0, height - 32);
+      dialog.style.setProperty('max-height', `${Math.min(Number.isFinite(componentCap) ? componentCap : available, available)}px`);
+    };
+    updateAvailableHeight();
+    window.visualViewport?.addEventListener('resize', updateAvailableHeight);
+    window.addEventListener('resize', updateAvailableHeight);
     const frame = requestAnimationFrame(() => {
       const preferred = ref.current?.querySelector<HTMLElement>('[data-dialog-focus]');
       (preferred || controls()[0] || ref.current)?.focus();
@@ -40,6 +60,9 @@ export function useDialog(open: boolean, onClose: () => void, dismissible = true
     document.addEventListener('keydown', keydown);
     return () => {
       cancelAnimationFrame(frame);
+      window.visualViewport?.removeEventListener('resize', updateAvailableHeight);
+      window.removeEventListener('resize', updateAvailableHeight);
+      restoreMaxHeight();
       document.removeEventListener('keydown', keydown);
       const wasTop = dialogStack[dialogStack.length - 1] === identity;
       const index = dialogStack.indexOf(identity);

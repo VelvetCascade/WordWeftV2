@@ -82,6 +82,7 @@ public class AuthDtos {
         @Past
         private LocalDate dateOfBirth;
         private Boolean allowMatureContent;
+        private Boolean publicReadingStats;
     }
 
     @Data

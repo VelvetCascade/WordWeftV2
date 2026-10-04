@@ -50,7 +50,7 @@ test('touch reading controls remain reachable after scrolling and open discussio
     const controls = page.getByRole('navigation', { name: 'Reader controls', exact: true });
     await expect(controls).toBeInViewport();
     await page.getByRole('button', { name: 'Open chapter discussion', exact: true }).tap();
-    const discussion = page.getByRole('dialog', { name: 'Chapter Comments', exact: true });
+    const discussion = page.getByRole('dialog', { name: 'Story discussions', exact: true });
     await expect(discussion).toBeVisible();
     await expect(discussion).toContainText(comment.content);
     await discussion.getByRole('button', { name: 'Close discussion', exact: true }).tap();
@@ -61,7 +61,7 @@ test('touch reading controls remain reachable after scrolling and open discussio
     const paragraphComments = paragraph.getByRole('button', { name: 'Comment on this paragraph', exact: true });
     await expect(paragraphComments).toHaveCSS('pointer-events', 'auto');
     await paragraphComments.tap();
-    const paragraphDiscussion = page.getByRole('dialog', { name: 'Paragraph #13', exact: true });
+    const paragraphDiscussion = page.getByRole('dialog', { name: 'Passage 13', exact: true });
     await expect(paragraphDiscussion).toBeVisible();
     await paragraphDiscussion.getByRole('button', { name: 'Close discussion', exact: true }).tap();
     await page.getByRole('button', { name: 'More reader actions', exact: true }).tap();

@@ -76,6 +76,6 @@ export function communityComposeLink(circleSlug?: string, query = ''): string {
   return communityReturnLink({ name: 'community', circleSlug, query: params.toString() })!;
 }
 export function composerDefaults(circles: Circle[], initialCircleId: string | undefined, type: PostType): { circleId: string; type: PostType } {
-  const circle = circles.find(item => item.id === initialCircleId) || circles.find(item => item.allowedPostTypes.includes(type)) || circles[0];
+  const circle = circles.find(item => item.id === initialCircleId) || circles.find(item => item.joined && item.allowedPostTypes.includes(type));
   return { circleId: circle?.id || '', type: !circle || circle.allowedPostTypes.includes(type) ? type : circle.allowedPostTypes[0] || 'UPDATE' };
 }

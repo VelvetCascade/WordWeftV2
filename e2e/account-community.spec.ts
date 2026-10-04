@@ -116,7 +116,7 @@ test('settings save public details and preferences while keeping private data pr
   await session(page, member.token); await page.goto('/edit-profile');
   const bio = `Local account settings verification ${run}`;
   await page.getByLabel('Bio', { exact: true }).fill(bio); await page.getByRole('button', { name: 'Save Changes', exact: true }).click(); await expect(page.getByRole('status')).toContainText('Profile updated');
-  await page.getByRole('button', { name: 'Reading preferences', exact: true }).click();
+  await page.getByRole('button', { name: 'Story preferences', exact: true }).click();
   await page.getByRole('button', { name: 'Fantasy', exact: true }).click();
   await page.getByLabel('Date of birth', { exact: true }).fill(`${new Date().getFullYear() - 16}-01-01`); await expect(page.getByRole('checkbox', { name: /Include mature stories/ })).toBeDisabled();
   await page.getByLabel('Date of birth', { exact: true }).fill('1995-04-12'); await page.getByRole('button', { name: 'Save Changes', exact: true }).click(); await expect(page.getByRole('status')).toContainText('Profile updated');
@@ -153,7 +153,7 @@ test('poll votes, comments, follows, saved posts and connections work together',
   await page.getByRole('button', { name: 'Save', exact: true }).click(); await expect(page.getByRole('button', { name: 'Saved', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.goto('/community?mode=saved'); await expect(page.getByRole('heading', { name: post.title, exact: true })).toBeVisible();
   await page.goto(`/author/${member.id}`); await page.getByRole('button', { name: 'Follow', exact: true }).click(); await expect(page.getByRole('button', { name: 'Following', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /Followers/ }).click(); const connections = page.getByRole('dialog', { name: 'Followers' }); await expect(connections).toBeVisible(); await expect(connections.getByRole('button', { name: 'Follow', exact: true })).toHaveCount(0); await page.keyboard.press('Escape'); await expect(connections).not.toBeVisible();
+  await page.getByRole('button', { name: /\d+ followers?/i }).click(); const connections = page.getByRole('dialog', { name: 'Followers' }); await expect(connections).toBeVisible(); await expect(connections.getByRole('button', { name: 'Follow', exact: true })).toHaveCount(0); await page.keyboard.press('Escape'); await expect(connections).not.toBeVisible();
 });
 
 test('moderators can lock, remove and restore a discussion without exposing removed content', async ({ page, request, browser }) => {

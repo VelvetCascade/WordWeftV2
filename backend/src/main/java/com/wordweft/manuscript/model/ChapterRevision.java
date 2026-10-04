@@ -22,6 +22,8 @@ public class ChapterRevision {
     private String chapterId;
     private String title;
     private String content;
+    private java.util.List<String> contentWarnings;
+    private String disclaimerNote;
     private int wordCount;
     private String reason;
     private String contentHash;
