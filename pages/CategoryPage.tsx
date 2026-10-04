@@ -366,7 +366,7 @@ export const CategoryPage: React.FC<{ genre: string | null; favoriteGenres?: str
             {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="mt-5 rounded-xl bg-accent px-6 py-2.5 font-semibold text-white">Show all stories</button>}
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
+          <div className="ww-catalog-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
             {books.map(book => (
               <BookCard key={book.id} book={book} onClick={() => navigatePath(`/book/${book.id}`)} />
             ))}

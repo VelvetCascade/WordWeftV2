@@ -157,7 +157,7 @@ test('reduced motion and pending chapter content use stationary, accessible surf
     await page.goto(chapterPath);
     const placeholder = page.getByRole('status', { name: 'Loading chapter' });
     await expect(placeholder).toBeVisible();
-    await expect(placeholder.locator('[aria-hidden="true"]')).toHaveCSS('animation-name', 'none');
+    await expect(placeholder.locator('.reader-manuscript')).toHaveCSS('animation-name', 'none');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
     release(); await expect(page.locator('.reader-copy')).toBeVisible();
     await page.locator('.reader-header-actions button[aria-label="Reading appearance and themes"]').click();

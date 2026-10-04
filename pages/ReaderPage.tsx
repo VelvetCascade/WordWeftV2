@@ -910,7 +910,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         return () => window.clearTimeout(timer);
     }, [chapterContent?.chapterId, chapterContent?.access, isChapterLoading]);
 
-    if (isLoading || isChapterLoading) return <ReaderPlaceholder theme={contentTheme} />;
+    if (isLoading || isChapterLoading) return <ReaderPlaceholder theme={contentTheme} width={readerWidth} fontSize={fontSize} lineHeight={lineHeight} focusMode={isFocusMode} title={chapter?.title} />;
     if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
     if (!chapterContent) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
 

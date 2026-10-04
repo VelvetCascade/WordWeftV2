@@ -16,7 +16,7 @@ html .ww-app .v2-home-search .hero-search-wrapper { margin: 0; }
 html .ww-app .v2-hero-art { max-height: 460px; }
 html .ww-app .v2-shelf-grid, html .ww-app .search-results-book-grid { grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); }
 html .ww-app .v2-browse-layout { grid-template-columns: 210px minmax(0,1fr); gap: 36px; }
-html .ww-app .v2-browse-results > .grid { grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); }
+html .ww-app .v2-browse-results .ww-catalog-grid { grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); }
 /* The toolbar is in normal flow; the retained sticky offset overlaps covers. */
 html .ww-app .v2-browse-results .ww-library-filter { top: 0 !important; }
 html .ww-app .ww-library-v2 .ww-library-page-content { max-width: none; width: calc(100% - 64px); }
@@ -141,7 +141,7 @@ html .reader-experience.reader-v2 .reader-conversation-rail { right: 24px; width
   html .ww-app .v2-discovery { width: calc(100% - 40px); }
   html .ww-app .v2-home-hero { grid-template-columns: 1fr; }
   html .ww-app .v2-hero-art { max-height: 280px; }
-  html .ww-app :is(.v2-shelf-grid,.search-results-book-grid), html .ww-app .v2-browse-results > .grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  html .ww-app :is(.v2-shelf-grid,.search-results-book-grid), html .ww-app .v2-browse-results .ww-catalog-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   html .ww-app .v2-browse-layout { display: block; }
   html .ww-app .ww-library-v2 .ww-library-page-content, html .ww-app :is(.wv-support-shell,.fw-main,.fw-shell) { width: calc(100% - 40px); }
   html .ww-app .ww-library-v2 .ww-library-books-v2.is-cover-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
