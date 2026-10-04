@@ -5,6 +5,7 @@ import { ResilientImage } from './ResilientImage';
 import { WordWeftLogo } from './icons/WordWeftLogo';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDialog } from '../hooks/useDialog';
+import { usePresence } from '../hooks/usePresence';
 import type { User } from '../types';
 
 interface NavbarProps {
@@ -16,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
   const [path, setPath] = useState(route);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuPresent = usePresence(menuOpen);
   const { theme, toggleTheme } = useTheme();
   const menuRef = useDialog(menuOpen, () => setMenuOpen(false));
   useEffect(() => {
@@ -56,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, onLogout, isLog
     <nav className="v2-bottom-nav" aria-label="Mobile navigation">
       {[primary[0], { label: 'Library', href: '/library', icon: Library, active: path === '/library' }, primary[2], primary[1]].map(item => <a key={item.label} href={item.href} aria-current={item.active ? 'page' : undefined} className={item.active ? 'active' : ''}><item.icon size={20} /><span>{item.label === 'Read' ? 'Explore' : item.label}</span></a>)}
     </nav>
-    {menuOpen && <div className="v2-menu-scrim" onMouseDown={event => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+    {menuPresent && <div className="v2-menu-scrim ww-presence" data-state={menuOpen ? 'open' : 'closed'} inert={!menuOpen} aria-hidden={!menuOpen || undefined} onClick={event => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
       <div className="v2-account-menu" ref={menuRef} role="dialog" aria-modal="true" aria-labelledby="navigation-title" tabIndex={-1}>
         <div className="v2-menu-heading"><div><small>{isAuthenticated ? 'YOUR ACCOUNT' : 'FIND YOUR NEXT CHAPTER'}</small><h2 id="navigation-title">{currentUser?.name || 'Explore WordWeft'}</h2></div><button className="v2-icon-button" onClick={() => setMenuOpen(false)} aria-label="Close navigation"><X size={20} /></button></div>
         {isAuthenticated && <div className="v2-menu-group"><a href="/profile"><UserRound size={18} />Your profile</a><a href="/edit-profile"><Settings size={18} />Account settings</a><a href="/library"><Library size={18} />Your library</a></div>}

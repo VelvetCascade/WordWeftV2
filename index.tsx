@@ -5,6 +5,7 @@ import App from './App';
 import './styles/design-system.css';
 import './styles/discovery-v2.css';
 import './styles/app-layout.css';
+import './styles/interaction-polish.css';
 import { installNavigation, isNavigationLocked } from './utils/navigation';
 import { installPageLoadRecovery } from './utils/pageLoadRecovery';
 import { PageErrorBoundary } from './components/RouteSurface';

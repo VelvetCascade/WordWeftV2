@@ -35,6 +35,7 @@ export const ResilientImage: React.FC<ResilientImageProps> = ({
                 className={`${className} resilient-image-fallback resilient-image-fallback-${variant}`}
                 role="img"
                 aria-label={alt || label}
+                style={props.style}
             >
                 <span aria-hidden="true">{fallbackInitial(label)}</span>
             </span>

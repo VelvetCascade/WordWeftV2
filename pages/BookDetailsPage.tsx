@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { discussLink } from '../utils/community';
 import { BookCard } from '../components/BookCard';
+import { StoryPlaceholder } from '../components/ContentPlaceholder';
 import { Footer } from '../components/Footer';
 import { ArrowLeftIcon, BookmarkIcon, BookmarkIconSolid, CheckCircleIcon, LockClosedIcon, StarIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUturnLeftIcon, ChatBubbleLeftIcon, EyeIcon, HeartIcon, HeartIconSolid, XMarkIcon, ShareIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -528,7 +529,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     };
 
     if (isLoading || loadedBookAccessKey !== bookAccessKey) {
-        return <div className="min-h-screen flex items-center justify-center" role="status">Loading story details…</div>;
+        return <StoryPlaceholder />;
     }
 
     if (loadError) {

@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 
 const dialogStack: symbol[] = [];
 let unlockedOverflow = '';
+let unlockedPadding = '';
+let unlockedPaddingPriority = '';
 
 /** Keep a sheet keyboard reachable and return focus to the control that opened it. */
 export function useDialog(open: boolean, onClose: () => void, dismissible = true) {
@@ -14,7 +16,18 @@ export function useDialog(open: boolean, onClose: () => void, dismissible = true
     if (!open) return;
     const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const identity = Symbol('dialog');
-    if (!dialogStack.length) unlockedOverflow = document.body.style.overflow;
+    if (!dialogStack.length) {
+      unlockedOverflow = document.body.style.overflow;
+      unlockedPadding = document.body.style.getPropertyValue('padding-right');
+      unlockedPaddingPriority = document.body.style.getPropertyPriority('padding-right');
+      const before = document.documentElement.clientWidth;
+      const padding = Number.parseFloat(getComputedStyle(document.body).paddingRight) || 0;
+      document.body.style.overflow = 'hidden';
+      // Compensate only for width actually released by hiding the scrollbar.
+      // A browser with overlay scrollbars or a stable gutter needs no padding.
+      const released = document.documentElement.clientWidth - before;
+      if (released > 0) document.body.style.setProperty('padding-right', `${padding + released}px`);
+    }
     dialogStack.push(identity);
     document.body.style.overflow = 'hidden';
     const controls = () => Array.from(ref.current?.querySelectorAll<HTMLElement>(
@@ -42,7 +55,7 @@ export function useDialog(open: boolean, onClose: () => void, dismissible = true
     window.addEventListener('resize', updateAvailableHeight);
     const frame = requestAnimationFrame(() => {
       const preferred = ref.current?.querySelector<HTMLElement>('[data-dialog-focus]');
-      (preferred || controls()[0] || ref.current)?.focus();
+      (preferred || controls()[0] || ref.current)?.focus({ preventScroll: true });
     });
     const keydown = (event: KeyboardEvent) => {
       if (dialogStack[dialogStack.length - 1] !== identity) return;
@@ -67,7 +80,11 @@ export function useDialog(open: boolean, onClose: () => void, dismissible = true
       const wasTop = dialogStack[dialogStack.length - 1] === identity;
       const index = dialogStack.indexOf(identity);
       if (index >= 0) dialogStack.splice(index, 1);
-      if (!dialogStack.length) document.body.style.overflow = unlockedOverflow;
+      if (!dialogStack.length) {
+        document.body.style.overflow = unlockedOverflow;
+        if (unlockedPadding) document.body.style.setProperty('padding-right', unlockedPadding, unlockedPaddingPriority);
+        else document.body.style.removeProperty('padding-right');
+      }
       if (wasTop && trigger?.isConnected) trigger.focus({ preventScroll: true });
     };
   }, [open]);

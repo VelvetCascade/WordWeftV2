@@ -101,8 +101,8 @@ export type Page =
   | { name: 'reset-password'; token: string };
 
 const PageLoadingFallback: React.FC = () => (
-  <div className="min-h-[50vh] flex items-center justify-center" role="status" aria-label="Loading page">
-    <div className="flex gap-1.5" aria-hidden="true">
+  <div className="min-h-[50vh] flex items-center justify-center" role="status" aria-label="Loading page" data-route-loading="true">
+    <div className="ww-page-loading-dots flex gap-1.5" aria-hidden="true">
       <span className="w-2 h-2 rounded-full bg-accent/60 animate-pulse" />
       <span className="w-2 h-2 rounded-full bg-accent/60 animate-pulse [animation-delay:150ms]" />
       <span className="w-2 h-2 rounded-full bg-accent/60 animate-pulse [animation-delay:300ms]" />

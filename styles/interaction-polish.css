@@ -1,0 +1,67 @@
+/* Shared feedback, using the existing palette and geometry. */
+html { scroll-behavior: auto; }
+:where(.ww-app, .reader-experience) :is(button, a[href], summary) {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+:where(.ww-app, .reader-experience) button:disabled {
+  cursor: not-allowed;
+}
+:where(.ww-app, .reader-experience) button[aria-busy="true"] { cursor: wait; }
+:where(.ww-app, .reader-experience) :is(button, a[href], summary):focus-visible {
+  outline: 2px solid var(--reader-accent, var(--ww-brand));
+  outline-offset: 3px;
+}
+:where(.v2-button, .ww-story-read-action, .ww-story-save-action, .ww-writer-new-story):active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+/* Feedback belongs to the card's links, never a lift of its entire contents. */
+.ww-book-card:focus-within .ww-book-info h3 a,
+.v2-feature-story:focus-within h3 a { text-decoration: underline; text-underline-offset: 4px; }
+@media (hover: none) {
+  .ww-app .ww-book-card:hover .ww-book-cover,
+  .v2-feature-story:hover .v2-feature-cover > img,
+  .v2-genre-tile:hover > img { transform: none; }
+}
+
+/* Retained closing surfaces are inert; navigation never waits for an exit. */
+.ww-presence { transition: opacity 120ms ease-out; }
+.ww-presence[data-state="open"] { animation: ww-polish-enter 140ms ease-out; }
+.ww-presence[data-state="closed"] { animation: none; opacity: 0; pointer-events: none; }
+.ww-presence :is(.v2-account-menu, .search-overlay-container, [role="dialog"], [role="alertdialog"]) { animation: none; }
+.ww-presence.search-overlay-backdrop { animation-name: ww-polish-enter; }
+.ww-presence.search-overlay-backdrop[data-state="closed"] { animation: none; }
+@keyframes ww-polish-enter { from { opacity: .6; } to { opacity: 1; } }
+
+/* Keep suggestion geometry steady during the debounce and request. */
+.ww-search-progress { height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 20px; font-size: 12px; color: var(--ww-muted); }
+.ww-search-progress .search-overlay-spinner { width: 14px; height: 14px; }
+.search-overlay-results[aria-busy="true"] .search-overlay-section { opacity: .65; }
+.search-overlay-results .search-overlay-item:disabled { cursor: wait; }
+.search-overlay-results .search-overlay-section { transition: opacity 120ms ease; }
+.search-overlay-results { overscroll-behavior: contain; }
+.ww-sort-menu { max-height: min(380px, 60dvh); overflow-y: auto; overscroll-behavior: contain; }
+
+/* Quiet, static placeholders; no shimmer or changes to reading text. */
+.ww-content-placeholder { width: 100%; color: var(--ww-muted); }
+.ww-content-placeholder > p { font-size: 13px; padding: 12px 0; }
+.ww-placeholder-paper { max-width: 740px; margin: 32px auto; padding: 40px 30px; min-height: 65vh; }
+.ww-placeholder-line { height: 12px; margin: 16px 0; border-radius: 4px; background: var(--reader-line, var(--ww-line)); }
+.ww-placeholder-line.short { width: 55%; }
+.ww-placeholder-title { height: 38px; width: 72%; margin-bottom: 42px; }
+.ww-reader-placeholder { background: var(--reader-bg, var(--ww-canvas)); }
+.ww-reader-placeholder > p { text-align: center; }
+.ww-placeholder-cover { width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; background: var(--ww-line); }
+.ww-placeholder-list { display: grid; gap: 24px; }
+.ww-placeholder-list .ww-placeholder-book { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 20px; }
+.ww-content-placeholder [aria-hidden="true"] { opacity: 0; animation: ww-loading-reveal 1ms 150ms forwards; }
+.ww-studio-story-menu[open] > div { animation: ww-polish-enter 120ms ease-out; }
+.ww-page-loading-dots { opacity: 0; animation: ww-loading-reveal 1ms 150ms forwards; }
+@keyframes ww-loading-reveal { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ww-presence, .ww-presence[data-state="open"], .search-overlay-results .search-overlay-section { animation: none !important; transition: none !important; }
+  .ww-page-loading-dots { animation: none; opacity: 1; }
+  .ww-content-placeholder [aria-hidden="true"], .ww-studio-story-menu[open] > div { animation: none !important; opacity: 1; }
+  :where(.v2-button, .ww-story-read-action, .ww-story-save-action, .ww-writer-new-story):active:not(:disabled) { transform: none; }
+}

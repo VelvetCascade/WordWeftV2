@@ -28,6 +28,9 @@ export const RouteSurface: React.FC<{ children: React.ReactNode; reader?: boolea
     const apply = () => {
       if (settled) return;
       if (interacted) { settled = true; return; }
+      // A skeleton can already be tall enough for the saved position. Restore
+      // against the real content instead, so replacing it cannot shift Back.
+      if (ref.current?.querySelector('[data-route-loading="true"]')) return;
       if (position) {
         if (document.documentElement.scrollHeight - window.innerHeight < position.y) return;
         window.scrollTo(position.x, position.y); settled = true; observer?.disconnect();

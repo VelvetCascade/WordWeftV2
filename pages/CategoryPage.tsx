@@ -5,6 +5,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { availableGenreShortcuts, searchGenreCatalog, type AvailableGenre } from '../utils/discoveryFilters';
 import type { Book } from '../types';
 import { BookCard } from '../components/BookCard';
+import { CatalogPlaceholder } from '../components/ContentPlaceholder';
 import { Footer } from '../components/Footer';
 import { Squares2X2Icon, Bars3Icon, ChevronDownIcon, FunnelIcon, XMarkIcon, StarIcon, SearchIcon } from '../components/icons/Icons';
 import * as api from '../api/client';
@@ -351,7 +352,7 @@ export const CategoryPage: React.FC<{ genre: string | null; favoriteGenres?: str
         <p className="ww-catalog-summary" role="status">{isLoading ? 'Updating stories…' : `${totalBooks.toLocaleString()} ${totalBooks === 1 ? 'story' : 'stories'}`} · {selectedGenres[0] || 'All genres'} · {SORT_OPTIONS.find(([value]) => value === sortOption)?.[1]}</p>
         {/* Books Display */}
         {isLoading ? (
-          <div className="text-center p-8" role="status">Loading stories…</div>
+          <CatalogPlaceholder view={viewMode} />
         ) : loadError ? (
           <div className="mx-auto max-w-xl rounded-2xl border border-danger/20 bg-white p-8 text-center shadow-soft dark:bg-dark-surface" role="alert">
             <h2 className="text-xl font-bold text-text-rich dark:text-dark-text-rich">The library couldn’t be loaded.</h2>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from './icons/Icons';
+import { usePresence } from '../hooks/usePresence';
 
 export interface SortOption {
     value: string;
@@ -15,33 +16,53 @@ interface SortDropdownProps {
 
 export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onChange, label = 'Sort by' }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const present = usePresence(isOpen);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const close = (restoreFocus = false) => {
+        setIsOpen(false);
+        if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
+    };
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
+        if (!isOpen) return;
+        const handleClickOutside = (event: PointerEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        document.addEventListener('pointerdown', handleClickOutside);
+        return () => document.removeEventListener('pointerdown', handleClickOutside);
+    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen) return;
-        const closeOnEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setIsOpen(false);
-        };
-        window.addEventListener('keydown', closeOnEscape);
-        return () => window.removeEventListener('keydown', closeOnEscape);
+        const frame = requestAnimationFrame(() => {
+            (menuRef.current?.querySelector<HTMLElement>('[aria-checked="true"]') || menuRef.current?.querySelector<HTMLElement>('[role="menuitemradio"]'))?.focus({ preventScroll: true });
+        });
+        return () => cancelAnimationFrame(frame);
     }, [isOpen]);
+
+    const keyboard = (event: React.KeyboardEvent) => {
+        if (event.key === 'Escape' && isOpen) { event.preventDefault(); event.stopPropagation(); close(true); return; }
+        if (event.key === 'Tab') { close(); return; }
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        if (!isOpen) { setIsOpen(true); return; }
+        const items = Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitemradio"]') || []);
+        const index = items.indexOf(document.activeElement as HTMLElement);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        items[next]?.focus({ preventScroll: true });
+    };
 
     const selectedOption = options.find(o => o.value === value);
 
     return (
-        <div ref={dropdownRef} className="relative">
+        <div ref={dropdownRef} className="relative" onKeyDown={keyboard} onBlur={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) close(); }}>
             <button
                 type="button"
+                ref={triggerRef}
                 onClick={() => setIsOpen(prev => !prev)}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
@@ -60,9 +81,12 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
             </button>
 
             {/* Dropdown panel */}
-            {isOpen && <div
+            {present && <div
+                ref={menuRef}
                 role="menu"
-                className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden
+                aria-label={label}
+                data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined}
+                className="ww-presence ww-sort-menu absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden
           bg-white dark:bg-dark-surface-alt
           border border-gray-100 dark:border-dark-border
           shadow-xl dark:shadow-2xl
@@ -75,9 +99,10 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
                             <button
                                 type="button"
                                 role="menuitemradio"
+                                tabIndex={-1}
                                 aria-checked={isSelected}
                                 key={option.value}
-                                onClick={() => { onChange(option.value); setIsOpen(false); }}
+                                onClick={() => { onChange(option.value); close(true); }}
                                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-sans transition-all duration-150
                   ${isSelected
                                         ? 'bg-accent/10 dark:bg-accent/15 text-accent font-semibold'
