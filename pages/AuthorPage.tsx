@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { CalendarDays as CalendarIcon, MapPin as MapPinIcon, Link as LinkIcon, Feather as QuillIcon, Search } from 'lucide-react';
 import '../styles/account-v2.css';
 
@@ -58,7 +59,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     const [followError, setFollowError] = useState('');
     const [connectionModalType, setConnectionModalType] = useState<'followers' | 'following' | null>(null);
     const [activeTab, setActiveTab] = useState<'published' | 'about' | 'posts'>(() => {
-        const saved = window.history.state?.wordWeftAuthor;
+        const saved = readHistoryState()?.wordWeftAuthor;
         return saved?.authorId === authorId && ['published', 'about', 'posts'].includes(saved.tab) ? saved.tab : 'published';
     });
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -98,12 +99,12 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
     }, [author, pageBooks, page]);
 
     useEffect(() => {
-        const saved = window.history.state?.wordWeftAuthor;
+        const saved = readHistoryState()?.wordWeftAuthor;
         setActiveTab(saved?.authorId === authorId && ['published', 'about', 'posts'].includes(saved.tab) ? saved.tab : 'published');
     }, [authorId, page]);
     useEffect(() => {
         if (!window.location.pathname.startsWith(`/author/${encodeURIComponent(authorId)}`)) return;
-        window.history.replaceState({ ...window.history.state, wordWeftAuthor: { authorId, tab: activeTab } }, '');
+        updateHistoryState({ wordWeftAuthor: { authorId, tab: activeTab } });
     }, [authorId, activeTab]);
 
     const handleFollowToggle = async () => {

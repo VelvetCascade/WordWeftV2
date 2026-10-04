@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { SupportIncidentReference } from '../components/SupportIncidentReference';
 import { latestSupportIncident } from '../utils/supportIncident';
 import React, { useState, useEffect } from 'react';
@@ -29,7 +30,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
     const { trackEvent } = useAnalytics();
     useEffect(() => { trackEvent('support', 'contact_form_view'); }, []);
     const [initialDraft] = useState(() => {
-        const saved = typeof window !== 'undefined' ? window.history.state?.wordWeftContact : undefined;
+        const saved = typeof window !== 'undefined' ? readHistoryState()?.wordWeftContact : undefined;
         return saved?.userId === (currentUser?.id || 'guest') ? saved : undefined;
     });
     const [query, setQuery] = useState(initialDraft?.query || '');
@@ -41,7 +42,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
     const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         if (window.location.pathname !== '/contact' || submitted) return;
-        window.history.replaceState({ ...window.history.state, wordWeftContact: { userId: currentUser?.id || 'guest', query, formData } }, '');
+        updateHistoryState({ wordWeftContact: { userId: currentUser?.id || 'guest', query, formData } });
     }, [currentUser?.id, query, formData, submitted]);
     const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData(previous => ({ ...previous, [event.target.name]: event.target.value }));
@@ -51,8 +52,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
         event.preventDefault(); setIsSubmitting(true); setError(null);
         try {
             await api.submitGrievance({ ...formData, message: `${formData.message}${includeIncident && incidentId ? `\n\nIncident reference: ${incidentId}` : ''}` });
-            const { wordWeftContact: discardedDraft, ...historyState } = window.history.state || {};
-            window.history.replaceState(historyState, '');
+            updateHistoryState({ wordWeftContact: undefined });
             setSubmitted(true);
             setFormData({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '' });
         } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again later.'); }

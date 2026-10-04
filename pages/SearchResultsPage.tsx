@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { navigatePath } from '../utils/navigation';
 
 import '../styles/discovery-controls.css';
@@ -18,7 +19,7 @@ type SearchTab = 'all' | 'books' | 'authors';
 export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQuery = '' }) => {
     const { trackEvent } = useAnalytics();
     const [query, setQuery] = useState(searchQuery);
-    const [journey] = useState(() => window.history.state?.wordWeftSearch?.path === window.location.href ? window.history.state.wordWeftSearch : null);
+    const [journey] = useState(() => readHistoryState()?.wordWeftSearch?.path === window.location.href ? readHistoryState().wordWeftSearch : null);
     const [activeTab, setActiveTab] = useState<SearchTab>(['all', 'books', 'authors'].includes(journey?.tab) ? journey.tab : 'all');
     const [genres, setGenres] = useState<AvailableGenre[]>([]);
     const restorePageRef = React.useRef(Math.min(50, Math.max(0, Number(journey?.page) || 0)));
@@ -95,7 +96,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
 
     useEffect(() => {
         if (window.location.href !== journeyPathRef.current) return;
-        window.history.replaceState({ ...window.history.state, wordWeftSearch: { path: window.location.href, tab: activeTab, page: isLoading ? restorePageRef.current : currentPage, input: inputValue } }, '');
+        updateHistoryState({ wordWeftSearch: { path: window.location.href, tab: activeTab, page: isLoading ? restorePageRef.current : currentPage, input: inputValue } });
     }, [activeTab, currentPage, inputValue, isLoading]);
 
     const handleSearch = (e: React.FormEvent) => {

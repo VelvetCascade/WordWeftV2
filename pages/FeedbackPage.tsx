@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { SupportIncidentReference } from '../components/SupportIncidentReference';
 import { latestSupportIncident } from '../utils/supportIncident';
 import React, { useState, useEffect } from 'react';
@@ -22,7 +23,7 @@ const TagInput: React.FC<{ tags: string[]; onChange: (tags: string[]) => void }>
 export const FeedbackPage: React.FC = () => {
     const { trackEvent } = useAnalytics();
     useEffect(() => { trackEvent('support', 'feedback_view'); }, []);
-    const [initialDraft] = useState<Record<string, any>>(() => typeof window !== 'undefined' ? window.history.state?.wordWeftFeedback || {} : {});
+    const [initialDraft] = useState<Record<string, any>>(() => typeof window !== 'undefined' ? readHistoryState()?.wordWeftFeedback || {} : {});
     const textDraft = (field: string) => typeof initialDraft[field] === 'string' ? initialDraft[field] : '';
     const [userType, setUserType] = useState(() => textDraft('userType'));
     const [overallRating, setOverallRating] = useState(() => Number.isInteger(initialDraft.overallRating) ? Math.max(0, Math.min(5, initialDraft.overallRating)) : 0);
@@ -48,15 +49,14 @@ export const FeedbackPage: React.FC = () => {
 
     useEffect(() => {
         if (window.location.pathname !== '/feedback' || submitted) return;
-        window.history.replaceState({ ...window.history.state, wordWeftFeedback: { userType, overallRating, triedFeatures, otherFeature, whatFeltGood, whatWasFrustrating, missingFeatures, performanceIssue, performanceDetails, usageFrequency, usageWhy, openThoughts, contactPermission, contactEmail } }, '');
+        updateHistoryState({ wordWeftFeedback: { userType, overallRating, triedFeatures, otherFeature, whatFeltGood, whatWasFrustrating, missingFeatures, performanceIssue, performanceDetails, usageFrequency, usageWhy, openThoughts, contactPermission, contactEmail } });
     }, [userType, overallRating, triedFeatures, otherFeature, whatFeltGood, whatWasFrustrating, missingFeatures, performanceIssue, performanceDetails, usageFrequency, usageWhy, openThoughts, contactPermission, contactEmail, submitted]);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault(); setError(''); setIsSubmitting(true);
         try {
             await api.submitFeedback({ userType, overallRating: overallRating || null, triedFeatures: Object.entries(triedFeatures).filter(([, selected]) => selected).map(([feature]) => feature), otherTriedFeature: otherFeature || null, whatFeltGood: whatFeltGood || null, whatWasFrustrating: whatWasFrustrating || null, missingFeatures, performanceIssue: performanceIssue || null, performanceDetails: `${performanceDetails}${includeIncident && incidentId ? `\nIncident reference: ${incidentId}` : ''}` || null, usageFrequency: usageFrequency || null, usageFrequencyWhy: usageWhy || null, openThoughts: openThoughts || null, contactPermission, contactEmail: contactPermission ? contactEmail : null });
-            const { wordWeftFeedback: discardedDraft, ...historyState } = window.history.state || {};
-            window.history.replaceState(historyState, '');
+            updateHistoryState({ wordWeftFeedback: undefined });
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
         } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again.'); }

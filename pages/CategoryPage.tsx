@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { navigatePath } from '../utils/navigation';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -35,7 +36,7 @@ interface CatalogJourney {
 }
 
 const readCatalogJourney = (genre: string | null): CatalogJourney => {
-  const saved = window.history.state?.wordWeftCatalog;
+  const saved = readHistoryState()?.wordWeftCatalog;
   const valid = saved?.path === window.location.pathname ? saved : {};
   const text = (value: unknown) => typeof value === 'string' ? value.slice(0, 200) : '';
   return {
@@ -177,10 +178,10 @@ export const CategoryPage: React.FC<{ genre: string | null; favoriteGenres?: str
     // Keep browsing choices on this entry so opening a story and going Back
     // restores the same collection without interfering with navigation's scroll state.
     if (window.location.pathname !== journeyPathRef.current) return;
-    window.history.replaceState({ ...window.history.state, wordWeftCatalog: {
+    updateHistoryState({ wordWeftCatalog: {
       path: journeyPathRef.current, viewMode, sortOption, selectedGenres, genreSearch, libraryQuery,
       page: isLoading ? restoringPageRef.current : page,
-    } }, '');
+    } });
   }, [viewMode, sortOption, selectedGenres, genreSearch, libraryQuery, page, isLoading]);
 
   const loadNextPage = async () => {
