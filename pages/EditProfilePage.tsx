@@ -8,6 +8,8 @@ import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
 import { ResilientImage } from '../components/ResilientImage';
 import { goBackOrReplace } from '../utils/navigation';
+import '../styles/quality.css';
+import { MAX_FAVORITE_GENRES } from '../utils/onboarding';
 
 interface EditProfilePageProps {
   user: User;
@@ -25,6 +27,7 @@ interface ProfileDraft {
   website: string;
   dateOfBirth: string;
   allowMatureContent: boolean;
+  publicReadingStats: boolean;
   twitter: string;
   instagram: string;
   threads: string;
@@ -86,6 +89,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [dateOfBirth, setDateOfBirth] = useState(draft?.dateOfBirth ?? user.dateOfBirth ?? '');
   const [allowMatureContent, setAllowMatureContent] = useState(draft?.allowMatureContent ?? user.allowMatureContent ?? false);
 
+  const [publicReadingStats, setPublicReadingStats] = useState(draft?.publicReadingStats ?? user.publicReadingStats ?? false);
+
   // Socials
   const [twitter, setTwitter] = useState(draft?.twitter ?? user.socials?.twitter ?? '');
   const [instagram, setInstagram] = useState(draft?.instagram ?? user.socials?.instagram ?? '');
@@ -117,12 +122,12 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const initialProfileState = useMemo(() => JSON.stringify({
     name: user.name, avatarUrl: user.avatarUrl, avatarFileId: user.avatarFileId || null,
     bio: user.bio || '', location: user.location || '', website: user.website || '',
-    dateOfBirth: user.dateOfBirth || '', allowMatureContent: user.allowMatureContent || false,
+    dateOfBirth: user.dateOfBirth || '', allowMatureContent: user.allowMatureContent || false, publicReadingStats: user.publicReadingStats || false,
     twitter: user.socials?.twitter || '', instagram: user.socials?.instagram || '', threads: user.socials?.threads || '',
     selectedGenres: user.favoriteGenres || [],
   }), [user]);
   const [lastSavedState, setLastSavedState] = useState(savedSettings?.lastSavedState ?? initialProfileState);
-  const currentProfileState = JSON.stringify({ name, avatarUrl, avatarFileId, bio, location, website, dateOfBirth, allowMatureContent, twitter, instagram, threads, selectedGenres });
+  const currentProfileState = JSON.stringify({ name, avatarUrl, avatarFileId, bio, location, website, dateOfBirth, allowMatureContent, publicReadingStats, twitter, instagram, threads, selectedGenres });
   const isDirty = currentProfileState !== lastSavedState;
 
   // Keep this history entry's section and draft when visiting activity or policies.
@@ -171,8 +176,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
       setSelectedGenres(prev => prev.filter(g => g !== genre));
       setGenreError(null);
     } else {
-      if (selectedGenres.length >= 5) {
-        setGenreError('Choose up to 5 favorite genres. Remove one before adding another.');
+      if (selectedGenres.length >= MAX_FAVORITE_GENRES) {
+        setGenreError(`Choose up to ${MAX_FAVORITE_GENRES} favorite genres. Remove one before adding another.`);
         return;
       }
       setSelectedGenres(prev => [...prev, genre]);
@@ -208,6 +213,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         website,
         dateOfBirth,
         allowMatureContent,
+        publicReadingStats,
         socials: { twitter, instagram, threads },
         favoriteGenres: selectedGenres
       });
@@ -286,7 +292,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <div><p className="ww-page-eyebrow">Your settings</p><h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">{activeSection === 'profile' ? 'Profile settings' : activeSection === 'preferences' ? 'Reading preferences' : 'Privacy & security'}</h1></div>
+          <div><p className="ww-page-eyebrow">Your settings</p><h1 className="font-sans text-3xl font-bold text-text-rich dark:text-dark-text-rich">{activeSection === 'profile' ? 'Profile settings' : activeSection === 'preferences' ? 'Story preferences' : 'Privacy & security'}</h1></div>
         </div>
         <p className="ml-14 mb-7 text-sm text-text-body dark:text-dark-text-body">{activeSection === 'profile' ? 'Choose how you appear to readers and writers.' : activeSection === 'preferences' ? 'Choose the stories you find and the content you see.' : 'Manage sign-in details and account access.'}</p>
 
@@ -294,11 +300,11 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
           <nav className="ww-settings-nav" aria-label="Profile settings">
             {([
               ['profile', 'Public profile', 'Photo, bio and links'],
-              ['preferences', 'Reading preferences', 'Genres and content access'],
+              ['preferences', 'Story preferences', 'Genres and content access'],
               ['security', 'Privacy and security', 'Email and password'],
             ] as const).map(([id, label, description]) => (
               <button type="button" key={id} aria-label={label} onClick={() => setActiveSection(id)} className={activeSection === id ? 'active' : ''}>
-                <strong>{id === 'profile' ? 'Profile' : id === 'preferences' ? 'Reading' : label}</strong><span>{description}</span>
+                <strong>{id === 'profile' ? 'Profile' : id === 'preferences' ? 'Stories' : label}</strong><span>{description}</span>
               </button>
             ))}
             <a href="/notifications">Notifications</a>
@@ -308,7 +314,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
         <div className="ww-settings-panel bg-white dark:bg-dark-surface rounded-2xl border dark:border-dark-border">
           {activeSection !== 'security' && <form onSubmit={handleSave} className={`space-y-6 ${activeSection === 'profile' ? 'ww-settings-profile-form' : ''}`}>
             <header className="ww-settings-panel-head">
-              <div><h2>{activeSection === 'profile' ? 'Public profile' : 'Reading preferences'}</h2><p>{activeSection === 'profile' ? 'This is how your author portfolio appears to readers.' : 'Choose what helps WordWeft shape your library.'}</p></div>
+              <div><h2>{activeSection === 'profile' ? 'Public profile' : 'Story preferences'}</h2><p>{activeSection === 'profile' ? 'This is how your author portfolio appears to readers.' : 'Choose what helps WordWeft shape your library.'}</p></div>
               {isDirty && <span>Unsaved changes</span>}
             </header>
             {activeSection === 'profile' && <>
@@ -441,8 +447,8 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             </>}
 
             {/* Favorite Genres */}
-            {activeSection === 'preferences' && <><div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 mt-4">Favorite Genres (Max 5)</h3>
+            {activeSection === 'preferences' && <><p className="ww-account-security-note">For font, theme and spacing, open a chapter and choose <strong>Reading appearance</strong>. Your appearance choices stay in the reader. <a href="/library">Choose a story from your library →</a></p><div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 mt-4">Favorite genres · {selectedGenres.length}/{MAX_FAVORITE_GENRES}</h3>
               {genreError && <p role="alert" className="mb-3 text-sm text-danger">{genreError}</p>}
               {selectedGenres.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
@@ -492,8 +498,9 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             </section>
             </>}
 
-            <div className="ww-settings-savebar flex justify-between items-center w-full">
+            <div className={`ww-settings-savebar flex justify-between items-center w-full ${isDirty ? 'is-dirty' : ''}`}>
               <div>
+                {isDirty && !saveError && <p>Unsaved profile changes</p>}
                 {saveError && <p role="alert" className="text-sm text-danger font-sans">{saveError}</p>}
                 {saveSuccess && <p role="status" className="text-sm text-success font-sans">{saveSuccess}</p>}
               </div>
@@ -516,6 +523,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
             </div>
           </form>}
 
+          {activeSection === 'security' && <form onSubmit={handleSave} className="space-y-4 mb-8"><header className="ww-settings-panel-head"><div><h2>Profile visibility</h2><p>Choose the reading information visitors see.</p></div></header><label className="flex items-start gap-3"><input type="checkbox" checked={publicReadingStats} onChange={event => setPublicReadingStats(event.target.checked)} className="mt-1" /><span><strong>Show reading statistics on my public profile</strong><span className="block text-sm mt-1">Share aggregate words, chapters, stories, estimated reading time and reader rank. Individual reading history and progress remain private.</span></span></label><p className="text-sm">Your name, photo, bio, links, favorite genres and publications are public. Custom shelves are private unless you choose Public in your library. <a href="/library" className="text-accent underline">Manage shelf visibility</a>.</p><a href={`/author/${encodeURIComponent(user.id)}`} className="block text-accent underline">Preview saved public profile →</a><p className="text-sm">Saves your profile, visibility and story preferences together.</p>{saveError && <p role="alert" className="text-danger">{saveError}</p>}{saveSuccess && <p role="status">{saveSuccess}</p>}<button type="submit" className="bg-accent text-white px-5 py-3 rounded-xl" disabled={!isDirty || isSaving || isAvatarUploading}>{isSaving ? 'Saving…' : 'Save profile changes'}</button></form>}
           {activeSection === 'security' && <form onSubmit={handlePasswordChange} className="space-y-6">
             <header className="ww-settings-panel-head"><div><h2>Security</h2><p>Your sign-in email and password.</p></div></header>
             <div>
@@ -616,7 +624,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
           </form>}
         </div>
         <aside className="ww-settings-context" aria-label={activeSection === 'profile' ? 'Public profile preview' : 'Account information'}>
-          {activeSection === 'profile' ? <><span className="ww-page-eyebrow">Profile preview</span><ResilientImage src={avatarUrl} alt="Your profile photo" fallbackLabel={name || 'Writer'} className="ww-settings-preview-avatar" /><h2>{name || 'Your name'}</h2>{location && <span className="ww-settings-preview-location">{location}</span>}<p>{bio || 'Your bio introduces you to the people reading your work.'}</p><small>Changes appear in your public portfolio after you save.</small><a href="/profile">View your portfolio →</a></> : <><span className="ww-page-eyebrow">Your account</span><h2>{activeSection === 'security' ? 'Keep your account yours.' : 'Make room for your next read.'}</h2><p>{activeSection === 'security' ? 'Use a unique password. WordWeft will never ask you to share it in a comment or message.' : 'Reading preferences help shape discovery. Your library and reading progress stay with your account.'}</p><a href={activeSection === 'security' ? '/contact' : '/library'}>{activeSection === 'security' ? 'Get account help →' : 'Open your library →'}</a><a href="/privacy">Read our privacy policy →</a></>}
+          {activeSection === 'profile' ? <><span className="ww-page-eyebrow">Profile preview</span><ResilientImage src={avatarUrl} alt="Your profile photo" fallbackLabel={name || 'Writer'} className="ww-settings-preview-avatar" /><h2>{name || 'Your name'}</h2>{location && <span className="ww-settings-preview-location">{location}</span>}<p>{bio || 'Your bio introduces you to the people reading your work.'}</p><small>Changes appear in your public portfolio after you save.</small><a href={`/author/${encodeURIComponent(user.id)}`}>Preview public profile →</a></> : <><span className="ww-page-eyebrow">Your account</span><h2>{activeSection === 'security' ? 'Keep your account yours.' : 'Make room for your next read.'}</h2><p>{activeSection === 'security' ? 'Use a unique password. WordWeft will never ask you to share it in a comment or message.' : 'Story preferences help shape discovery. Your library and reading progress stay with your account.'}</p><a href={activeSection === 'security' ? '/contact' : '/library'}>{activeSection === 'security' ? 'Get account help →' : 'Open your library →'}</a><a href="/privacy">Read our privacy policy →</a></>}
         </aside>
         </div>
       </div>

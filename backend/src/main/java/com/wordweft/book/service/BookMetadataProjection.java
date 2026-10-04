@@ -48,7 +48,7 @@ public final class BookMetadataProjection {
         Object publicContent = ifNull(choose(snapshot, "$$chapter.publishedContent", "$$chapter.content"), "");
         Document metadata = new Document();
         metadata.put("_id", ifNull("$$chapter._id", "$$chapter.id"));
-        for (String field : List.of("title", "wordCount", "status", "scheduledAt", "publishedAt",
+        for (String field : List.of("title", "wordCount", "status", "editRevision", "scheduledAt", "publishedAt",
                 "viewCount", "commentCount", "contentWarnings", "disclaimerNote")) {
             metadata.put(field, "$$chapter." + field);
         }

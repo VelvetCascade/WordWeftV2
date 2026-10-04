@@ -7,6 +7,7 @@ import com.wordweft.book.model.Comment;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.CommentRepository;
 import com.wordweft.book.service.PublishedChapterView;
+import com.wordweft.book.service.BookActivityCounters;
 import com.wordweft.notification.service.NotificationService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
@@ -37,6 +38,8 @@ public class CommentController {
     BookRepository bookRepository;
     @Autowired
     NotificationService notificationService;
+    @Autowired
+    BookActivityCounters counters;
 
     @GetMapping("/{bookId}/chapters/{chapterId}/comments")
     public ResponseEntity<?> getComments(@PathVariable String bookId, @PathVariable String chapterId) {
@@ -62,8 +65,7 @@ public class CommentController {
         Book book = bookRepository.findById(bookId).orElseThrow();
         Chapter chapter = book.getChapters().stream().filter(c -> c.getId().equals(chapterId)).findFirst()
                 .orElseThrow();
-        chapter.setCommentCount(chapter.getCommentCount() + 1);
-        bookRepository.save(book);
+        counters.commentAdded(bookId, chapterId);
 
         // --- Notification Triggers ---
         Map<String, User> authors = commentAuthors(List.of(comment));
@@ -80,6 +82,7 @@ public class CommentController {
                     meta.put("bookTitle", book.getTitle());
                     meta.put("bookId", bookId);
                     meta.put("chapterId", chapterId);
+            meta.put("commentId", comment.getId());
                     notificationService.createNotification(
                             parent.getUserId(), userDetails.getId(), "COMMENT_REPLY", "CHAPTER",
                             chapterId, commenterName + " replied to your comment", meta);
@@ -95,6 +98,7 @@ public class CommentController {
             meta.put("bookTitle", book.getTitle());
             meta.put("bookId", bookId);
             meta.put("chapterId", chapterId);
+            meta.put("commentId", comment.getId());
             notificationService.createNotification(
                     book.getAuthorId(), userDetails.getId(), "NEW_COMMENT", "CHAPTER",
                     chapterId, commenterName + " commented on \"" + PublishedChapterView.of(chapter).title() + "\"", meta);

@@ -45,7 +45,7 @@ for (const width of [390, 1920]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 1080 });
         await page.goto('/edit-profile');
         await page.getByLabel('Bio', { exact: true }).fill('Unsaved settings return test');
-        await page.getByRole('button', { name: 'Reading preferences', exact: true }).click();
+        await page.getByRole('button', { name: 'Story preferences', exact: true }).click();
         await page.getByRole('searchbox', { name: 'Search favorite genres' }).fill('fan');
         await page.getByRole('link', { name: 'Notifications', exact: true }).click();
         await expect(page.getByRole('heading', { name: 'Notifications', exact: true })).toBeVisible();
@@ -54,7 +54,7 @@ for (const width of [390, 1920]) {
         await expect(page.getByRole('button', { name: 'Back to settings', exact: true })).toBeVisible();
         await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
         await expect(page).toHaveURL(/\/edit-profile$/);
-        await expect(page.getByRole('heading', { name: 'Reading preferences', level: 1 })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Story preferences', level: 1 })).toBeVisible();
         await expect(page.getByRole('searchbox', { name: 'Search favorite genres' })).toHaveValue('fan');
         await expect(page.getByText('Unsaved changes', { exact: true }).first()).toBeVisible();
         await page.getByRole('button', { name: 'Public profile', exact: true }).click();
@@ -89,7 +89,7 @@ for (const width of [390, 1920]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 1080 });
         await page.goto('/edit-profile');
         await page.getByLabel('Bio', { exact: true }).fill('Unsaved support journey profile');
-        await page.getByRole('button', { name: 'Reading preferences', exact: true }).click();
+        await page.getByRole('button', { name: 'Story preferences', exact: true }).click();
         await page.getByRole('button', { name: 'Open account and navigation', exact: true }).click();
         await page.getByRole('dialog').getByRole('link', { name: 'Help & contact', exact: true }).click();
         await expect(page.getByRole('heading', { name: 'How can we help?', level: 1 })).toBeVisible();
@@ -103,7 +103,7 @@ for (const width of [390, 1920]) {
         await page.screenshot({ path: info.outputPath('feedback-return.png') });
         await page.getByRole('button', { name: 'Back to settings', exact: true }).click();
         await expect(page).toHaveURL(/\/edit-profile$/);
-        await expect(page.getByRole('heading', { name: 'Reading preferences', level: 1 })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Story preferences', level: 1 })).toBeVisible();
         await page.getByRole('button', { name: 'Public profile', exact: true }).click();
         await expect(page.getByLabel('Bio', { exact: true })).toHaveValue('Unsaved support journey profile');
     });

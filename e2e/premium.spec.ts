@@ -14,14 +14,14 @@ test.beforeAll(async ({ request }) => {
 test.beforeEach(async ({ context }, info) => {
   await context.setExtraHTTPHeaders({ 'X-Forwarded-For': `127.9.${Math.floor(Date.now() / 1000) % 200 + 1}.${info.testId.split('').reduce((sum,char) => sum + char.charCodeAt(0),0) % 200 + 1}` });
 });
-async function session(page: Page, token: string) {
+async function session(page: Page, token: string, theme: 'light' | 'dark' = 'light') {
   await page.addInitScript(value => {
     if (!['localhost','127.0.0.1'].includes(location.hostname)) return;
-    localStorage.setItem('wordweft_jwt', value);
+    localStorage.setItem('wordweft_jwt', value.token);
     localStorage.setItem('ww_welcomeJourneyCompleted', 'true');
     localStorage.setItem('hasSeenWhatsNewPopup_v1', 'true');
-    localStorage.setItem('theme', 'light');
-  }, token);
+    localStorage.setItem('theme', value.theme);
+  }, { token, theme });
 }
 async function healthy(page: Page) {
   await expect(page.locator('vite-error-overlay')).toHaveCount(0);
@@ -63,11 +63,11 @@ test('global search keyboard shortcut, real autocomplete, Escape and focus retur
   await trigger.focus(); await page.keyboard.press('Control+k');
   const dialog = page.getByRole('dialog', { name: 'Search WordWeft' });
   await expect(dialog).toBeVisible();
-  await page.getByRole('combobox').fill('Bellweather');
+  await page.getByRole('searchbox', { name: 'Search stories and people' }).fill('Bellweather');
   await expect(dialog.getByText('The Last Spring in Bellweather', { exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible(); await expect(trigger).toBeFocused();
-  await trigger.click(); await page.getByRole('combobox').fill('Bellweather'); await page.keyboard.press('Enter');
+  await trigger.click(); await page.getByRole('searchbox', { name: 'Search stories and people' }).fill('Bellweather'); await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/search\?q=Bellweather/);
   await expect(page.getByRole('button', { name: /Open The Last Spring in Bellweather/ })).toBeVisible();
 });
@@ -183,11 +183,21 @@ for (const route of ['/auth', '/notifications']) test(`mobile accessibility audi
   expect(result.violations.filter(item => ['serious','critical'].includes(item.impact || '')).map(item => ({id:item.id,nodes:item.nodes.map(node => node.target)}))).toEqual([]);
 });
 
-for (const contentTheme of ['dark', 'sepia']) test(`reader accessibility audit in ${contentTheme} appearance`, async ({ page }) => {
-  await session(page, readerToken);
+for (const globalTheme of ['light', 'dark'] as const) for (const contentTheme of ['light', 'dark', 'sepia']) test(`reader accessibility audit in ${contentTheme} appearance${globalTheme === 'dark' ? ' with global dark appearance' : ''}`, async ({ page }) => {
+  await session(page, readerToken, globalTheme);
   await page.addInitScript(theme => { if (!['localhost','127.0.0.1'].includes(location.hostname)) return; localStorage.setItem('ww_reader_preferences', JSON.stringify({ contentTheme: theme, fontSize: 19, readerFont: 'literary', readerWidth: 'comfortable', lineHeight: 2 })); }, contentTheme);
   await page.goto('/book/local-story-spring/chapter/local-story-spring-chapter-1');
   await expect(page.locator('.reader-copy')).toBeVisible();
+  await expect(page.locator('html')).toHaveClass(globalTheme === 'dark' ? 'dark' : 'light');
+  await expect(page.locator('.reader-experience')).toHaveClass(new RegExp(`reader-theme-${contentTheme}`));
+  const discussion = page.locator('.reader-discussion');
+  await expect(discussion.locator('.reader-discussion-card').first()).toBeAttached();
   const result = await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
   expect(result.violations.filter(item => ['serious','critical'].includes(item.impact || '')).map(item => ({id:item.id,nodes:item.nodes.map(node => node.target)}))).toEqual([]);
+  await discussion.locator('.reader-discussion-card').filter({ has: page.locator('.reader-passage-context') }).first().locator('.reader-discussion-open').click();
+  const drawer = page.getByRole('dialog', { name: /^Passage \d+$/ });
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator('.reader-passage-context')).toBeVisible();
+  const opened = await new AxeBuilder({page}).include('.reader-thread-panel').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+  expect(opened.violations.map(item => ({id:item.id,nodes:item.nodes.map(node => node.target)}))).toEqual([]);
 });

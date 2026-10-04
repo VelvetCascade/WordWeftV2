@@ -6,6 +6,11 @@ import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.service.ChapterImageStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,6 +25,7 @@ public class ManuscriptImportService {
 
     private final BookRepository books;
     private final ManuscriptParser parser;
+    private final MongoTemplate mongo;
     private final ChapterImageStorageService chapterImageStorageService;
     private final ConcurrentHashMap<String, Long> importDebounce = new ConcurrentHashMap<>();
 
@@ -27,14 +33,16 @@ public class ManuscriptImportService {
     public ManuscriptImportService(
             BookRepository books,
             ManuscriptParser parser,
-            @org.springframework.lang.Nullable ChapterImageStorageService chapterImageStorageService) {
+            @org.springframework.lang.Nullable ChapterImageStorageService chapterImageStorageService,
+            MongoTemplate mongo) {
         this.books = books;
+        this.mongo = mongo;
         this.parser = parser;
         this.chapterImageStorageService = chapterImageStorageService;
     }
 
-    public ManuscriptImportService(BookRepository books, ManuscriptParser parser) {
-        this(books, parser, null);
+    public ManuscriptImportService(BookRepository books, ManuscriptParser parser, MongoTemplate mongo) {
+        this(books, parser, null, mongo);
     }
 
     public record ImportResult(
@@ -46,7 +54,7 @@ public class ManuscriptImportService {
 
     public ImportResult importManuscript(
             String authorId, String bookId, String filename, byte[] bytes) {
-        Book book = books.findById(bookId)
+        Book book = books.findAnalyticsMetadataById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Story not found."));
         if (!authorId.equals(book.getAuthorId())) {
             throw new ResponseStatusException(
@@ -79,9 +87,7 @@ public class ManuscriptImportService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, invalidFile.getMessage());
             }
 
-            if (book.getChapters() == null) {
-                book.setChapters(new ArrayList<>());
-            }
+            List<Chapter> imported = new ArrayList<>();
 
             for (ManuscriptParser.ImportedChapter source : parsed.chapters()) {
                 Chapter chapter = new Chapter();
@@ -89,12 +95,23 @@ public class ManuscriptImportService {
                 chapter.setContent(source.content());
                 chapter.setStatus("draft");
                 chapter.updateWordCount();
-                book.getChapters().add(chapter);
+                imported.add(chapter);
             }
-            book.setLastUpdatedAt(LocalDate.now());
-            books.save(book);
+            // Normalize only legacy explicit-null arrays. This predicate cannot
+            // reset chapters appended concurrently by another session.
+            mongo.updateFirst(Query.query(Criteria.where("_id").is(bookId).and("authorId").is(authorId).and("chapters").is(null)),
+                    new Update().set("chapters", List.of()), Book.class);
+            // Append to the current owned document; never save the metadata snapshot.
+            // Autosaves, releases, counters and revisions remain untouched.
+            Query append = Query.query(Criteria.where("_id").is(bookId).and("authorId").is(authorId));
+            append.fields().include("_id").include("chapters.id");
+            Book updated = mongo.findAndModify(append,
+                    new Update().push("chapters").each(imported.toArray()).set("lastUpdatedAt", LocalDate.now()),
+                    FindAndModifyOptions.options().returnNew(true), Book.class);
+            if (updated == null) throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "The story changed or was removed during import. No chapters were imported; reopen the story and try again.");
             return new ImportResult(
-                    parsed.chapters().size(), book.getChapters().size(),
+                    parsed.chapters().size(), updated.getChapters() == null ? 0 : updated.getChapters().size(),
                     parsed.embeddedImages(), parsed.uploadedImages(), parsed.characterCandidates());
         } finally {
             importDebounce.remove(debounceKey);

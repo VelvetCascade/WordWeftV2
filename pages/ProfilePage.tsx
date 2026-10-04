@@ -19,6 +19,8 @@ import {
 import { AuthorShareModal } from '../components/AuthorShareModal';
 import { ConnectionsModal } from '../components/ConnectionsModal';
 import { ResilientImage } from '../components/ResilientImage';
+import { readOptionalValue } from '../utils/optionalStorage';
+import { countLabel } from '../utils/profilePresentation';
 import * as api from '../api/client';
 
 const StatCard: React.FC<{
@@ -59,6 +61,9 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [profileLoadError, setProfileLoadError] = useState('');
     const [loadAttempt, setLoadAttempt] = useState(0);
+    const [intent] = useState(() => readOptionalValue('ww_userRole'));
+    const writingProfile = writtenBooks.length > 0 || intent === 'writer' || intent === 'both';
+    const publicShelves = user.library.filter(shelf => shelf.visibility === 'PUBLIC');
 
     useEffect(() => {
         let active = true;
@@ -78,7 +83,7 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
             <header className="ww-profile-hero relative overflow-hidden border-b border-gray-200/80 bg-white dark:border-dark-border dark:bg-dark-surface">
                 <div className="ww-account-profile-banner"><img src="/design-v2/assets/met-45294.jpg" alt="" /></div>
                 <div className="ww-profile-hero-inner container relative z-10 mx-auto px-6 py-12">
-                    <span className="ww-page-eyebrow">Your public portfolio</span>
+                    <span className="ww-page-eyebrow">Your profile</span>
                     <div className="ww-profile-identity mt-5 flex flex-col items-start gap-8 md:flex-row">
                         <div className="ww-profile-avatar relative shrink-0">
                             <ResilientImage src={user.avatarUrl} alt={user.name} fallbackLabel={user.name} className="h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-lifted dark:border-dark-surface" />
@@ -107,7 +112,7 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
 
                                 <div className="ww-profile-actions flex shrink-0 gap-2 self-start">
                                     <button type="button" onClick={() => { window.location.hash = '/edit-profile'; }} className="flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold transition-colors hover:bg-gray-200 dark:bg-dark-surface-alt dark:hover:bg-dark-border"><Cog6ToothIcon className="h-4 w-4" /> Edit profile</button>
-                                    <button type="button" onClick={() => setIsShareOpen(true)} className="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-primary"><ShareIcon className="h-4 w-4" /> Share portfolio</button>
+                                    <button type="button" onClick={() => setIsShareOpen(true)} className="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-primary"><ShareIcon className="h-4 w-4" /> Share profile</button>
                                 </div>
                             </div>
                         </div>
@@ -117,7 +122,7 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
                         <StatCard icon={<TrophyIcon className="h-6 w-6" />} value={user.stats?.readerLevel || 'Novice'} label="Reader rank" subLabel="Based on words read" />
                         <StatCard icon={<ClockIcon className="h-6 w-6" />} value={formatReadingTime(user.stats?.readingTimeMinutes || 0)} label="Time reading" />
                         <StatCard icon={<DocumentPlusIcon className="h-6 w-6" />} value={(user.stats?.totalWordsRead || 0).toLocaleString()} label="Words read" />
-                        <StatCard icon={<UserGroupIcon className="h-6 w-6" />} value={user.followersCount || 0} label="Followers" onClick={() => setConnectionModalType('followers')} />
+                        <StatCard icon={<UserGroupIcon className="h-6 w-6" />} value={user.followersCount || 0} label={(user.followersCount || 0) === 1 ? "Follower" : "Followers"} onClick={() => setConnectionModalType('followers')} />
                         <StatCard icon={<UserGroupIcon className="h-6 w-6" />} value={user.followingCount || 0} label="Following" onClick={() => setConnectionModalType('following')} />
                     </div>
                 </div>
@@ -126,13 +131,14 @@ export const ProfilePage: React.FC<{ user: User }> = ({ user }) => {
             {profileLoadError && <div role="alert" className="container mx-auto mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/5 px-5 py-3 text-sm text-danger"><span>{profileLoadError}</span><button type="button" className="font-bold underline" onClick={() => setLoadAttempt(attempt => attempt + 1)}>Retry</button></div>}
 
             <main className="container mx-auto px-4 py-10 sm:px-6">
-                <section aria-labelledby="portfolio-heading">
+                <section aria-labelledby="reading-profile-heading" className="mb-10"><div className="ww-profile-section-head"><div><span>Your reading identity</span><h2 id="reading-profile-heading">Stories you choose to share</h2><p>Your reading history and progress stay private. Only shelves you mark public appear to visitors.</p></div><a href={`/author/${encodeURIComponent(user.id)}`} className="font-semibold text-accent">Preview public profile →</a></div>{publicShelves.length ? publicShelves.map(shelf => <div key={shelf.id} className="mb-8"><h3 className="font-sans text-xl mb-4 break-words">{shelf.name} · {countLabel(shelf.books.length, 'story', 'stories')}</h3><div className="ww-account-story-grid grid grid-cols-2 md:grid-cols-5 gap-6">{shelf.books.map(book => <BookCard key={book.id} book={book} onClick={() => { window.location.hash = `/book/${book.id}`; }} />)}</div></div>) : <div className="ww-profile-empty"><BookOpenIcon className="h-11 w-11" /><h3>Make your profile a little more you.</h3><p>Create a favorites shelf in your library, then choose Public if you want visitors to see it.</p><button type="button" onClick={() => { window.location.hash = '/library'; }}>Open your library</button></div>}<p className="mt-4 text-sm">Your reading statistics are {user.publicReadingStats ? 'public' : 'private'}. <a href="/edit-profile" className="text-accent underline">Manage profile visibility</a>.</p></section>
+                {writingProfile && <section aria-labelledby="portfolio-heading">
                     <div className="ww-profile-section-head">
                         <div><span>Written by you</span><h2 id="portfolio-heading">Your published work</h2><p>This is the work readers see when they visit your portfolio.</p></div>
                         <button type="button" onClick={() => { window.location.hash = '/write/book/create'; }}><PlusIcon className="h-4 w-4" /> New story</button>
                     </div>
                     {writtenBooks.length > 0 ? <div className="ww-account-story-grid grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{writtenBooks.map(book => <BookCard key={book.id} book={book} onClick={() => { window.location.hash = `/book/${book.id}`; }} />)}</div> : <div className="ww-profile-empty"><BookOpenIcon className="h-11 w-11" /><h3>Your portfolio is ready for its first story.</h3><p>Publish a story and it will appear here automatically.</p><button type="button" onClick={() => { window.location.hash = '/write'; }}>Open writer studio</button></div>}
-                </section>
+                </section>}
             </main>
 
             <ConnectionsModal isOpen={!!connectionModalType} onClose={() => setConnectionModalType(null)} title={connectionModalType === 'followers' ? 'Followers' : 'Following'} userId={user.id} viewerId={user.id} type={connectionModalType || 'followers'} />

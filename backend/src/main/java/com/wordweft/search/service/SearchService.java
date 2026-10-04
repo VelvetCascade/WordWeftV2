@@ -85,7 +85,8 @@ public class SearchService {
     private Map<String, Object> searchBooksFull(String query, int page, int size, Set<AgeRating> allowedRatings) {
         Criteria criteria = new Criteria().andOperator(ContentAccessService.discoverableCriteria(allowedRatings),
                 new Criteria().orOperator(Criteria.where("title").regex(containsPattern(query)),
-                        Criteria.where("genres").regex(prefixPattern(query)), Criteria.where("tags").regex(prefixPattern(query))));
+                        Criteria.where("genres").regex(containsPattern(query)), Criteria.where("tags").regex(containsPattern(query)),
+                        Criteria.where("summary").regex(containsPattern(query)), Criteria.where("description").regex(containsPattern(query))));
         long total = mongoTemplate.count(Query.query(criteria), Book.class);
         if (total > 0) {
             Query data = bookQuery(criteria).skip((long) page * size).limit(size);

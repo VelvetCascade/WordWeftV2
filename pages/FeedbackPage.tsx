@@ -1,3 +1,5 @@
+import { SupportIncidentReference } from '../components/SupportIncidentReference';
+import { latestSupportIncident } from '../utils/supportIncident';
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, Plus, X } from 'lucide-react';
 import { Footer } from '../components/Footer';
@@ -38,6 +40,8 @@ export const FeedbackPage: React.FC = () => {
     const [contactEmail, setContactEmail] = useState(() => textDraft('contactEmail'));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [incidentId] = useState(latestSupportIncident);
+    const [includeIncident, setIncludeIncident] = useState(false);
     const [error, setError] = useState('');
     const features = ['Writing a story', 'Reading stories', 'Comments/discussions', 'Library/shelves', 'Searching for stories', 'Profile', 'Notifications'];
     const ratingLabels = ['Very confusing', 'Somewhat confusing', 'Neutral', 'Easy to use', 'Extremely smooth'];
@@ -50,7 +54,7 @@ export const FeedbackPage: React.FC = () => {
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault(); setError(''); setIsSubmitting(true);
         try {
-            await api.submitFeedback({ userType, overallRating: overallRating || null, triedFeatures: Object.entries(triedFeatures).filter(([, selected]) => selected).map(([feature]) => feature), otherTriedFeature: otherFeature || null, whatFeltGood: whatFeltGood || null, whatWasFrustrating: whatWasFrustrating || null, missingFeatures, performanceIssue: performanceIssue || null, performanceDetails: performanceDetails || null, usageFrequency: usageFrequency || null, usageFrequencyWhy: usageWhy || null, openThoughts: openThoughts || null, contactPermission, contactEmail: contactPermission ? contactEmail : null });
+            await api.submitFeedback({ userType, overallRating: overallRating || null, triedFeatures: Object.entries(triedFeatures).filter(([, selected]) => selected).map(([feature]) => feature), otherTriedFeature: otherFeature || null, whatFeltGood: whatFeltGood || null, whatWasFrustrating: whatWasFrustrating || null, missingFeatures, performanceIssue: performanceIssue || null, performanceDetails: `${performanceDetails}${includeIncident && incidentId ? `\nIncident reference: ${incidentId}` : ''}` || null, usageFrequency: usageFrequency || null, usageFrequencyWhy: usageWhy || null, openThoughts: openThoughts || null, contactPermission, contactEmail: contactPermission ? contactEmail : null });
             const { wordWeftFeedback: discardedDraft, ...historyState } = window.history.state || {};
             window.history.replaceState(historyState, '');
             setSubmitted(true);
@@ -76,6 +80,7 @@ export const FeedbackPage: React.FC = () => {
                     <Group number={8} title="Would you use this regularly?"><Options name="usage" choices={[["daily", "Yes, daily"], ["few_times_week", "Few times a week"], ["occasionally", "Occasionally"], ["probably_not", "Probably not yet"]]} value={usageFrequency} onChange={setUsageFrequency} /><label className="wv-field">Why? <span className="wv-hint">Optional</span><input value={usageWhy} onChange={event => setUsageWhy(event.target.value)} placeholder="What would bring you back?" /></label></Group>
                     <Group number={9} title="Open thoughts" subtitle="If WordWeft could improve one thing, what would it be?"><label className="wv-field">Your thoughts<textarea value={openThoughts} onChange={event => setOpenThoughts(event.target.value)} rows={4} placeholder="Write freely…" /></label></Group>
                     <Group number={10} title="Can we follow up?" subtitle="Only if you’re open to it."><CheckOption label="Allow us to contact you for clarification" checked={contactPermission} onChange={setContactPermission} />{contactPermission && <label className="wv-field">Email address<input type="email" autoComplete="email" value={contactEmail} onChange={event => setContactEmail(event.target.value)} placeholder="you@example.com" /></label>}</Group>
+                    <SupportIncidentReference incidentId={incidentId} selected={includeIncident} onChange={setIncludeIncident} />
                     {error && <p className="wv-error" role="alert">{error}</p>}
                     <div className="wv-feedback-submit"><p className="wv-hint">Your responses are shared with the WordWeft team.</p><button type="submit" disabled={isSubmitting} className="wv-button wv-button-primary">{isSubmitting ? 'Submitting…' : 'Send feedback'} {!isSubmitting && <ArrowRight size={18} />}</button></div>
                 </form>

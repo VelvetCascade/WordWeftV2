@@ -1,5 +1,7 @@
+import { navigatePath } from '../utils/navigation';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { availableGenreShortcuts, searchGenreCatalog, type AvailableGenre } from '../utils/discoveryFilters';
 import type { Book } from '../types';
 import { BookCard } from '../components/BookCard';
 import { Footer } from '../components/Footer';
@@ -11,6 +13,7 @@ import { metadataFor, parseRoute, isPublicBook } from '../seo/metadata.mjs';
 import { ResilientImage } from '../components/ResilientImage';
 import { useDialog } from '../hooks/useDialog';
 import '../styles/discovery-v2.css';
+import '../styles/discovery-controls.css';
 
 type ViewMode = 'grid' | 'list';
 type SortOption = 'most_read' | 'most_viewed' | 'recent_update' | 'new';
@@ -50,7 +53,7 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
     <ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
-        {book.genres.map(g => <button type="button" key={g} onClick={event => { event.stopPropagation(); window.location.hash = `/genre/${encodeURIComponent(g)}`; }} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full hover:bg-accent/20">{g}</button>)}
+        {book.genres.map(g => <button type="button" key={g} onClick={event => { event.stopPropagation(); navigatePath(`/genre/${encodeURIComponent(g)}`); }} className="text-xs font-sans font-medium bg-accent/10 text-accent px-2 py-1 rounded-full hover:bg-accent/20">{g}</button>)}
       </div>
       <h3 className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">{book.title}</h3>
       <p className="text-sm font-medium text-text-body dark:text-dark-text-body mb-2">by {book.author.name}</p>
@@ -67,20 +70,22 @@ const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onC
 );
 
 
-export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
+export const CategoryPage: React.FC<{ genre: string | null; favoriteGenres?: string[] }> = ({ genre, favoriteGenres = [] }) => {
     const { trackEvent } = useAnalytics();
   const [journey] = useState(() => readCatalogJourney(genre));
   const [viewMode, setViewMode] = useState<ViewMode>(journey.viewMode);
   const [sortOption, setSortOption] = useState<SortOption>(journey.sortOption);
   const [selectedGenres, setSelectedGenres] = useState<string[]>(journey.selectedGenres);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isGenreOpen, setIsGenreOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
   const [page, setPage] = useState(journey.page);
   const [hasMore, setHasMore] = useState(false);
   const [totalBooks, setTotalBooks] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [rankedGenres, setRankedGenres] = useState<AvailableGenre[]>([]);
+  const [draftGenre, setDraftGenre] = useState<string[]>([]);
+  const [draftSort, setDraftSort] = useState<SortOption>(sortOption);
   const [allGenres, setAllGenres] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -90,7 +95,6 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
   const [libraryQuery, setLibraryQuery] = useState(journey.libraryQuery);
   const [librarySearchError, setLibrarySearchError] = useState('');
 
-  const genreDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const requestSequenceRef = useRef(0);
@@ -105,9 +109,6 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (genreDropdownRef.current && !genreDropdownRef.current.contains(event.target as Node)) {
-        setIsGenreOpen(false);
-      }
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
         setIsSortOpen(false);
       }
@@ -122,7 +123,6 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setIsFilterOpen(false);
-      setIsGenreOpen(false);
       setIsSortOpen(false);
     };
     window.addEventListener('keydown', handleEscape);
@@ -135,7 +135,10 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
   useEffect(() => {
     setGenresError(false);
-    api.getGenres().then(setAllGenres).catch(() => setGenresError(true));
+    let active = true;
+    api.getGenres().then(value => { if (active) setAllGenres(value); }).catch(() => { if (active) setGenresError(true); });
+    api.getGenresRanked().then(value => { if (active) setRankedGenres(value); }).catch(() => { /* Omit unavailable shortcuts; taxonomy still works. */ });
+    return () => { active = false; };
   }, [loadAttempt]);
 
   useEffect(() => {
@@ -212,18 +215,12 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore, page, selectedGenres, sortOption]);
 
-  const handleGenreToggle = () => {
-    setIsGenreOpen(prev => !prev);
-    setIsSortOpen(false); // Close other dropdown
-  };
+  const handleSortToggle = () => setIsSortOpen(prev => !prev);
 
-  const handleSortToggle = () => {
-    setIsSortOpen(prev => !prev);
-    setIsGenreOpen(false); // Close other dropdown
-  };
-
-
-  const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
+  const filteredGenres = searchGenreCatalog(allGenres, selectedGenres, genreSearch);
+  const quickGenres = availableGenreShortcuts(rankedGenres, favoriteGenres);
+  const genreCount = (name: string) => rankedGenres.find(item => item.name.toLowerCase() === name.toLowerCase())?.bookCount;
+  const openFilters = () => { setDraftGenre(selectedGenres); setDraftSort(sortOption); setIsFilterOpen(true); };
 
   const handleLibrarySearch = (event: React.FormEvent) => {
     event.preventDefault();
@@ -232,12 +229,12 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
       return;
     }
     setLibrarySearchError('');
-    window.location.hash = `/search?q=${encodeURIComponent(libraryQuery.trim())}`;
+    navigatePath(`/search?q=${encodeURIComponent(libraryQuery.trim())}`);
   };
 
   const filterDrawer = (
     <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setIsFilterOpen(false)}>
-      <div className="absolute bottom-0 left-0 right-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={e => e.stopPropagation()} ref={filterRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="mobile-filter-heading">
+      <div className="absolute bottom-0 left-0 right-0 ww-catalog-filter-sheet max-h-[85dvh] overflow-y-auto bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={e => e.stopPropagation()} ref={filterRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="mobile-filter-heading">
         <div className="flex justify-between items-center mb-4">
           <h3 id="mobile-filter-heading" className="font-sans text-xl font-bold dark:text-dark-text-rich">Filters</h3>
           <button type="button" aria-label="Close filters" onClick={() => setIsFilterOpen(false)}><XMarkIcon className="w-6 h-6 dark:text-dark-text-body" /></button>
@@ -255,19 +252,19 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           />
           <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
             {filteredGenres.map(g => (
-              <button type="button" key={g} aria-pressed={selectedGenres.includes(g)} onClick={() => toggleGenre(g)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
+              <button type="button" key={g} aria-pressed={draftGenre.includes(g)} onClick={() => setDraftGenre(previous => previous.includes(g) ? [] : [g])} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium transition-colors ${draftGenre.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>
                 {g}
               </button>
             ))}
             {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match.</p>}
           </div>
-          {selectedGenres.length > 0 && <button type="button" className="text-sm text-accent mt-3 hover:underline" onClick={() => setSelectedGenres([])}>Clear genre filter</button>}
+          {draftGenre.length > 0 && <button type="button" className="text-sm text-accent mt-3 hover:underline" onClick={() => setDraftGenre([])}>Clear genre filter</button>}
         </div>
         <div className="mt-5">
           <h4 className="font-sans font-semibold mb-3 dark:text-dark-text-rich">Sort stories</h4>
-          <div className="flex flex-wrap gap-2">{SORT_OPTIONS.map(([value, label]) => <button type="button" key={value} aria-pressed={sortOption === value} onClick={() => setSortOption(value)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium ${sortOption === value ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>{label}</button>)}</div>
+          <div className="flex flex-wrap gap-2">{SORT_OPTIONS.map(([value, label]) => <button type="button" key={value} aria-pressed={draftSort === value} onClick={() => setDraftSort(value)} className={`px-3 py-1.5 rounded-full text-sm font-sans font-medium ${draftSort === value ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body'}`}>{label}</button>)}</div>
         </div>
-        <button onClick={() => setIsFilterOpen(false)} className="mt-6 w-full bg-accent text-white font-sans font-semibold py-3 rounded-xl">Apply Filters</button>
+        <button onClick={() => { setSelectedGenres(draftGenre); setSortOption(draftSort); setIsFilterOpen(false); }} className="ww-catalog-apply mt-6 w-full bg-accent text-white font-sans font-semibold py-3 rounded-xl">Apply Filters</button>
       </div>
     </div>
   );
@@ -280,26 +277,26 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           {genre || 'Browse stories'}
         </h1>
         <p className="text-lg text-text-body dark:text-dark-text-body max-w-2xl mb-8">
-          A new world, an unexpected voice, a story that stays. Find something that feels like you.
+          Choose a story. Follow your curiosity.
         </p>
         <div className="ww-library-discovery">
           <form onSubmit={handleLibrarySearch} className="ww-library-search">
             <SearchIcon className="w-5 h-5" />
-            <input value={libraryQuery} onChange={event => { setLibraryQuery(event.target.value); setLibrarySearchError(''); }} placeholder="Search by title, author, world, or theme…" aria-label="Search the library" aria-describedby={librarySearchError ? 'catalog-search-hint' : undefined} />
+            <input value={libraryQuery} onChange={event => { setLibraryQuery(event.target.value); setLibrarySearchError(''); }} placeholder="Search titles, genres, tags or summaries…" aria-label="Search the library" aria-describedby={librarySearchError ? 'catalog-search-hint' : undefined} />
             <button type="submit">Search</button>
           </form>
           {librarySearchError && <p id="catalog-search-hint" role="status" className="text-sm text-accent mt-2">{librarySearchError}</p>}
-          {allGenres.length > 0 && (
+          {quickGenres.length > 0 && (
             <div className="ww-library-quick-genres">
               <span>Start with</span>
-              {allGenres.slice(0, 6).map(item => <button key={item} onClick={() => toggleGenre(item)} className={selectedGenres.includes(item) ? 'active' : ''}>{item}</button>)}
+              {quickGenres.map(item => <button type="button" key={item.name} aria-pressed={selectedGenres.includes(item.name)} onClick={() => toggleGenre(item.name)} className={selectedGenres.includes(item.name) ? 'active' : ''}>{item.name} <small>{item.bookCount}</small></button>)}
             </div>
           )}
         </div>
 
         <div className="v2-browse-layout">
           <aside className="v2-browse-filters" aria-label="Story filters">
-            <fieldset><legend>Genre</legend><label><input type="radio" name="browse-genre" checked={!selectedGenres.length} onChange={() => setSelectedGenres([])} />All stories</label>{allGenres.map(item => <label key={item}><input type="radio" name="browse-genre" checked={selectedGenres.includes(item)} onChange={() => setSelectedGenres([item])} />{item}</label>)}</fieldset>
+            <fieldset><legend>Genre</legend><input type="search" aria-label="Search genres" onKeyDown={event => { if (event.key === 'Escape') event.preventDefault(); }} placeholder="Find a genre" value={genreSearch} onChange={event => setGenreSearch(event.target.value)} className="ww-genre-search" /><label><input type="radio" name="browse-genre" checked={!selectedGenres.length} onChange={() => setSelectedGenres([])} />All stories</label>{filteredGenres.map(item => <label key={item}><input type="radio" name="browse-genre" checked={selectedGenres.includes(item)} onChange={() => setSelectedGenres([item])} />{item}{genreCount(item) !== undefined && <small>{genreCount(item)}</small>}</label>)}{filteredGenres.length === 0 && <p className="text-sm">No genres match.</p>}</fieldset>
             <fieldset><legend>Sort stories</legend>{SORT_OPTIONS.map(([value,label]) => <label key={value}><input type="radio" name="browse-sort" checked={sortOption === value} onChange={() => setSortOption(value)} />{label}</label>)}</fieldset>
             {selectedGenres.length > 0 && <button type="button" onClick={() => setSelectedGenres([])}>Clear filters</button>}
           </aside>
@@ -309,30 +306,6 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           <div className="flex justify-between items-center">
             {/* Desktop Filters */}
             <div className="hidden md:flex items-center gap-4">
-              <div ref={genreDropdownRef} className="relative">
-                <button type="button" onClick={handleGenreToggle} aria-expanded={isGenreOpen} aria-haspopup="true" className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
-                  Genre <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isGenreOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isGenreOpen && <div className="absolute top-full mt-2 w-80 bg-white dark:bg-dark-surface rounded-xl shadow-lg p-4 border dark:border-dark-border" role="group" aria-label="Filter by genre">
-                  <input
-                    type="text"
-                    placeholder="Search genres..."
-                    aria-label="Search genres"
-                    value={genreSearch}
-                    onChange={e => setGenreSearch(e.target.value)}
-                    className="w-full h-9 px-3 mb-3 rounded-lg text-sm font-sans border-gray-300 shadow-sm focus:ring-accent focus:border-accent dark:bg-dark-surface-alt dark:border-dark-border dark:text-dark-text-rich"
-                  />
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                    {filteredGenres.map(g => (
-                      <button key={g} onClick={() => toggleGenre(g)} className={`px-2 py-1 rounded-md text-sm font-sans font-medium transition-colors ${selectedGenres.includes(g) ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface-alt text-text-body dark:text-dark-text-body hover:bg-gray-200 dark:hover:bg-dark-border'}`}>
-                        {g}
-                      </button>
-                    ))}
-                    {filteredGenres.length === 0 && <p className="text-xs text-gray-400 py-2">No genres match.</p>}
-                  </div>
-                  {selectedGenres.length > 0 && <button onClick={() => setSelectedGenres([])} className="text-xs text-accent mt-3 hover:underline">Clear all</button>}
-                </div>}
-              </div>
               <div ref={sortDropdownRef} className="relative">
                 <button type="button" onClick={handleSortToggle} aria-expanded={isSortOpen} aria-haspopup="menu" className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface-alt transition-colors">
                   Sort by: {SORT_OPTIONS.find(([value]) => value === sortOption)?.[1]} <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -347,7 +320,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
 
             {/* Mobile Filter Button */}
             <div className="md:hidden">
-              <button onClick={() => setIsFilterOpen(true)} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg bg-gray-100 dark:bg-dark-surface-alt">
+              <button onClick={openFilters} className="flex items-center gap-2 font-sans font-medium text-sm p-2 rounded-lg bg-gray-100 dark:bg-dark-surface-alt">
                 <FunnelIcon className="w-4 h-4" /> Filters
               </button>
             </div>
@@ -363,7 +336,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
             </div>
           </div>
           {selectedGenres.length > 0 && (
-            <div className="hidden md:flex items-center gap-2 pt-3">
+            <div className="flex flex-wrap items-center gap-2 pt-3">
               {selectedGenres.map(g => (
                 <div key={g} className="flex items-center gap-1 bg-accent/10 text-accent text-sm font-medium px-2 py-1 rounded-full">
                   <span>{g}</span>
@@ -374,6 +347,7 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
           )}
         </div>
 
+        <p className="ww-catalog-summary" role="status">{isLoading ? 'Updating stories…' : `${totalBooks.toLocaleString()} ${totalBooks === 1 ? 'story' : 'stories'}`} · {selectedGenres[0] || 'All genres'} · {SORT_OPTIONS.find(([value]) => value === sortOption)?.[1]}</p>
         {/* Books Display */}
         {isLoading ? (
           <div className="text-center p-8" role="status">Loading stories…</div>
@@ -392,13 +366,13 @@ export const CategoryPage: React.FC<{ genre: string | null }> = ({ genre }) => {
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
             {books.map(book => (
-              <BookCard key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
+              <BookCard key={book.id} book={book} onClick={() => navigatePath(`/book/${book.id}`)} />
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-6">
             {books.map(book => (
-              <BookListItem key={book.id} book={book} onClick={() => window.location.hash = `/book/${book.id}`} />
+              <BookListItem key={book.id} book={book} onClick={() => navigatePath(`/book/${book.id}`)} />
             ))}
           </div>
         )}

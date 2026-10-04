@@ -28,6 +28,9 @@ public interface BookRepository extends MongoRepository<Book, String> {
     @Query(value = "{'_id': ?0}", fields = "{'chapters.content': 0, 'chapters.publishedContent': 0}")
     Optional<Book> findAnalyticsMetadataById(String id);
 
+    @Query(value = "{'chapters.id': ?0}", fields = "{'_id': 1, 'authorId': 1, 'chapters.id': 1}")
+    Optional<Book> findPlanningMetadataByChapterId(String chapterId);
+
     @Query("{'chapters': {$elemMatch: {'status': 'scheduled', 'scheduledAt': {$lte: ?0}}}}")
     List<Book> findBooksWithDueChapters(Instant now);
 }

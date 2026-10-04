@@ -19,6 +19,8 @@ public class Shelf {
 
     private String name;
 
+    private String visibility = "PRIVATE";
+
     private LocalDate createdDate = LocalDate.now();
 
     public Shelf(String userId, String name) {

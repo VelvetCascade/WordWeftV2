@@ -420,6 +420,7 @@ public class BookService {
                     : publicChapter.contentWarnings());
             cMap.put("disclaimerNote", isOwner ? ch.getDisclaimerNote() : publicChapter.disclaimerNote());
             if (isOwner) {
+                cMap.put("editRevision", ch.getEditRevision());
                 cMap.put("scheduledAt", ch.getScheduledAt());
                 cMap.put("publishedAt", ch.getPublishedAt());
                 cMap.put("hasUnpublishedChanges", "published".equals(ch.getStatus())

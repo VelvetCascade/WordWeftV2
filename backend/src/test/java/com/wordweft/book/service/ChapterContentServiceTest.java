@@ -48,8 +48,9 @@ class ChapterContentServiceTest {
 
         assertEquals(PREVIEW, response.access());
         assertFalse(response.content().contains("FIRST_END_SECRET"));
+        assertTrue(response.content().contains("WORD_0"));
         assertEquals(0, response.chapterIndex());
-        assertTrue(response.obfuscated());
+        assertFalse(response.obfuscated());
     }
 
     @Test
@@ -61,17 +62,17 @@ class ChapterContentServiceTest {
     }
 
     @Test
-    void signedInEligibleReaderGetsFullTextObfuscated() {
+    void signedInEligibleReaderGetsReadableFullText() {
         when(repository.findById("book")).thenReturn(Optional.of(publishedBook()));
         when(contentAccess.currentUserId()).thenReturn("reader");
 
         ChapterContentResponse response = service.load("book", "second");
 
         assertEquals(FULL, response.access());
-        assertTrue(response.obfuscated());
-        assertNotNull(response.obfuscationSeed());
-        assertNotNull(response.fontFamily());
-        assertEquals("SECOND_FULL", fontObfuscationService.deobfuscate(response.content(), response.obfuscationSeed()));
+        assertFalse(response.obfuscated());
+        assertNull(response.obfuscationSeed());
+        assertNull(response.fontFamily());
+        assertEquals("SECOND_FULL", response.content());
     }
 
     @Test
@@ -109,8 +110,8 @@ class ChapterContentServiceTest {
         ChapterContentResponse response = service.load("book", "second");
 
         assertEquals("Second — live", response.chapterTitle());
-        assertTrue(response.obfuscated());
-        assertEquals("SECOND_PUBLISHED", fontObfuscationService.deobfuscate(response.content(), response.obfuscationSeed()));
+        assertFalse(response.obfuscated());
+        assertEquals("SECOND_PUBLISHED", response.content());
     }
 
     @Test
@@ -122,8 +123,8 @@ class ChapterContentServiceTest {
         ChapterContentResponse response = service.load("book", "second");
 
         assertEquals(FULL, response.access());
-        assertTrue(response.obfuscated());
-        assertEquals("SECOND_FULL", fontObfuscationService.deobfuscate(response.content(), response.obfuscationSeed()));
+        assertFalse(response.obfuscated());
+        assertEquals("SECOND_FULL", response.content());
     }
 
     @Test

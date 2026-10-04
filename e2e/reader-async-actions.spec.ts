@@ -167,7 +167,7 @@ test('a comments loading failure keeps the manuscript readable and can retry ins
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(chapters[0].title);
 
     await page.locator('.reader-end-secondary-actions').getByRole('button', { name: /^Discuss/ }).click();
-    const discussion = page.getByRole('dialog', { name: 'Chapter Comments', exact: true });
+    const discussion = page.getByRole('dialog', { name: 'Story discussions', exact: true });
     await expect(discussion).toBeVisible();
     await expect(discussion.getByRole('alert')).toContainText('Chapter comments are temporarily unavailable.');
     const retry = discussion.getByRole('button', { name: 'Retry comments', exact: true });
@@ -191,7 +191,7 @@ test('an older comments snapshot retains a comment successfully posted while the
         await openFirstChapter(page);
         await expect.poll(() => commentsPending).toBe(true);
         await page.locator('.reader-end-secondary-actions').getByRole('button', { name: /^Discuss/ }).click();
-        const discussion = page.getByRole('dialog', { name: 'Chapter Comments', exact: true });
+        const discussion = page.getByRole('dialog', { name: 'Story discussions', exact: true });
         await expect(discussion.getByRole('status')).toHaveText('Loading comments…');
 
         const newComment = 'A new thought posted before the old snapshot arrives.';

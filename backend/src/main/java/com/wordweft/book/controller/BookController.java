@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "*", maxAge = 3600, exposedHeaders = "X-Chapter-Revision")
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
@@ -68,6 +68,8 @@ public class BookController {
     @Autowired
     ChapterContentService chapterContentService;
     @Autowired
+    com.wordweft.book.service.ChapterWriteService chapterWriteService;
+    @Autowired
     com.wordweft.support.ImageKitService imageKitService;
     @Autowired(required = false)
     UserRepository userRepository;
@@ -75,6 +77,13 @@ public class BookController {
     ContentAccessService contentAccessService;
     @Autowired(required = false)
     com.wordweft.book.service.ChapterImageStorageService chapterImageStorageService;
+
+    private ResponseEntity<?> revisionResponse(String userId, Book committed, String chapterId) {
+        var response = ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store");
+        if (committed != null) committed.getChapters().stream().filter(c -> chapterId.equals(c.getId())).findFirst()
+                .ifPresent(c -> response.header("X-Chapter-Revision", String.valueOf(c.getEditRevision())));
+        return response.body(userService.getUserProfile(userId));
+    }
 
     private String getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -175,7 +184,7 @@ public class BookController {
             chapter.getLikes().add(userId);
         }
 
-        bookRepository.save(book);
+        chapterWriteService.toggleChapterLike(bookId, chapterId, userId, !chapter.getLikes().contains(userId));
 
         // Do NOT increment view count when toggling a like
         return ResponseEntity.ok(bookService.getBookById(bookId, false));
@@ -199,7 +208,7 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 
-    public record ScheduleChapterRequest(Instant scheduledAt) {}
+    public record ScheduleChapterRequest(Instant scheduledAt, Long expectedRevision) {}
 
     @PutMapping("/{bookId}/chapters/{chapterId}/schedule")
     public ResponseEntity<?> scheduleChapter(
@@ -207,17 +216,21 @@ public class BookController {
             @PathVariable String chapterId,
             @RequestBody ScheduleChapterRequest request) {
         String userId = getCurrentUserId();
-        chapterPublishingService.schedule(userId, bookId, chapterId, request.scheduledAt());
-        return ResponseEntity.ok(userService.getUserProfile(userId));
+        Book committed = request.expectedRevision() == null
+                ? chapterPublishingService.schedule(userId, bookId, chapterId, request.scheduledAt())
+                : chapterPublishingService.schedule(userId, bookId, chapterId, request.scheduledAt(), request.expectedRevision());
+        return revisionResponse(userId, committed, chapterId);
     }
 
     @DeleteMapping("/{bookId}/chapters/{chapterId}/schedule")
     public ResponseEntity<?> cancelChapterSchedule(
             @PathVariable String bookId,
-            @PathVariable String chapterId) {
+            @PathVariable String chapterId,
+            @RequestParam(required = false) Long expectedRevision) {
         String userId = getCurrentUserId();
-        chapterPublishingService.cancelSchedule(userId, bookId, chapterId);
-        return ResponseEntity.ok(userService.getUserProfile(userId));
+        Book committed = expectedRevision == null ? chapterPublishingService.cancelSchedule(userId, bookId, chapterId)
+                : chapterPublishingService.cancelSchedule(userId, bookId, chapterId, expectedRevision);
+        return revisionResponse(userId, committed, chapterId);
     }
 
     // --- Writer Endpoints ---
@@ -299,6 +312,7 @@ public class BookController {
             return ResponseEntity.status(403).body("Not authorized");
         }
 
+        var snapshot = com.wordweft.book.service.ChapterWriteService.snapshotQuery(book);
         if (updates.getTitle() != null)
             book.setTitle(updates.getTitle());
         if (updates.getDescription() != null)
@@ -343,8 +357,29 @@ public class BookController {
             book.setAIGenerated(updates.isAIGenerated());
 
         if ("published".equals(book.getPublicationStatus())) book.setLastUpdatedAt(LocalDate.now());
-        bookRepository.save(book);
+        chapterWriteService.updateMetadata(book, snapshot);
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+    }
+
+    @GetMapping("/{bookId}/chapters/{chapterId}/edit-session")
+    public ResponseEntity<?> editSession(@PathVariable String bookId, @PathVariable String chapterId) {
+        Book book = bookRepository.findById(bookId).orElseThrow();
+        if (!book.getAuthorId().equals(getCurrentUserId())) return ResponseEntity.status(403).build();
+        Chapter chapter = book.getChapters().stream().filter(c -> chapterId.equals(c.getId())).findFirst().orElseThrow();
+        return viewerScoped(chapter);
+    }
+
+    @GetMapping("/{bookId}/chapters/{chapterId}/publication-impact")
+    public ResponseEntity<?> publicationImpact(@PathVariable String bookId, @PathVariable String chapterId) {
+        return viewerScoped(chapterPublishingService.reviewPublication(getCurrentUserId(), bookId, chapterId));
+    }
+
+    public record ReviewedPublicationRequest(String reviewToken) {}
+    @PostMapping("/{bookId}/chapters/{chapterId}/publish-reviewed")
+    public ResponseEntity<?> publishReviewed(@PathVariable String bookId, @PathVariable String chapterId,
+            @RequestBody ReviewedPublicationRequest request) {
+        Book committed = chapterPublishingService.publishReviewed(getCurrentUserId(), bookId, chapterId, request.reviewToken());
+        return revisionResponse(getCurrentUserId(), committed, chapterId);
     }
 
     @PatchMapping("/{bookId}/chapters/{chapterId}")
@@ -378,6 +413,9 @@ public class BookController {
             }
         }
 
+        Long expectedRevision = payload.get("expectedRevision") instanceof Number n ? n.longValue() : null;
+        com.wordweft.book.service.ChapterWriteService.requireRevision(chapter, expectedRevision);
+        long previousRevision = chapter.getEditRevision();
         Map<String, String> data = (Map<String, String>) payload.get("data");
         String status = (String) payload.get("status");
 
@@ -385,7 +423,7 @@ public class BookController {
             String reason = "published".equals(status) ? "PUBLISH"
                     : "draft".equals(status) ? "MANUAL_SAVE" : "AUTOSAVE";
             chapterRevisionService.capture(
-                    userDetails.getId(), book, chapter, reason, !"preserve".equals(status));
+                    userDetails.getId(), book, chapter, reason, !"preserve".equals(status) || Boolean.TRUE.equals(payload.get("preserveServerRevision")));
             PublishedChapterView.preserveLegacySnapshot(chapter);
         }
 
@@ -407,11 +445,12 @@ public class BookController {
             chapter.setScheduledAt(null);
         }
 
-        bookRepository.save(book);
+        chapter.setEditRevision(previousRevision + 1);
+        chapterWriteService.save(book, chapter, isNew, previousRevision);
         if (publishAfterSave) {
-            chapterPublishingService.publishNow(userDetails.getId(), bookId, chapter.getId());
+            book = chapterPublishingService.publishNow(userDetails.getId(), bookId, chapter.getId());
         }
-        return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
+        return revisionResponse(userDetails.getId(), book, chapter.getId());
     }
 
     @PatchMapping("/{bookId}/status")
@@ -476,10 +515,12 @@ public class BookController {
     public ResponseEntity<?> restoreChapterRevision(
             @PathVariable String bookId,
             @PathVariable String chapterId,
-            @PathVariable String revisionId) {
+            @PathVariable String revisionId,
+            @RequestParam(required = false) Long expectedRevision) {
         String userId = getCurrentUserId();
-        chapterRevisionService.restore(userId, bookId, chapterId, revisionId);
-        return ResponseEntity.ok(userService.getUserProfile(userId));
+        Book committed = expectedRevision == null ? chapterRevisionService.restore(userId, bookId, chapterId, revisionId)
+                : chapterRevisionService.restore(userId, bookId, chapterId, revisionId, expectedRevision);
+        return revisionResponse(userId, committed, chapterId);
     }
 
     // --- Delete Endpoints ---
@@ -523,8 +564,9 @@ public class BookController {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.NOT_FOUND, "Chapter not found.");
         }
+        var snapshot = com.wordweft.book.service.ChapterWriteService.snapshotQuery(book);
+        chapterWriteService.deleteChapter(book, chapterId, snapshot);
         book.getChapters().remove(deletedChapterIndex);
-        bookRepository.save(book);
         bookService.deleteChapterData(bookId, chapterId, deletedChapterIndex, book.getChapters().size());
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
     }

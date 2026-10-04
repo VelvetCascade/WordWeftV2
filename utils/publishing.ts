@@ -24,3 +24,17 @@ export function localScheduleInputValue(date = new Date(Date.now() + 60 * 60 * 1
 export function browserTimezoneLabel(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'your local timezone';
 }
+
+/** Shared writer status text always includes the timezone for a dated release. */
+export function publicationStatusLabel(chapter?: { status: string; scheduledAt?: string | null; publishedAt?: string | null } | null, now = new Date()): string {
+    const label = chapter?.status === 'scheduled' ? 'Scheduled' : chapter?.status === 'published' ? 'Published' : 'Private draft';
+    const instant = chapter?.status === 'scheduled' ? chapter.scheduledAt : chapter?.status === 'published' ? chapter.publishedAt : null;
+    if (!instant) return label;
+    const date = new Date(instant);
+    if (Number.isNaN(date.getTime())) return label;
+    const absolute = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    const seconds = (date.getTime() - now.getTime()) / 1000;
+    const unit = Math.abs(seconds) >= 86400 ? 'day' : Math.abs(seconds) >= 3600 ? 'hour' : 'minute';
+    const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }).format(Math.round(seconds / (unit === 'day' ? 86400 : unit === 'hour' ? 3600 : 60)), unit);
+    return `${label} · ${absolute} ${browserTimezoneLabel()} · ${relative}`;
+}

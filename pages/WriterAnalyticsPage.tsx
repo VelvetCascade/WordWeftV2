@@ -106,11 +106,13 @@ export const WriterAnalyticsPage: React.FC = () => {
             ) : (
                 <>
                     <section className="ww-analytics-summary" aria-label="Analytics summary">
-                        <MetricCard label="Unique readers" value={analytics.summary.uniqueReaders.toLocaleString()} note="privacy-safe reader count" />
+                        <MetricCard label="Unique readers" value={analytics.summary.uniqueReaders.toLocaleString()} note="distinct readers in the last 400 days, plus saved progress" />
                         <MetricCard label="Chapter views" value={analytics.summary.views.toLocaleString()} note="all-time chapter opens" />
-                        <MetricCard label="Completion" value={formatRate(analytics.summary.completionRate)} note={`${analytics.summary.completedReaders} readers reached 90%`} />
+                        <MetricCard label="Completion" value={formatRate(analytics.summary.completionRate)} note={`${analytics.summary.completedReaders} distinct readers reached 90% of a story`} />
                         <MetricCard label="Returning readers" value={analytics.summary.returningReaders.toLocaleString()} note="reached two or more chapters" />
                     </section>
+
+                    <p className="text-sm mb-6">Chapter views are all-time chapter opens, including repeat visits. Reader counts combine recorded activity in the last 400 days with saved reading progress; they do not identify people. Completion means saved progress reached at least 90% of a story; Finished uses the same threshold for a chapter. The trend below covers only the last 14 days.</p>
 
                     <section className="ww-analytics-panel ww-trend-panel">
                         <div className="ww-analytics-panel-head">

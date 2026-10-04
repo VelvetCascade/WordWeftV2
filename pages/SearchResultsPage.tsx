@@ -1,4 +1,7 @@
+import { navigatePath } from '../utils/navigation';
 
+import '../styles/discovery-controls.css';
+import { searchRecovery, type AvailableGenre } from '../utils/discoveryFilters';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { SearchBookResult, SearchAuthorResult, SearchFullResponse } from '../types';
 import * as api from '../api/client';
@@ -14,18 +17,23 @@ type SearchTab = 'all' | 'books' | 'authors';
 
 export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQuery = '' }) => {
     const { trackEvent } = useAnalytics();
-    const [query, setQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<SearchTab>('all');
+    const [query, setQuery] = useState(searchQuery);
+    const [journey] = useState(() => window.history.state?.wordWeftSearch?.path === window.location.href ? window.history.state.wordWeftSearch : null);
+    const [activeTab, setActiveTab] = useState<SearchTab>(['all', 'books', 'authors'].includes(journey?.tab) ? journey.tab : 'all');
+    const [genres, setGenres] = useState<AvailableGenre[]>([]);
+    const restorePageRef = React.useRef(Math.min(50, Math.max(0, Number(journey?.page) || 0)));
+    const journeyPathRef = React.useRef(window.location.href);
     const [results, setResults] = useState<SearchFullResponse>({});
     const [isLoading, setIsLoading] = useState(false);
     const [loadingPage, setLoadingPage] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState(journey?.input || searchQuery);
     const [searchError, setSearchError] = useState('');
     const requestGateRef = React.useRef(createLatestRequestGate());
     const loadingRef = React.useRef(false);
 
-    useEffect(() => { setQuery(searchQuery); setInputValue(searchQuery); }, [searchQuery]);
+    useEffect(() => { journeyPathRef.current = window.location.href; if (query !== searchQuery) { setQuery(searchQuery); setInputValue(searchQuery); } }, [searchQuery]);
+    useEffect(() => { let active = true; api.getGenresRanked().then(value => { if (active) setGenres(value); }).catch(() => {}); return () => { active = false; }; }, []);
 
     const fetchResults = useCallback(async (q: string, tab: SearchTab, page: number) => {
         if (q.trim().length < 2) { requestGateRef.current.invalidate(); setResults({}); setSearchError(''); setIsLoading(false); loadingRef.current = false; return; }
@@ -37,6 +45,17 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
         setSearchError('');
         try {
             const data = await api.searchFull(q, tab, page, 12);
+            let loadedPage = page;
+            if (page === 0) {
+                const restore = restorePageRef.current;
+                restorePageRef.current = 0;
+                while (loadedPage < restore && requestGateRef.current.isLatest(requestId) && ((data.books?.totalPages || 0) > loadedPage + 1 || (data.authors?.totalPages || 0) > loadedPage + 1)) {
+                    const next = await api.searchFull(q, tab, loadedPage + 1, 12);
+                    if (data.books && next.books) data.books = { ...next.books, items: [...data.books.items, ...next.books.items] };
+                    if (data.authors && next.authors) data.authors = { ...next.authors, items: [...data.authors.items, ...next.authors.items] };
+                    loadedPage++;
+                }
+            }
             if (!requestGateRef.current.isLatest(requestId)) return;
             if (page === 0) {
                 setResults(data);
@@ -53,7 +72,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                     } : prev.authors,
                 }));
             }
-            setCurrentPage(page);
+            setCurrentPage(loadedPage);
         } catch (e) {
             if (requestGateRef.current.isLatest(requestId)) {
                 console.error('Search error:', e);
@@ -74,10 +93,16 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
         fetchResults(query, activeTab, 0);
     }, [query, activeTab, fetchResults]);
 
+    useEffect(() => {
+        if (window.location.href !== journeyPathRef.current) return;
+        window.history.replaceState({ ...window.history.state, wordWeftSearch: { path: window.location.href, tab: activeTab, page: isLoading ? restorePageRef.current : currentPage, input: inputValue } }, '');
+    }, [activeTab, currentPage, inputValue, isLoading]);
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        restorePageRef.current = 0;
         setQuery(inputValue.trim());
-        window.location.hash = `/search${inputValue.trim() ? `?q=${encodeURIComponent(inputValue.trim())}` : ''}`;
+        navigatePath(`/search${inputValue.trim() ? `?q=${encodeURIComponent(inputValue.trim())}` : ''}`);
     };
 
     const handleLoadMore = () => {
@@ -93,6 +118,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     const hasMoreAuthors = (results.authors?.page ?? 0) < (results.authors?.totalPages ?? 0) - 1;
     const hasMore = activeTab === 'books' ? hasMoreBooks : activeTab === 'authors' ? hasMoreAuthors : (hasMoreBooks || hasMoreAuthors);
 
+    const recovery = searchRecovery(query, genres);
     const tabs: { key: SearchTab; label: string; count: number }[] = [
         { key: 'all', label: 'All', count: totalBooks + totalAuthors },
         { key: 'books', label: 'Books', count: totalBooks },
@@ -102,7 +128,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
     return (
         <div className="search-results-page">
             <div className="container mx-auto px-4 md:px-6 py-8">
-                <div className="v2-search-heading"><p className="ww-page-eyebrow">Follow your curiosity</p><h1>Find your next story.</h1><p>Search by title, writer, or something you love.</p></div>
+                <div className="v2-search-heading"><p className="ww-page-eyebrow">Follow your curiosity</p><h1>Find your next story.</h1><p>Search story titles, genres, tags, summaries and descriptions, or people’s usernames and bios.</p></div>
                 {/* Search Bar */}
                 <form onSubmit={handleSearch} className="search-results-bar">
                     <svg className="search-results-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -110,11 +136,13 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                         <path d="m21 21-4.35-4.35" />
                     </svg>
                     <input
-                        type="text"
+                        type="search"
+                        enterKeyHint="search"
+                        maxLength={200}
                         aria-label="Search books and users"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Search books, users, genres..."
+                        placeholder="Search titles, genres, tags or people…"
                         className="search-results-bar-input"
                     />
                     <button type="submit" className="search-results-bar-btn">Search</button>
@@ -205,6 +233,7 @@ export const SearchResultsPage: React.FC<{ searchQuery?: string }> = ({ searchQu
                                 <p className="text-text-body dark:text-dark-text-body max-w-md mx-auto">
                                     We couldn't find anything matching <strong>"{query}"</strong>. Try different keywords, check your spelling, or broaden your search.
                                 </p>
+                                <div className="ww-search-recovery">{recovery.queries.map(word => <a key={word} className="ww-recovery-action" href={`/search?q=${encodeURIComponent(word)}`}>Search “{word}”</a>)}{recovery.genres.map(genre => <a key={genre.name} className="ww-recovery-action" href={`/genre/${encodeURIComponent(genre.name)}`}>{genre.name} · {genre.bookCount} {genre.bookCount === 1 ? 'story' : 'stories'}</a>)}<a className="ww-recovery-action" href="/category">Browse all stories</a></div>
                             </div>
                         )}
 
@@ -233,7 +262,7 @@ const BookResultCard: React.FC<{ book: SearchBookResult; index: number }> = ({ b
         type="button"
         className="search-book-card"
         style={{ animationDelay: `${index * 60}ms` }}
-        onClick={() => { window.location.hash = `/book/${book.id}`; }}
+        onClick={() => { navigatePath(`/book/${book.id}`); }}
         aria-label={`Open ${book.title}${book.author ? ` by ${book.author.name}` : ''}`}
     >
         <div className="search-book-card-cover-wrapper">
@@ -291,7 +320,7 @@ const AuthorResultCard: React.FC<{ author: SearchAuthorResult; index: number }> 
         type="button"
         className="search-author-card"
         style={{ animationDelay: `${index * 80}ms` }}
-        onClick={() => { window.location.hash = `/author/${author.id}`; }}
+        onClick={() => { navigatePath(`/author/${author.id}`); }}
     >
         <ResilientImage
             src={author.avatarUrl}

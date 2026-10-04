@@ -1,3 +1,5 @@
+import { readOptionalValue, writeOptionalValue, readOptionalSessionValue, writeOptionalSessionValue } from './optionalStorage';
+
 
 // Feedback Cooldown Manager
 // Manages localStorage-based rate limiting for contextual feedback popups.
@@ -16,14 +18,16 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
 
 function getNumber(key: string, fallback: number): number {
-    const val = localStorage.getItem(key);
-    return val ? parseInt(val, 10) : fallback;
+    const val = readOptionalValue(key);
+    const parsed = val ? Number(val) : fallback;
+    return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function getArray(key: string): string[] {
     try {
-        const val = localStorage.getItem(key);
-        return val ? JSON.parse(val) : [];
+        const val = readOptionalValue(key);
+        const parsed = val ? JSON.parse(val) : [];
+        return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
     } catch {
         return [];
     }
@@ -43,8 +47,8 @@ export function canShowFeedback(): boolean {
     const weekStart = getNumber(STORAGE_KEYS.WEEK_START, 0);
     if (now - weekStart > WEEK_MS) {
         // Reset weekly counter
-        localStorage.setItem(STORAGE_KEYS.WEEK_START, String(now));
-        localStorage.setItem(STORAGE_KEYS.WEEKLY_COUNT, '0');
+        writeOptionalValue(STORAGE_KEYS.WEEK_START, String(now));
+        writeOptionalValue(STORAGE_KEYS.WEEKLY_COUNT, '0');
     }
     const weeklyCount = getNumber(STORAGE_KEYS.WEEKLY_COUNT, 0);
     if (weeklyCount >= 3) return false;
@@ -54,13 +58,13 @@ export function canShowFeedback(): boolean {
 
 /** Record that a feedback popup was shown */
 export function recordShown(): void {
-    localStorage.setItem(STORAGE_KEYS.LAST_SHOWN, String(Date.now()));
+    writeOptionalValue(STORAGE_KEYS.LAST_SHOWN, String(Date.now()));
     const weeklyCount = getNumber(STORAGE_KEYS.WEEKLY_COUNT, 0);
-    localStorage.setItem(STORAGE_KEYS.WEEKLY_COUNT, String(weeklyCount + 1));
+    writeOptionalValue(STORAGE_KEYS.WEEKLY_COUNT, String(weeklyCount + 1));
 
     // Ensure week start is set
-    if (!localStorage.getItem(STORAGE_KEYS.WEEK_START)) {
-        localStorage.setItem(STORAGE_KEYS.WEEK_START, String(Date.now()));
+    if (!readOptionalValue(STORAGE_KEYS.WEEK_START)) {
+        writeOptionalValue(STORAGE_KEYS.WEEK_START, String(Date.now()));
     }
 }
 
@@ -69,7 +73,7 @@ export function recordDismissed(type: string): void {
     const dismissed = getArray(STORAGE_KEYS.DISMISSED_TYPES);
     if (!dismissed.includes(type)) {
         dismissed.push(type);
-        localStorage.setItem(STORAGE_KEYS.DISMISSED_TYPES, JSON.stringify(dismissed));
+        writeOptionalValue(STORAGE_KEYS.DISMISSED_TYPES, JSON.stringify(dismissed));
     }
 }
 
@@ -86,7 +90,7 @@ export function recordSessionDay(): void {
         days.push(today);
         // Keep only last 30 days
         const recent = days.slice(-30);
-        localStorage.setItem(STORAGE_KEYS.SESSION_DAYS, JSON.stringify(recent));
+        writeOptionalValue(STORAGE_KEYS.SESSION_DAYS, JSON.stringify(recent));
     }
 }
 
@@ -97,14 +101,14 @@ export function getSessionDayCount(): number {
 
 /** Mark session start time */
 export function markSessionStart(): void {
-    if (!sessionStorage.getItem(STORAGE_KEYS.SESSION_START)) {
-        sessionStorage.setItem(STORAGE_KEYS.SESSION_START, String(Date.now()));
+    if (!readOptionalSessionValue(STORAGE_KEYS.SESSION_START)) {
+        writeOptionalSessionValue(STORAGE_KEYS.SESSION_START, String(Date.now()));
     }
 }
 
 /** Get session duration in minutes */
 export function getSessionDurationMinutes(): number {
-    const start = parseInt(sessionStorage.getItem(STORAGE_KEYS.SESSION_START) || '0', 10);
+    const start = parseInt(readOptionalSessionValue(STORAGE_KEYS.SESSION_START) || '0', 10);
     if (!start) return 0;
     return (Date.now() - start) / 60000;
 }
@@ -117,16 +121,16 @@ export function canShowBanner(): boolean {
 
 /** Record banner shown */
 export function recordBannerShown(): void {
-    localStorage.setItem(STORAGE_KEYS.BANNER_LAST_SHOWN, String(Date.now()));
+    writeOptionalValue(STORAGE_KEYS.BANNER_LAST_SHOWN, String(Date.now()));
 }
 
 /** Generate a session ID for grouping feedback */
 export function getSessionId(): string {
     const key = 'ww_feedback_session_id';
-    let id = sessionStorage.getItem(key);
+    let id = readOptionalSessionValue(key);
     if (!id) {
         id = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        sessionStorage.setItem(key, id);
+        writeOptionalSessionValue(key, id);
     }
     return id;
 }

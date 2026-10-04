@@ -115,7 +115,7 @@ test('failed progress sync survives reload and a visible retry saves the real ch
   await expect(page.getByRole('button', { name: 'Retry saving your place', exact: true })).toBeVisible();
   fail = false;
   await page.getByRole('button', { name: 'Retry saving your place', exact: true }).click();
-  await expect(page.locator('.reader-save-status')).toContainText('Your place is saved');
+  await expect(page.locator('.reader-save-status')).toContainText('Saved online');
   await expect.poll(async () => (await (await request.get(`/api/reading/progress/${bookId}`, { headers: headers() })).json())?.chapters?.[chapters[0]]?.progress).toBe(100);
 });
 

@@ -109,15 +109,12 @@ public class ChapterContentService {
             if (chapterIndex != 0) {
                 throw new AuthRequiredException();
             }
-            String seed = fontObfuscationService.getSeedForChapter(bookId, chapterId);
-            String obfuscatedPreview = fontObfuscationService.obfuscateHtml(preview.html(), seed);
-            return response(book, chapter, publicChapter, chapterIndex, PREVIEW, obfuscatedPreview, preview, true, seed, "WW-Cipher-" + seed);
+            // Only this already-truncated preview is returned. Ordinary text supports
+            // assistive technology, browser find, read aloud and translation.
+            return response(book, chapter, publicChapter, chapterIndex, PREVIEW, preview.html(), preview, false, null, null);
         }
 
-        // Reader mode: Authenticated reader gets obfuscated full content
-        String seed = fontObfuscationService.getSeedForChapter(bookId, chapterId);
-        String obfuscatedContent = fontObfuscationService.obfuscateHtml(fullContent, seed);
-        return response(book, chapter, publicChapter, chapterIndex, FULL, obfuscatedContent, preview, true, seed, "WW-Cipher-" + seed);
+        return response(book, chapter, publicChapter, chapterIndex, FULL, fullContent, preview, false, null, null);
     }
 
     private ChapterContentResponse response(

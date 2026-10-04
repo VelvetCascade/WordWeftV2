@@ -2,7 +2,9 @@ import '../styles/account-v2.css';
 import { BookOpen, Feather, Library, Palette, EyeOff, Users, Drama, Map, CheckCircle, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useDialog } from '../hooks/useDialog';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
+import { firstRoleStep, onboardingSteps } from '../utils/onboarding';
+import { readOptionalValue, writeOptionalValue } from '../utils/optionalStorage';
 
 interface WelcomeJourneyProps {
     userName: string;
@@ -118,10 +120,7 @@ const WriterFeatures: React.FC = () => {
         },
     ];
 
-    useEffect(() => {
-        const timer = setInterval(() => setActiveFeature(f => (f + 1) % features.length), 4000);
-        return () => clearInterval(timer);
-    }, []);
+    // Keep the demonstration stable until the user chooses another.
 
     return (
         <motion.div
@@ -194,10 +193,7 @@ const ReaderFeatures: React.FC = () => {
         },
     ];
 
-    useEffect(() => {
-        const timer = setInterval(() => setActiveFeature(f => (f + 1) % features.length), 4000);
-        return () => clearInterval(timer);
-    }, []);
+    // Keep the demonstration stable until the user chooses another.
 
     return (
         <motion.div
@@ -280,11 +276,13 @@ const ReadyScreen: React.FC<{ role: string }> = ({ role }) => (
 
 // ─── Mini Demo Components ──────────────────────────────────────
 const WriterMentionDemo: React.FC = () => {
+    const reducedMotion = useReducedMotion();
     const [typed, setTyped] = useState('');
     const [showSuggestion, setShowSuggestion] = useState(false);
 
     useEffect(() => {
         const target = '@Elar';
+        if (reducedMotion) { setTyped(target); setShowSuggestion(true); return; }
         let i = 0;
         const timer = setInterval(() => {
             if (i <= target.length) {
@@ -294,7 +292,7 @@ const WriterMentionDemo: React.FC = () => {
             } else { clearInterval(timer); }
         }, 180);
         return () => clearInterval(timer);
-    }, []);
+    }, [reducedMotion]);
 
     return (
         <div className="wj-mini-demo wj-mini-mention">
@@ -464,7 +462,7 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        if (localStorage.getItem(STORAGE_KEY)) {
+        if (readOptionalValue(STORAGE_KEY)) {
             setIsVisible(false);
         }
     }, []);
@@ -472,12 +470,12 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
 
     const handleRoleSelect = (selectedRole: 'reader' | 'writer' | 'both') => {
         setRole(selectedRole);
-        setStep(2);
+        setStep(firstRoleStep(selectedRole));
     };
 
     const handleComplete = () => {
-        localStorage.setItem(STORAGE_KEY, 'true');
-        localStorage.setItem('ww_userRole', role);
+        writeOptionalValue(STORAGE_KEY, 'true');
+        writeOptionalValue('ww_userRole', role);
         setIsVisible(false);
         onComplete(role);
     };
@@ -486,13 +484,7 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
     if (!isVisible) return null;
 
     // Determine total steps based on role
-    const getSteps = () => {
-        if (role === 'reader') return [0, 1, 3, 4]; // welcome, role, reader features, ready
-        if (role === 'writer') return [0, 1, 2, 4]; // welcome, role, writer features, ready
-        return [0, 1, 2, 3, 4]; // all
-    };
-
-    const stepSequence = getSteps();
+    const stepSequence = onboardingSteps(role);
     const currentStepInSequence = stepSequence.indexOf(step);
     const isLast = currentStepInSequence === stepSequence.length - 1;
     const isFirst = currentStepInSequence === 0;
@@ -512,7 +504,7 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
     };
 
     return (
-        <div className="account-v2-welcome wj-overlay">
+        <MotionConfig reducedMotion="user"><div className="account-v2-welcome wj-overlay">
             <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Welcome to WordWeft" className="wj-container">
                 {/* Content */}
                 <div className="wj-content">
@@ -556,6 +548,6 @@ export const WelcomeJourney: React.FC<WelcomeJourneyProps> = ({ userName, onComp
                     </div>
                 </div>
             </div>
-        </div>
+        </div></MotionConfig>
     );
 };

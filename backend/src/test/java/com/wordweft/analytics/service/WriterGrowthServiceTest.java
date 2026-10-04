@@ -96,6 +96,36 @@ class WriterGrowthServiceTest {
     }
 
     @Test
+    void portfolioCompletionCountsEachReaderOnceAcrossStoriesAndUnionsLegacyProgress() {
+        Book other = new Book(); other.setId("other"); other.setAuthorId("author");
+        when(books.findAnalyticsMetadataByAuthorId("author")).thenReturn(List.of(book, other));
+        when(events.findByBookIdInAndOccurredAtBetween(anyCollection(), any(), any())).thenReturn(List.of(event("chapter-1", "reader-a")));
+        ReadingProgress second = progress("reader-a", Map.of(), 100); second.setBookId("other");
+        when(progress.findByBookIdIn(anyCollection())).thenReturn(List.of(
+                progress("reader-a", Map.of("chapter-1", 100), 100), second,
+                progress("legacy-reader", Map.of("chapter-1", 95), 95)));
+        WriterAnalyticsResponse result = service.getAnalytics("author", null, NOW);
+        assertEquals(2, result.summary().uniqueReaders());
+        assertEquals(2, result.summary().completedReaders());
+        assertEquals(100.0, result.summary().completionRate());
+        assertEquals(2, result.stories().get(0).uniqueReaders());
+        assertEquals(100.0, result.stories().get(0).completionRate());
+    }
+
+    @Test
+    void chapterProgressCompletionThresholdIsExactlyNinetyPercent() {
+        when(books.findAnalyticsMetadataById("book")).thenReturn(Optional.of(book));
+        when(events.findByBookIdInAndOccurredAtBetween(anyCollection(), any(), any())).thenReturn(List.of());
+        when(progress.findByBookIdIn(anyCollection())).thenReturn(List.of(
+                progress("below", Map.of("chapter-1", 89), 89),
+                progress("threshold", Map.of("chapter-1", 90), 90)));
+        WriterAnalyticsResponse result = service.getAnalytics("author", "book", NOW);
+        assertEquals(1, result.summary().completedReaders());
+        assertEquals(50.0, result.summary().completionRate());
+        assertEquals(1, result.chapterFunnel().get(0).completedReaders());
+    }
+
+    @Test
     void anotherAuthorsStoryIsRejected() {
         when(books.findAnalyticsMetadataById("book")).thenReturn(Optional.of(book));
 

@@ -39,8 +39,8 @@ class UserServiceTest {
         assertFalse(profile.containsKey("dateOfBirth"));
         assertFalse(profile.containsKey("following"));
         assertFalse(profile.containsKey("notificationPreferences"));
-        verifyNoInteractions(service.bookService, service.bookRepository, service.libraryRepository,
-                service.shelfRepository, service.readingProgressService);
+        verify(service.shelfRepository).findByUserId("user-1");
+        verifyNoInteractions(service.bookService, service.bookRepository, service.libraryRepository, service.readingProgressService);
     }
 
     @Test

@@ -1,3 +1,4 @@
+import { ReleaseImpactDialog } from '../components/ReleaseImpactDialog';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Chapter, Book, AgeRating, ContentWarning, StoryStatus } from '../types';
 import { ArrowLeftIcon, PlusIcon, PencilIcon, CheckCircleIcon, XMarkIcon, Cog6ToothIcon, TrashIcon, ShareIcon } from '../components/icons/Icons';
@@ -379,7 +380,7 @@ const PublishStoryDialog: React.FC<{
                 <footer className="flex items-center justify-end gap-3 border-t p-5 dark:border-dark-border">
                     <button type="button" onClick={onClose} disabled={isPublishing} className="rounded-lg px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-surface-alt">Cancel</button>
                     <button type="button" onClick={() => onPublish(selectedIds)} disabled={isPublishing || selectedIds.length === 0} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
-                        {isPublishing ? 'Publishing…' : `Publish ${selectedIds.length || ''} ${selectedIds.length === 1 ? 'chapter' : 'chapters'}`.trim()}
+                        {isPublishing ? 'Publishing…' : 'Review selected release'}
                     </button>
                 </footer>
             </section>
@@ -506,6 +507,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [isNavigatingNewChapter, setIsNavigatingNewChapter] = useState(false);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
     const [showPublishStoryDialog, setShowPublishStoryDialog] = useState(false);
+    const [releaseTarget, setReleaseTarget] = useState<string | null>(null);
     const [showReturnDraftConfirm, setShowReturnDraftConfirm] = useState(false);
     const [chapterStatusTarget, setChapterStatusTarget] = useState<{ id: string; title: string; mode: 'publish-story' | 'unpublish-cascade'; laterCount: number } | null>(null);
 
@@ -561,8 +563,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 setChapterStatusTarget({ id: chapter.id, title: chapter.title, mode: 'unpublish-cascade', laterCount });
                 return;
             }
-        } else if (!isBookPublished) {
-            setChapterStatusTarget({ id: chapter.id, title: chapter.title, mode: 'publish-story', laterCount: index });
+        } else {
+            setReleaseTarget(chapterId);
             return;
         }
         void performChapterPublishToggle(chapterId);
@@ -640,25 +642,12 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         }
     };
 
-    const confirmStoryPublication = async (chapterIds: string[]) => {
+    const confirmStoryPublication = (chapterIds: string[]) => {
         if (!book || pendingAction || chapterIds.length === 0) return;
-        if ((book.isMature || book.ageRating === 'MATURE_18' || book.ageRating === 'ADULT_21') && !currentUser.dateOfBirth) {
-            setErrorMsg('Date of birth is required in your profile before publishing mature (18+/21+) content.');
-            setShowPublishStoryDialog(false);
-            return;
-        }
-        try {
-            setPendingAction('book-status');
-            const updatedUser = await api.setBookStatus(currentUser.id, bookId, 'published', chapterIds);
-            onUserUpdate(updatedUser);
-            setShowPublishStoryDialog(false);
-            setShowPublishCelebration(true);
-            setErrorMsg(null);
-        } catch (error) {
-            setErrorMsg(error instanceof Error ? error.message : 'The story could not be published.');
-        } finally {
-            setPendingAction(null);
-        }
+        const target = book.chapters.filter(chapter => chapterIds.includes(chapter.id)).at(-1);
+        if (!target) return;
+        setShowPublishStoryDialog(false);
+        setReleaseTarget(target.id);
     };
 
     const handleBookUpdate = async (updates: Partial<Book>) => {
@@ -752,8 +741,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     <button onClick={() => setIsEditModalOpen(true)}>Story details</button>
                     <button onClick={() => navigatePath(`/write/analytics?book=${bookId}`)}>Statistics</button>
                 </nav>
-                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span>{isBookPublished && <a className="ww-studio-text-link" href={`/book/${book.id}`}>Preview story <ExternalLink size={16} /></a>}<DisclosureMenu label="Story actions"><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></DisclosureMenu><input ref={importInputRef} className="sr-only" type="file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => handleManuscriptImport(event.target.files?.[0])} /></div>
-                {activeTab !== 'chapters' && <div className="ww-manage-guide-note">Private notes stay visible only to you. Character details linked in your manuscript appear in the reader’s story guide.</div>}
+                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span>{isBookPublished && <a className="ww-studio-text-link" href={`/book/${book.id}`}>Preview story <ExternalLink size={16} /></a>}<DisclosureMenu label="Story actions"><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></DisclosureMenu><input ref={importInputRef} className="sr-only" type="file" aria-label="Import manuscript file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => handleManuscriptImport(event.target.files?.[0])} /></div>
+                {activeTab !== 'chapters' && <div className="ww-manage-guide-note">Private notes stay visible only to you. Public character fields linked in your manuscript appear in the reader’s story guide. Private fields stay hidden; spoiler details follow their reveal rules.</div>}
                 {activeTab === 'chapters' && (
                     <section className="ww-manage-chapters">
                         <div className="ww-manage-section-head">
@@ -787,9 +776,9 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     </section>
                 )}
 
-                {activeTab === 'characters' && <CharacterList bookId={bookId} />}
-                {activeTab === 'scenes' && <SceneList bookId={bookId} chapters={book.chapters} />}
-                {activeTab === 'notes' && <NoteList bookId={bookId} />}
+                {activeTab === 'characters' && <CharacterList bookId={bookId} ownerId={currentUser.id} />}
+                {activeTab === 'scenes' && <SceneList bookId={bookId} ownerId={currentUser.id} chapters={book.chapters} />}
+                {activeTab === 'notes' && <NoteList bookId={bookId} ownerId={currentUser.id} />}
             </div>
 
             <EditBookModal
@@ -800,6 +789,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 onUpdate={handleBookUpdate}
             />
 
+            {releaseTarget && <ReleaseImpactDialog bookId={bookId} chapterId={releaseTarget} bookTitle={book.title} onClose={() => setReleaseTarget(null)} onPublished={(updatedUser, storyBecomesPublic) => { onUserUpdate(updatedUser); setErrorMsg(null); if (storyBecomesPublic) setShowPublishCelebration(true); }} />}
             <PublishStoryDialog
                 isOpen={showPublishStoryDialog}
                 chapters={book.chapters}

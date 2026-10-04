@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ToastConfig } from '../components/FeedbackToast';
 import type { ModalConfig } from '../components/FeedbackModal';
 import * as cooldown from '../utils/feedbackCooldown';
+import { readOptionalSessionValue, writeOptionalSessionValue } from '../utils/optionalStorage';
+import { canOfferOptionalPrompt } from '../utils/onboarding';
 import * as api from '../api/client';
 
 const TOAST_CONFIGS: Record<string, { message: string; buttons: { label: string; value: number }[] }> = {
@@ -74,7 +76,7 @@ export function useFeedbackTriggers(enabled = true) {
 
         // Banner check (delayed to not compete with page load)
         const bannerTimer = setTimeout(() => {
-            if (cooldown.canShowBanner() && cooldown.canShowFeedback()) {
+            if (canOfferOptionalPrompt() && cooldown.canShowBanner() && cooldown.canShowFeedback()) {
                 setShowBanner(true);
                 cooldown.recordBannerShown();
             }
@@ -103,13 +105,13 @@ export function useFeedbackTriggers(enabled = true) {
                 const sessionMinutes = cooldown.getSessionDurationMinutes();
                 if (sessionMinutes >= 5 && !cooldown.wasDismissed('EXIT_FEEDBACK')) {
                     // Store pending exit feedback flag for next visit
-                    sessionStorage.setItem('ww_pending_exit_feedback', 'true');
+                    writeOptionalSessionValue('ww_pending_exit_feedback', 'true');
                 }
             } else if (document.visibilityState === 'visible') {
                 // User came back — check if we should show exit feedback
-                const pending = sessionStorage.getItem('ww_pending_exit_feedback');
-                if (pending === 'true' && cooldown.canShowFeedback()) {
-                    sessionStorage.removeItem('ww_pending_exit_feedback');
+                const pending = readOptionalSessionValue('ww_pending_exit_feedback');
+                if (pending === 'true' && canOfferOptionalPrompt() && cooldown.canShowFeedback()) {
+                    writeOptionalSessionValue('ww_pending_exit_feedback', 'false');
                     setModalConfig({
                         mode: 'exit',
                         feedbackType: 'EXIT_FEEDBACK',
@@ -136,7 +138,7 @@ export function useFeedbackTriggers(enabled = true) {
         if (!enabled) return;
         const timer = setTimeout(() => {
             const dayCount = cooldown.getSessionDayCount();
-            if (dayCount >= 3 && !cooldown.wasDismissed('POWER_USER') && cooldown.canShowFeedback()) {
+            if (canOfferOptionalPrompt() && dayCount >= 3 && !cooldown.wasDismissed('POWER_USER') && cooldown.canShowFeedback()) {
                 setModalConfig({
                     mode: 'power_user',
                     feedbackType: 'POWER_USER',
@@ -154,7 +156,7 @@ export function useFeedbackTriggers(enabled = true) {
     const triggerFeedback = useCallback((type: FeedbackTriggerType, delayMs = 2000) => {
         if (!enabled) return;
         setTimeout(() => {
-            if (!enabledRef.current) return;
+            if (!enabledRef.current || !canOfferOptionalPrompt()) return;
             if (!cooldown.canShowFeedback()) return;
             if (cooldown.wasDismissed(type)) return;
 

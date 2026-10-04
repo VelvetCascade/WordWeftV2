@@ -29,6 +29,8 @@ public class ChapterRevisionService {
     private final ChapterRevisionRepository revisions;
     private final BookRepository books;
     private final Clock clock;
+    @Autowired(required = false)
+    com.wordweft.book.service.ChapterWriteService chapterWrites;
 
     @Autowired
     public ChapterRevisionService(ChapterRevisionRepository revisions, BookRepository books) {
@@ -52,7 +54,7 @@ public class ChapterRevisionService {
             return Optional.empty();
         }
 
-        String hash = hash(chapter.getTitle() + "\n" + chapter.getContent());
+        String hash = hash(chapter.getTitle() + "\n" + chapter.getContent() + "\n" + chapter.getContentWarnings() + "\n" + chapter.getDisclaimerNote());
         Optional<ChapterRevision> latest = revisions.findFirstByChapterIdOrderByCreatedAtDesc(chapter.getId());
         if (latest.isPresent() && hash.equals(latest.get().getContentHash())) {
             return Optional.empty();
@@ -69,6 +71,8 @@ public class ChapterRevisionService {
         revision.setChapterId(chapter.getId());
         revision.setTitle(chapter.getTitle());
         revision.setContent(chapter.getContent());
+        revision.setContentWarnings(chapter.getContentWarnings() == null ? java.util.List.of() : new java.util.ArrayList<>(chapter.getContentWarnings()));
+        revision.setDisclaimerNote(chapter.getDisclaimerNote());
         revision.setWordCount(chapter.getWordCount());
         revision.setReason(reason);
         revision.setContentHash(hash);
@@ -86,7 +90,13 @@ public class ChapterRevisionService {
     }
 
     public Book restore(String authorId, String bookId, String chapterId, String revisionId) {
+        return restore(authorId, bookId, chapterId, revisionId, null);
+    }
+
+    public Book restore(String authorId, String bookId, String chapterId, String revisionId, Long expectedRevision) {
         OwnedChapter owned = requireOwnedChapter(authorId, bookId, chapterId);
+        com.wordweft.book.service.ChapterWriteService.requireRevision(owned.chapter(), expectedRevision);
+        var snapshot = com.wordweft.book.service.ChapterWriteService.snapshotQuery(owned.book());
         ChapterRevision revision = revisions.findById(revisionId)
                 .filter(candidate -> bookId.equals(candidate.getBookId()))
                 .filter(candidate -> chapterId.equals(candidate.getChapterId()))
@@ -97,15 +107,22 @@ public class ChapterRevisionService {
         PublishedChapterView.preserveLegacySnapshot(owned.chapter());
         owned.chapter().setTitle(revision.getTitle());
         owned.chapter().setContent(revision.getContent());
+        if (revision.getContentWarnings() != null) {
+            owned.chapter().setContentWarnings(new java.util.ArrayList<>(revision.getContentWarnings()));
+            owned.chapter().setDisclaimerNote(revision.getDisclaimerNote());
+        }
         owned.chapter().updateWordCount();
         int restoredIndex = owned.book().getChapters().indexOf(owned.chapter());
         for (int index = restoredIndex; index < owned.book().getChapters().size(); index++) {
             Chapter affected = owned.book().getChapters().get(index);
+            affected.setEditRevision(affected.getEditRevision() + 1);
             affected.setStatus("draft");
             affected.setScheduledAt(null);
             affected.setPublishedAt(null);
         }
-        return books.save(owned.book());
+        if (chapterWrites == null) return books.save(owned.book()); // Unit-test constructor only.
+        chapterWrites.restore(owned.book(), snapshot);
+        return owned.book();
     }
 
     private OwnedChapter requireOwnedChapter(String authorId, String bookId, String chapterId) {

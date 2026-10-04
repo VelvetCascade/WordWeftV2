@@ -1,4 +1,6 @@
 export interface PageErrorDetails {
+  incidentId: string;
+  interactions?: import('./reliabilityDiagnostics.ts').InteractionRecord[];
   occurredAt: string;
   build: string;
   screen: string;
@@ -35,6 +37,7 @@ export function createPageErrorDetails(error: unknown, componentStack: string, c
 }): PageErrorDetails {
   const failure = error instanceof Error ? error : new Error(String(error));
   return {
+    incidentId: `WW-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
     occurredAt: new Date().toISOString(),
     build: context.build,
     screen: diagnosticScreen(context.route),

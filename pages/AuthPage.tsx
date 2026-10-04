@@ -152,6 +152,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [resetRequested, setResetRequested] = useState(false);
+    const [resetCooldown, setResetCooldown] = useState(0);
+    useEffect(() => { if (!resetCooldown) return; const timer = window.setTimeout(() => setResetCooldown(value => Math.max(0, value - 1)), 1000); return () => window.clearTimeout(timer); }, [resetCooldown]);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
 
@@ -400,8 +403,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                 const user = await api.verifyOtp(email, otp);
                 onLogin(user);
             } else if (view === 'forgot') {
-                const msg = await api.forgotPassword(email);
-                setSuccessMsg(msg);
+                if (resetCooldown > 0) return;
+                await api.forgotPassword(email);
+                setResetRequested(true);
+                setResetCooldown(60);
+                setSuccessMsg('If an account uses this email, a reset link is on its way. Check your inbox and spam folder.');
             }
         } catch (err: any) {
              const errorMsg = getFriendlyError(err);
@@ -488,6 +494,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
 
     const resetForm = (newView: 'login' | 'signup' | 'forgot') => {
         setView(newView);
+        setResetRequested(false);
+        setResetCooldown(0);
         setError(null);
         setSuccessMsg(null);
         setEmail('');
@@ -532,20 +540,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
 
                     {view === 'forgot' && (
                         <button type="button" onClick={() => resetForm('login')} className="ww-auth-back absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors" aria-label="Back to sign in">
-                            <ArrowLeftIcon className="w-6 h-6" />
+                            <ArrowLeftIcon className="w-5 h-5" /><span>Back to sign in</span>
                         </button>
                     )}
 
                     <h1 className="text-3xl font-bold text-center text-text-rich dark:text-dark-text-rich mb-2 font-sans">
                         {view === 'login' && 'Welcome back'}
                         {view === 'signup' && 'Create an account'}
-                        {view === 'forgot' && 'Reset your password'}
+                        {view === 'forgot' && (resetRequested ? 'Check your inbox' : 'Reset your password')}
                         {view === 'otp' && 'Check your inbox'}
                     </h1>
                     <p className="text-center text-text-body dark:text-dark-text-body mb-8">
                         {view === 'login' && "Pick up where you left off."}
-                        {view === 'signup' && "Read stories. Write your own."}
-                        {view === 'forgot' && "Enter your email to receive a reset link."}
+                        {view === 'signup' && "Create a free account to keep reading, save your place and follow writers."}
+                        {view === 'forgot' && (resetRequested ? 'Use the link in your email to choose a new password.' : 'Enter your email to receive a reset link.')}
                         {view === 'otp' && "Enter the 6-digit code sent to your email to verify your account."}
                     </p>
 
@@ -680,15 +688,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                         {error && <p role="alert" className="ww-account-message error text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
                         {successMsg && <p role="status" className="ww-account-message success text-center text-xs text-success font-sans pt-2 leading-tight font-semibold">{successMsg}</p>}
 
-                        <button type="submit" disabled={isLoading || (view === 'otp' && otp.length !== 6)} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
+                        <button type="submit" disabled={isLoading || (view === 'otp' && otp.length !== 6) || (view === 'forgot' && resetCooldown > 0)} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
                             {isLoading ? 'Processing...' : (
                                 view === 'login' ? 'Sign In' :
                                     view === 'signup' ? 'Create an account' :
                                         view === 'otp' ? 'Verify' :
-                                        'Send Reset Link'
+                                        resetRequested ? (resetCooldown > 0 ? `Resend available in ${resetCooldown}s` : 'Resend reset link') : 'Send reset link'
                             )}
                         </button>
                     </form>
+                    {view === 'forgot' && resetRequested && <button type="button" onClick={() => resetForm('login')} className="mt-4 text-accent underline">Return to sign in</button>}
                     {view === 'otp' && <p className="ww-account-private-note">Sent to {email}. Your email stays private.</p>}
 
                     {(view === 'login' || view === 'signup') && (

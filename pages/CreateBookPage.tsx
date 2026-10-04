@@ -1,4 +1,5 @@
 
+import '../styles/planning.css';
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, AgeRating, ContentWarning } from '../types';
 import { ArrowLeftIcon } from '../components/icons/Icons';
@@ -7,31 +8,40 @@ import { useAnalytics } from '../contexts/AnalyticsContext';
 import { ImageUpload } from '../components/ImageUpload';
 import { goBackOrReplace, replaceHash } from '../utils/navigation';
 import { ArrowRight, Check, LockKeyhole } from 'lucide-react';
+import { useRecoverableForm } from '../hooks/useRecoverableForm';
+import { isCompatibleForm } from '../utils/formDrafts';
+import { FormDraftNotice } from '../components/FormDraftNotice';
 
 interface CreateBookPageProps {
     currentUser: User;
     onUserUpdate: (user: User) => void;
 }
 
+const emptyStoryDetails = {
+    title: '', description: '', summary: '', tags: '', selectedGenres: [] as string[], category: '',
+    ageRating: 'TEEN_13' as AgeRating, contentWarnings: [] as ContentWarning[], customDisclaimer: '',
+    isAIGenerated: false, coverUrl: '', coverFileId: null as string | null, customCategory: '',
+};
+type StoryDetailsDraft = typeof emptyStoryDetails;
+const validStoryDraft = (value: unknown): value is StoryDetailsDraft => isCompatibleForm(emptyStoryDetails, value)
+    && ['ALL_AGES', 'TEEN_13', 'MATURE_18', 'ADULT_21'].includes(value.ageRating);
+
 export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onUserUpdate }) => {
     const { trackEvent } = useAnalytics();
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [summary, setSummary] = useState('');
-    const [tags, setTags] = useState('');
+    const recovery = useRecoverableForm(currentUser.id, 'new-story', emptyStoryDetails, validStoryDraft);
+    const { title, description, summary, tags, selectedGenres, category, ageRating, contentWarnings,
+        customDisclaimer, isAIGenerated, coverUrl, coverFileId, customCategory } = recovery.value;
+    const field = <K extends keyof StoryDetailsDraft,>(name: K) => (next: React.SetStateAction<StoryDetailsDraft[K]>) =>
+        recovery.setValue(previous => ({ ...previous, [name]: typeof next === 'function' ? (next as (value: StoryDetailsDraft[K]) => StoryDetailsDraft[K])(previous[name]) : next }));
+    const setTitle = field('title'), setDescription = field('description'), setSummary = field('summary'),
+        setTags = field('tags'), setSelectedGenres = field('selectedGenres'), setCategory = field('category'),
+        setAgeRating = field('ageRating'), setContentWarnings = field('contentWarnings'),
+        setCustomDisclaimer = field('customDisclaimer'), setIsAIGenerated = field('isAIGenerated'),
+        setCoverUrl = field('coverUrl'), setCoverFileId = field('coverFileId'), setCustomCategory = field('customCategory');
     const [genresError, setGenresError] = useState('');
-    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-    const [category, setCategory] = useState('');
-    const [ageRating, setAgeRating] = useState<AgeRating>('TEEN_13');
-    const [contentWarnings, setContentWarnings] = useState<ContentWarning[]>([]);
-    const [customDisclaimer, setCustomDisclaimer] = useState('');
-    const [isAIGenerated, setIsAIGenerated] = useState(false);
-    const [coverUrl, setCoverUrl] = useState('');
-    const [coverFileId, setCoverFileId] = useState<string | null>(null);
     const [allGenres, setAllGenres] = useState<string[]>([]);
     const [isLoadingGenres, setIsLoadingGenres] = useState(true);
     const [genreSearch, setGenreSearch] = useState('');
-    const [customCategory, setCustomCategory] = useState('');
     const [isCoverUploading, setIsCoverUploading] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
@@ -100,6 +110,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         try {
             const existingBookIds = new Set((currentUser.writtenBooks || []).map(book => book.id));
             const updatedUser = await api.createBook(currentUser.id, newBookData);
+            recovery.clear();
             onUserUpdate(updatedUser);
 
             const newBookId = updatedUser.writtenBooks?.find(book => !existingBookIds.has(book.id))?.id;
@@ -133,7 +144,8 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                     </div>
                 </header>
 
-                <form onSubmit={handleSubmit} className="ww-create-form">
+                <form onSubmit={handleSubmit} className="ww-create-form" aria-busy={isSubmitting}>
+                    <fieldset className="ww-pending-fields" disabled={isSubmitting} aria-label="Story details">
                     <div className="ww-create-main">
                         <section className="ww-create-section">
                             <div className="ww-create-section-heading">
@@ -144,6 +156,19 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <label htmlFor="title">Story title</label>
                                 <input type="text" id="title" value={title} maxLength={100} onChange={e => setTitle(e.target.value)} required placeholder="The Last Sky-Sailor" autoFocus />
                             </div>
+                            <div className="ww-create-field">
+                                <label htmlFor="category">Format</label>
+                                <select id="category" value={category} onChange={e => setCategory(e.target.value)}>
+                                    <option value="">Select a format</option>
+                                    {BOOK_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
+                            </div>
+                            {category === 'Other' && (
+                                <div className="ww-create-field">
+                                    <label htmlFor="customCategory">Custom format</label>
+                                    <input type="text" id="customCategory" value={customCategory} onChange={e => setCustomCategory(e.target.value)} required placeholder="e.g., LitRPG" />
+                                </div>
+                            )}
                             <div className="ww-create-field">
                                 <label htmlFor="story-summary">A short introduction <small>(optional)</small></label>
                                 <input id="story-summary" type="text" maxLength={200} value={summary} onChange={event => setSummary(event.target.value)} placeholder="One line that invites the reader in." />
@@ -159,19 +184,6 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <span>02</span>
                                 <div><h2>Place it on the shelf</h2><p>Help the right readers discover it.</p></div>
                             </div>
-                            <div className="ww-create-field">
-                                <label htmlFor="category">Format</label>
-                                <select id="category" value={category} onChange={e => setCategory(e.target.value)}>
-                                    <option value="">Select a format</option>
-                                    {BOOK_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
-                            </div>
-                            {category === 'Other' && (
-                                <div className="ww-create-field">
-                                    <label htmlFor="customCategory">Custom format</label>
-                                    <input type="text" id="customCategory" value={customCategory} onChange={e => setCustomCategory(e.target.value)} required placeholder="e.g., LitRPG" />
-                                </div>
-                            )}
                             <div className="ww-create-field">
                                 <div className="ww-create-label-row"><label htmlFor="genre-search">Genres</label><span>{selectedGenres.length} selected</span></div>
                                 <input id="genre-search" type="search" placeholder="Search genres" value={genreSearch} onChange={e => setGenreSearch(e.target.value)} />
@@ -225,12 +237,12 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         <section className="ww-create-cover">
                             <div className="ww-create-section-heading compact">
                                 <span>04</span>
-                                <div><h2>Cover</h2><p>Set the first impression.</p></div>
+                                <div><h2>Cover <small>(optional)</small></h2><p>Add artwork now or from story details later.</p></div>
                             </div>
                             <ImageUpload
                                 value={coverUrl}
                                 onChange={(url, fileId) => { setCoverUrl(url); setCoverFileId(fileId); }}
-                                label=""
+                                label="Story cover (optional)"
                                 fallbackUrl="/design-v2/assets/met-53681.jpg"
                                 aspectRatio={2/3}
                                 cropShape="rect"
@@ -251,6 +263,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                         </div>
                     </aside>
 
+                    <FormDraftNotice restored={recovery.restored} location={recovery.location} dirty={recovery.dirty} onDiscard={recovery.discard} />
                     <footer className="ww-create-actions">
                         {submitError && (
                             <p className="ww-create-submit-error" role="alert">
@@ -265,6 +278,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                             {isCoverUploading ? 'Uploading cover…' : isSubmitting ? 'Creating story…' : 'Save as draft'} <ArrowRight size={18} />
                         </button>
                     </footer>
+                    </fieldset>
                 </form>
             </div>
         </div>

@@ -3,6 +3,7 @@ package com.wordweft.analytics.service;
 import com.wordweft.analytics.model.ChapterReadEvent;
 import com.wordweft.analytics.repository.ChapterReadEventRepository;
 import com.wordweft.book.model.Book;
+import com.wordweft.book.service.BookActivityCounters;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +33,13 @@ class ChapterReadEventServiceTest {
 
     @Mock ChapterReadEventRepository events;
     @Mock BookRepository books;
+    @Mock BookActivityCounters counters;
     private ChapterReadEventService service;
     private Book book;
 
     @BeforeEach
     void setUp() {
-        service = new ChapterReadEventService(events, books);
+        service = new ChapterReadEventService(events, books, counters);
         Chapter chapter = new Chapter();
         chapter.setId("chapter");
         chapter.setStatus("published");
@@ -46,6 +48,13 @@ class ChapterReadEventServiceTest {
         book.setPublicationStatus("published");
         book.setChapters(List.of(chapter));
         when(books.findById("book")).thenReturn(Optional.of(book));
+    }
+
+    @Test
+    void readerOpensNeverReplaceTheManuscriptDocument() {
+        service.record("book", "chapter", "reader", null, null, NOW);
+        org.mockito.Mockito.verify(books, org.mockito.Mockito.never()).save(org.mockito.ArgumentMatchers.any(Book.class));
+        verify(counters).readerOpened("book", "chapter");
     }
 
     @Test

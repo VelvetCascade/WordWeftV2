@@ -42,6 +42,20 @@ for(const width of [320,390,768,1440])test(`notification preview stays inside th
  await expect(preview.getByRole('button',{name:'View all notifications',exact:true})).toBeVisible();await page.keyboard.press('Escape');await expect(preview).not.toBeVisible();await expect(trigger).toBeFocused();
 });
 
+test('an open notification sheet preserves its own cap through viewport shrink and growth', async ({ page }) => {
+ await page.setViewportSize({ width: 1440, height: 844 }); await page.goto('/');
+ await page.getByRole('button', { name: 'Notifications', exact: true }).click();
+ const panel = page.getByRole('dialog', { name: 'Notification preview', exact: true });
+ await expect(panel).toHaveCSS('max-height', '650px');
+ await page.setViewportSize({ width: 1440, height: 400 });
+ await expect(panel).toHaveCSS('max-height', '280px');
+ const bounds = await panel.boundingBox(); expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(400);
+ await page.setViewportSize({ width: 1440, height: 844 });
+ await expect(panel).toHaveCSS('max-height', '650px');
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('button', { name: 'Notifications', exact: true })).toBeFocused();
+});
+
 test('profile avatar fallbacks use the same circular frame as images',async({page})=>{
  for(const route of ['/profile','/author/local-writer']){await page.goto(route);await expect(page.locator('h1').first()).toBeVisible();const avatar=page.locator('.ww-profile-avatar > .resilient-image-fallback,.ww-author-avatar > .resilient-image-fallback').first();await expect(avatar).toBeVisible();expect(await avatar.evaluate(el=>getComputedStyle(el).borderRadius)).toBe('50%');}
 });

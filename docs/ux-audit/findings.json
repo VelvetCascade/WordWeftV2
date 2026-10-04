@@ -1,0 +1,885 @@
+{
+  "baseline": "f0d961753212ebdc5830ba44c064094917e9b786",
+  "date": "2026-10-03",
+  "findings": [
+    {
+      "id": "F01",
+      "title": "Optional announcement storage can take down the whole app",
+      "priority": "P1",
+      "kind": "Observed",
+      "group": "Reliability",
+      "evidence": [
+        43
+      ],
+      "basis": "A controlled storage exception in WhatsNewPopup emptied the React root; the page error screen did not catch it. The unaffected control rendered normally.",
+      "recommendation": "Guard optional storage reads and writes, isolate global popups with an outer boundary, and keep announcements independent of the core app. This reproduces a failure path; it does not establish the cause of the reported iPhone crashes.",
+      "source": "components/WhatsNewPopup.tsx:10; App.tsx:643; storage-fault-results.json"
+    },
+    {
+      "id": "F02",
+      "title": "Reader onboarding opens writer tools and loops",
+      "priority": "P1",
+      "kind": "Observed",
+      "group": "Onboarding",
+      "evidence": [
+        16,
+        17,
+        18
+      ],
+      "basis": "Choosing “I’m a Reader” opens writer tools; Next returns to Welcome.",
+      "recommendation": "Use the selected role’s actual step sequence. Cover reader, writer, both, Skip and Back; preserve the journey the person came to complete.",
+      "source": "components/WelcomeJourney.tsx:473"
+    },
+    {
+      "id": "F03",
+      "title": "New story metadata is discarded on navigation",
+      "priority": "P1",
+      "kind": "Observed",
+      "group": "Writing",
+      "evidence": [
+        64,
+        65
+      ],
+      "basis": "An entered story title disappeared after opening Stories and using browser Back, without a discard warning.",
+      "recommendation": "Keep a recoverable form draft and offer an explicit discard choice. Preserve title, synopsis, genres, rating and cover state as carefully as chapter text.",
+      "source": "pages/CreateBookPage.tsx:18"
+    },
+    {
+      "id": "F04",
+      "title": "Closing the community composer silently loses writing",
+      "priority": "P1",
+      "kind": "Observed",
+      "group": "Community",
+      "evidence": [
+        35,
+        36
+      ],
+      "basis": "A 73-character unsent post was blank after Close and reopen.",
+      "recommendation": "Keep drafts per user and conversation/circle. Ask before discarding meaningful text or uploads; cover X, Escape, backdrop and navigation paths.",
+      "source": "components/community/CommunityComposer.tsx"
+    },
+    {
+      "id": "F05",
+      "title": "Discuss count and the opened discussion view disagree",
+      "priority": "P1",
+      "kind": "Observed",
+      "group": "Reading",
+      "evidence": [
+        14
+      ],
+      "basis": "Discuss 19 opened a drawer saying there were no comments. The count included paragraph threads; the drawer showed only general comments.",
+      "recommendation": "Provide clear All, Chapter and Passage scopes with matching counts. “View all discussions” must include paragraph threads and let readers return to the passage.",
+      "source": "pages/ReaderPage.tsx:1235"
+    },
+    {
+      "id": "F06",
+      "title": "Visually readable prose exposes cipher glyphs to accessibility tools",
+      "priority": "P1",
+      "kind": "Observed technical risk",
+      "group": "Reading",
+      "evidence": [
+        5,
+        86
+      ],
+      "basis": "The chapter looked normal, but the DOM/accessibility snapshots contained private-use glyphs. This was observed locally and on the production preview.",
+      "recommendation": "Provide a readable accessible text path for the permitted chapter/preview content, then validate with VoiceOver, browser find, read-aloud and translation. The native tools themselves were not tested in this audit.",
+      "source": "pages/ReaderPage.tsx:949; reader-accessibility-snapshot.txt"
+    },
+    {
+      "id": "F07",
+      "title": "Publishing review does not disclose all affected chapters",
+      "priority": "P1",
+      "kind": "Source-backed risk",
+      "group": "Writing",
+      "evidence": [
+        58
+      ],
+      "basis": "The editor describes publishing the selected chapter. The server’s publishNow validates and publishes every preceding unpublished chapter through that selection; a private story also becomes public.",
+      "recommendation": "Before confirmation, list every chapter that will go live and whether the whole story becomes public. Include their warnings and any scheduled releases affected. Require deliberate approval of the complete release, or reject the request until earlier chapters are explicitly published.",
+      "source": "backend/src/main/java/com/wordweft/book/service/ChapterPublishingService.java:87; pages/ChapterEditorPage.tsx:596"
+    },
+    {
+      "id": "F08",
+      "title": "Some writing forms have no accessible field names",
+      "priority": "P1",
+      "kind": "Observed",
+      "group": "Accessibility",
+      "evidence": [
+        76,
+        83
+      ],
+      "basis": "Axe flagged the four character-edit fields, the scene’s chapter selector and the manuscript file input. The character-edit browser snapshot likewise showed unnamed textboxes.",
+      "recommendation": "Associate visible labels with inputs and selects, give the import control a name, and test the opened forms as well as their initial pages.",
+      "source": "accessibility-results.json; secondary-flow-results.json; components/CharacterList.tsx:241"
+    },
+    {
+      "id": "F09",
+      "title": "Author average rating includes unrated stories as zero",
+      "priority": "P2",
+      "kind": "Observed and source-backed",
+      "group": "Profiles",
+      "evidence": [
+        32
+      ],
+      "basis": "The author page computes total rating divided by every published book, including books with no rating. Publishing an unrated story reduces the displayed average.",
+      "recommendation": "Exclude unrated books or use a documented review-weighted average. Show the number of reviews behind the figure and a clear empty state.",
+      "source": "pages/AuthorPage.tsx:145"
+    },
+    {
+      "id": "F10",
+      "title": "Scheduled chapters are also labeled Private draft",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Writing",
+      "evidence": [
+        74
+      ],
+      "basis": "The editor top bar says Private draft while the manuscript, chapter list and publication panel say Scheduled.",
+      "recommendation": "Use one shared publication-state label everywhere. Keep scheduled time and timezone visible near the chapter status.",
+      "source": "pages/ChapterEditorPage.tsx:584"
+    },
+    {
+      "id": "F11",
+      "title": "Personalized discovery is an informational dead end",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Discovery",
+      "evidence": [
+        80
+      ],
+      "basis": "The account-menu action opens explanatory copy rather than a feed. Escape did not dismiss it, and it has no dialog role.",
+      "recommendation": "Route to the existing personalized Hook Feed or give a concrete genre/feed action. Apply the shared dialog’s focus, Escape and return-focus behavior.",
+      "source": "App.tsx:675; secondary-flow-results.json"
+    },
+    {
+      "id": "F12",
+      "title": "Mobile story details postpone the reading action",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Story details",
+      "evidence": [
+        19,
+        85
+      ],
+      "basis": "The first screen emphasizes cover and summary, then repeats the description below title and author. Read/Continue is further down.",
+      "recommendation": "Lead with title, author, compact cover and Read/Continue. Expand the synopsis on demand and retain content guidance before entry. A compact sticky action can appear while scrolling, with safe-area clearance.",
+      "source": "pages/BookDetailsPage.tsx"
+    },
+    {
+      "id": "F13",
+      "title": "Mobile Hook Feed postpones the hook itself",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Discovery",
+      "evidence": [
+        38,
+        39
+      ],
+      "basis": "The large cover occupies most of the first mobile screen; the opening and Open story action are below it.",
+      "recommendation": "Use a smaller cover beside title/author, put the opening first, and keep Open story / Next accessible near it. Retain the generous desktop layout.",
+      "source": "pages/HookFeedPage.tsx"
+    },
+    {
+      "id": "F14",
+      "title": "Returning readers need a more compact library resume card",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Library",
+      "evidence": [
+        21,
+        22
+      ],
+      "basis": "On mobile, header/search/selectors and the resume card push Continue down. The desktop card has a large unused right region.",
+      "recommendation": "Put the current chapter, last reading place and Continue together. Use remaining desktop space for relevant chapter/update context; preserve a comfortable reading width.",
+      "source": "pages/LibraryPage.tsx"
+    },
+    {
+      "id": "F15",
+      "title": "Catalog headings and controls delay the books",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Discovery",
+      "evidence": [
+        2,
+        59
+      ],
+      "basis": "The large introduction and search area use much of the first viewport before useful book title/author detail appears.",
+      "recommendation": "Use a compact browse header, particularly for signed-in return visits. Keep filters nearby while bringing the first useful story choices higher.",
+      "source": "pages/CategoryPage.tsx"
+    },
+    {
+      "id": "F16",
+      "title": "Start-with shortcuts can recommend empty genres",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Discovery",
+      "evidence": [
+        3,
+        60
+      ],
+      "basis": "The source uses the first six alphabetic taxonomy entries. Local Action was empty; production Cyberpunk was also empty.",
+      "recommendation": "Choose shortcuts from available/popular genres or the reader’s interests, show useful counts, and avoid promoting an empty result. Keep the existing clear-filter recovery.",
+      "source": "pages/CategoryPage.tsx:295"
+    },
+    {
+      "id": "F17",
+      "title": "Genre filtering repeats a long taxonomy",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Discovery",
+      "evidence": [
+        2,
+        40
+      ],
+      "basis": "Desktop browse has a long genre sidebar and a second genre selector; taste settings also present the entire taxonomy at once.",
+      "recommendation": "Use one clear filtering model, a searchable genre picker, popular/selected groups, and a visible applied-filter summary. Mobile selection should end with an easily reachable Apply/Save action.",
+      "source": "pages/CategoryPage.tsx"
+    },
+    {
+      "id": "F18",
+      "title": "Search should explain its scope and recover from weak matches",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Discovery",
+      "evidence": [
+        46,
+        49
+      ],
+      "basis": "Search works for a title such as Spring. The UI also promises world/theme discovery, while readers may naturally search by phrase, trope or misspelling.",
+      "recommendation": "Align the placeholder with the supported fields, add useful tag/theme matching and typo suggestions where feasible, and offer relevant genre links on no results. Preserve typed queries and result position through story visits.",
+      "source": "pages/SearchResultsPage.tsx; search overlay"
+    },
+    {
+      "id": "F19",
+      "title": "Mobile search uses a desktop ESC label",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Discovery",
+      "evidence": [
+        46
+      ],
+      "basis": "The phone search overlay’s visible close control says ESC.",
+      "recommendation": "Show an X or Done on touch layouts while retaining Escape support and an accessible name. Let the phone keyboard submit the query without another tap.",
+      "source": "search overlay"
+    },
+    {
+      "id": "F20",
+      "title": "The same genre preference has two selection limits",
+      "priority": "P2",
+      "kind": "Source-backed",
+      "group": "Account",
+      "evidence": [
+        27,
+        40
+      ],
+      "basis": "Hook Feed taste allows eight genres and saves favoriteGenres; profile reading preferences says Max 5 for the same field.",
+      "recommendation": "Set one limit and one source of truth, with consistent copy and selection rules. Avoid silently losing an existing six-to-eight genre preference when editing settings.",
+      "source": "pages/HookFeedPage.tsx:293; pages/EditProfilePage.tsx:174"
+    },
+    {
+      "id": "F21",
+      "title": "Writing announcements interrupt an active reader",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Onboarding",
+      "evidence": [
+        13
+      ],
+      "basis": "After sign-in returned to the preview position, the global New writing tools popup covered the lower mobile prose.",
+      "recommendation": "Defer optional announcements until a safe pause or exit, and target them to the selected role. Keep reader/editor activity free from unrelated timed prompts.",
+      "source": "components/WhatsNewPopup.tsx"
+    },
+    {
+      "id": "F22",
+      "title": "Feedback prompts consume scarce mobile space",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Navigation",
+      "evidence": [
+        19,
+        21
+      ],
+      "basis": "When shown, the early-version feedback strip sits above bottom navigation and reduces the usable content region.",
+      "recommendation": "Use a context-aware prompt budget, remember dismissal safely, and avoid stacking prompts during reading, drafting or a modal interaction.",
+      "source": "FeedbackBanner and shared app overlays"
+    },
+    {
+      "id": "F23",
+      "title": "Create a shelf where the reader is organizing a book",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Library",
+      "evidence": [
+        20,
+        23
+      ],
+      "basis": "The story’s shelf picker requires the user to create a shelf elsewhere.",
+      "recommendation": "Add inline New shelf, then select the created shelf and retain the current book/context. Confirm the section’s save without restarting the page.",
+      "source": "story shelf picker"
+    },
+    {
+      "id": "F24",
+      "title": "Shelf visibility should be clear at creation and selection",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Library",
+      "evidence": [
+        20,
+        23,
+        28
+      ],
+      "basis": "The name-only creation dialog and picker do not explain the private default at the point of action.",
+      "recommendation": "Show Private/Public labels, explain who can see a shelf, and require an explicit choice before public sharing. Keep the current private default.",
+      "source": "pages/LibraryPage.tsx"
+    },
+    {
+      "id": "F25",
+      "title": "Organizing a large library needs small convenience tools",
+      "priority": "P3",
+      "kind": "Proposal",
+      "group": "Library",
+      "evidence": [
+        20,
+        22
+      ],
+      "basis": "The picker remains usable by scrolling, but many shelf names make selection slower.",
+      "recommendation": "Add shelf search, useful sorting and eventually selected-book bulk organization. Preserve current filters and scroll after edits; keep the controls light for small libraries.",
+      "source": "library and shelf picker"
+    },
+    {
+      "id": "F26",
+      "title": "Surface updates to stories already in the library",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Library",
+      "evidence": [
+        21,
+        22
+      ],
+      "basis": "The library resume flow is present, but a reader should quickly distinguish unread releases from a finished or up-to-date serial.",
+      "recommendation": "Add a clear new-chapter badge/filter and show the actual next unread chapter. Keep “finished story” distinct from “caught up with an ongoing story.”",
+      "source": "pages/LibraryPage.tsx; book progress"
+    },
+    {
+      "id": "F27",
+      "title": "A reader’s profile looks like an empty writer portfolio",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Profiles",
+      "evidence": [
+        25
+      ],
+      "basis": "The reader account’s main content is Your published work with New story/Open writer studio despite having no writing.",
+      "recommendation": "Adapt the profile to reading/writing intent: chosen public shelves, favorite books and optional reading identity for readers; publications for writers. Keep private reading history private.",
+      "source": "pages/ProfilePage.tsx"
+    },
+    {
+      "id": "F28",
+      "title": "Privacy settings need meaningful visibility controls",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Account",
+      "evidence": [
+        28
+      ],
+      "basis": "Privacy & security currently focuses on email and password.",
+      "recommendation": "Explain public versus private profile, shelf and reading information in one place; offer control over optional public reading stats. Add a clear public-profile preview.",
+      "source": "pages/EditProfilePage.tsx"
+    },
+    {
+      "id": "F29",
+      "title": "Make saving long settings forms easy to notice",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Account",
+      "evidence": [
+        26,
+        29,
+        31
+      ],
+      "basis": "Profile edits correctly survived the Notifications round trip, but Save changes can be below the fold.",
+      "recommendation": "Use a compact persistent dirty-state save bar, section-specific validation and visible success feedback. Keep the draft-preserving return behavior.",
+      "source": "pages/EditProfilePage.tsx"
+    },
+    {
+      "id": "F30",
+      "title": "Separate reader appearance from discovery preferences",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Account",
+      "evidence": [
+        6,
+        27
+      ],
+      "basis": "Reading preferences names two different things: font/theme/spacing in the reader, and favorite genres/content access in account settings.",
+      "recommendation": "Use clearer labels such as Reading appearance and Story preferences, with links between the relevant controls. Preserve explicit reader choices.",
+      "source": "reader settings; pages/EditProfilePage.tsx"
+    },
+    {
+      "id": "F31",
+      "title": "Notifications need grouping and direct next actions",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Account",
+      "evidence": [
+        30
+      ],
+      "basis": "Filters, search and Back to settings exist; the list is still a flat stream of activity.",
+      "recommendation": "Group recent activity by day/story, consolidate repeated chapter notices when appropriate, and give relevant Continue/View thread actions. Keep unread counts and mark-read changes immediate.",
+      "source": "pages/NotificationsPage.tsx"
+    },
+    {
+      "id": "F32",
+      "title": "Password recovery needs a clearer mobile layout and next state",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Authentication",
+      "evidence": [
+        11,
+        12
+      ],
+      "basis": "The Back control overlaps the brand mark on mobile. After a successful request, Send Reset Link remains the main action.",
+      "recommendation": "Separate Back from branding; show Check your inbox, helpful resend timing and the return-to-sign-in route after the request.",
+      "source": "pages/AuthPage.tsx"
+    },
+    {
+      "id": "F33",
+      "title": "The preview sign-up handoff can explain its value",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Authentication",
+      "evidence": [
+        8,
+        9,
+        10
+      ],
+      "basis": "Sign-in/signup is functional in the captured entry screens and preserves the reader’s return position.",
+      "recommendation": "Explain free account access at the current business stage and the concrete benefits: finish the chapter, save a place, follow a writer. Keep the form focused and preserve the acquisition story.",
+      "source": "reader preview gate and authentication"
+    },
+    {
+      "id": "F34",
+      "title": "Welcome demos need calmer user-controlled progression",
+      "priority": "P2",
+      "kind": "Source-backed",
+      "group": "Onboarding",
+      "evidence": [
+        17,
+        18
+      ],
+      "basis": "Welcome feature demos rotate on four-second timers. Explicit selections do not stop those timers; CSS motion reduction does not stop the content changes.",
+      "recommendation": "Pause after manual selection, respect reduced motion in the state logic, and shorten role-specific onboarding. Preserve the responsive writing-tools tour, which is already much better.",
+      "source": "components/WelcomeJourney.tsx:122"
+    },
+    {
+      "id": "F35",
+      "title": "Create-story mobile ordering starts with Cover step 04",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Writing",
+      "evidence": [
+        64,
+        65
+      ],
+      "basis": "The cover sidebar stacks before title and synopsis on a phone, so the form’s numbered order feels reversed.",
+      "recommendation": "Put title, format and synopsis first; make cover an optional later step or compact preview. Allow writers to start with the manuscript and complete metadata progressively.",
+      "source": "pages/CreateBookPage.tsx"
+    },
+    {
+      "id": "F36",
+      "title": "Existing scenes cannot be amended through the visible UI",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Writing",
+      "evidence": [
+        78
+      ],
+      "basis": "Scenes have Add and Delete, but no visible Edit action. An editingId state exists without a corresponding editing flow.",
+      "recommendation": "Allow inline scene edits, chapter reassignment and character changes. Keep deletion deliberate and distinguish a saved scene from an in-progress form.",
+      "source": "components/SceneList.tsx"
+    },
+    {
+      "id": "F37",
+      "title": "Existing private notes cannot be amended through the visible UI",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Writing",
+      "evidence": [
+        79
+      ],
+      "basis": "A saved note has a Delete action but no visible way to edit its title or content.",
+      "recommendation": "Add lightweight note editing with the same save/recovery rules as other writing. Optional pinning or search can help once a writer has many notes.",
+      "source": "components/NoteList.tsx"
+    },
+    {
+      "id": "F38",
+      "title": "Planning edits should preserve the manuscript context",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Writing",
+      "evidence": [
+        50,
+        62,
+        76,
+        83
+      ],
+      "basis": "Story guide is a useful reference drawer; managing the guide takes the writer back to the studio.",
+      "recommendation": "Offer quick add/edit for a character, scene or private note from the guide, or a reliable return to the same chapter and cursor. Refresh mentions and guide data immediately after a successful change.",
+      "source": "components/WorldBuildingSidebar.tsx; writing workspace"
+    },
+    {
+      "id": "F39",
+      "title": "Content warnings should express actual severity",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Writing",
+      "evidence": [
+        53,
+        58
+      ],
+      "basis": "No-warning state can remain quiet; selected mature/serious warnings need to stand out and explain rating consequences.",
+      "recommendation": "Use a neutral None state, meaningful amber/red emphasis for selected warnings, and immediate age-rating guidance. Clearly separate private notes from the reader-visible author note.",
+      "source": "chapter details and publication review"
+    },
+    {
+      "id": "F40",
+      "title": "Give writers a safe way to leave during a failed save",
+      "priority": "P2",
+      "kind": "Source-backed opportunity",
+      "group": "Writing",
+      "evidence": [
+        47,
+        52,
+        57
+      ],
+      "basis": "Local recovery and offline save states exist. leaveEditor attempts a server save and keeps the writer in the editor when it fails.",
+      "recommendation": "Offer Retry, Keep a verified device draft and leave, or explicit Discard. Provide a copy/export escape route when storage is unavailable; never imply a device-only save is on the server.",
+      "source": "pages/ChapterEditorPage.tsx:455"
+    },
+    {
+      "id": "F41",
+      "title": "Detect editing the same chapter in another tab",
+      "priority": "P3",
+      "kind": "Proposal",
+      "group": "Writing",
+      "evidence": [
+        47
+      ],
+      "basis": "The chapter is valuable work, and two tabs/devices can hold independent drafts.",
+      "recommendation": "Use a revision/conflict check or a clear same-chapter warning before one session replaces newer content. Preserve both drafts for deliberate recovery rather than merging silently.",
+      "source": "chapter autosave and revision flow"
+    },
+    {
+      "id": "F42",
+      "title": "Preview could show the actual reading conditions",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Writing",
+      "evidence": [
+        48,
+        52
+      ],
+      "basis": "The current preview is usable, but writers cannot directly compare desktop/phone or reader appearance choices from it.",
+      "recommendation": "Add a compact viewport/theme preview using the reader’s rendering rules for mentions, spoilers and footnotes. Preserve the draft cursor and scroll when closing preview.",
+      "source": "chapter preview"
+    },
+    {
+      "id": "F43",
+      "title": "Scheduling should be one coherent publication state",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Writing",
+      "evidence": [
+        74,
+        75
+      ],
+      "basis": "The dialog already shows the browser timezone and explains automatic publication. The scheduled state is less consistently exposed in the editor.",
+      "recommendation": "Show release date plus relative timing in the status, make Cancel schedule easy to find, and explain whether publishing now changes a scheduled release. Keep timezone confirmation and chapter-order validation.",
+      "source": "components/ScheduleChapterDialog.tsx"
+    },
+    {
+      "id": "F44",
+      "title": "Writer comments need passage context and inbox tools",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Writing",
+      "evidence": [
+        66,
+        67
+      ],
+      "basis": "Inline Reply works; the list is a series of cards with book/chapter text and no passage link or inbox filters.",
+      "recommendation": "Add a link back to the relevant passage, New/Unanswered/Replied filters, per-story filtering and preserved reply drafts. Keep successful replies local to their thread.",
+      "source": "pages/WriterDashboardPage.tsx"
+    },
+    {
+      "id": "F45",
+      "title": "Use consistent definitions for reads, views and completion",
+      "priority": "P2",
+      "kind": "Observed terminology issue",
+      "group": "Writing",
+      "evidence": [
+        44,
+        70,
+        77
+      ],
+      "basis": "The studio overview calls the viewCount aggregate Total chapter reads; detailed analytics calls it Chapter views/all-time chapter opens. Book details labels the same view aggregate Reads.",
+      "recommendation": "Choose clear shared definitions and labels, explain completion thresholds, and distinguish time-window figures from all-time totals. Keep analytics’ existing daily-data table and privacy-conscious reader counts.",
+      "source": "pages/WriterDashboardPage.tsx:44; pages/WriterAnalyticsPage.tsx:110; pages/BookDetailsPage.tsx:582"
+    },
+    {
+      "id": "F46",
+      "title": "A story ending can offer a more relevant next step",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Reading",
+      "evidence": [
+        5,
+        7
+      ],
+      "basis": "Next chapter and the caught-up/complete distinctions already exist in the reader.",
+      "recommendation": "After the final released chapter, offer Follow writer/next-release context for an ongoing story, or a quiet Review/next story choice for a completed one. Keep Next chapter as the primary action during a serial.",
+      "source": "pages/ReaderPage.tsx:1064"
+    },
+    {
+      "id": "F47",
+      "title": "Let readers keep a specific passage, not only the whole book",
+      "priority": "P3",
+      "kind": "Proposal",
+      "group": "Reading",
+      "evidence": [
+        6,
+        7
+      ],
+      "basis": "The bookmark action currently saves the story to the library.",
+      "recommendation": "Add optional passage bookmarks or private notes that reopen at the exact place. A find-in-chapter tool would also help, once readable accessible text is available.",
+      "source": "reader navigation and saved-place model"
+    },
+    {
+      "id": "F48",
+      "title": "Character information could be spoiler-aware",
+      "priority": "P3",
+      "kind": "Proposal",
+      "group": "Reading",
+      "evidence": [
+        50,
+        76
+      ],
+      "basis": "Character previews expose Background and Current goal; the studio already warns that linked character details appear to readers.",
+      "recommendation": "Make public visibility explicit beside those fields, offer a reader preview, and optionally support spoiler sections or chapter-based reveal rules. Keep private planning information separate.",
+      "source": "components/CharacterPreview.tsx"
+    },
+    {
+      "id": "F49",
+      "title": "Your circles includes circles the user has not joined",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Community",
+      "evidence": [
+        33,
+        34
+      ],
+      "basis": "The sidebar titled Your circles displays all circles and a total count, including ones with a Join action.",
+      "recommendation": "Show joined circles in Your circles and put unjoined ones under Explore circles, or rename the combined list truthfully.",
+      "source": "pages/CommunityPage.tsx"
+    },
+    {
+      "id": "F50",
+      "title": "The community composer picks a surprising default circle",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Community",
+      "evidence": [
+        35
+      ],
+      "basis": "Opening from All conversations chose Critique Corner, which was not joined in the reader fixture.",
+      "recommendation": "Use the current circle, an explicit destination choice or a remembered joined circle. Show who will see the post beside Publish.",
+      "source": "components/community/CommunityComposer.tsx"
+    },
+    {
+      "id": "F51",
+      "title": "Disabled post types need a useful explanation",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Community",
+      "evidence": [
+        35
+      ],
+      "basis": "Release and Recommendation were disabled for the selected circle’s allowed types, without an obvious touch-friendly explanation.",
+      "recommendation": "Explain why a type is unavailable and offer the circle or qualifying story needed to use it. Preserve the post text when the destination changes.",
+      "source": "community composer"
+    },
+    {
+      "id": "F52",
+      "title": "Post-detail Back does not return to the feed origin",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Community",
+      "evidence": [
+        37
+      ],
+      "basis": "A post opened from the general feed offered Back to The Common Room, taking the user to that circle instead of the original feed.",
+      "recommendation": "Return to the actual originating feed/filter/scroll position. Keep the circle name as a separate navigation link.",
+      "source": "pages/CommunityPostPage.tsx"
+    },
+    {
+      "id": "F53",
+      "title": "Long applications deserve a resumable draft",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Support",
+      "evidence": [
+        61,
+        82
+      ],
+      "basis": "Founding Writer policy links correctly opened a separate tab and preserved the form. The long application otherwise keeps state in memory.",
+      "recommendation": "Add Save/resume or guarded local recovery, clear progress, a review step and visible upload requirements. Prefill known account details where appropriate. Preserve the working policy handoff.",
+      "source": "pages/FoundingWritersPage.tsx"
+    },
+    {
+      "id": "F54",
+      "title": "Help should cover the failures readers actually report",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Support",
+      "evidence": [
+        56,
+        63
+      ],
+      "basis": "Searchable FAQs and contact/feedback forms exist, but common progress, loading and touch questions are not among the captured FAQs.",
+      "recommendation": "Add short guidance for missing reading progress, app errors, repeated taps and failed uploads. Connect reports to a bounded privacy-safe incident ID without collecting manuscript text or passwords.",
+      "source": "pages/ContactPage.tsx; utils/pageErrorDetails.ts"
+    },
+    {
+      "id": "F55",
+      "title": "Unavailable stories leave a sparse dead end",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Reliability",
+      "evidence": [
+        73
+      ],
+      "basis": "A missing story renders a centered Book not found message with the global navbar, but no nearby recovery action.",
+      "recommendation": "Provide a consistent unavailable-story state with Back to the previous task, Browse stories and a clear distinction between removed, private and temporarily failed content where the API allows it.",
+      "source": "pages/BookDetailsPage.tsx"
+    },
+    {
+      "id": "F56",
+      "title": "Discovery features are buried in the account menu",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Navigation",
+      "evidence": [
+        24,
+        80
+      ],
+      "basis": "Hook Feed and Events & challenges are mixed into a long account/navigation menu.",
+      "recommendation": "Surface them in relevant discovery/community areas and separate account actions from exploration. Prefer one clear destination over duplicate informational entries.",
+      "source": "shared navbar and account menu"
+    },
+    {
+      "id": "F57",
+      "title": "Small policy badges miss the contrast target",
+      "priority": "P2",
+      "kind": "Observed",
+      "group": "Accessibility",
+      "evidence": [
+        51,
+        54
+      ],
+      "basis": "Axe measured 4.39:1 for the Privacy Policy’s Last Updated/Contact badge text, below the 4.5:1 requirement for that text.",
+      "recommendation": "Adjust the muted-text token on these backgrounds and verify the same pattern in light/dark themes. Keep long-form policy reading width and collapsible mobile contents.",
+      "source": "accessibility-results.json"
+    },
+    {
+      "id": "F58",
+      "title": "Finish consistency at the component level",
+      "priority": "P2",
+      "kind": "Proposal",
+      "group": "Visual system",
+      "evidence": [
+        46,
+        53,
+        76,
+        81,
+        84
+      ],
+      "basis": "Core shells are more consistent now; some planning forms, sharing dialogs and hints still use different label, spacing and control conventions.",
+      "recommendation": "Normalize button heights, field labels, corner radii, icon weights, focus rings and error/success placement. Use sticky action footers in long sheets, while preserving the intentional reader/writer color distinction.",
+      "source": "shared controls and writing/support surfaces"
+    },
+    {
+      "id": "F59",
+      "title": "Fix small pluralization and vocabulary mismatches",
+      "priority": "P3",
+      "kind": "Observed",
+      "group": "Content",
+      "evidence": [
+        22,
+        32,
+        33,
+        77
+      ],
+      "basis": "Examples include 1 chapters finished, 1 Followers and 1 members. Book/story, writer/author and guide/bible labels also need consistent usage.",
+      "recommendation": "Centralize plural helpers and use a small vocabulary set across cards, progress, profiles and writing tools. Keep full titles readable, including multilingual titles.",
+      "source": "library, community and author labels"
+    },
+    {
+      "id": "F60",
+      "title": "The reported iPhone tap failures still need device evidence",
+      "priority": "P1",
+      "kind": "Validation needed",
+      "group": "Reliability",
+      "evidence": [
+        55,
+        59,
+        85,
+        86
+      ],
+      "basis": "This audit used Chromium with phone-sized viewports and ordinary production browsing; it cannot reproduce a physical iPhone’s browser chrome, keyboard or intermittent touch behavior. No cause of that reported failure has been established here.",
+      "recommendation": "Reproduce on the actual iPhone in both reported browsers, including keyboard open, back/forward restoration, slow navigation and overlays. Record touch target, route/build and resulting handler/navigation with privacy-safe diagnostics; confirm one tap performs one action.",
+      "source": "physical-device release validation"
+    }
+  ],
+  "motions": [
+    {
+      "id": "M01",
+      "title": "Use short, stable navigation transitions",
+      "recommendation": "Use roughly 120–180 ms opacity/translation only where it helps orientation. Preserve scroll on Back, move focus to the destination, and avoid a whole-screen animation for every route."
+    },
+    {
+      "id": "M02",
+      "title": "Make button presses immediate",
+      "recommendation": "Give a subtle pressed color/scale response, then a local pending state followed by a check or success label. Keep the same button node mounted and its hit area stable throughout."
+    },
+    {
+      "id": "M03",
+      "title": "Animate organization within the affected section",
+      "recommendation": "For shelves, likes, follows and comments, update the affected card/control and its count. Restore the prior state on failure and offer a local retry without blanking the screen."
+    },
+    {
+      "id": "M04",
+      "title": "Open drawers and sheets consistently",
+      "recommendation": "Use a short slide/fade, restore focus to the opener, and keep the primary action clear of the mobile safe area and keyboard. Reduced-motion mode should use an immediate or simple opacity change."
+    },
+    {
+      "id": "M05",
+      "title": "Keep motion away from active reading and writing",
+      "recommendation": "The hero already rotates real covers, pauses on hover/focus and respects reduced motion. Keep that behavior; pause interactive targets from touch-down until the action resolves. Avoid automatic content cycling inside prose or an active form."
+    },
+    {
+      "id": "M06",
+      "title": "Reveal changes without moving the user’s target",
+      "recommendation": "Use restrained expansion for synopsis, warnings, replies and validation messages. Reserve image/loading space and avoid layout shifts under a finger, cursor or caret."
+    },
+    {
+      "id": "M07",
+      "title": "Let reading controls recede when appropriate",
+      "recommendation": "Offer an optional quiet/auto-hiding control mode alongside the existing focus mode, with a reliable way to reveal Back, contents and appearance. Keep it predictable for keyboard and assistive technology users."
+    },
+    {
+      "id": "M08",
+      "title": "Make save and completion feel calm",
+      "recommendation": "Use clear Saving / Saved on this device / Saved online text, small state transitions and restrained chapter-finish acknowledgement. Keep streaks, celebrations and prompts optional so they do not compete with the story."
+    }
+  ]
+}

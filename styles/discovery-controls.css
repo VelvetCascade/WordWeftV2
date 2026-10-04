@@ -1,0 +1,119 @@
+/* Focused discovery controls: keep the shared visual language and card geometry. */
+.ww-app .ww-library-container{padding-top:24px}
+.ww-app .ww-library-container>h1{font-size:30px!important;margin-bottom:8px}
+.ww-app .ww-library-container>p{font-size:14px;margin-bottom:18px}
+.ww-app .ww-library-discovery{margin-top:0;margin-bottom:0;padding:0;background:transparent;border:0}
+.ww-app .ww-library-search{max-width:720px}
+.ww-app .ww-library-quick-genres{margin-top:12px;gap:8px;align-items:center}
+.ww-app .ww-library-quick-genres button{min-height:36px;padding:6px 11px;font-size:12px}
+.ww-library-quick-genres small{margin-left:5px;opacity:.8}
+.ww-app .v2-browse-layout{margin-top:20px;gap:32px}
+.ww-app .v2-browse-results .ww-library-filter{margin-bottom:8px;padding-block:8px}
+.ww-catalog-summary{color:var(--ww-muted);font-size:12px;margin-bottom:18px}
+.ww-genre-search{width:100%;border:1px solid var(--ww-line);background:var(--ww-paper);color:var(--ww-ink);border-radius:7px;min-height:44px;padding:10px 12px;font-size:13px;margin:10px 0}
+.v2-browse-filters fieldset:first-child{max-height:420px;overflow-y:auto;scrollbar-width:thin}
+.v2-browse-filters label small{margin-left:auto;color:var(--ww-muted)}
+.ww-catalog-filter-sheet{display:flex;flex-direction:column;max-height:85dvh;overflow:hidden!important;padding-bottom:calc(12px + env(safe-area-inset-bottom))!important}
+.ww-catalog-filter-sheet>div:nth-child(2){min-height:0;overflow-y:auto}
+.ww-catalog-filter-sheet>div:nth-child(3){flex-shrink:0}
+.ww-catalog-apply{flex-shrink:0;min-height:44px;margin-top:16px!important}
+.ww-search-scope{font-size:12px;line-height:1.6;padding:12px 20px;color:var(--ww-muted);border-bottom:1px solid var(--ww-line)}
+.ww-overlay-submit,.ww-recovery-action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border-radius:7px;font-size:13px;color:var(--ww-brand);border:1px solid var(--ww-line);background:var(--ww-paper)}
+.ww-overlay-submit:disabled{opacity:.5}
+.search-overlay-close-btn{min-width:44px;min-height:44px;padding:10px!important;flex-shrink:0}
+.search-overlay-input{min-width:0}
+.search-overlay-input-wrapper{gap:8px}
+.ww-search-recovery{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
+.search-overlay-empty>.ww-recovery-action{margin-top:12px}
+.wv-taste-dialog{max-height:85dvh!important;overflow:hidden}
+.wv-taste-panel{display:flex;flex-direction:column;max-height:85dvh}
+.wv-taste-header,.wv-taste-footer,.wv-taste-panel>.ww-genre-search{flex-shrink:0}
+.wv-taste-genres{overflow-y:auto;min-height:0;max-height:36dvh;margin-top:12px!important}
+.wv-taste-selected{display:flex;flex-wrap:wrap;gap:6px;max-height:90px;overflow:auto}
+.wv-taste-selected button{display:inline-flex;gap:7px;align-items:center;min-height:36px;padding:6px 9px;border:1px solid var(--ww-line);border-radius:6px;font-size:12px;color:var(--ww-brand)}
+.wv-taste-footer{margin-top:16px!important;padding-top:16px!important;padding-bottom:env(safe-area-inset-bottom)}
+.wv-hook-card:focus-visible{outline:2px solid var(--ww-brand);outline-offset:8px;border-radius:8px}
+@media(max-width:760px){
+ .ww-app .ww-library-container{padding-top:18px}
+ .ww-app .ww-library-container>h1{font-size:27px!important}
+ .ww-app .ww-library-container>p{margin-bottom:12px;font-size:13px}
+ .ww-app .ww-library-quick-genres{flex-wrap:nowrap;overflow:auto;padding-bottom:4px;white-space:nowrap}
+ .ww-app .ww-library-quick-genres>*{flex-shrink:0}
+ .ww-app .v2-browse-layout{margin-top:12px}
+ .ww-app .ww-library-search{padding:6px 8px!important}
+ .ww-app .ww-library-search input{font-size:13px;min-width:0}
+ .ww-app .ww-library-search button{min-height:40px;padding:8px 12px}
+ .ww-app .v2-browse-results .ww-library-filter{position:relative;top:auto}
+ .ww-app .v2-search-heading{margin-bottom:16px}
+ .ww-app .v2-search-heading h1{font-size:28px!important}
+ .search-overlay-backdrop{padding:12px!important;align-items:flex-start!important}
+ .search-overlay-container{width:100%;max-height:calc(100dvh - 24px);overflow-y:auto}
+ .search-overlay-input-wrapper{padding:10px!important;position:sticky;top:0;background:var(--ww-paper);z-index:1}
+ .search-overlay-icon{width:18px;flex-shrink:0}
+ .search-overlay-input{font-size:16px!important}
+ .ww-overlay-submit{padding-inline:10px}
+ .ww-search-scope{padding:10px 14px}
+}
+@media(max-width:600px){
+ .wv-hooks .wv-support-shell{padding-top:22px}
+ .wv-hooks .wv-hook-header{gap:10px;margin-bottom:20px}
+ .wv-hooks .wv-hook-header h1{font-size:29px!important;margin-bottom:8px}
+ .wv-hooks .wv-hook-header .wv-lead{font-size:13px;line-height:1.6}
+ .wv-hooks .wv-hook-card{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px 16px;padding-top:0}
+ .wv-hooks .wv-hook-art{grid-column:1;grid-row:1;max-width:76px}
+ .wv-hooks .wv-hook-art>.wv-hook-cover{height:112px;max-height:112px;aspect-ratio:auto}
+ .wv-hooks .wv-hook-art-empty{min-height:112px;font-size:10px;text-align:center;gap:6px}
+ .wv-hooks .wv-hook-art-empty svg{width:24px}
+ .wv-hooks .wv-hook-reading{display:contents}
+ .wv-hooks .wv-hook-identity{grid-column:2;grid-row:1;align-self:center}
+ .wv-hooks .wv-hook-meta{gap:2px;margin-bottom:6px;font-size:10px}
+ .wv-hooks .wv-hook-reading h2{font-size:23px;margin-bottom:7px}
+ .wv-hooks .wv-hook-reading>:not(.wv-hook-identity){grid-column:1/-1}
+ .wv-hooks .wv-hook-match{margin-top:0;font-size:11px}
+ .wv-hooks .wv-hook-excerpt-wrap{margin:0}
+ .wv-hooks .hook-feed-excerpt{font-size:19px;line-height:1.55;-webkit-line-clamp:5}
+ .wv-hooks .wv-hook-bottom{padding-top:12px}
+ .wv-hooks .wv-hook-tags{margin-bottom:8px}
+ .wv-taste-panel{padding:18px 16px!important}
+ .wv-taste-header h2{font-size:25px;margin-bottom:6px}
+ .wv-taste-header .wv-eyebrow{margin-bottom:7px}
+ .wv-taste-genres button{padding:9px 11px!important}
+}
+@media(prefers-reduced-motion:reduce){.ww-library-page *,.search-results-page *{scroll-behavior:auto!important}}
+/* Override the application shell's deliberate broad defaults only within discovery. */
+html .ww-app .ww-library-container{padding-top:24px!important}
+html .ww-app .ww-library-container>h1{font-size:30px!important;margin-bottom:8px!important}
+html .ww-app .ww-library-container>p{font-size:14px!important;margin-bottom:16px!important}
+html .ww-app .ww-library-discovery{margin:0!important;padding:0!important;box-shadow:none!important}
+html .ww-app .ww-library-search{grid-template-columns:24px minmax(0,1fr) auto}
+html .ww-app .ww-library-search>button{grid-column:auto;width:auto;margin-bottom:0}
+html .ww-app .v2-browse-filters .ww-genre-search{width:100%;height:44px;padding:10px 12px}
+html .ww-app .search-overlay-section-label{color:var(--ww-muted)}
+html .ww-app .search-overlay-rating{color:var(--ww-brand)}
+@media(max-width:760px){
+ html .ww-app .ww-library-container{padding-top:18px!important}
+ html .ww-app .ww-library-container>h1{font-size:27px!important}
+ html .ww-app .ww-library-container>p{margin-bottom:12px!important}
+ html .ww-app .ww-library-search input{height:38px!important;font-size:13px!important}
+ html .ww-app .ww-library-search{min-height:48px;grid-template-columns:18px minmax(0,1fr) auto;padding:4px 7px!important}
+ html .ww-app .ww-library-quick-genres{padding-top:0;margin-top:9px}
+}
+@media(max-width:600px){
+ html .ww-app .wv-hooks .wv-support-shell{padding-top:18px}
+ html .ww-app .wv-hooks .wv-hook-header{margin-bottom:14px;gap:8px}
+ html .ww-app .wv-hooks .wv-hook-header .wv-eyebrow{margin-bottom:8px}
+ html .ww-app .wv-hooks .wv-hook-header h1{font-size:29px!important}
+ html .ww-app .wv-hooks .wv-hook-card{gap:12px 16px}
+}
+html .ww-app .ww-library-quick-genres{padding-top:0;margin-top:8px}
+html .ww-app .v2-browse-results .ww-library-filter{padding-block:8px!important;border-radius:10px}
+html .ww-app .ww-library-page .ww-book-cover-wrap{max-height:280px}
+@media(max-width:600px){
+ html .ww-app .wv-hooks .wv-hook-card{grid-template-columns:76px minmax(0,1fr)}
+ html .ww-app .wv-hooks .wv-hook-art{max-width:76px}
+ html .ww-app .wv-hooks .wv-hook-reading{display:contents}
+ html .ww-app .wv-hooks .wv-hook-excerpt-wrap,html .ww-app .wv-hooks .wv-hook-bottom,html .ww-app .wv-hooks .wv-hook-match{grid-column:1/-1}
+}
+html .ww-app .ww-library-page .v2-browse-layout{margin-top:14px}
+@media(max-width:600px){html .ww-app .wv-hooks .wv-hook-excerpt-wrap{margin:0}html .ww-app .wv-hooks .wv-hook-header{margin-bottom:10px}}
+@media(min-width:761px){html .ww-app .ww-library-page .ww-book-cover-wrap{width:100%;height:280px;aspect-ratio:auto}}

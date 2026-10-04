@@ -189,7 +189,7 @@ test('paragraph discussion stays anchored and a failed post retains the draft fo
   await paragraph.scrollIntoViewIfNeeded();
   const top = await paragraph.evaluate(element => element.getBoundingClientRect().top);
   await paragraph.locator('.reader-comment-button').click({ force: true });
-  const dialog = page.getByRole('dialog', { name: 'Paragraph #3', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Passage 3', exact: true });
   await expect(dialog).toBeVisible();
   expect(Math.abs(await paragraph.evaluate(element => element.getBoundingClientRect().top) - top)).toBeLessThan(3);
   const content = `The quiet detail in this passage stayed with me. Reader check ${Date.now()}.`;

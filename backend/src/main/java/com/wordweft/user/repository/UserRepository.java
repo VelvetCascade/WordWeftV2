@@ -30,14 +30,14 @@ public interface UserRepository extends MongoRepository<User, String> {
             {'username': 1, 'email': 1, 'avatarUrl': 1, 'bio': 1, 'location': 1, 'website': 1,
              'joinDate': 1, 'followers': 1, 'following': 1, 'socials': 1, 'favoriteGenres': 1,
              'roles': 1, 'communityInterests': 1, 'communityBadges': 1, 'hasSeenWritingDemo': 1,
-             'dateOfBirth': 1, 'allowMatureContent': 1, 'notificationPreferences': 1, 'stats': 1}
+             'dateOfBirth': 1, 'allowMatureContent': 1, 'notificationPreferences': 1, 'stats': 1, 'publicReadingStats': 1}
             """)
     Optional<User> findProfileById(String userId);
 
     @Query(value = "{'_id': ?0}", fields = """
             {'username': 1, 'avatarUrl': 1, 'bio': 1, 'location': 1, 'website': 1, 'joinDate': 1,
              'followers': 1, 'following': 1, 'socials': 1, 'favoriteGenres': 1,
-             'communityInterests': 1, 'communityBadges': 1, 'stats': 1}
+             'communityInterests': 1, 'communityBadges': 1, 'stats': 1, 'publicReadingStats': 1}
             """)
     Optional<User> findPublicProfileById(String userId);
 

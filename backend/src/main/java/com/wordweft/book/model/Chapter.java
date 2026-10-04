@@ -18,6 +18,7 @@ public class Chapter {
     private int wordCount;
     private String content; 
     private String status = "draft"; // "draft", "scheduled", or "published"
+    private long editRevision; // Missing legacy field reads as zero.
     private Instant scheduledAt;
     private Instant publishedAt;
     // The writer can keep editing title/content after release without changing

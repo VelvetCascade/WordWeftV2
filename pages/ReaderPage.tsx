@@ -2,7 +2,7 @@ import { applyMetadata } from '../utils/pageMetadata';
 import { metadataFor, parseRoute, chapterPath } from '../seo/metadata.mjs';
 import React, { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from 'react';
 import { Flag, MoreHorizontal } from 'lucide-react';
-import type { User, Book, BookProgress, ChapterContentResult, Comment, Character  } from '../types';
+import type { User, Book, BookProgress, ChapterContentResult, Comment, Character, PassageBookmark  } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, Bars3Icon, BookmarkIcon, BookmarkIconSolid, XMarkIcon, PlusIcon, ArrowUturnLeftIcon, HeartIcon, HeartIconSolid, ShareIcon, EyeIcon, ChatBubbleLeftIcon } from '../components/icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import * as api from '../api/client';
@@ -29,6 +29,9 @@ import { consumeReaderResumeIntent, readerChapterPath, saveReaderAuthIntent, typ
 import { ensureCipherFontLoaded, preloadCipherFonts } from '../utils/cipherFont';
 import { useDialog } from '../hooks/useDialog';
 import '../styles/reader-v2.css';
+import { ReaderPassageTools } from '../components/ReaderPassageTools';
+import { authoredPassageTexts, discussionComments, resolvePassageIndex, type DiscussionScope } from '../utils/readingTools';
+import { readOptionalValue, writeOptionalValue, readOptionalSessionValue, writeOptionalSessionValue } from '../utils/optionalStorage';
 
 type ContentTheme = 'light' | 'dark' | 'sepia';
 type ReaderFont = 'literary' | 'modern';
@@ -71,7 +74,7 @@ const CommentItem: React.FC<{
     };
 
     return (
-        <div className={`relative ${depth > 0 ? 'ml-6 mt-3' : 'mt-4'}`}>
+        <div data-comment-id={comment.id} className={`relative ${depth > 0 ? 'ml-6 mt-3' : 'mt-4'}`}>
             {depth > 0 && (
                 <div className="absolute -left-4 top-4 w-4 h-[1px] bg-gray-300 dark:bg-dark-border"></div>
             )}
@@ -163,15 +166,24 @@ const CommentDrawer: React.FC<{
     paragraphText?: string;
     onAddComment: (content: string, parentId?: string | null) => Promise<void>;
     onReportComment: (comment: Comment) => void;
-}> = ({ isOpen, onClose, comments, commentsLoading, commentsError, onRetryComments, paragraphIndex, paragraphText, onAddComment, onReportComment }) => {
+    scope: DiscussionScope;
+    initialCommentId?: string | null;
+    onScopeChange: (scope: DiscussionScope) => void;
+    onReturnToPassage: (index: number) => void;
+}> = ({ isOpen, onClose, comments, commentsLoading, commentsError, onRetryComments, paragraphIndex, paragraphText, onAddComment, onReportComment, scope, onScopeChange, onReturnToPassage, initialCommentId }) => {
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const dialogRef = useDialog(isOpen, onClose);
-
+    useEffect(() => {
+        if (!isOpen || !initialCommentId || commentsLoading) return;
+        const target = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('[data-comment-id]') ?? []).find(element => element.dataset.commentId === initialCommentId);
+        if (target) { target.tabIndex = -1; target.scrollIntoView({ block: 'center' }); target.focus({ preventScroll: true }); }
+    }, [isOpen, initialCommentId, commentsLoading, comments.length]);
     if (!isOpen) return null;
 
-    const topLevelComments = comments.filter(c => !c.parentId);
+    const scopedComments = discussionComments(comments, scope, paragraphIndex);
+    const topLevelComments = scopedComments.filter(c => !c.parentId);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -196,14 +208,15 @@ const CommentDrawer: React.FC<{
             >
                 <div className="p-4 border-b border-gray-200 dark:border-dark-border flex justify-between items-center bg-gray-50 dark:bg-dark-surface-alt">
                     <h3 id="reader-thread-title" className="font-sans font-bold text-lg text-text-rich dark:text-dark-text-rich">
-                        {paragraphIndex !== null ? `Paragraph #${paragraphIndex + 1}` : 'Chapter Comments'}
+                        {paragraphIndex !== null ? `Passage ${paragraphIndex + 1}` : 'Story discussions'}
                     </h3>
                     <button onClick={onClose} aria-label="Close discussion"><XMarkIcon className="w-6 h-6" /></button>
                 </div>
 
+                <nav className="reader-discussion-scopes" aria-label="Discussion scope">{(['all','chapter','passage'] as const).map(item => <button type="button" key={item} aria-pressed={scope === item} onClick={() => onScopeChange(item)}>{item === 'all' ? 'All' : item === 'chapter' ? 'Chapter' : 'Passage'} ({discussionComments(comments, item, item === 'passage' ? paragraphIndex : null).length})</button>)}</nav>
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                     {paragraphText && (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border-l-4 border-amber-400 text-sm text-gray-700 dark:text-gray-300 italic mb-6">
+                        <div className="reader-passage-context p-3 rounded-lg border-l-4 text-sm italic mb-6">
                             "{paragraphText.substring(0, 150)}{paragraphText.length > 150 ? '...' : ''}"
                         </div>
                     )}
@@ -214,20 +227,21 @@ const CommentDrawer: React.FC<{
                         <div className="text-center py-8 text-gray-500">No comments yet. Be the first!</div>
                     ) : (
                         topLevelComments.map(c => (
+                            <div key={c.id}>
+                            {c.paragraphIndex !== null && <button type="button" className="reader-return-passage" onClick={() => onReturnToPassage(c.paragraphIndex!)}>Return to passage {c.paragraphIndex + 1}</button>}
                             <CommentItem
-                                key={c.id}
                                 comment={c}
-                                allComments={comments}
+                                allComments={scopedComments}
                                 onReply={async (parentId, content) => await onAddComment(content, parentId)}
                                 onReport={onReportComment}
                                 depth={0}
-                            />
+                            /></div>
                         ))
                     )}
                 </div>
 
                 <div className="p-4 border-t border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-surface-alt">
-                    <form onSubmit={handleSubmit}>
+                    {scope === 'passage' && paragraphIndex === null ? <p>Select a passage thread above to reply, or open a passage in the chapter.</p> : <form onSubmit={handleSubmit}>
                         {submitError && <p role="alert" className="reader-thread-error">{submitError}</p>}
                         <label className="reader-thread-input-label" htmlFor="reader-new-comment">Your comment</label>
                         <textarea
@@ -245,7 +259,7 @@ const CommentDrawer: React.FC<{
                         >
                             {isSubmitting ? 'Posting...' : 'Post Comment'}
                         </button>
-                    </form>
+                    </form>}
                 </div>
             </div>
         </div>
@@ -281,6 +295,16 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [progressSaveState, setProgressSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
+    const [quietControls, setQuietControls] = useState(() => readOptionalValue('ww_reader_quiet_controls') === 'true');
+    const [discussionCommentId, setDiscussionCommentId] = useState<string | null>(null);
+    const [discussionScope, setDiscussionScope] = useState<DiscussionScope>('all');
+    const [isPassageToolsOpen, setIsPassageToolsOpen] = useState(false);
+    const [passageIndex, setPassageIndex] = useState<number | null>(null);
+    const pendingPassageRef = useRef<PassageBookmark | null>(null);
+    const readerEntryQueryRef = useRef<URLSearchParams | null>(null);
+    const passageTexts = useMemo(() => authoredPassageTexts(chapterContent?.content ?? ''), [chapterContent?.content]);
+    const getParagraphs = useCallback(() => passageTexts, [passageTexts]);
+    useEffect(() => { writeOptionalValue('ww_reader_quiet_controls', String(quietControls)); setIsToolbarVisible(true); }, [quietControls]);
 
     const [bookmarkSaving, setBookmarkSaving] = useState(false);
     const [chapterLikeSaving, setChapterLikeSaving] = useState(false);
@@ -310,6 +334,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
 
     const lastScrollY = useRef(0);
+    const keyboardNavigationRef = useRef(false);
     const contentRef = useRef<HTMLDivElement>(null);
     const moodContentRef = useRef<HTMLDivElement>(null);
     const saveProgressTimeoutRef = useRef<number | null>(null);
@@ -369,6 +394,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         let active = true;
         setIsLoading(true);
         startReadingTimer();
+        readerEntryQueryRef.current = new URLSearchParams(window.location.hash.includes('?') ? window.location.hash.split('?')[1] : window.location.search);
+        if (readerEntryQueryRef.current.has('paragraph')) setResumedChapterId(chapterId ?? null);
         const bookRequest = api.getBookById(bookId).then(fetchedBook => {
             if (!active) return;
             setBook(fetchedBook);
@@ -378,10 +405,6 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             if (selected) replaceReaderChapter(bookId, resolvedIndex, selected.id);
             setIsLoading(false);
         }).catch(() => { if (active) { setBook(null); setIsLoading(false); } });
-        const charactersRequest = api.getCharactersByBookId(bookId)
-            .then(result => { if (active) setCharacters(result); })
-            .catch(() => { if (active) setCharacters([]); });
-        void Promise.allSettled([bookRequest, charactersRequest]);
         return () => { active = false; checkReadingDuration(); };
     }, [bookId, chapterId, chapterIndex]);
 
@@ -448,7 +471,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     }, [book?.id, selectedChapterId, currentUser?.id]);
 
     useEffect(() => {
-        if (chapter) setIsDisclaimerOpen(disclaimerRequired && sessionStorage.getItem(disclaimerKey) !== 'accepted');
+        if (chapter) setIsDisclaimerOpen(disclaimerRequired && readOptionalSessionValue(disclaimerKey) !== 'accepted');
     }, [chapter?.id, disclaimerRequired, disclaimerKey]);
 
     useEffect(() => {
@@ -478,7 +501,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
     useEffect(() => {
         if (book && chapter && chapterContent?.access === 'FULL') {
-            if ((!disclaimerRequired || sessionStorage.getItem(disclaimerKey) === 'accepted') && hasRecordedView.current !== chapter.id) {
+            if ((!disclaimerRequired || readOptionalSessionValue(disclaimerKey) === 'accepted') && hasRecordedView.current !== chapter.id) {
                 api.recordChapterView(bookId, chapter.id);
                 trackEvent('reading', 'chapter_read_start', chapter.title, undefined, { bookId, chapterId: chapter.id, chapterIndex: currentChapterIndex });
                 hasRecordedView.current = chapter.id;
@@ -602,7 +625,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         const handleScroll = () => {
             observeProgress();
             const scrollY = window.scrollY;
-            setIsToolbarVisible(!(scrollY > lastScrollY.current && scrollY > 100));
+            const focusedControl = keyboardNavigationRef.current && document.activeElement?.closest('.reader-dock,.reader-header,.reader-tools-panel');
+            setIsToolbarVisible(!quietControls || !!focusedControl || !(scrollY > lastScrollY.current && scrollY > 100));
             lastScrollY.current = scrollY;
             if (saveProgressTimeoutRef.current === null) {
                 saveProgressTimeoutRef.current = window.setTimeout(() => {
@@ -627,11 +651,15 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             // The DOM may already show a different chapter; flush the observed chapter, never measure it here.
             saveProgress(false);
         };
-    }, [chapter?.id, chapterContent?.access, currentUser?.id, isChapterLoading, saveProgress, observeProgress]);
+    }, [chapter?.id, chapterContent?.access, currentUser?.id, isChapterLoading, saveProgress, observeProgress, quietControls]);
 
     useEffect(() => {
         const handleReaderShortcuts = (event: KeyboardEvent) => {
+            keyboardNavigationRef.current = true;
+            setIsToolbarVisible(true);
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
             const target = event.target as HTMLElement;
+            if (event.defaultPrevented || target.closest('[role="dialog"]')) return;
             if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
 
             if (event.key.toLowerCase() === 'f') {
@@ -640,6 +668,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 setIsFocusMode(false);
                 setIsSettingsPanelVisible(false);
                 setIsTocVisible(false);
+                setIsPassageToolsOpen(false);
             } else if (event.key === '[') {
                 changeAppearance(() => setFontSize(size => Math.max(12, size - 1)));
             } else if (event.key === ']') {
@@ -697,7 +726,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         returnToStory(book.id);
     };
 
-    const openCommentDrawer = (index: number | null) => {
+    const openCommentDrawer = (index: number | null, scope: DiscussionScope = index === null ? 'all' : 'passage') => {
+        setDiscussionScope(scope);
         setActiveParagraphIndex(index);
         setIsCommentDrawerOpen(true);
     };
@@ -715,7 +745,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const scrollToParagraph = (index: number) => {
         const el = document.getElementById(`paragraph-${index}`);
         if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center' });
+            el.tabIndex = -1; window.requestAnimationFrame(() => { if (el.isConnected) el.focus({ preventScroll: true }); });
             el.classList.remove('highlight-animation');
             void el.offsetWidth;
             el.classList.add('highlight-animation');
@@ -837,6 +868,38 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
         );
     }
 
+    useEffect(() => {
+        setIsPassageToolsOpen(false); setPassageIndex(null); setViewingCharacter(null);
+        if (!book || !selectedChapterId) return;
+        let active = true;
+        api.getCharactersByBookId(book.id, selectedChapterId).then(items => { if (active) setCharacters(items); }).catch(() => {});
+        return () => { active = false; };
+    }, [book?.id, selectedChapterId, currentUser?.id]);
+    useEffect(() => {
+        if (chapterContent?.access !== 'FULL') return;
+        const query = readerEntryQueryRef.current;
+        if (!query) return;
+        if (query.get('discussion') === 'all') { setDiscussionCommentId(query.get('comment')); setDiscussionScope('all'); setActiveParagraphIndex(null); setIsCommentDrawerOpen(true); }
+        const requested = query.get('paragraph');
+        if (requested !== null && /^\d+$/.test(requested)) {
+            const timer = window.setTimeout(() => { const index = Number(requested); if (index < getParagraphs().length) scrollToParagraph(index); else setReaderActionError('This passage is no longer available.'); }, 180);
+            readerEntryQueryRef.current = null;
+            return () => window.clearTimeout(timer);
+        }
+        readerEntryQueryRef.current = null;
+    }, [chapterContent?.chapterId, chapterContent?.access]);
+    useEffect(() => {
+        const pending = pendingPassageRef.current;
+        if (!pending || pending.chapterId !== chapterContent?.chapterId || isChapterLoading || chapterContent.access !== 'FULL') return;
+        const timer = window.setTimeout(() => {
+            const index = resolvePassageIndex(getParagraphs(), pending.paragraphIndex, pending.quote);
+            pendingPassageRef.current = null;
+            if (index === null) { setReaderActionError('The writer has revised this passage. Your saved quote and private note are still in Passages & find.'); return; }
+            scrollToParagraph(index); setResumeAnnouncement(`Returned to saved passage ${index + 1}.`);
+        }, 180);
+        return () => window.clearTimeout(timer);
+    }, [chapterContent?.chapterId, chapterContent?.access, isChapterLoading]);
+
     if (isLoading || isChapterLoading) return <div className="min-h-screen flex items-center justify-center">Loading chapter...</div>;
     if (!book || !chapter) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
     if (!chapterContent) return <div className="min-h-screen flex items-center justify-center">Could not load content.</div>;
@@ -845,8 +908,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const allReleasedRead = isReadingFinished(book.chapters, mergeReadingSnapshots(readingProgress, [{ chapterId: chapter.id, chapterIndex: currentChapterIndex, progress: Math.max(scrollProgress, observedProgressRef.current.get(chapter.id)?.progress ?? 0), scrollPosition: window.scrollY, timestamp: Date.now() }], book.chapters));
     const storyComplete = allReleasedRead && book.readingStatus === 'Completed';
 
-    const paragraphComments = (index: number) => comments.filter(c => c.paragraphIndex === index);
-    const paragraphCommentCount = (index: number) => comments.filter(c => c.paragraphIndex === index && !c.parentId).length;
+    const paragraphCommentCount = (index: number) => discussionComments(comments, 'passage', index).length;
 
     let blockIndex = 0;
 
@@ -925,7 +987,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             domToReact(domNode.children, parseOptions)
                         )}
                         {chapterContent.access === 'FULL' ? (
-                            <button
+                            <><button type="button" className="reader-passage-bookmark" aria-label={`Save passage ${index + 1} or add a private note`} onClick={event => { event.stopPropagation(); setPassageIndex(index); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-4 h-4" /></button><button
                                 onClick={(event) => { event.stopPropagation(); setRevealedCommentIndex(null); openCommentDrawer(index); }}
                                 className={`reader-comment-button absolute top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'has-comments text-accent bg-accent/10' : 'text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
                                 title="Add comment"
@@ -935,7 +997,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                                     <ChatBubbleLeftIcon className="w-4 h-4" />
                                     {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
                                 </div>
-                            </button>
+                            </button></>
                         ) : null}
                     </div>
                 );
@@ -954,7 +1016,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     blockIndex = 0;
 
     return (
-        <div className={`reader-experience reader-v2 transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''}`}>
+        <div onPointerDownCapture={() => { keyboardNavigationRef.current = false; }} className={`reader-experience reader-v2 transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''} ${quietControls && !isToolbarVisible ? 'reader-quiet-hidden' : ''}`}>
             <div className="sr-only" role="status" aria-live="polite">{resumeAnnouncement}</div>
             {/* Contextual Reader Onboarding */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? (
@@ -973,6 +1035,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
             <div className="reader-progress-track" aria-hidden="true"><span style={{ width: `${scrollProgress}%` }} /></div>
 
+            {quietControls && !isToolbarVisible && !isFocusMode && <button type="button" className="reader-reveal-controls" onClick={() => setIsToolbarVisible(true)}>Show reading controls</button>}
             {/* Header */}
             <header className="reader-header reader-header-visible fixed top-0 left-0 right-0 z-20">
                 <div className="reader-header-inner">
@@ -993,12 +1056,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                         <button onClick={() => setIsShareModalOpen(true)} aria-label="Share chapter"><ShareIcon className="w-5 h-5" /></button>
                         <button onClick={() => currentUser ? setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }) : window.location.hash = '/auth'} aria-label="Report chapter" className="reader-report-button"><Flag className="w-4 h-4" /></button>
                         <button onClick={() => setIsTocVisible(true)} aria-label="Open table of contents"><Bars3Icon className="w-5 h-5" /></button>
-                        <button className="reader-more-button" onClick={() => setIsReaderMoreOpen(true)} aria-label="More reader actions"><MoreHorizontal className="w-5 h-5" /></button>
+                        <button aria-label="Open saved passages and find in chapter" onClick={() => { setPassageIndex(null); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-5 h-5" /></button><button className="reader-more-button" onClick={() => setIsReaderMoreOpen(true)} aria-label="More reader actions"><MoreHorizontal className="w-5 h-5" /></button>
                     </div>
                 </div>
             </header>
 
-            {isReaderMoreOpen && <div className="reader-more-overlay" onClick={event => { if (event.target === event.currentTarget) setIsReaderMoreOpen(false); }}><div className="reader-more-panel" ref={moreDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="reader-more-title"><div><h2 id="reader-more-title">Reader actions</h2><button aria-label="Close reader actions" onClick={() => setIsReaderMoreOpen(false)}><XMarkIcon className="w-5 h-5" /></button></div><button onClick={() => { setIsReaderMoreOpen(false); void handleToggleBookmark(); }} disabled={bookmarkSaving}><BookmarkIcon className="w-5 h-5" />{isBookmarked ? 'Remove from library' : 'Save to library'}</button><button onClick={() => { setIsReaderMoreOpen(false); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" />Share chapter</button><button onClick={() => { setIsReaderMoreOpen(false); setIsFocusMode(true); }}><EyeIcon className="w-5 h-5" />Focus mode</button><button onClick={() => { setIsReaderMoreOpen(false); if (currentUser) setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }); else window.location.hash = '/auth'; }}><Flag className="w-5 h-5" />Report chapter</button></div></div>}
+            {isReaderMoreOpen && <div className="reader-more-overlay" onClick={event => { if (event.target === event.currentTarget) setIsReaderMoreOpen(false); }}><div className="reader-more-panel" ref={moreDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="reader-more-title"><div><h2 id="reader-more-title">Reader actions</h2><button aria-label="Close reader actions" onClick={() => setIsReaderMoreOpen(false)}><XMarkIcon className="w-5 h-5" /></button></div><button onClick={() => { setIsReaderMoreOpen(false); void handleToggleBookmark(); }} disabled={bookmarkSaving}><BookmarkIcon className="w-5 h-5" />{isBookmarked ? 'Remove from library' : 'Save to library'}</button><button onClick={() => { setIsReaderMoreOpen(false); setPassageIndex(null); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-5 h-5" />Passages & find</button><button onClick={() => { setIsReaderMoreOpen(false); setIsShareModalOpen(true); }}><ShareIcon className="w-5 h-5" />Share chapter</button><button onClick={() => { setIsReaderMoreOpen(false); setIsFocusMode(true); }}><EyeIcon className="w-5 h-5" />Focus mode</button><button onClick={() => { setIsReaderMoreOpen(false); if (currentUser) setReportTarget({ type: 'CHAPTER', id: `${book.id}:${chapter.id}`, title: `${book.title} — ${chapter.title}` }); else window.location.hash = '/auth'; }}><Flag className="w-5 h-5" />Report chapter</button></div></div>}
 
             {isFocusMode && (
                 <button className="reader-focus-exit" onClick={() => setIsFocusMode(false)}>
@@ -1072,6 +1135,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             <button onClick={handleReturnToStory}>Return to story <ChevronRightIcon className="w-5 h-5" /></button>
                         )}
                     </div>
+                    {nextReleasedIndex < 0 && <div className="reader-ending-context">{book.readingStatus === 'Completed' ? <><a href={`/book/${encodeURIComponent(book.id)}`}>Rate or review this story</a><a href="/category">Find your next story</a></> : <><p>{book.nextScheduledReleaseAt ? `Next chapter scheduled for ${new Date(book.nextScheduledReleaseAt).toLocaleString()}.` : 'The writer has not announced the next release yet.'}</p><button type="button" disabled={bookmarkSaving || currentUser?.following.includes(book.author.id)} onClick={async () => { if (!currentUser) { handleAuthenticate('login'); return; } setBookmarkSaving(true); try { await api.followUser(book.author.id); onUserUpdate({ ...currentUser, following: [...currentUser.following, book.author.id] }); } catch { setReaderActionError('The writer could not be followed. Please try again.'); } finally { setBookmarkSaving(false); } }}>{currentUser?.following.includes(book.author.id) ? 'Following writer' : bookmarkSaving ? 'Following…' : 'Follow writer for new releases'}</button></>}</div>}
                     <div className="reader-end-secondary-actions">
                         <button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-busy={chapterLikeSaving} className={chapter.isLiked ? 'active' : ''}>
                             {chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}
@@ -1083,9 +1147,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <p className="reader-copyright">&copy; {new Date().getFullYear()} {book.author.name}. All rights reserved. Protected from unauthorized distribution and model training.</p>
                     <a href={discussLink(book.id, chapter.id, currentUser?.id === book.author.id)} className="inline-flex items-center gap-2 text-sm font-semibold text-accent mt-4 hover:underline"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
                 </section> : null}
-                {chapterContent.access === 'FULL' && <div className="reader-save-status" role="status"><span>{!currentUser ? 'Sign in to save your reading place' : progressSaveState === 'saving' ? 'Saving your place…' : progressSaveState === 'saved' ? '✓ Your place is saved' : progressSaveState === 'error' ? 'Kept on this device. Sync could not finish.' : 'Your reading place syncs as you read'}</span>{progressSaveState === 'error' && <button type="button" onClick={() => { const observation = observedProgressRef.current.get(chapter.id); if (observation) observation.dirty = true; saveProgress(); }}>Retry saving your place</button>}<span>{Math.max(0, Math.ceil(readingMinutes * (1 - scrollProgress / 100)))} min left in this chapter</span></div>}
+                {chapterContent.access === 'FULL' && <div className="reader-save-status" role="status"><span>{!currentUser ? 'Sign in to save your reading place' : progressSaveState === 'saving' ? 'Saving your place…' : progressSaveState === 'saved' ? 'Saved online' : progressSaveState === 'error' ? 'Kept on this device. Sync could not finish.' : 'Your reading place syncs as you read'}</span>{progressSaveState === 'error' && <button type="button" onClick={() => { const observation = observedProgressRef.current.get(chapter.id); if (observation) observation.dirty = true; saveProgress(); }}>Retry saving your place</button>}<span>{Math.max(0, Math.ceil(readingMinutes * (1 - scrollProgress / 100)))} min left in this chapter</span></div>}
             </main>
-            {chapterContent.access === 'FULL' && <aside className="reader-conversation-rail"><span className="ww-page-eyebrow">Chapter conversation</span><h2>A thought to share?</h2><p>Open a paragraph thread, or join the conversation at the end.</p><button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-pressed={chapter.isLiked}>{chapter.isLiked ? 'Liked' : 'Like chapter'}{chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}</button><button className="reader-conversation-count" onClick={() => openCommentDrawer(null)}>{comments.filter(comment => comment.paragraphIndex === null).length} chapter comments</button></aside>}
+            {chapterContent.access === 'FULL' && <aside className="reader-conversation-rail"><span className="ww-page-eyebrow">Chapter conversation</span><h2>A thought to share?</h2><p>Open a paragraph thread, or join the conversation at the end.</p><button onClick={handleToggleLike} disabled={chapterLikeSaving} aria-pressed={chapter.isLiked}>{chapter.isLiked ? 'Liked' : 'Like chapter'}{chapter.isLiked ? <HeartIconSolid className="w-5 h-5" /> : <HeartIcon className="w-5 h-5" />}</button><button className="reader-conversation-count" onClick={() => openCommentDrawer(null)}>{comments.length} {comments.length === 1 ? 'comment' : 'comments'} · All discussions</button></aside>}
             <aside className="reader-outline-rail" aria-label="Story chapters">
                 <div><span>YOUR CURRENT READ</span><h2>{book.title}</h2></div>
                 <nav aria-label="Chapter outline">{book.chapters.map((item, index) => <button key={item.id} disabled={item.status !== 'published'} aria-current={index === currentChapterIndex ? 'page' : undefined} onClick={() => goToChapter(index)}><span>CHAPTER {index + 1}{item.status !== 'published' ? ' · NOT RELEASED' : item.accessLabel === 'SIGN_IN' ? ' · SIGN IN TO READ' : ''}</span><strong>{item.title}</strong></button>)}</nav>
@@ -1100,7 +1164,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                         Chapter Discussion <span className="text-base font-normal text-gray-500">({comments.length})</span>
                     </h2>
                     <button
-                        onClick={() => openCommentDrawer(null)}
+                        onClick={() => openCommentDrawer(null, 'chapter')}
                         className="bg-accent text-white font-sans font-semibold px-4 py-2 rounded-lg hover:bg-primary transition-colors text-sm"
                     >
                         Add General Comment
@@ -1110,14 +1174,14 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 <div className="space-y-6">
                     {commentsError && <div role="alert" className="reader-thread-error">{commentsError}<button type="button" onClick={() => setCommentsRefresh(value => value + 1)}>Retry comments</button></div>}
                     {commentsLoading && <p role="status">Loading comments…</p>}
-                    {comments.filter(c => !c.parentId && c.paragraphIndex === null).length === 0 && !commentsError && !commentsLoading ? (
-                        <p className="text-center text-gray-500 py-8">No general comments yet.</p>
+                    {comments.filter(c => !c.parentId).length === 0 && !commentsError && !commentsLoading ? (
+                        <p className="text-center text-gray-500 py-8">No discussions yet.</p>
                     ) : (
                         comments.filter(c => !c.parentId).slice(0, 3).map(comment => {
                             return (
                                 <div
                                     key={comment.id}
-                                    className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border border-gray-200/50 dark:border-dark-border cursor-pointer hover:border-accent/30 transition-colors"
+                                    className="reader-discussion-card cursor-pointer transition-colors"
                                     onClick={() => openCommentDrawer(comment.paragraphIndex)}
                                 >
                                     <div className="flex items-start gap-4">
@@ -1131,38 +1195,38 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                                         <div className="flex-1">
                                             <div className="flex items-baseline justify-between">
                                                 <h4
-                                                    className="font-sans font-bold text-text-rich dark:text-dark-text-rich hover:text-accent cursor-pointer"
+                                                    className="reader-discussion-author font-sans font-bold cursor-pointer"
                                                     onClick={(e) => { e.stopPropagation(); window.location.hash = `/author/${comment.user.id}`; }}
                                                 >
                                                     {comment.user.name}
                                                 </h4>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                                <span className="reader-discussion-date text-xs">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                             </div>
 
                                             {comment.paragraphIndex !== null && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); scrollToParagraph(comment.paragraphIndex!); }}
-                                                    className="w-full text-left mt-2 mb-3 bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-400 p-3 rounded-r-lg hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors group"
+                                                    className="reader-passage-context w-full text-left mt-2 mb-3 border-l-4 p-3 rounded-r-lg transition-colors group"
                                                 >
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1 flex items-center gap-2">
+                                                    <p className="reader-passage-context-label text-xs font-bold uppercase mb-1 flex items-center gap-2">
                                                         In response to paragraph #{comment.paragraphIndex + 1}
                                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-accent">Jump to paragraph ↗</span>
                                                     </p>
                                                 </button>
                                             )}
 
-                                            <p className="text-text-body dark:text-dark-text-body mt-2 leading-relaxed">{comment.content}</p>
+                                            <p className="reader-discussion-copy mt-2 leading-relaxed">{comment.content}</p>
 
                                             {comments.filter(r => r.parentId === comment.id).length > 0 && (
-                                                <div className="mt-3 text-xs text-accent font-semibold flex items-center gap-1">
+                                                <div className="reader-discussion-replies mt-3 text-xs font-semibold flex items-center gap-1">
                                                     <ArrowUturnLeftIcon className="w-3 h-3" />
-                                                    {comments.filter(r => r.parentId === comment.id).length} Replies
+                                                    {comments.filter(r => r.parentId === comment.id).length} {comments.filter(r => r.parentId === comment.id).length === 1 ? 'Reply' : 'Replies'}
                                                 </div>
                                             )}
 
                                             <button
                                                 type="button"
-                                                className="mt-3 text-xs font-semibold text-accent hover:underline"
+                                                className="reader-discussion-open mt-3 text-xs font-semibold hover:underline"
                                                 onClick={(event) => { event.stopPropagation(); openCommentDrawer(comment.paragraphIndex); }}
                                             >
                                                 Open discussion
@@ -1187,6 +1251,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <button onClick={() => setIsSettingsPanelVisible(false)} aria-label="Close preferences"><XMarkIcon className="w-5 h-5" /></button>
                 </div>
                 <div className="reader-setting-grid">
+                    <div className="reader-setting-group reader-setting-group-wide"><label><input type="checkbox" checked={quietControls} onChange={event => setQuietControls(event.target.checked)} /> Quiet controls</label><p>Hide controls as you scroll down. Show reading controls or press any key to bring them back.</p></div>
                     <div className="reader-setting-group">
                         <label>Theme</label>
                         <div className="reader-theme-options">
@@ -1231,20 +1296,27 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             {chapterContent.access === 'FULL' ? <CommentDrawer
                 isOpen={isCommentDrawerOpen}
                 onClose={() => setIsCommentDrawerOpen(false)}
-                comments={activeParagraphIndex !== null ? paragraphComments(activeParagraphIndex) : comments.filter(c => c.paragraphIndex === null)}
+                comments={comments}
+                scope={discussionScope}
+                initialCommentId={discussionCommentId}
+                onScopeChange={scope => { setDiscussionScope(scope); if (scope !== 'passage') setActiveParagraphIndex(null); }}
+                onReturnToPassage={index => { setIsCommentDrawerOpen(false); scrollToParagraph(index); }}
                 commentsLoading={commentsLoading}
                 commentsError={commentsError}
                 onRetryComments={() => setCommentsRefresh(value => value + 1)}
                 paragraphIndex={activeParagraphIndex}
-                paragraphText={activeParagraphIndex !== null && !chapterContent.obfuscated ? document.getElementById(`paragraph-${activeParagraphIndex}`)?.querySelector('p,h1,h2,h3,h4,h5,h6,blockquote,ul,ol,pre')?.textContent ?? undefined : undefined}
+                paragraphText={activeParagraphIndex !== null ? document.getElementById(`paragraph-${activeParagraphIndex}`)?.querySelector('p,h1,h2,h3,h4,h5,h6,blockquote,ul,ol,pre')?.textContent ?? undefined : undefined}
                 onAddComment={handleAddComment}
                 onReportComment={(comment) => currentUser ? setReportTarget({ type: 'COMMENT', id: comment.id, title: `Comment by ${comment.user.name}` }) : window.location.hash = '/auth'}
             /> : null}
 
+            {chapterContent.access !== 'AUTH_REQUIRED' && <ReaderPassageTools open={isPassageToolsOpen} onClose={() => setIsPassageToolsOpen(false)} bookId={book.id} chapterId={chapter.id} chapters={book.chapters} userId={currentUser?.id} paragraphIndex={passageIndex} getParagraphs={getParagraphs} onFind={scrollToParagraph} onSignIn={() => handleAuthenticate('login')} onNavigate={bookmark => { const index = book.chapters.findIndex(item => item.id === bookmark.chapterId && item.status === 'published'); if (index < 0) { setReaderActionError('This saved chapter is no longer released.'); return; } pendingPassageRef.current = bookmark; if (index === currentChapterIndex) { const resolved = resolvePassageIndex(getParagraphs(), bookmark.paragraphIndex, bookmark.quote); pendingPassageRef.current = null; if (resolved !== null) scrollToParagraph(resolved); else setReaderActionError('This passage has changed. Your saved quote and note remain available.'); } else { goToChapter(index); setResumedChapterId(bookmark.chapterId); } }} />}
             <CharacterPreview
                 character={viewingCharacter}
                 isOpen={!!viewingCharacter}
                 onClose={() => setViewingCharacter(null)}
+                chapters={book.chapters}
+                previewChapterId={chapter.id}
             />
 
             <ShareModal 
@@ -1262,7 +1334,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 rating={book.ageRating}
                 warnings={[...(book.contentWarnings || []), ...(chapter.contentWarnings || [])].filter((warning, index, all) => all.indexOf(warning) === index)}
                 note={chapter.disclaimerNote || book.customDisclaimer}
-                onContinue={() => { sessionStorage.setItem(disclaimerKey, 'accepted'); setIsDisclaimerOpen(false); }}
+                onContinue={() => { writeOptionalSessionValue(disclaimerKey, 'accepted'); setIsDisclaimerOpen(false); }}
                 onLeave={handleReturnToStory}
             />
             {reportTarget && <ReportModal isOpen onClose={() => setReportTarget(null)} targetType={reportTarget.type} targetId={reportTarget.id} targetTitle={reportTarget.title} />}

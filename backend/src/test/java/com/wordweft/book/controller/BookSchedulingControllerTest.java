@@ -35,11 +35,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 @WebMvcTest(BookController.class)
 @Import(SecurityConfig.class)
@@ -51,6 +53,7 @@ class BookSchedulingControllerTest {
     @MockBean NotificationService notificationService;
     @MockBean ImageKitService imageKitService;
     @MockBean ChapterPublishingService publishing;
+    @MockBean com.wordweft.book.service.ChapterWriteService chapterWriteService;
     @MockBean ChapterContentService chapterContentService;
     @MockBean ChapterReadEventService readEvents;
     @MockBean ManuscriptImportService manuscriptImportService;
@@ -113,4 +116,23 @@ class BookSchedulingControllerTest {
         mvc.perform(get("/api/books/book/chapters/chapter/revisions"))
                 .andExpect(status().isUnauthorized());
     }
+    @Test
+    void saveAcknowledgementUsesCommittedRevisionEvenWhenProfileContainsALaterSession() throws Exception {
+        var chapter = new com.wordweft.book.model.Chapter(); chapter.setId("chapter"); chapter.setTitle("Before"); chapter.setContent("Before draft");
+        var book = new com.wordweft.book.model.Book(); book.setId("book"); book.setAuthorId("author"); book.setChapters(new java.util.ArrayList<>(List.of(chapter)));
+        when(bookRepository.findById("book")).thenReturn(java.util.Optional.of(book));
+        when(userService.getUserProfile("author")).thenReturn(Map.of("id", "author", "writtenBooks", List.of(Map.of("id", "book", "chapters", List.of(Map.of("id", "chapter", "editRevision", 9))))));
+        mvc.perform(patch("/api/books/book/chapters/chapter").with(user(author)).contentType("application/json")
+                .content("{\"data\":{\"title\":\"My version\",\"content\":\"My draft\"},\"status\":\"preserve\",\"expectedRevision\":0}"))
+                .andExpect(status().isOk()).andExpect(header().string("X-Chapter-Revision", "1"))
+                .andExpect(jsonPath("$.writtenBooks[0].chapters[0].editRevision").value(9));
+    }
+
+    @Test void publicationImpactAndEditSessionAreNeverAnonymous() throws Exception {
+        doAnswer(invocation -> { ((jakarta.servlet.http.HttpServletResponse) invocation.getArgument(1)).sendError(401); return null; })
+                .when(entryPoint).commence(any(), any(), any());
+        mvc.perform(get("/api/books/book/chapters/chapter/publication-impact")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/books/book/chapters/chapter/edit-session")).andExpect(status().isUnauthorized());
+    }
+
 }

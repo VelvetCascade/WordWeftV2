@@ -27,6 +27,8 @@ public class ChapterPublishingService {
     private final BookRepository books;
     private final NotificationService notifications;
     private final Clock clock;
+    @Autowired(required = false)
+    org.springframework.data.mongodb.core.MongoTemplate mongo;
 
     @Autowired(required = false)
     com.wordweft.user.repository.UserRepository userRepository;
@@ -45,9 +47,81 @@ public class ChapterPublishingService {
         this.clock = clock;
     }
 
-    public Book schedule(String authorId, String bookId, String chapterId, Instant releaseAt) {
+    public record ReleaseChapter(String id, int number, String title, String status, Instant scheduledAt,
+            List<String> contentWarnings, int wordCount, String disclaimerNote, boolean complete) {}
+    public record PublicationImpact(String reviewToken, boolean storyBecomesPublic, String resultingAgeRating,
+            List<ReleaseChapter> chapters) {}
+
+    public PublicationImpact reviewPublication(String authorId, String bookId, String chapterId) {
+        return impact(requireOwnedBook(authorId, bookId), chapterId);
+    }
+
+    private PublicationImpact impact(Book book, String chapterId) {
+        int target = chapterIndex(book, chapterId);
+        List<ReleaseChapter> releases = new java.util.ArrayList<>();
+        AgeRating rating = book.getAgeRating() == null ? AgeRating.ALL_AGES : book.getAgeRating();
+        for (int i = 0; i <= target; i++) {
+            Chapter c = book.getChapters().get(i);
+            if (!"published".equals(c.getStatus()) || i == target) {
+                List<String> warnings = c.getContentWarnings() == null ? List.of() : c.getContentWarnings();
+                AgeRating required = ContentAccessService.requiredRatingForWarnings(warnings);
+                if (required.getMinimumAge() > rating.getMinimumAge()) rating = required;
+                releases.add(new ReleaseChapter(c.getId(), i + 1, c.getTitle(), c.getStatus(), c.getScheduledAt(),
+                        warnings, c.getWordCount(), c.getDisclaimerNote(),
+                        !isBlank(c.getTitle()) && !isBlank(stripHtml(c.getContent()))));
+            }
+        }
+        // Hash the reviewed manuscript and release state, never disclose manuscript bodies in the impact response.
+        try {
+            var values = new java.util.ArrayList<Object>();
+            values.add(java.util.Arrays.asList(book.getId(), book.getPublicationStatus(), book.getAgeRating(), book.isMature(), book.getContentWarnings()));
+            for (Chapter c : book.getChapters()) values.add(java.util.Arrays.asList(c.getId(), c.getTitle(), c.getContent(),
+                    c.getContentWarnings(), c.getDisclaimerNote(), c.getStatus(), c.getScheduledAt(), c.getEditRevision()));
+            values.add(chapterId);
+            String json = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules().writeValueAsString(values);
+            String token = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(json.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            return new PublicationImpact(token, !"published".equals(book.getPublicationStatus()), rating.name(), releases);
+        } catch (Exception impossible) { throw new IllegalStateException("Could not review publication", impossible); }
+    }
+
+    public Book publishReviewed(String authorId, String bookId, String chapterId, String reviewToken) {
         Book book = requireOwnedBook(authorId, bookId);
+        if (reviewToken == null || !impact(book, chapterId).reviewToken().equals(reviewToken)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "The release changed since your review. Review every affected chapter again.");
+        }
+        return publishNow(book, chapterId);
+    }
+
+    /** Atomic preconditions cover ordering, manuscript revisions, schedules and story visibility. */
+    private org.springframework.data.mongodb.core.query.Query publicationQuery(Book book) {
+        return ChapterWriteService.snapshotQuery(book);
+    }
+
+    private Book persist(Book book, org.springframework.data.mongodb.core.query.Query precondition) {
+        if (mongo == null) return books.save(book); // Unit-test constructor; production always uses MongoTemplate.
+        var update = new org.springframework.data.mongodb.core.query.Update()
+                .set("publicationStatus", book.getPublicationStatus()).set("publishedDate", book.getPublishedDate())
+                .set("lastUpdatedAt", book.getLastUpdatedAt()).set("ageRating", book.getAgeRating())
+                .set("isMature", book.isMature()).set("contentWarnings", book.getContentWarnings());
+        for (int i = 0; i < book.getChapters().size(); i++) {
+            var draft = ChapterWriteService.draftUpdate("chapters." + i + ".", book.getChapters().get(i));
+            draft.getUpdateObject().get("$set", org.bson.Document.class).forEach(update::set);
+            update.set("chapters." + i + ".publishedAt", book.getChapters().get(i).getPublishedAt());
+        }
+        if (mongo.updateFirst(precondition, update, Book.class).getMatchedCount() != 1) throw ChapterWriteService.conflict();
+        return book;
+    }
+
+    public Book schedule(String authorId, String bookId, String chapterId, Instant releaseAt) {
+        return schedule(authorId, bookId, chapterId, releaseAt, null);
+    }
+
+    public Book schedule(String authorId, String bookId, String chapterId, Instant releaseAt, Long expectedRevision) {
+        Book book = requireOwnedBook(authorId, bookId);
+        var precondition = publicationQuery(book);
         Chapter chapter = requireChapter(book, chapterId);
+        ChapterWriteService.requireRevision(chapter, expectedRevision);
         requirePublishedStory(book);
         requireCompleteChapter(chapter);
         int targetIndex = chapterIndex(book, chapterId);
@@ -70,25 +144,37 @@ public class ChapterPublishingService {
                     "Choose a release time within the next year.");
         }
 
+        chapter.setEditRevision(chapter.getEditRevision() + 1);
         chapter.setStatus("scheduled");
         chapter.setScheduledAt(releaseAt);
         chapter.setPublishedAt(null);
-        return books.save(book);
+        return persist(book, precondition);
     }
 
     public Book cancelSchedule(String authorId, String bookId, String chapterId) {
+        return cancelSchedule(authorId, bookId, chapterId, null);
+    }
+
+    public Book cancelSchedule(String authorId, String bookId, String chapterId, Long expectedRevision) {
         Book book = requireOwnedBook(authorId, bookId);
+        var precondition = publicationQuery(book);
         Chapter chapter = requireChapter(book, chapterId);
+        ChapterWriteService.requireRevision(chapter, expectedRevision);
         if ("scheduled".equals(chapter.getStatus())) {
+            chapter.setEditRevision(chapter.getEditRevision() + 1);
             chapter.setStatus("draft");
             chapter.setScheduledAt(null);
-            return books.save(book);
+            return persist(book, precondition);
         }
         return book;
     }
 
     public Book publishNow(String authorId, String bookId, String chapterId) {
-        Book book = requireOwnedBook(authorId, bookId);
+        return publishNow(requireOwnedBook(authorId, bookId), chapterId);
+    }
+
+    private Book publishNow(Book book, String chapterId) {
+        var precondition = publicationQuery(book);
         int targetIndex = chapterIndex(book, chapterId);
         Chapter chapter = book.getChapters().get(targetIndex);
         boolean storyWasPublished = "published".equals(book.getPublicationStatus());
@@ -116,7 +202,7 @@ public class ChapterPublishingService {
             }
         }
         markStoryUpdated(book, publishedAt);
-        Book saved = books.save(book);
+        Book saved = persist(book, precondition);
         if (storyWasPublished && !chapterWasPublished) {
             notifyFollowers(saved, chapter);
         } else if (!storyWasPublished) {
@@ -139,29 +225,34 @@ public class ChapterPublishingService {
 
     public Book unpublishChapter(String authorId, String bookId, String chapterId) {
         Book book = requireOwnedBook(authorId, bookId);
+        var precondition = publicationQuery(book);
         int targetIndex = chapterIndex(book, chapterId);
         for (int index = targetIndex; index < book.getChapters().size(); index++) {
             Chapter chapter = book.getChapters().get(index);
+            chapter.setEditRevision(chapter.getEditRevision() + 1);
             chapter.setStatus("draft");
             chapter.setScheduledAt(null);
             chapter.setPublishedAt(null);
         }
-        return books.save(book);
+        return persist(book, precondition);
     }
 
     public Book unpublishStory(String authorId, String bookId) {
         Book book = requireOwnedBook(authorId, bookId);
+        var precondition = publicationQuery(book);
         book.setPublicationStatus("draft");
         for (Chapter chapter : book.getChapters()) {
+            chapter.setEditRevision(chapter.getEditRevision() + 1);
             chapter.setStatus("draft");
             chapter.setScheduledAt(null);
             chapter.setPublishedAt(null);
         }
-        return books.save(book);
+        return persist(book, precondition);
     }
 
     public boolean publishDue(Book book, Instant now) {
         if (!"published".equals(book.getPublicationStatus())) return false;
+        var precondition = publicationQuery(book);
         boolean changed = false;
         while (true) {
             int nextIndex = firstUnpublishedIndex(book);
@@ -181,7 +272,7 @@ public class ChapterPublishingService {
         }
 
         markStoryUpdated(book, now);
-        books.save(book);
+        persist(book, precondition);
         book.getChapters().stream()
                 .filter(chapter -> now.equals(chapter.getPublishedAt()))
                 .forEach(chapter -> notifyFollowers(book, chapter));
@@ -245,6 +336,7 @@ public class ChapterPublishingService {
     }
 
     private void publishChapter(Chapter chapter, Instant publishedAt) {
+        chapter.setEditRevision(chapter.getEditRevision() + 1);
         PublishedChapterView.capture(chapter);
         chapter.setStatus("published");
         chapter.setScheduledAt(null);

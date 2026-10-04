@@ -4,6 +4,7 @@ package com.wordweft.book.controller;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Review;
 import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.service.BookActivityCounters;
 import com.wordweft.book.repository.ReviewRepository;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
@@ -29,6 +30,7 @@ public class ReviewController {
     @Autowired ReviewRepository reviewRepository;
     @Autowired UserRepository userRepository;
     @Autowired BookRepository bookRepository;
+    @Autowired BookActivityCounters counters;
 
     @GetMapping("/{bookId}/reviews")
     public ResponseEntity<?> getReviews(@PathVariable String bookId) {
@@ -83,11 +85,8 @@ public class ReviewController {
     
     private void updateBookStats(String bookId) {
         List<Review> reviews = reviewRepository.findByBookId(bookId);
-        Book book = bookRepository.findById(bookId).orElseThrow();
-        book.setReviewsCount(reviews.size());
         double avg = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
-        book.setRating(Math.round(avg * 10.0) / 10.0);
-        bookRepository.save(book);
+        counters.reviewsChanged(bookId, reviews.size(), Math.round(avg * 10.0) / 10.0);
     }
     
     private Map<String, Object> enrichReview(Review review) {

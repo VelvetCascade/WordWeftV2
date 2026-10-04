@@ -7,13 +7,32 @@ async function catalog(request: import('@playwright/test').APIRequestContext) {
     const response = await request.get('/api/books?size=30', { headers: { 'X-Forwarded-For': '127.22.2.12' } });
     expect(response.ok()).toBeTruthy();
     const { content } = await response.json();
-    return { stories: content.filter(book => book.category !== 'Poetry').slice(0, 3), novels: content.filter(book => book.category === 'Novel').slice(3, 6), poems: content.filter(book => book.category === 'Poetry') };
+    const stories = content.filter(book => book.category !== 'Poetry').slice(0, 3);
+    // Keep each format populated even in the minimal disposable preview database.
+    // Cover links still point to real published stories; only hero format fixtures vary.
+    return { stories, novels: stories.slice(0, 2).map(book => ({ ...book, category: 'Novel' })), poems: stories.slice(2, 3).map(book => ({ ...book, category: 'Poetry', genres: ['Poetry'] })) };
 }
+
+test('a touch press pauses automatic covers until activation finishes', async ({ page, request }) => {
+    const groups = await catalog(request);
+    await page.route('**/api/books/hero', route => route.fulfill({ json: groups }));
+    await page.goto('/');
+    const hero = page.locator('.v2-home-hero');
+    const first = hero.locator('.v2-hero-book').first();
+    await expect(first).toBeVisible();
+    // Confirm rotation is active before testing that a press suppresses it.
+    await expect(hero).toHaveAttribute('data-active-format', 'novels');
+    const original = await first.elementHandle();
+    await first.dispatchEvent('pointerdown', { pointerType: 'touch' });
+    await page.waitForTimeout(2800);
+    await expect(hero).toHaveAttribute('data-active-format', 'novels');
+    expect(await original!.evaluate(node => node.isConnected)).toBe(true);
+    await first.dispatchEvent('pointercancel', { pointerType: 'touch' });
+});
 
 test('hero automatically cycles the highlighted word and published covers without format controls', async ({ page, request }) => {
     const groups = await catalog(request);
     await page.route('**/api/books/hero', route => route.fulfill({ json: groups }));
-    await page.clock.install();
     await page.goto('/');
     const hero = page.locator('.v2-home-hero');
     await expect(hero.getByRole('heading', { level: 1, name: 'Read stories. Write your own.', exact: true })).toBeVisible();
@@ -30,7 +49,7 @@ test('hero automatically cycles the highlighted word and published covers withou
     // Reading the left-hand copy must not stop the automatic presentation.
     await hero.locator('.v2-hero-description').hover();
     for (const format of ['novels', 'poems', 'stories'] as const) {
-        await page.clock.runFor(7100);
+        // Exercise the actual cadence, including React's exit/enter effects.
         await expect(hero).toHaveAttribute('data-active-format', format);
         await expect(hero.locator('.v2-story-word-text')).toHaveText(format);
         await expect(hero.locator('.v2-hero-book')).toHaveCount(groups[format].length);

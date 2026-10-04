@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, PassageBookmark, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
 import { invalidateAuthSession, JWT_STORAGE_KEY, shouldInvalidateAuthSession } from '../utils/authSession';
 import type { DiscoveryHeroGroups } from '../utils/discoveryHero';
 import { mergeReadingSnapshots, type ReadingSnapshot } from '../utils/readingJourney';
@@ -433,7 +433,7 @@ export async function getGenres(): Promise<string[]> {
 }
 
 export async function getGenresRanked(): Promise<{ name: string; bookCount: number; readCount: number }[]> {
-    const response = await fetch(`${API_BASE_URL}/books/genres/ranked`);
+    const response = await fetch(`${API_BASE_URL}/books/genres/ranked`, { headers: getHeaders() });
     return await handleResponse(response, { requireArray: true });
 }
 
@@ -515,6 +515,8 @@ export async function getAuthorById(id: string): Promise<Author | null> {
         website: data.website,
         joinDate: safeJoinDate,
         stats: data.stats || undefined,
+        publicReadingStats: data.publicReadingStats === true,
+        publicShelves: (data.publicShelves || []).map((shelf: any) => ({ ...shelf, books: (shelf.books || []).map(mapBackendBookToFrontend) })),
         socials: data.socials || {},
         favoriteGenres: data.favoriteGenres || [],
         followersCount: data.followersCount || 0,
@@ -994,13 +996,20 @@ export async function updateBookDetails(userId: string, bookId: string, updates:
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function saveChapter(userId: string, bookId: string, chapterId: any, data: any, status: any): Promise<User> {
+export type ManuscriptWriteResult = User & { savedChapterRevision?: number };
+async function manuscriptWriteResponse(response: Response): Promise<ManuscriptWriteResult> {
+    const user = mapBackendUserToFrontend(await handleResponse(response));
+    const header = response.headers.get('X-Chapter-Revision');
+    return { ...user, ...(header !== null && Number.isSafeInteger(Number(header)) ? { savedChapterRevision: Number(header) } : {}) };
+}
+
+export async function saveChapter(userId: string, bookId: string, chapterId: any, data: any, status: any, expectedRevision?: number, preserveServerRevision = false): Promise<ManuscriptWriteResult> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}`, {
         method: 'PATCH',
         headers: getHeaders(),
-        body: JSON.stringify({ data, status, contentWarnings: data.contentWarnings || [], disclaimerNote: data.disclaimerNote || '' })
+        body: JSON.stringify({ data, status, expectedRevision, preserveServerRevision, contentWarnings: data.contentWarnings || [], disclaimerNote: data.disclaimerNote || '' })
     });
-    return mapBackendUserToFrontend(await handleResponse(response));
+    return manuscriptWriteResponse(response);
 }
 
 export async function setBookStatus(userId: string, bookId: string, status: 'draft' | 'published', chapterIds?: string[]): Promise<User> {
@@ -1049,21 +1058,21 @@ export async function importManuscript(bookId: string, file: File, onProgress?: 
     };
 }
 
-export async function scheduleChapter(bookId: string, chapterId: string, scheduledAt: string): Promise<User> {
+export async function scheduleChapter(bookId: string, chapterId: string, scheduledAt: string, expectedRevision?: number): Promise<ManuscriptWriteResult> {
     const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
         method: 'PUT',
         headers: getHeaders(),
-        body: JSON.stringify({ scheduledAt })
+        body: JSON.stringify({ scheduledAt, expectedRevision })
     });
-    return mapBackendUserToFrontend(await handleResponse(response));
+    return manuscriptWriteResponse(response);
 }
 
-export async function cancelChapterSchedule(bookId: string, chapterId: string): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule`, {
+export async function cancelChapterSchedule(bookId: string, chapterId: string, expectedRevision?: number): Promise<ManuscriptWriteResult> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/schedule${expectedRevision === undefined ? '' : `?expectedRevision=${expectedRevision}`}`, {
         method: 'DELETE',
         headers: getHeaders()
     });
-    return mapBackendUserToFrontend(await handleResponse(response));
+    return manuscriptWriteResponse(response);
 }
 
 export async function getChapterRevisions(bookId: string, chapterId: string): Promise<ChapterRevision[]> {
@@ -1073,12 +1082,12 @@ export async function getChapterRevisions(bookId: string, chapterId: string): Pr
     return await handleResponse(response);
 }
 
-export async function restoreChapterRevision(bookId: string, chapterId: string, revisionId: string): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}/restore`, {
+export async function restoreChapterRevision(bookId: string, chapterId: string, revisionId: string, expectedRevision?: number): Promise<ManuscriptWriteResult> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}/restore${expectedRevision === undefined ? '' : `?expectedRevision=${expectedRevision}`}`, {
         method: 'POST',
         headers: getHeaders()
     });
-    return mapBackendUserToFrontend(await handleResponse(response));
+    return manuscriptWriteResponse(response);
 }
 
 export async function getWriterAnalytics(bookId?: string): Promise<WriterAnalytics> {
@@ -1153,8 +1162,8 @@ export async function addChapterComment(bookId: string, chapterId: string, parag
 
 // --- Character API ---
 
-export async function getCharactersByBookId(bookId: string): Promise<Character[]> {
-    const response = await fetch(`${API_BASE_URL}/characters/book/${bookId}`, { headers: getHeaders() });
+export async function getCharactersByBookId(bookId: string, chapterId?: string): Promise<Character[]> {
+    const response = await fetch(`${API_BASE_URL}/characters/book/${encodeURIComponent(bookId)}${chapterId ? `?chapterId=${encodeURIComponent(chapterId)}` : ''}`, { headers: getHeaders() });
     return await handleResponse(response);
 }
 
@@ -1368,6 +1377,7 @@ function mapBackendUserToFrontend(backendData: any): User {
         website: backendData.website,
         joinDate: safeJoinDate,
         isEmailVerified: backendData.isEmailVerified ?? true,
+        publicReadingStats: backendData.publicReadingStats === true,
         stats: backendData.stats || {
             booksRead: 0,
             chaptersRead: 0,
@@ -1553,3 +1563,41 @@ export const searchFull = async (
     const response = await fetch(`${API_BASE_URL}/search?${params}`);
     return handleResponse(response);
 };
+
+
+export interface PublicationImpact {
+    reviewToken: string;
+    storyBecomesPublic: boolean;
+    resultingAgeRating: string;
+    chapters: { id: string; number: number; title: string; status: 'draft' | 'scheduled' | 'published'; scheduledAt?: string | null; contentWarnings: string[]; wordCount: number; disclaimerNote?: string; complete: boolean }[];
+}
+export async function getChapterEditSession(bookId: string, chapterId: string): Promise<import('../types').Chapter> {
+    return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/edit-session`, { headers: getHeaders(), cache: 'no-store' }));
+}
+export async function getPublicationImpact(bookId: string, chapterId: string): Promise<PublicationImpact> {
+    return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/publication-impact`, { headers: getHeaders(), cache: 'no-store' }));
+}
+export async function publishReviewed(bookId: string, chapterId: string, reviewToken: string): Promise<ManuscriptWriteResult> {
+    return manuscriptWriteResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/publish-reviewed`, {
+        method: 'POST', headers: getHeaders(), body: JSON.stringify({ reviewToken }),
+    }));
+}
+
+// Private passage tools are account-scoped by the server, never part of public story data.
+export async function getPassageBookmarks(bookId: string): Promise<PassageBookmark[]> {
+    const response = await fetch(`${API_BASE_URL}/reading/passages/${encodeURIComponent(bookId)}`, { headers: getHeaders(), cache: 'no-store' });
+    return handleResponse(response);
+}
+export async function savePassageBookmark(bookId: string, chapterId: string, paragraphIndex: number, note: string): Promise<PassageBookmark> {
+    const response = await fetch(`${API_BASE_URL}/reading/passages/${encodeURIComponent(bookId)}/${encodeURIComponent(chapterId)}/${paragraphIndex}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ note }) });
+    return handleResponse(response);
+}
+export async function deletePassageBookmark(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/reading/passages/${encodeURIComponent(id)}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) await handleResponse(response);
+}
+
+export async function organizeLibraryBooks(bookIds: string[], shelfId: string, operation: 'ADD'|'REMOVE'): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/library/books/shelves`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ bookIds, shelfId, operation }) });
+    return mapBackendUserToFrontend(await handleResponse(response));
+}

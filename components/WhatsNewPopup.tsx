@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { readOptionalValue, writeOptionalValue } from '../utils/optionalStorage';
 
 export const WhatsNewPopup: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -7,7 +8,7 @@ export const WhatsNewPopup: React.FC = () => {
     useEffect(() => {
         // We only trigger when auth is valid, as the parent controls mounting this.
         // Ensure we run on client safely
-        const hasSeenPopup = localStorage.getItem('hasSeenWhatsNewPopup_v1');
+        const hasSeenPopup = readOptionalValue('hasSeenWhatsNewPopup_v1');
 
         if (!hasSeenPopup) {
             // Delay before popping up to allow the user entry context
@@ -22,13 +23,13 @@ export const WhatsNewPopup: React.FC = () => {
 
     const handleDismiss = () => {
         setIsVisible(false);
-        localStorage.setItem('hasSeenWhatsNewPopup_v1', 'true');
+        writeOptionalValue('hasSeenWhatsNewPopup_v1', 'true');
         setHasDismissed(true);
     };
 
     const handleDiscover = () => {
         setIsVisible(false);
-        localStorage.setItem('hasSeenWhatsNewPopup_v1', 'true');
+        writeOptionalValue('hasSeenWhatsNewPopup_v1', 'true');
         setHasDismissed(true);
         window.location.hash = '/features';
     };

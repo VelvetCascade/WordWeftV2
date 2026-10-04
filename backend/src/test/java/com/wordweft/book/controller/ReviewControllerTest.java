@@ -1,6 +1,7 @@
 package com.wordweft.book.controller;
 
 import com.wordweft.book.model.Book;
+import com.wordweft.book.service.BookActivityCounters;
 import com.wordweft.book.model.Review;
 import com.wordweft.book.repository.BookRepository;
 import com.wordweft.book.repository.ReviewRepository;
@@ -28,6 +29,7 @@ class ReviewControllerTest {
 
     @BeforeEach void setup() {
         controller.reviewRepository = reviews;
+        controller.counters = mock(BookActivityCounters.class);
         controller.bookRepository = mock(BookRepository.class);
         controller.userRepository = mock(UserRepository.class);
         Book book = new Book(); book.setId("story");
@@ -38,6 +40,14 @@ class ReviewControllerTest {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
     }
     @AfterEach void clearSession() { SecurityContextHolder.clearContext(); }
+
+    @Test void reviewUpdatesNeverReplaceTheManuscriptDocument() {
+        when(reviews.findByBookId("story")).thenReturn(List.of());
+        Review input = new Review(); input.setRating(4); input.setComment("An ordinary reader review.");
+        controller.addReview("story", input);
+        verify(controller.bookRepository, never()).save(any(Book.class));
+        verify(controller.counters).reviewsChanged("story", 0, 0.0);
+    }
 
     @Test void editingKeepsTheExistingReviewAndReplies() {
         Review existing = new Review(); existing.setId("existing"); existing.setUserId("reader"); existing.setBookId("story"); existing.setDate(LocalDate.of(2026, 9, 1));

@@ -94,6 +94,28 @@ class SearchServiceTest {
         assertEquals(List.of("accessible"), autocompleteIds(service, "Bellweather"));
     }
 
+    @Test
+    void standaloneFullSearchQueriesThemeFieldsWithLiteralInput() {
+        MongoTemplate mongo = mock(MongoTemplate.class);
+        SearchService service = new SearchService();
+        ReflectionTestUtils.setField(service, "mongoTemplate", mongo);
+        ReflectionTestUtils.setField(service, "contentAccessService", new ContentAccessService());
+        SecurityContextHolder.clearContext();
+        when(mongo.count(any(Query.class), eq(Book.class))).thenAnswer(invocation -> {
+            Query query = invocation.getArgument(0);
+            for (String field : List.of("summary", "description", "tags", "genres")) {
+                Pattern pattern = (Pattern) criterionValue(query.getQueryObject(), field);
+                assertTrue(pattern != null, field + " must be searchable on standalone Mongo");
+                assertTrue(pattern.matcher("A found.family adventure").find());
+                assertFalse(pattern.matcher("A foundXfamily adventure").find());
+            }
+            return 0L;
+        });
+        when(mongo.aggregate(any(Aggregation.class), eq(Book.class), eq(Document.class)))
+                .thenThrow(new IllegalStateException("Atlas Search is unavailable"));
+        service.fullSearch("found.family", "books", 0, 12);
+    }
+
     private SearchService fallbackServiceFor(List<Book> storedBooks) {
         SecurityContextHolder.clearContext(); // These searches run as anonymous readers.
         MongoTemplate mongo = mock(MongoTemplate.class);

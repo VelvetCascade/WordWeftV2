@@ -76,7 +76,7 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ token }) =
                         onClick={() => window.location.hash = '/auth'}
                         aria-label="Back to sign in" className="ww-reset-back p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors mb-4"
                     >
-                        <ArrowLeftIcon className="w-5 h-5" />
+                        <ArrowLeftIcon className="w-5 h-5" /><span>Back to sign in</span>
                     </button>
 
                     {!token.trim() ? (

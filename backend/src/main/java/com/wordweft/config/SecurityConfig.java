@@ -91,7 +91,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/founding-writer-applications/**").hasRole("ADMIN")
                         .requestMatchers("/api/feedback/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/books/*/chapters/*/revisions").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/books/*/chapters/*/revisions", "/api/books/*/chapters/*/edit-session",
+                                "/api/books/*/chapters/*/publication-impact").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/characters/book/*", "/api/characters/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/books/*/chapters/*/view").permitAll()
