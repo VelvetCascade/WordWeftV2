@@ -13,6 +13,7 @@ import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterPreview } from '../components/CharacterPreview';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
+import { readAtmosphereIntensity, type AtmosphereIntensity } from '../utils/atmosphere';
 import { ReaderDiscoveryCoach } from '../components/ReaderDiscoveryCoach';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
 import { ShareModal } from '../components/ShareModal';
@@ -292,6 +293,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [resumedChapterId, setResumedChapterId] = useState<string | null>(null);
     const [resumeAnnouncement, setResumeAnnouncement] = useState('');
     const [fontSize, setFontSize] = useState(initialReaderPreferences.fontSize);
+    const [atmosphereIntensity, setAtmosphereIntensity] = useState<AtmosphereIntensity>(() => { try { return readAtmosphereIntensity(localStorage.getItem('ww_reader_atmosphere')); } catch { return 'full'; } });
+    useEffect(() => { try { localStorage.setItem('ww_reader_atmosphere', atmosphereIntensity); } catch { /* Reading remains available without storage. */ } }, [atmosphereIntensity]);
     const [contentTheme, setContentTheme] = useState<ContentTheme>(initialReaderPreferences.contentTheme);
     const [readerFont, setReaderFont] = useState<ReaderFont>(initialReaderPreferences.readerFont);
     const [readerWidth, setReaderWidth] = useState<ReaderWidth>(initialReaderPreferences.readerWidth);
@@ -1037,7 +1040,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             ) : null}
 
             {/* Mood Atmosphere — page-level immersive overlay */}
-            <MoodAtmosphere contentRef={moodContentRef} active={chapterContent.access !== 'AUTH_REQUIRED'} />
+            <MoodAtmosphere contentRef={moodContentRef} intensity={atmosphereIntensity} active={chapterContent.access !== 'AUTH_REQUIRED'} />
 
             {contentsPresent && renderTableOfContents()}
 
@@ -1269,6 +1272,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             <button onClick={() => changeAppearance(() => setContentTheme('sepia'))} aria-pressed={contentTheme === 'sepia'} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
                             <button onClick={() => changeAppearance(() => setContentTheme('dark'))} aria-pressed={contentTheme === 'dark'} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
                         </div>
+                    </div>
+                    <div className="reader-setting-group reader-setting-group-wide">
+                        <label>Passage atmospheres</label>
+                        <div className="reader-segmented" role="group" aria-label="Atmosphere intensity">{(['full', 'subtle', 'off'] as const).map(value => <button key={value} type="button" aria-pressed={atmosphereIntensity === value} className={atmosphereIntensity === value ? 'active' : ''} onClick={() => setAtmosphereIntensity(value)}>{value === 'full' ? 'Full' : value === 'subtle' ? 'Subtle' : 'Off'}</button>)}</div>
+                        <p>Follows the writer’s passage moods. Reduced motion keeps the atmosphere still.</p>
                     </div>
                     <div className="reader-setting-group">
                         <label>Type size</label>

@@ -16,3 +16,9 @@
   .rte-mood-dialog h2 { font-size: 21px; }
   .rte-mood-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+.rte-mood-option small { color: var(--mood-muted); font-size: 10px; }
+.rte-mood-option[aria-pressed=true] { border-color: var(--mood-blue); background: var(--mood-paper); }
+.rte-mood-section-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.rte-mood-section-actions button { padding: 10px 12px; min-height: 44px; border: 1px solid var(--mood-line); border-radius: 7px; font-size: 12px; }
+.rte-mood-dialog .rte-mood-help { font-size: 12px; margin-bottom: 0; }

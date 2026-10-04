@@ -11,6 +11,8 @@ declare module '@tiptap/core' {
         };
         moodBlock: {
             setMoodBlock: (mood: string) => ReturnType;
+            unsetMoodBlock: () => ReturnType;
+            endMoodBlock: () => ReturnType;
             insertMoodBlock: (mood: string) => ReturnType;
         };
         pullQuote: {
