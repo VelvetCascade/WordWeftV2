@@ -1,5 +1,6 @@
 import { chapterPath } from '../seo/metadata.mjs';
 import { internalNavigationTrail, returnNavigationTarget, lastMatchingTrailIndex, type NavigationTrailEntry } from './navigationHistory';
+import { flushHistoryState, readHistoryState, updateHistoryState } from './historyEntryState';
 let navigationLock: { url: string; message: string } | null = null;
 let pendingScroll: { x: number; y: number } | null = null;
 let lastEntry: { url: string; state: Record<string, any> } | null = null;
@@ -8,15 +9,17 @@ export const consumeNavigationScroll = () => {
     pendingScroll = null;
     return value;
 };
-const saveScroll = () => window.history.replaceState({ ...window.history.state, wordWeftScroll: { x: window.scrollX, y: window.scrollY } }, '');
+const recordScroll = () => updateHistoryState({ wordWeftScroll: { x: window.scrollX, y: window.scrollY } });
+const saveScroll = () => { recordScroll(); flushHistoryState(); };
 
 const currentUrl = () => window.location.pathname + window.location.search + window.location.hash;
 const entryId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
-const trail = () => internalNavigationTrail(window.history.state?.wordWeftReturnTrail);
-const rememberEntry = () => { lastEntry = { url: currentUrl(), state: { ...window.history.state } }; };
+const trail = () => internalNavigationTrail(readHistoryState().wordWeftReturnTrail);
+const rememberEntry = () => { lastEntry = { url: currentUrl(), state: readHistoryState() }; };
 const ensureEntry = () => {
     if (!window.history.state?.wordWeftEntryId) {
-        window.history.replaceState({ ...window.history.state, wordWeftEntryId: entryId(), wordWeftReturnTrail: [] }, '');
+        flushHistoryState();
+        window.history.replaceState({ ...readHistoryState(), wordWeftEntryId: entryId(), wordWeftReturnTrail: [] }, '');
     }
 };
 const nextEntryState = (source: { url: string; state: Record<string, any> }) => ({
@@ -62,7 +65,7 @@ export const navigatePath = (path: string, replace = false) => {
     ensureEntry();
     saveScroll();
     pendingScroll = null;
-    const state = replace ? window.history.state : nextEntryState({ url: currentUrl(), state: window.history.state });
+    const state = replace ? readHistoryState() : nextEntryState({ url: currentUrl(), state: readHistoryState() });
     window.history[replace ? 'replaceState' : 'pushState'](state, '', next);
     rememberEntry();
     window.dispatchEvent(new Event('wordweft:navigate'));
@@ -77,24 +80,20 @@ export const installNavigation = () => {
             currentUrl().split('#')[0] === lastEntry.url.split('#')[0]) {
             window.history.replaceState(nextEntryState(lastEntry), '');
         }
-        const position = event.state?.wordWeftScroll;
+        const position = readHistoryState().wordWeftScroll;
         pendingScroll = position && Number.isFinite(position.x) && Number.isFinite(position.y) ? position : { x: 0, y: 0 };
         if (!window.location.hash.startsWith('#/')) { ensureEntry(); rememberEntry(); }
     };
-    // A legacy hash action creates its history entry before hashchange fires.
-    // Capture the outgoing place while scrolling, so browser Back still resumes it.
-    let scrollFrame = 0;
-    const recordScroll = () => {
-        cancelAnimationFrame(scrollFrame);
-        scrollFrame = requestAnimationFrame(saveScroll);
-    };
+    // Capture every position in memory; coalesce native persistence instead of
+    // consuming WebKit's shared history budget once per animation frame.
     window.addEventListener('scroll', recordScroll, { passive: true });
+    window.addEventListener('pagehide', flushHistoryState);
     window.addEventListener('popstate', restoreScroll);
     const migrateHash = (initial = false) => {
         if (window.location.hash.startsWith('#/')) {
             const target = window.location.hash.slice(1);
             if (!target.startsWith('//')) {
-                const state = !initial && lastEntry && lastEntry.url !== target ? nextEntryState(lastEntry) : window.history.state;
+                const state = !initial && lastEntry && lastEntry.url !== target ? nextEntryState(lastEntry) : readHistoryState();
                 window.history.replaceState(state, '', target);
             }
         } else if (lastEntry && currentUrl() !== lastEntry.url && currentUrl().split('#')[0] === lastEntry.url.split('#')[0] &&
@@ -119,9 +118,10 @@ export const installNavigation = () => {
     };
     document.addEventListener('click', click);
     return () => {
-        cancelAnimationFrame(scrollFrame);
+        flushHistoryState();
         document.removeEventListener('click', click); window.removeEventListener('hashchange', handleHashChange);
         window.removeEventListener('scroll', recordScroll); window.removeEventListener('popstate', restoreScroll);
+        window.removeEventListener('pagehide', flushHistoryState);
     };
 };
 export const goBackOrReplace = (fallbackPath: string) => {
@@ -137,10 +137,11 @@ export const getReturnNavigation = (fallbackPath = '/', fallbackLabel = 'Back to
 export const replaceHash = (path: string) => navigatePath(path, true);
 export const openReaderFromStory = (bookId: string, chapterIndex: number, chapterId?: string) => {
     navigatePath(chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
-    window.history.replaceState({ ...window.history.state, wordWeftReaderParent: bookId }, '');
+    updateHistoryState({ wordWeftReaderParent: bookId });
 };
 export const replaceReaderChapter = (bookId: string, chapterIndex: number, chapterId?: string) => {
-    window.history.replaceState(window.history.state, '', chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
+    flushHistoryState();
+    window.history.replaceState(readHistoryState(), '', chapterId ? chapterPath(bookId, chapterId) : `/read/book/${bookId}/chapter/${chapterIndex}`);
     rememberEntry();
 };
 export const returnToStory = (bookId: string) => {

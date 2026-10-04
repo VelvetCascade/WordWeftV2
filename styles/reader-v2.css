@@ -627,3 +627,39 @@
 .ww-library-section-tools>summary {min-height:44px;cursor:pointer;padding:10px 0;}
 .ww-library-v2 .ww-library-resume-v2 {margin:20px 0 28px;}
 .reader-experience.reader-v2 .reader-thread-panel .text-gray-400 {color:var(--reader-muted)!important;}
+
+/* Notes follow the chosen reading palette, including a light preview in a
+   dark studio. Positioning and edge avoidance are shared with the preview. */
+.reader-experience.reader-v2 .reader-comment-block:has(.footnote-marker.active) { position: relative; z-index: 30; }
+.reader-experience.reader-v2 .reader-comment-block:has(.footnote-marker.active) > :first-child { position: relative; z-index: 31; }
+.reader-experience.reader-v2 .footnote-popup { background: var(--reader-panel-solid); border-color: var(--reader-line); border-radius: 10px; box-shadow: 0 8px 24px #191c1c18; text-align: left; }
+.reader-experience.reader-v2 .footnote-popup-header { padding: 6px 12px; background: var(--reader-panel-solid); border-color: var(--reader-line); }
+.reader-experience.reader-v2 .reader-copy .footnote-popup .footnote-popup-badge { color: var(--reader-muted) !important; font: 600 10px/1.5 Rubik, sans-serif; font-family: Rubik, sans-serif !important; letter-spacing: .08em; }
+.reader-experience.reader-v2 .footnote-popup-close { width: 36px; height: 36px; flex-shrink: 0; color: var(--reader-accent); font: 400 22px/1 Rubik, sans-serif; }
+.reader-experience.reader-v2 .footnote-popup-close:hover { color: var(--reader-ink); background: var(--reader-accent-soft); }
+.reader-experience.reader-v2 .reader-copy .footnote-popup .footnote-popup-body { padding: 12px 16px 16px; color: var(--reader-copy) !important; font: 400 17px/1.65 'WordWeft Serif', Georgia, serif; font-family: 'WordWeft Serif', Georgia, serif !important; overflow-wrap: anywhere; }
+.reader-experience.reader-v2 .footnote-marker { color: var(--reader-accent); background: var(--reader-accent-soft); font-family: Rubik, sans-serif; }
+.reader-experience.reader-v2 .footnote-marker:hover, .reader-experience.reader-v2 .footnote-marker.active { color: var(--reader-panel-solid); background: var(--reader-accent); }
+
+/* Keep 44px paragraph actions beside the prose on phones. Their previous
+   inset overlapped right-aligned links/notes and could intercept a repeat tap. */
+@media (max-width: 720px) {
+  .reader-experience.reader-v2 .reader-copy:has(.reader-comment-button) { padding-inline-end: 20px; }
+  .reader-experience.reader-v2 .reader-comment-button,
+  .reader-experience.reader-v2 .reader-passage-bookmark { right: -44px !important; }
+  .reader-experience.reader-v2 .reader-comment-button { top: 0 !important; }
+  .reader-experience.reader-v2 .reader-comment-block.is-comment-revealed { padding-right: 0; }
+}
+
+/* Table cells have neighboring text rather than an outside annotation rail.
+   Keep their actions in a small footer inside the cell at every viewport. */
+.reader-experience.reader-v2 :is(td, th) .reader-comment-button,
+.reader-experience.reader-v2 :is(td, th) .reader-passage-bookmark { position: static; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-top: 8px; vertical-align: middle; opacity: 1 !important; pointer-events: auto; }
+
+@media (max-width: 720px) {
+  .reader-experience.reader-v2 .reader-context-left .reader-back-button { min-width: 0; width: 100%; max-width: 100%; }
+  .reader-experience.reader-v2 .reader-back-button > svg { flex-shrink: 0; }
+  .reader-experience.reader-v2 .reader-back-button > span { flex: 1; min-width: 0; }
+  .reader-experience.reader-v2 .reader-back-button strong { max-width: 100%; }
+  .reader-experience.reader-v2 .reader-header-actions button { width: 44px !important; min-width: 44px !important; height: 44px; flex-shrink: 0; }
+}

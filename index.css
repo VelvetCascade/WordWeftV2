@@ -1081,35 +1081,22 @@
     transform: scale(1.15);
 }
 
-.footnote-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 99;
-}
-
 .footnote-popup {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block;
     z-index: 100;
     width: 280px;
     background: white;
     border: 1px solid #D7CCC8;
     border-radius: 14px;
     box-shadow: 0 8px 32px rgba(93, 64, 55, 0.15), 0 2px 8px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
+    overflow: auto;
     animation: footnoteIn 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.footnote-popup.above {
-    bottom: calc(100% + 8px);
-}
-
-.footnote-popup.below {
-    top: calc(100% + 8px);
-}
-
 .footnote-popup-header {
+    position: sticky;
+    top: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1147,6 +1134,7 @@
 }
 
 .footnote-popup-body {
+    display: block;
     padding: 12px 14px;
     font-size: 0.88em;
     line-height: 1.6;
@@ -1156,12 +1144,12 @@
 @keyframes footnoteIn {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(4px) scale(0.96);
+        transform: translateY(4px);
     }
 
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 

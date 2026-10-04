@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Bookmark, Compass, Feather, MessageCircle, Plus, Settings2, ShieldCheck, Users } from 'lucide-react';
 import type { User } from '../types';
@@ -15,7 +16,7 @@ interface Props { currentUser: User | null; onSignIn: () => void; circleSlug?: s
 const MODES: { mode: FeedMode; label: string; icon: typeof Compass }[] = [{ mode: 'discover', label: 'Discover', icon: Compass }, { mode: 'following', label: 'Following', icon: Users }, { mode: 'circles', label: 'Circles', icon: MessageCircle }, { mode: 'saved', label: 'Saved', icon: Bookmark }];
 const communityJourneyPath = () => window.location.pathname + window.location.search;
 const readCommunityFormat = (): PostType | '' => {
-  const saved = window.history.state?.wordWeftCommunity;
+  const saved = readHistoryState()?.wordWeftCommunity;
   return saved?.path === communityJourneyPath() && Object.prototype.hasOwnProperty.call(POST_LABELS, saved.type) ? saved.type : '';
 };
 const CommunityContent: React.FC<Pick<Props, 'circleSlug' | 'query'>> = ({ circleSlug, query = '' }) => {
@@ -48,7 +49,7 @@ const CommunityContent: React.FC<Pick<Props, 'circleSlug' | 'query'>> = ({ circl
     if (communityJourneyPath() !== journeyPathRef.current) return;
     // Format choices belong to this feed entry; preserve navigation's own
     // history fields so browser Back returns to the same conversation list.
-    window.history.replaceState({ ...window.history.state, wordWeftCommunity: { path: journeyPathRef.current, type } }, '');
+    updateHistoryState({ wordWeftCommunity: { path: journeyPathRef.current, type } });
   }, [type]);
   useEffect(() => { if (new URLSearchParams(query).get('compose') === '1' && requireAuth()) setComposer(true); }, [query, user?.id]);
   const join = async (target: Circle) => {

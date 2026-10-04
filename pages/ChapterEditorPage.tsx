@@ -8,7 +8,7 @@ import { CharacterPreview } from '../components/CharacterPreview';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { SpoilerReveal } from '../components/SpoilerReveal';
 import { FootnoteTooltip } from '../components/FootnoteTooltip';
-import parse, { domToReact } from 'html-react-parser';
+import parse, { attributesToProps, domToReact } from 'html-react-parser';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { WritingDemoModal, type WritingTourTool } from '../components/WritingDemoModal';
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
@@ -26,6 +26,7 @@ import { NoteList } from '../components/NoteList';
 import { useDialog } from '../hooks/useDialog';
 import { publicationStatusLabel } from '../utils/publishing';
 import { manuscriptSessionId, verifyDeviceDraft } from '../utils/manuscriptSession';
+import '../styles/reader-v2.css';
 import '../styles/publishing-editor.css';
 
 interface ChapterEditorPageProps {
@@ -46,7 +47,7 @@ const warningLabels: Record<ContentWarning, string> = {
 };
 const matureWarnings: ContentWarning[] = ['GORE', 'SEXUAL_CONTENT', 'ABUSE', 'SELF_HARM'];
 
-const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string; characters: Character[]; onCharacterClick: (char: Character) => void }> = ({ isOpen, onClose, title, content, characters, onCharacterClick }) => {
+const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; content: string; chapterNumber: number; wordCount: number; characters: Character[]; onCharacterClick: (char: Character) => void }> = ({ isOpen, onClose, title, content, chapterNumber, wordCount, characters, onCharacterClick }) => {
     const previewProseRef = React.useRef<HTMLDivElement>(null);
     const dialogRef = useDialog(isOpen, onClose);
     const [viewport, setViewport] = useState<'desktop' | 'phone'>('desktop');
@@ -115,25 +116,37 @@ const PreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
                     />
                 );
             }
+            // Use the live reader's paragraph rhythm and drop cap, preserving
+            // manuscript formatting without exposing paragraph comment actions.
+            if (domNode.type === 'tag' && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'ul', 'ol', 'pre'].includes(domNode.name)) {
+                return <div className="reader-comment-block mb-6">{React.createElement(domNode.name, attributesToProps(domNode.attribs), domToReact(domNode.children, options))}</div>;
+            }
         }
     };
 
     return (
-        <div className="ww-editor-preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Reader preview" tabIndex={-1} className="ww-editor-reader-preview ww-reading-preview-controls w-full max-w-3xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
-                <header className="ww-reading-preview-toolbar"><strong>Reader preview</strong><label>Viewport<select value={viewport} onChange={event => setViewport(event.target.value as 'desktop' | 'phone')}><option value="desktop">Desktop</option><option value="phone">Phone · 390 px</option></select></label><label>Appearance<select value={theme} onChange={event => setTheme(event.target.value as 'light' | 'sepia' | 'dark')}><option value="light">Light</option><option value="sepia">Sepia</option><option value="dark">Dark</option></select></label></header>
-                {/* Mood Atmosphere in preview */}
-                <MoodAtmosphere contentRef={previewProseRef} active={true} />
-                <button onClick={onClose} aria-label="Close reader preview" className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-dark-surface-alt hover:bg-gray-200 transition-colors z-10">
-                    <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-                </button>
-                <div className={`ww-reading-preview-canvas reader-theme-${theme} ww-reading-preview-${viewport}`} data-preview-viewport={viewport} data-preview-theme={theme}>
-                    <main className="reader-manuscript reader-width-standard"><div className="reader-chapter-intro">
-                        <h1 className="text-4xl font-serif font-bold mb-8 leading-snug text-text-rich dark:text-dark-text-rich">{title || 'Untitled Chapter'}</h1>
-                        </div><div ref={previewProseRef} className="ww-prose reader-copy reader-font-serif" style={{ fontSize: '20px', lineHeight: 1.9 }}>
-                            {parse(content, options)}
-                        </div>
-                    </main>
+        <div className="ww-editor-preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Reader preview" tabIndex={-1} className={`ww-editor-reader-preview ww-reading-preview-controls ${viewport === 'phone' ? 'is-phone-preview' : ''}`}>
+                <header className="ww-reading-preview-toolbar">
+                    <div className="ww-reading-preview-heading"><BookOpenText size={22} aria-hidden="true" /><div><strong>Reader preview</strong><p>See your chapter as readers will.</p></div></div>
+                    <div className="ww-reading-preview-options">
+                        <label>Viewport<select value={viewport} onChange={event => setViewport(event.target.value as 'desktop' | 'phone')}><option value="desktop">Desktop</option><option value="phone">Phone</option></select></label>
+                        <label>Appearance<select value={theme} onChange={event => setTheme(event.target.value as 'light' | 'sepia' | 'dark')}><option value="light">Light</option><option value="sepia">Sepia</option><option value="dark">Dark</option></select></label>
+                    </div>
+                    <button type="button" onClick={onClose} aria-label="Close reader preview" className="ww-reading-preview-close"><X size={20} aria-hidden="true" /></button>
+                </header>
+                <div className="ww-reading-preview-stage">
+                    <div className={`ww-reading-preview-canvas reader-experience reader-v2 reader-theme-${theme} ww-reading-preview-${viewport}`} data-preview-viewport={viewport} data-preview-theme={theme}>
+                        <MoodAtmosphere contentRef={previewProseRef} active={true} />
+                        <main className="reader-manuscript reader-width-standard"><div className="reader-chapter-intro">
+                            <span>Chapter {chapterNumber} · {Math.max(1, Math.ceil(wordCount / 220))} min read</span>
+                            <h1>{title || 'Untitled Chapter'}</h1>
+                            <div className="reader-chapter-meta"><span>{wordCount.toLocaleString()} words</span></div>
+                            </div><div ref={previewProseRef} className="ww-prose reader-copy reader-font-literary">
+                                {parse(content, options)}
+                            </div>
+                        </main>
+                    </div>
                 </div>
             </div>
         </div>
@@ -781,6 +794,8 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 onClose={closePreview}
                 title={title}
                 content={content}
+                chapterNumber={chapterNumber}
+                wordCount={wordCount}
                 characters={characters}
                 onCharacterClick={setViewingCharacter}
             />

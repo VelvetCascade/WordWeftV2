@@ -1,3 +1,4 @@
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import '../styles/account-v2.css';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -76,7 +77,7 @@ const PasswordRequirements: React.FC<{ password: string; isVisible: boolean }> =
 export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdateProfile, onChangePassword }) => {
     const { trackEvent } = useAnalytics();
   const [savedSettings] = useState<SettingsHistory | null>(() => {
-    const saved = window.history.state?.wordWeftSettings as SettingsHistory | undefined;
+    const saved = readHistoryState()?.wordWeftSettings as SettingsHistory | undefined;
     return saved?.userId === user.id && saved.draft ? saved : null;
   });
   const draft = savedSettings?.draft;
@@ -134,13 +135,12 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   // Password fields remain local to the form and are never written to history.
   useEffect(() => {
     if (window.location.pathname !== '/edit-profile') return;
-    window.history.replaceState({
-      ...window.history.state,
+    updateHistoryState({
       wordWeftSettings: {
         userId: user.id, activeSection, genreSearch, lastSavedState,
         draft: JSON.parse(currentProfileState) as ProfileDraft,
       } satisfies SettingsHistory,
-    }, '');
+    });
   }, [user.id, activeSection, genreSearch, lastSavedState, currentProfileState]);
 
   useEffect(() => {
@@ -274,8 +274,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
 
   const handleCancel = () => {
-    const { wordWeftSettings: discardedDraft, ...historyState } = window.history.state || {};
-    window.history.replaceState(historyState, '');
+    updateHistoryState({ wordWeftSettings: undefined });
     goBackOrReplace('/profile');
   };
 
