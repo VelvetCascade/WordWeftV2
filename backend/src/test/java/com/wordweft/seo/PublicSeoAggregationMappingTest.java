@@ -43,8 +43,9 @@ class PublicSeoAggregationMappingTest {
             if (kind.equals("chapters")) {
                 Document projection = stages.stream().filter(stage -> stage.containsKey("$project")).findFirst().orElseThrow().get("$project", Document.class);
                 assertEquals("$_id", projection.get("bookId"));
-                assertEquals("$chapters._id", projection.get("chapterId"));
+                assertEquals("$chapterId", projection.get("chapterId"));
                 assertTrue(stages.contains(new Document("$match", new Document("chapters.status", "published"))));
+                assertTrue(stages.stream().anyMatch(stage -> stage.containsKey("$group")), "One opening chapter per book");
             }
         }
     }
