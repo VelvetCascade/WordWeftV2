@@ -76,6 +76,8 @@ test('later chapter SEO keeps context and sign-in actions without manuscript tex
   assert.match(result.body, />Sign in</);
   assert.match(result.body, />Create account</);
   assert.match(result.body, /Read the preview/);
+  assert.match(result.headers['X-Robots-Tag'], /noindex/);
+  assert.match(result.body, /name="robots" content="noindex, follow"/);
   assert.doesNotMatch(result.body, /SECOND_FULL_SECRET|The next day/);
 });
 test('drafts, scheduled chapters, restricted and deleted content stay out of public HTML', async () => {
@@ -182,4 +184,28 @@ test('only production static pages use shared caching', async () => {
   assert.match((await response('/')).headers['Cache-Control'], /s-maxage=3600/);
   assert.equal((await response('/', { preview: true })).headers['Cache-Control'], 'private, no-store');
   assert.equal((await response('/book/story')).headers['Cache-Control'], 'private, no-store');
+});
+
+test('features has a real standalone canonical, title, schema, and sitemap entry', async () => {
+  const meta = metadataFor(parseRoute('/features'));
+  assert.equal(meta.canonical, 'https://www.wordweftstudio.com/features');
+  assert.equal(meta.index, true);
+  assert.equal(meta.title, 'Reading & Writing Platform Features | WordWeft');
+  assert.equal(meta.graph[0].url, meta.canonical);
+  const page = await response('/features', { staticBodies: { '/features': '<h1>Reading and writing features</h1>' } });
+  assert.match(page.body, /href="https:\/\/www.wordweftstudio.com\/features"/);
+  const map = await response('/sitemaps/static.xml');
+  assert.match(map.body, /www.wordweftstudio.com\/features/);
+});
+
+test('writing guides provide distinct search-oriented help and crawlable destinations', () => {
+  for (const path of ['/how-to-write-a-web-novel', '/how-to-plan-a-novel']) {
+    const guide = landingPages[path];
+    assert.ok(guide.sections.length >= 6);
+    assert.ok(guide.faqs.length >= 3);
+    const meta = metadataFor(parseRoute(path));
+    assert.equal(meta.canonical, 'https://www.wordweftstudio.com' + path);
+    assert.equal(meta.index, true);
+    assert.ok(meta.graph.some(item => item['@type'] === 'FAQPage'));
+  }
 });
