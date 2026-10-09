@@ -36,8 +36,6 @@ const breadcrumbs = items => ({ '@type': 'BreadcrumbList', itemListElement: item
 const website = { '@type': 'WebSite', '@id': `${SITE_ORIGIN}/#website`, name: SITE_NAME, alternateName: 'WordWeft Studio', url: SITE_ORIGIN + '/' };
 
 export function metadataFor(route, data = null) {
-  // These two routes intentionally display the same public feature showcase.
-  if (route.kind === 'static' && route.path === '/features') return metadataFor({ kind: 'static', path: '/' });
   let title = 'WordWeft', description = 'Read and write stories on WordWeft.', image = DEFAULT_IMAGE, type = 'website', index = true;
   let path = route.path + (['catalog', 'author'].includes(route.kind) && route.page > 1 ? `?page=${route.page}` : ''), graph = [];
   if (route.kind === 'static') {
