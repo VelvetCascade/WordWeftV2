@@ -48,17 +48,16 @@ function wordweftAdminAnalytics(e) {
       }
       return -1;
     }
-    const timestamp = col('timestamp', 'time', 'date');
+    const timestamp = col('timestamp', 'startTime', 'time', 'date');
     const action = col('action', 'eventaction');
     const sessionId = col('sessionid');
     const pagePath = col('pagepath', 'path', 'page');
     const device = col('devicetype', 'device');
     const browser = col('browser');
     const entryPage = col('entrypage');
-    const tabName = normalize(sheet.getName());
-    let kind = action >= 0 ? 'events' : (pagePath >= 0 ? 'pages' : entryPage >= 0 ? 'sessions' : 'skip');
+    let kind = action >= 0 ? 'events' : (entryPage >= 0 ? 'sessions' : pagePath >= 0 ? 'pages' : 'skip');
     if (kind === 'pages') hasSeparatePageViews = true;
-    return { sheet, columns, timestamp, action, sessionId, pagePath, device, browser, entryPage, kind, tabName };
+    return { sheet, columns, timestamp, action, sessionId, pagePath, device, browser, entryPage, kind };
   }).filter(Boolean);
   const increase = (group, name) => {
     const key = String(name || 'Unknown').trim().slice(0, 160) || 'Unknown';
