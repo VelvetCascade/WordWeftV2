@@ -1,192 +1,111 @@
-# WordWeft production administration
+# WordWeft production admin console
 
-The private administration workspace lives at `/admin`. Access is based on the
-existing backend `ROLE_ADMIN` authority; no email address is privileged by
-this feature. The application menu displays the entry point only for admins,
-and **every** `/api/admin/**` endpoint is protected by Spring Security.
-`AdminConsoleController` also has a method-security check.
+Open the private administration workspace at `/admin`. Only authenticated accounts
+holding `ROLE_ADMIN` can access its backend routes. The frontend navigation
+hides the link from other accounts; Spring Security independently protects
+`/api/admin/**` and the administrative controllers.
 
-## Screens
+## Available sections
 
-- **Overview:** total and verified accounts, new signups this week, unique
-  authors with published stories, story totals, published chapters, read
-  counts, pending reports, Founding Writer applications and a seven-day
-  signup/story creation chart.
-- **Members:** paginated directory, literal name/email search, role filter,
-  signup date, verification status and published story count. This view never
-  returns password hashes, OTPs, reset tokens, private preferences or profile
-  documents.
-- **Stories:** searchable catalog across published stories and drafts.
-  Includes author, chapter counts, publication status, views and reads. Full
-  manuscript text and descriptions are not fetched for this list.
-- **Reports:** filtered review queue. An admin can resolve or dismiss a
-  non-community pending report with a written reason (10–1000 characters).
-  The backend records the acting admin, timestamp and status atomically.
-  Community posts and comments must be handled through the existing Community
-  moderation desk (Community > shield icon), which preserves its separate
-  content-removal safeguards and moderation audit trail.
-- **Writer applications:** link to the existing Founding Writer application
-  desk, retaining its existing review and manuscript access controls.
-- **Operations:** read-only information and links for security, reporting
-  workflow, applications and deployment.
+- **Overview:** operational counts from existing MongoDB documents: users,
+  verified users, signups over the last seven days, published authors, story
+  totals, published chapters, recorded reads, pending reports and Founding
+  Writer application counts. Includes a seven-day signup/story creation chart.
+- **Members:** paginated and searchable account directory, role, verification,
+  join date, publishing activity and suspension state; **Suspend** or **Reinstate**
+  non-admin users. Passwords, reset tokens, OTPs and private account fields
+  are not returned.
+- **Stories:** searchable directory showing title, author, status, chapter
+  counts, views and reads. Administrators can **Remove** a story from public
+  view or **Restore** it. Full chapter manuscript text is not loaded.
+- **Reports:** inspect reports, resolve or dismiss them with a reason, or take
+  matching user/book moderation actions. Community post and comment reports
+  continue through the existing Community moderation workflow.
+- **Activity log:** admin moderation actions and reasons recorded in the
+  **existing MongoDB moderation audit collection**.
+- **Founding Writers:** link to the existing application review system.
+- **Operations:** information and links for security and deployment.
 
-## API
+## Administrative API
 
-| Endpoint | Function |
+| Endpoint | Purpose |
 | --- | --- |
-| `GET /api/admin/console/overview` | Live platform snapshot |
+| `GET /api/admin/console/overview` | Live MongoDB platform metrics |
 | `GET /api/admin/console/users?page=0&size=20&q=&role=ALL` | Member directory |
 | `GET /api/admin/console/stories?page=0&size=20&q=&status=ALL` | Story directory |
-| `GET /api/admin/console/reports?page=0&size=20&status=PENDING` | Reports |
-| `PATCH /api/admin/console/reports/{id}` | Resolve/dismiss report; JSON `{"status":"RESOLVED","reason":"..."}` |
+| `GET /api/admin/console/reports?page=0&size=20&status=PENDING` | Report queue |
+| `PATCH /api/admin/console/reports/{id}` | Resolve/dismiss a report |
+| `POST /api/admin/console/users/{id}/moderation` | Suspend/reinstate an account |
+| `POST /api/admin/console/stories/{id}/moderation` | Remove/restore a story |
+| `GET /api/admin/console/audit?page=0` | Existing MongoDB audit history |
 
-Responses are marked `Cache-Control: no-store`. List page size is capped at
-50, searches are escaped and bounded, and report decisions require a role
-check and validated body.
+A moderation decision has the JSON shape
+`{"action":"SUSPEND","reason":"Specific reason at least 10 characters","note":"Internal staff note","reportId":null}`.
+Possible actions are `SUSPEND`, `REINSTATE`, `REMOVE`, and `RESTORE`,
+depending on target type. `reason` is required (10–1000 characters);
+`note` is optional (up to 2000 characters), stored only as part of the
+existing moderation audit history. A matching report ID is optional.
 
-## Metric definitions
+API responses are `Cache-Control: no-store`; directory page size is capped
+at 50. Search text is escaped and bounded.
 
-- **Members:** stored user documents, including accounts not yet verified.
-- **Authors:** distinct user IDs on published stories.
-- **Stories:** stored book documents. Published and draft totals are separate.
-- **Published chapters:** chapters with published status inside published books.
-- **Reads:** sum of the stored `Book.readCount` field. Not unique readers.
-- **New members/stories:** the last seven calendar dates, using `joinDate`
-  and `createdAt`. Existing/legacy records without dates are excluded from
-  these time-window counts.
+## Moderation rules
 
-These are operational database totals, not Google Analytics visitors, sessions,
-or revenue. The chart isn't a count of page views. Daily source fields are
-indexed for bounded admin reporting queries.
+- Suspension disables account authentication, including password, Google
+  sign-in and existing JWT sessions once user details are reloaded. Neither
+  the acting administrator nor another administrator can be suspended here.
+- Story takedown is **reversible**. It hides the story from discovery and
+  normal reader routes, blocks republishing, and retains manuscript content,
+  ownership and original publication state. Restoring a draft does not publish
+  it automatically.
+- Staff actions update the existing `users`, `books`, and relevant `reports`
+  documents, with audit events in the **existing**
+  `community_moderation_events` collection. No extra collections are added.
+- Action responses indicate whether the audit write succeeded; a failed audit
+  write must be investigated by an administrator.
+- Community post and comment takedowns continue through the existing
+  Community moderation desk.
+- No hard delete, role escalation, mass messaging or automated unpublishing
+  of an entire author's catalog is enabled.
 
-## Deployment and testing
+**No moderation emails are sent by this admin console.** The reason and the
+optional staff note are for internal review; they are not delivered to the
+member or author. This deliberately avoids adding any Apps Script or other
+external-service dependency to the new admin features.
 
-This feature uses the existing MongoDB backend and JWT configuration. No
-secrets, new environment variables, email-based administrator bootstrap, or
-external analytics credentials are required.
+## Operational metric definitions
 
-Run `npm run typecheck`, `npm run build`, `(cd backend && mvn test)`, and
-`npm run test:e2e` against the **disposable local fixture database**.
-The added browser tests check anonymous/member denial, admin access, safe
-response projections and navigation. Never run destructive tests against
-production MongoDB.
+- **Members:** existing user documents (including unverified accounts).
+- **Authors:** unique authors with at least one published, non-removed story.
+- **Published stories/chapters:** excludes administratively removed stories.
+- **Story reads:** aggregate of existing stored book read counters; not
+  unique readers or spreadsheet page views.
+- **Seven-day activity:** counts by the existing `joinDate` and `createdAt`
+  fields; legacy rows without dates are not included in these time windows.
 
-## Deliberate exclusions
+These are MongoDB operational counts, **not** website page views, traffic
+sessions, conversion attribution, or email analytics.
 
-Account suspension, role assignment, mass messaging, forced unpublishing and
-deletion are **not** enabled by this change. They need explicit moderation
-policy, recovery safeguards, audit history and protections against locking out
-the last administrator. The current member/story directories are read-only.
-The report workflow records a decision only; it does not automatically remove
-reported content.
+## No Apps Script integration in this feature
 
-Review and merge the PR after backend security tests and production deployment
-checks have succeeded.
+The admin console contains **no** Google Sheets reader, Apps Script
+aggregation handler, analytics polling endpoint, spreadsheet credentials,
+or analytics migration/replication. Its metrics and moderation workflows use
+the existing MongoDB models and collections.
 
+The unrelated **pre-existing WordWeft features** for email delivery, Founding
+Writer submission logging, and website tracking are intentionally unchanged;
+their existing configuration and behavior are outside this PR.
 
-## User and story enforcement
+## Verification before merging
 
-The member directory supports **Suspend / Reinstate**, and story rows support
-**Remove / Restore**. Report cards for BOOK or USER targets offer the same
-actions and can mark a matching pending report resolved on success. The action
-dialog requires a 10–1000 character reason and accepts a 0–2000 character
-plain-text custom message for the author/member.
+1. Run `cd backend && mvn test`.
+2. Run `npm run typecheck && npm run build`.
+3. Run `npm run test:e2e` with the disposable local fixture database.
+4. On a test environment, verify non-admin access is denied, member
+   suspension/reinstatement, story takedown/restoration, reports, and audit
+   history. Do not exercise moderation tests against real user accounts.
 
-- A suspended user cannot sign in through email/password or Google, and
-  existing JWT sessions are rejected when user details are reloaded.
-  Other administrators (including yourself) cannot be suspended here.
-- A removed story is hidden from public discovery and reading routes, but
-  its manuscript, original publication status and ownership are retained.
-  Scheduled publication and writer-initiated republishing are blocked until
-  staff restoration. Restoring a story does not publish a private draft.
-- All actions store the acting administrator and reason on the existing
-  user/book document and append to the **existing** `community_moderation_events`
-  audit collection. A failed audit write is returned as a warning.
-- Transactional emails use the existing Apps Script email delivery system.
-  Custom messages are HTML-escaped. The UI says **queued**, not delivered:
-  actual delivery depends on the configured sender.
-- Reports about COMMUNITY_POST and COMMUNITY_COMMENT continue to use the
-  Community moderation desk, preserving existing content removal and audit
-  rules. The admin console cannot bypass that flow.
-- No account or book is permanently deleted. No mass messaging or
-  administrator role reassignment is enabled.
-
-## Google Sheets traffic analytics — read-only
-
-**Source of truth stays in Google Sheets.** The existing frontend batches
-events into `POST /api/analytics/events`, which forwards to an Apps Script
-that appends events, page views and sessions to Sheets. That write pipeline
-is **unchanged** by the administration console. The independent Founding Writer
-submission-attempt Sheet is also unchanged; the application counts on the
-Overview page still come from the existing Founding Writer Mongo documents.
-
-A new admin-only `GET /api/admin/console/analytics?days=30` uses
-`AdminSheetAnalyticsService` to call a **read-only** Apps Script web endpoint.
-It returns aggregated traffic without participant identity, email addresses,
-session IDs or raw events. Its UI provides:
-- 7/30/90 day page views, unique tracked sessions, total interaction events.
-- Daily page-view and interaction totals.
-- Most visited paths, devices, browsers, and event/action distributions.
-
-This feature **does not** add MongoDB analytics collections, store analytics
-events in MongoDB, copy Sheet rows, or write to Google Sheets. The endpoint
-returns `status: unavailable` until the reader is configured; zeros are not
-presented as real traffic in that state.
-
-### Read-only Apps Script setup
-
-1. Open the **existing** analytics spreadsheet's Apps Script project. No
-   spreadsheet tab or cell needs modification.
-2. Add the function in `scripts/analytics-admin-reader.gs` to the script.
-   If it already defines `doGet(e)`, add a branch to that function only;
-   do not replace `doPost(e)` or the existing analytics/email handlers:
-
-   ```javascript
-   if (e.parameter.action === 'admin_analytics') {
-     return wordweftAdminAnalytics(e);
-   }
-   ```
-
-3. Set two **Apps Script Properties** (not spreadsheet cells):
-   `WORDWEFT_ANALYTICS_SHEET_ID` (the existing analytics spreadsheet ID) and
-   `WORDWEFT_ADMIN_READ_TOKEN` (a long, random secret different from any
-   write credential). Deploy the updated web app and keep its URL private.
-4. Configure the backend environment with
-   `WORDWEFT_ANALYTICS_READ_URL` (the read-capable script's HTTPS URL) and
-   `WORDWEFT_ANALYTICS_READ_TOKEN` (the matching secret). If property
-   placeholders aren't configured in the environment-specific Spring
-   application file, add these lines:
-
-   ```properties
-   wordweft.analytics.sheet-read-url=${WORDWEFT_ANALYTICS_READ_URL:}
-   wordweft.analytics.sheet-read-token=${WORDWEFT_ANALYTICS_READ_TOKEN:}
-   ```
-
-5. Sign in with `ROLE_ADMIN` and open `/admin` → **Analytics**.
-   The backend does a server-to-server GET, and only the summarized JSON
-   reaches the browser.
-
-The Apps Script reader identifies event, page-view and session tabs by header
-names and reads a bounded newest slice of each tab. Verify real tab headers
-and period totals before treating metrics as authoritative; the exact source
-spreadsheet is not present in the connected Drive account used for this PR.
-The source may contain unrecorded/failed event flushes. **No traffic figures
-are fabricated**, and the admin UI explains when the read endpoint is not
-configured or cannot be reached.
-
-Do not put the script URL/token in Vite environment variables, frontend
-code, Git or third-party logs. Configure backend-only secrets. This is a
-server-side shared-secret approach; use a restricted Google API read-only
-identity if stronger controls are required by your security policy.
-
-## Verification before rollout
-
-- `cd backend && mvn test`
-- `npm run typecheck && npm run build`
-- `npm run test:e2e` against a disposable local test backend only
-- Inspect any user/book moderation activity on **test accounts only**, and
-  verify suspended JWT, public takedown, email formatting and restoration.
-- Verify that historical traffic is read from the **existing** Sheet and
-  is not written to MongoDB, and check a 403 is returned to non-admins.
-
-No production or staging data was modified in the PR development workflow.
+Keep PR #160 as a draft until the security tests and build checks pass.
+No staging or production records were intentionally changed during the
+implementation or this cleanup.
