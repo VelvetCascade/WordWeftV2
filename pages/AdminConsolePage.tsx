@@ -237,7 +237,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
               <h3>{report.targetTitle || report.targetType}</h3>
               <p>{report.category} · Reported member: {report.reportedUsername || 'Unknown'} · Submitted by {report.reporterUsername || 'Unknown'}</p>
               <blockquote>{report.description || 'No additional details provided.'}</blockquote>
-              {report.status === 'PENDING' ? <>
+              {report.status === 'PENDING' && (report.targetType === 'COMMUNITY_POST' || report.targetType === 'COMMUNITY_COMMENT') ? <div className="ac-community-handoff"><p>Community posts and comments are handled by the existing moderation workflow, which records content actions and audit history.</p><a className="ac-text-button" href="/community">Open Community, then select the Moderation desk shield icon <ArrowRight size={16} /></a></div> : report.status === 'PENDING' ? <>
                 {reviewId === report.id ? <div className="ac-review-form"><label htmlFor="ac-reason">Decision reason (required, minimum 10 characters)</label>
                   <textarea id="ac-reason" maxLength={1000} value={reason} onChange={event => setReason(event.target.value)} placeholder="Write a specific reason for this decision." />
                   <div><button type="button" className="ac-primary" disabled={saving || reason.trim().length < 10} onClick={() => void review(report.id, 'RESOLVED')}><CheckCircle2 size={16} /> Resolve</button>
