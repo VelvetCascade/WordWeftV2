@@ -1,4 +1,4 @@
-import { SITE_ORIGIN, SITE_NAME, DEFAULT_IMAGE, staticPages, landingPages } from './content.mjs';
+import { SITE_ORIGIN, SITE_NAME, DEFAULT_IMAGE, staticPages, landingPages, genreIntroductions } from './content.mjs';
 
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 export const plainText = value => String(value ?? '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/\s+/g, ' ').trim();
@@ -87,7 +87,7 @@ export function metadataFor(route, data = null) {
   } else if (route.kind === 'catalog') {
     const label = route.value || 'Original';
     title = route.value ? `${label} Stories & Novels to Read Online | WordWeft` : route.path === '/home' ? 'Discover Stories & Independent Writers | WordWeft' : 'Browse Stories & Novels by Genre | WordWeft';
-    description = route.filter === 'tag' ? `Explore published stories tagged ${label} on WordWeft. Browse book descriptions, meet their authors, and open a chapter to start reading.` : `Read ${label.toLowerCase()} stories online on WordWeft. Discover novels and fiction from independent writers and explore their published chapters.`;
+    description = route.filter === 'tag' ? `Explore published stories tagged ${label} on WordWeft. Browse book descriptions, meet their authors, and open a chapter to start reading.` : route.filter === 'genre' && genreIntroductions[label] ? excerpt(genreIntroductions[label], 155) : `Read ${label.toLowerCase()} stories online on WordWeft. Discover novels and fiction from independent writers and explore their published chapters.`;
     index = !!data?.books?.length;
     graph = [{ '@type': 'CollectionPage', name: title, url: SITE_ORIGIN + path, mainEntity: { '@type': 'ItemList', itemListElement: (data?.books || []).map((book, i) => ({ '@type': 'ListItem', position: (route.page - 1) * 24 + i + 1, url: SITE_ORIGIN + bookPath(book.id), name: book.title })) } }, breadcrumbs([['Home', '/'], [route.value || 'Stories', route.path]])];
   } else {
