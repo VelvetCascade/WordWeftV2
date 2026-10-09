@@ -20,9 +20,11 @@ and **every** `/api/admin/**` endpoint is protected by Spring Security.
   Includes author, chapter counts, publication status, views and reads. Full
   manuscript text and descriptions are not fetched for this list.
 - **Reports:** filtered review queue. An admin can resolve or dismiss a
-  pending report with a written reason (10–1000 characters). The backend
-  records the acting admin, timestamp and status atomically; a report already
-  reviewed cannot silently be overwritten.
+  non-community pending report with a written reason (10–1000 characters).
+  The backend records the acting admin, timestamp and status atomically.
+  Community posts and comments must be handled through the existing Community
+  moderation desk (Community > shield icon), which preserves its separate
+  content-removal safeguards and moderation audit trail.
 - **Writer applications:** link to the existing Founding Writer application
   desk, retaining its existing review and manuscript access controls.
 - **Operations:** read-only information and links for security, reporting
