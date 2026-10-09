@@ -17,7 +17,7 @@ export const landingPages = {
     ],
     steps: ['Open the library and choose a genre or search for a story.', 'Read the synopsis and check the rating and content notes.', 'Open a published chapter and adjust the reader to suit you.'],
     faqs: [
-      ['Do I need an account to read?', 'You can browse publicly available stories and read their published chapters without signing in. Saving your library, following writers, and participating require an account. Some age-rated stories require an eligible account and mature-content preferences.'],
+      ['Do I need an account to read?', 'You can browse public story pages and read a preview of the opening published chapter without signing in. Sign in to continue reading and access later chapters. Saving books, following writers, and taking part in discussions also require an account. Age-restricted stories have additional eligibility rules.'],
       ['Can I read on a phone?', 'The reader adapts to smaller screens and includes adjustable type and reading themes. WordWeft runs in your browser.'],
     ],
   },
@@ -280,4 +280,4 @@ export const staticPages = {
 };
 
 export const discoveryLinks = Object.entries(landingPages).map(([href, page]) => ({ href, label: page.eyebrow }));
-export const primaryDiscoveryLinks = discoveryLinks.filter(link => ['/read-online', '/writing-tools', '/publish-stories', '/world-building-tools'].includes(link.href));
+export const primaryDiscoveryLinks = discoveryLinks.filter(link => ['/read-online', '/writing-tools', '/publish-stories', '/world-building-tools', '/wattpad-alternatives', '/royal-road-alternatives', '/webnovel-alternatives', '/how-to-write-a-web-novel', '/how-to-plan-a-novel'].includes(link.href));
