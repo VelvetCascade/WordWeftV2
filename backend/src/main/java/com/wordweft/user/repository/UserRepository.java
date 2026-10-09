@@ -17,10 +17,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findFirstByResetPasswordToken(String resetPasswordToken);
 
-    @Query(value = "{'email': ?0}", fields = "{'username': 1, 'email': 1, 'password': 1, 'roles': 1}")
+    @Query(value = "{'email': ?0}", fields = "{'username': 1, 'email': 1, 'password': 1, 'roles': 1, 'suspended': 1}")
     Optional<User> findAuthenticationByEmail(String email);
 
-    @Query(value = "{'username': ?0}", fields = "{'username': 1, 'email': 1, 'password': 1, 'roles': 1}")
+    @Query(value = "{'username': ?0}", fields = "{'username': 1, 'email': 1, 'password': 1, 'roles': 1, 'suspended': 1}")
     Optional<User> findAuthenticationByUsername(String username);
 
     @Query(value = "{'_id': ?0}", fields = "{'dateOfBirth': 1, 'allowMatureContent': 1}")
