@@ -14,6 +14,7 @@ import { WritingDemoModal, type WritingTourTool } from '../components/WritingDem
 import { MoodAtmosphere } from '../components/MoodAtmosphere';
 import { SmartPasteAssistant } from '../components/SmartPasteAssistant';
 import { PublishCharacterReviewModal } from '../components/PublishCharacterReviewModal';
+import { characterNameKey, isExistingCharacterName, type CharacterNameDraft } from '../utils/characterRecognition';
 import { ChapterScannerModal } from '../components/ChapterScannerModal';
 import { SparklesIcon } from '../components/icons/Icons';
 import { ShareModal } from '../components/ShareModal';
@@ -384,6 +385,10 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     // Mention System State
     const [characters, setCharacters] = useState<Character[]>([]);
+    const charactersRef = useRef(characters); charactersRef.current = characters;
+    const addingCharactersRef = useRef(false);
+    const castMutationVersionRef = useRef(0);
+    const castRequestRef = useRef(0);
     const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
 
     const saveTimeoutRef = useRef<number | null>(null);
@@ -395,7 +400,14 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
 
     useEffect(() => {
         let active = true;
-        const refresh = () => { api.getCharactersByBookId(bookId).then(items => { if (active) setCharacters(items); }).catch(() => {}); };
+        const refresh = () => {
+            const request = ++castRequestRef.current; const version = castMutationVersionRef.current;
+            api.getCharactersByBookId(bookId).then(items => {
+                if (active && request === castRequestRef.current && version === castMutationVersionRef.current && !addingCharactersRef.current) {
+                    charactersRef.current = items; setCharacters(items);
+                }
+            }).catch(() => {});
+        };
         const planningUpdated = (event: Event) => { if ((event as CustomEvent<{ bookId: string }>).detail?.bookId === bookId) refresh(); };
         refresh(); window.addEventListener('wordweft:planning-updated', planningUpdated);
         return () => {
@@ -581,23 +593,32 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
         setShowSmartPasteToast(true);
     };
 
-    const handleAddCharacters = async (names: string[]) => {
+    const handleAddCharacters = async (names: CharacterNameDraft[]) => {
+        if (addingCharactersRef.current) throw new Error('Characters are already being added. Please wait.');
+        addingCharactersRef.current = true;
+        castMutationVersionRef.current++;
         const newlyAdded: Character[] = [];
         const failedNames: string[] = [];
-        for (const name of names) {
-            try {
-                const char = await api.createCharacter({ bookId, name, role: 'Secondary' });
-                newlyAdded.push(char);
-            } catch (e) {
-                console.error("Failed to create character", name, e);
-                failedNames.push(name);
+        try {
+            for (const candidate of names) {
+                const known = [...charactersRef.current, ...newlyAdded];
+                if (isExistingCharacterName(candidate.name, known)) continue;
+                try {
+                    const aliases = [...new Map((candidate.aliases || []).filter(alias => !isExistingCharacterName(alias, known)).map(alias => [characterNameKey(alias), alias])).values()];
+                    const character = await api.createCharacter({ bookId, name: candidate.name.trim(), aliases, role: 'Secondary' });
+                    newlyAdded.push(character);
+                } catch {
+                    failedNames.push(candidate.name);
+                }
             }
-        }
-        setSmartPastedCharacters(prev => [...prev, ...newlyAdded]);
-        setCharacters(previous => Array.from(new Map([...previous, ...newlyAdded].map(character => [character.id, character])).values()));
-        const updated = await api.getCharactersByBookId(bookId);
-        setCharacters(updated);
-        if (failedNames.length) throw new Error(`Could not add ${failedNames.join(', ')}. Your other characters were added; retry the remaining names.`);
+            // A failed refresh must not turn a successful create into a failed save.
+            // Merge the server's created profiles directly, including partial successes.
+            castMutationVersionRef.current++;
+            charactersRef.current = Array.from(new Map([...charactersRef.current, ...newlyAdded].map(character => [character.id, character])).values());
+            setCharacters(charactersRef.current);
+            setSmartPastedCharacters(previous => [...previous, ...newlyAdded]);
+            if (failedNames.length) throw new Error(`Could not add ${failedNames.join(', ')}. ${newlyAdded.length ? 'Your other characters were added; retry the remaining names.' : 'Your draft is unchanged; please retry.'}`);
+        } finally { addingCharactersRef.current = false; }
     };
 
     const executeDeferredPublish = () => {

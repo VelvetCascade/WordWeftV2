@@ -488,9 +488,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             }),
             Mention.configure({
                 HTMLAttributes: { class: 'mention' },
-                renderLabel({ options, node }) {
-                    return `${options.suggestion.char || '@'}${node.attrs.label ?? node.attrs.id}`;
-                },
+                // @ opens the picker; it is not part of the author's prose.
+                renderText({ node }) { return node.attrs.label ?? node.attrs.id; },
+                renderHTML({ node, options }) { return ['span', options.HTMLAttributes, node.attrs.label ?? node.attrs.id]; },
                 suggestion,
             }),
             Details,
