@@ -3,6 +3,30 @@ export const SITE_ORIGIN = 'https://www.wordweftstudio.com';
 export const SITE_NAME = 'WordWeft';
 export const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-banner.jpg`;
 
+export const genreIntroductions = {
+  Action: 'Action fiction builds momentum through choices under pressure. Compare the premise and opening chapter of the available stories, then follow a character through the consequences of their next move.',
+  Adventure: 'Adventure stories are shaped by journeys, unfamiliar places, and the decisions that change a traveller. Browse the published openings here and look for a setting or quest worth following.',
+  Comedy: 'Comedy can sit inside a romance, mystery, or everyday story. Find writing that uses wit, awkward situations, and memorable characters rather than assuming every funny story follows the same pattern.',
+  Crime: 'Crime fiction follows questions of motive, evidence, and consequence. Explore the premises of published stories and choose an investigation or character perspective that interests you.',
+  'Dark Fantasy': 'Dark fantasy mixes the possibilities of imagined worlds with unsettling choices, danger, or moral ambiguity. Check each story’s age rating and content notes before beginning.',
+  Drama: 'Drama focuses on the difficult choices people make, the relationships they change, and the consequences that remain. Read story descriptions to find a character or conflict you want to understand.',
+  'Fan Fiction': 'Fan fiction begins from a reader’s relationship with familiar worlds or characters. Browse only the stories available here and check each work’s description and author information before reading.',
+  Fantasy: 'Fantasy stories can begin with a small impossible detail or an entirely imagined world. Follow the premise, cast, and published chapters of the stories here to find a world worth returning to.',
+  Horror: 'Horror uses uncertainty, atmosphere, and mounting consequences to unsettle the reader. Check the synopsis and content warnings to find the kind of suspense you enjoy.',
+  Humor: 'Humorous fiction finds its voice in timing, point of view, and characters who see things differently. Explore the story premises rather than expecting every book to deliver the same kind of joke.',
+  'LGBTQ+': 'Explore stories featuring LGBTQ+ characters, experiences, and relationships. Genre labels describe aspects of a work, not its full story; read the author’s synopsis and content notes for context.',
+  Mystery: 'A mystery begins with a question that matters and keeps the reader attentive to clues. Browse each story’s premise and opening to see which puzzle you would like to follow.',
+  'Non-Fiction': 'Non-fiction writing can include essays, reflections, and accounts of real experiences. Read the description and author information to understand the work’s subject and approach.',
+  Romance: 'Romance explores attraction, trust, conflict, and the choices that bring people together or keep them apart. Browse the synopsis and chapter previews to find a relationship worth following.',
+  Supernatural: 'Supernatural fiction places unexplained forces into the lives of its characters. Discover how each story handles the unknown through its premise, setting, and opening chapter.',
+  Suspense: 'Suspense holds a question open while the stakes keep rising. Explore works that use uncertainty, secrets, and consequential choices to draw readers into the next chapter.',
+  Thriller: 'Thrillers move through escalating risks, urgent decisions, and unfolding threats. Compare their premises and content notes before settling into a fast-moving story.',
+  'Young Adult': 'Young adult fiction often explores identity, friendship, belonging, and difficult first decisions. The published stories here can span romance, fantasy, mystery, and other genres.',
+  Poetry: 'Poetry makes room for rhythm, imagery, and a distinctive voice. Explore the published work here and follow the writers whose language stays with you.',
+  'Science Fiction': 'Science fiction asks what may change when technology, discovery, or unfamiliar worlds reshape people’s lives. Choose a premise that turns an intriguing idea into a human story.',
+  'Historical Fiction': 'Historical fiction uses another time as the setting for personal choices and conflict. Read the descriptions to see how an author connects events, place, and character.',
+};
+
 export const landingPages = {
   '/read-online': {
     title: 'Read Stories & Novels Online | WordWeft',
