@@ -57,6 +57,9 @@ export function metadataFor(route, data = null) {
     if (route.kind === 'chapter') {
       const chapter = publicChapters(book).find(ch => ch.id === route.chapterId);
       if (!chapter) return metadataFor({ kind: 'missing', path });
+      // Only the opening preview contains public narrative text; later chapters
+      // are sign-in gates and should remain reachable but not be indexed as thin pages.
+      index = index && chapter.access === 'PREVIEW' && !!plainText(chapter.content);
       title = `${chapter.title} — ${book.title} | WordWeft`;
       // Use the synopsis for snippets so chapter spoilers aren't used as the description.
       description = excerpt(`Read ${chapter.title} from ${book.title} by ${author.name}. ${plainText(book.summary)}`);
