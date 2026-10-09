@@ -5,6 +5,7 @@ import type { AppNotification, NavigateTo } from '../types';
 import type { Page } from '../App';
 import { communityNotificationPostId } from '../utils/community';
 import { useDialog } from '../hooks/useDialog';
+import { usePresence } from '../hooks/usePresence';
 import { ResilientImage } from './ResilientImage';
 import { notificationCopy } from '../utils/notificationPresentation';
 import '../styles/notifications-v2.css';
@@ -63,6 +64,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     hasMore, onLoadMore, isLoading, error, onRetry,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const present = usePresence(isOpen);
     const dialogRef = useDialog(isOpen, () => setIsOpen(false));
     useEffect(() => {
         const close = () => setIsOpen(false);
@@ -80,8 +82,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             <Bell size={20} aria-hidden="true" />
             {unreadCount > 0 && <span className="v2-notifications-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
         </button>
-        {isOpen && createPortal(
-            <div className="v2-notifications-scrim" onMouseDown={event => { if (event.target === event.currentTarget) setIsOpen(false); }}>
+        {present && createPortal(
+            <div className="v2-notifications-scrim ww-presence" data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined} onMouseDown={event => { if (event.target === event.currentTarget) setIsOpen(false); }}>
                 <div id="notification-preview" ref={dialogRef} className="v2-notifications-panel" role="dialog" aria-modal="true" aria-label="Notification preview" tabIndex={-1}>
                     <header className="v2-notifications-heading">
                         <div><small>YOUR READING & WRITING</small><h2>Notifications</h2></div>
@@ -93,7 +95,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                         {notifications.map(notification => {
                             const Icon = getNotificationIcon(notification.type);
                             const copy = notificationCopy(notification);
-                            return <button className={`v2-notification-item ${notification.read ? '' : 'is-unread'}`} key={notification.id} onClick={() => {
+                            return <button className={`v2-notification-item ww-arrive-quiet ${notification.read ? '' : 'is-unread'}`} key={notification.id} onClick={() => {
                                 if (!notification.read) onMarkRead(notification.id);
                                 const target = getNotificationTarget(notification);
                                 if (target) { setIsOpen(false); onNavigate(target); }

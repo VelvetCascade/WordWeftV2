@@ -39,7 +39,7 @@ const LibraryBookCard: React.FC<{
     const chapter = book.chapters[chapterIndex];
     const actionLabel = isCompleted ? book.readingStatus === 'Completed' ? 'Read again' : 'Revisit story' : hasStarted ? 'Continue reading' : 'Start reading';
     return (
-        <article className={`ww-library-book-v2 ${hasStarted ? 'is-started' : 'is-saved'} ${isCompleted ? 'is-finished' : ''}`}>
+        <article className={`ww-library-book-v2 ww-arrive ${hasStarted ? 'is-started' : 'is-saved'} ${isCompleted ? 'is-finished' : ''}`}>
             {selecting && <label className="ww-library-book-select"><input type="checkbox" checked={selected} onChange={() => onSelect(book.id)} /><span className="sr-only">Select {book.title}</span></label>}
             <button type="button" className="ww-library-book-cover" onClick={() => onOpen(book)} aria-label={`${actionLabel}: ${book.title}`}><ResilientImage src={book.coverUrl} alt={book.title} fallbackLabel={book.title} variant="cover" className="w-full h-full object-cover" /></button>
             <div className="ww-library-book-copy"><span className="ww-page-eyebrow">{book.genres[0] || 'A WordWeft story'}</span><button type="button" className="ww-library-book-title" onClick={() => onOpen(book)}><h3>{book.title}</h3></button><p className="ww-library-book-author">{book.author.name} · {book.readingStatus}</p><p className="ww-library-book-summary">{book.summary || book.description}</p>

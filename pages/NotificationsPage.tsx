@@ -284,7 +284,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                                         window.location.hash = `/book/${encodeURIComponent(target.bookId)}/chapter/${encodeURIComponent(target.chapterId || '')}?discussion=all${n.metadata?.commentId ? `&comment=${encodeURIComponent(n.metadata.commentId)}` : ''}`;
                                     } else if (target) navigateTo(target);
                                 }}
-                                className={`ww-notification-row ${!n.read ? 'unread' : ''} flex items-start gap-4 w-full p-4 border-b border-gray-100 dark:border-dark-border last:border-0 text-left transition-colors ${!n.read ? 'bg-accent/5 dark:bg-accent/10 hover:bg-accent/10 dark:hover:bg-accent/20' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-dark-surface-alt'}`}
+                                className={`ww-notification-row ww-arrive-quiet ${!n.read ? 'unread' : ''} flex items-start gap-4 w-full p-4 border-b border-gray-100 dark:border-dark-border last:border-0 text-left transition-colors ${!n.read ? 'bg-accent/5 dark:bg-accent/10 hover:bg-accent/10 dark:hover:bg-accent/20' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-dark-surface-alt'}`}
                             >
                                 {/* Icon / Avatar */}
                                 {n.metadata?.actorAvatar ? (

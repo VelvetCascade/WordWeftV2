@@ -477,7 +477,7 @@ const ManuscriptPreflightDialog: React.FC<{ file: File; preview: api.ManuscriptP
 };
 
 const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, isBusy?: boolean, onPublishToggle: () => void, onCancelSchedule: () => void, onDelete: () => void, onShare: () => void, onDuplicate: () => void, onMove: (direction: -1 | 1) => void, canMoveUp: boolean, canMoveDown: boolean }> = ({ chapter, bookId, index, isBusy = false, onPublishToggle, onCancelSchedule, onDelete, onShare, onDuplicate, onMove, canMoveUp, canMoveDown }) => (
-    <div className="ww-manage-chapter-card flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
+    <div className="ww-manage-chapter-card ww-arrive-quiet flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
         <div className="ww-manage-chapter-main flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
             <div className="ww-manage-chapter-copy">
