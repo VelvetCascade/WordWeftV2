@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, Mail, X } from 'lucide-react';
 import {
   moderateAdminStory, moderateAdminUser,
   type AdminModerationDecision, type AdminModerationResult,
-} from '../api/adminConsole';
+} from '../../api/adminConsole';
 
 export type AdminActionTarget = {
   kind: 'USER' | 'BOOK'; id: string; label: string;
