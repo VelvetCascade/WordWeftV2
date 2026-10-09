@@ -208,6 +208,63 @@ export const landingPages = {
     ],
     related: ['/read-online', '/wattpad-alternatives', '/royal-road-alternatives'],
   },
+
+  '/how-to-write-a-web-novel': {
+    title: 'How to Write a Web Novel: Plan, Draft & Publish | WordWeft',
+    heading: 'How to write a web novel that readers can follow.',
+    description: 'A practical web novel writing guide: plan a serial arc, structure chapters, set a release rhythm, revise drafts, and publish without losing ownership.',
+    eyebrow: 'Web novel writing guide', cta: 'Plan your first story', href: '/write',
+    intro: 'A web novel is written for people who may read one chapter today and return next week. That changes the craft: each installment needs its own movement, while the larger story must remain coherent. Here is a straightforward way to plan, write, and publish a serial without treating your first draft as a permanent promise.',
+    sections: [
+      ['01. Start with a premise that can sustain chapters', 'Write one sentence naming a protagonist, what they want, what prevents them from getting it, and what changes if they fail. Then list three escalating complications. A premise such as “a mapmaker must restore a missing road before her village disappears” gives you a continuing problem; “a mapmaker has adventures” does not yet explain why readers should return.'],
+      ['02. Sketch the story in arcs, not a rigid hundred-chapter outline', 'Plan an opening arc with a clear promise, a turning point, and an ending that changes the situation. Note a few longer mysteries or character decisions that can develop later. Leave space for discoveries during drafting. For a first serial, outline the opening five to ten chapters in detail rather than inventing filler to reach an arbitrary chapter count.'],
+      ['03. Give each installment a satisfying change', 'Before drafting a chapter, write down its starting situation, the decision or conflict that drives it, and what is different at the end. A good chapter might reveal an answer, complicate a relationship, or force a choice. A cliffhanger can help, but repeated cliffhangers without progress quickly lose their effect.'],
+      ['04. Build a small continuity notebook', 'Track character names and motivations, places, dates, important objects, and rules of your story world. Add a note when something changes. Readers may remember a detail from chapter two when you are writing chapter twenty; you should be able to find it in seconds. WordWeft’s story workspace keeps chapter drafts, characters, scenes, and lore alongside the manuscript.'],
+      ['05. Establish a publishing rhythm you can keep', 'Draft a buffer of several chapters before announcing a schedule. Estimate writing and editing time honestly, then choose a pace that leaves room for work, study, or life. One carefully revised chapter every two weeks is better than promising daily updates you cannot maintain. If you pause, mark the story status clearly.'],
+      ['06. Revise for clarity before you publish', 'Read each installment for continuity, pacing, and obvious errors. Make sure the opening tells readers where they are, who they are following, and what has changed. Check paragraphs and dialogue on a phone, not only in your editor. You can keep future chapters private while reviewing them and publish the ready installments separately.'],
+      ['07. Help readers decide whether the story is for them', 'Write a synopsis that names the central conflict, add accurate genres and tags, and include age ratings and relevant content notes. Give the work a clear cover only if you have rights to use the artwork. Each published WordWeft story has its own page and chapter list, making the series easier to share and discover.'],
+    ],
+    steps: [
+      'Write a one-sentence premise and identify your opening arc’s turning point.',
+      'Outline the first five chapters and draft a small publishing buffer.',
+      'Create a story in WordWeft, add chapters and story details, then publish only the ready material.',
+    ],
+    faqs: [
+      ['How long should a web novel chapter be?', 'There is no universal word count. Choose a length you can revise consistently and that lets each installment advance the story. Test it on a phone; an engaging shorter chapter beats padded prose.'],
+      ['Do I need to finish the whole novel before publishing?', 'No. Many serials release progressively. A completed opening arc and several prepared chapters reduce the risk of losing momentum when real life interrupts.'],
+      ['Can I edit chapters after publishing?', 'WordWeft offers chapter editing and revision history. Review changes carefully, especially if readers already depend on an earlier plot detail.'],
+      ['Does publishing online transfer ownership?', 'Publishing on WordWeft does not require transferring ownership of your original manuscript. Review the platform terms and any other contracts before posting elsewhere.'],
+    ],
+    related: ['/how-to-plan-a-novel', '/writing-tools', '/publish-stories', '/world-building-tools'],
+  },
+  '/how-to-plan-a-novel': {
+    title: 'How to Plan a Novel: Practical Outline & Story Notes | WordWeft',
+    heading: 'A practical way to plan a novel before you write.',
+    description: 'Learn to plan a novel with a premise, character goals, turning points, a chapter outline, and story notes. Includes a usable example and revision checklist.',
+    eyebrow: 'Novel planning guide', cta: 'Open the writing workspace', href: '/write',
+    intro: 'A novel outline does not have to be a rigid template. Its job is to help you answer the questions that would otherwise stop you halfway through a draft. Start with a small plan you can revise as the story takes shape; the finished manuscript matters more than whether you followed every beat you wrote down.',
+    sections: [
+      ['01. Write the promise of the story', 'Describe who the story follows, their goal, the obstacle, and what is at stake. Example: “When a coastal town begins forgetting its own history, an apprentice archivist must recover a stolen ledger before the last witnesses disappear.” This tells you what kind of events the book needs to deliver.'],
+      ['02. Give the protagonist a choice that costs something', 'Write down what the main character wants externally and what they are afraid to admit internally. Then give them two competing needs. When a character must choose between protecting a friend and discovering the truth, scenes can turn on decisions rather than coincidences.'],
+      ['03. Define a beginning, middle, and ending', 'At the beginning, establish the normal situation and the disruption. In the middle, raise the cost of pursuing the goal and let the character’s first approach fail. At the ending, force a consequential choice and show its effects. You can move these moments during drafting; they are signposts, not page-count requirements.'],
+      ['04. Turn turning points into scene cards', 'For each scene, write four short fields: point-of-view character, immediate goal, obstacle, and outcome. A scene without a changed outcome may need a stronger conflict or could belong inside another scene. Arrange the cards into chapters based on narrative movement, not an arbitrary target length.'],
+      ['05. Maintain a source of truth for people and places', 'Keep character names, roles, relationships, locations, timelines, and world rules in one place. Mark unresolved questions. If you create a character profile after drafting a scene, link it to the book’s planning materials so the next chapter is easier to write. WordWeft provides a manuscript workspace with chapters, character profiles, scenes, and lore.'],
+      ['06. Draft before polishing the outline forever', 'Once you know the opening conflict and a few consequential decisions, write the first chapter. If the draft suggests a stronger direction, update the plan. Treat the outline as a tool to complete the work, not a prerequisite that must be perfect before you begin.'],
+      ['07. Revise with the reader’s experience in mind', 'On revision, check what readers know at each moment, whether every major action follows from character motivation, and whether the ending answers the promise of the opening. Read chapter breaks aloud and check the text on smaller screens if you plan to publish online.'],
+    ],
+    steps: [
+      'Write one premise sentence and one goal/fear pair for your protagonist.',
+      'Choose three major turning points and make a card for each opening scene.',
+      'Put chapters and character notes together, then draft the first chapter before over-planning.',
+    ],
+    faqs: [
+      ['Should I outline every chapter?', 'Only as much as helps you write. Some writers need detailed scene cards; others prefer a premise, three turning points, and a continuity notebook. Both approaches can produce a coherent novel.'],
+      ['What is the difference between a plot outline and story bible?', 'An outline maps what happens. A story bible records facts that must remain consistent, such as character relationships, setting details, timelines, and rules. Long stories often benefit from both.'],
+      ['Can WordWeft be used just for drafts?', 'You can keep books and chapters as private drafts while using the writing workspace. Publishing is a separate step.'],
+      ['Can I plan a serial with this method?', 'Yes. Break the overarching novel into shorter arcs, and give each published installment a meaningful change. See the web novel guide for release planning.'],
+    ],
+    related: ['/how-to-write-a-web-novel', '/writing-tools', '/world-building-tools', '/publish-stories'],
+  },
 };
 
 export const staticPages = {
