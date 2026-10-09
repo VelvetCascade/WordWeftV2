@@ -8,7 +8,6 @@ import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -66,7 +65,7 @@ public class AdminConsoleController {
                             String reporterUsername, String reportedUsername,
                             Instant createdAt, String resolutionReason) {}
     public record ResolveRequest(
-            @NotBlank @Pattern(regexp = "RESOLVED|DISMISSED") String status,
+            @NotBlank @jakarta.validation.constraints.Pattern(regexp = "RESOLVED|DISMISSED") String status,
             @NotBlank @Size(min = 10, max = 1000) String reason) {}
 
     @GetMapping("/overview")
@@ -74,7 +73,7 @@ public class AdminConsoleController {
         LocalDate today = LocalDate.now();
         LocalDate week = today.minusDays(6);
         long users = mongo.count(new Query(), User.class);
-        long verified = mongo.count(Query.query(Criteria.where("emailVerified").is(true)), User.class);
+        long verified = mongo.count(Query.query(Criteria.where("isEmailVerified").is(true)), User.class);
         long recentUsers = mongo.count(Query.query(Criteria.where("joinDate").gte(week)), User.class);
         long stories = mongo.count(new Query(), Book.class);
         long published = mongo.count(Query.query(Criteria.where("publicationStatus").is("published")), Book.class);
