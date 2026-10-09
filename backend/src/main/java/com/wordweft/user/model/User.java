@@ -36,6 +36,11 @@ public class User {
     private String googleId;
 
     private String authProvider = "LOCAL"; // LOCAL or GOOGLE
+    // Staff suspension is reversible; existing JWTs are rejected at authentication.
+    private boolean suspended = false;
+    private String suspensionReason;
+    private String suspendedBy;
+    private Instant suspendedAt;
 
     private String avatarUrl;
     private String avatarFileId;
@@ -46,6 +51,7 @@ public class User {
 
     private String website;
 
+    @Indexed
     private LocalDate joinDate;
     private LocalDate dateOfBirth;
     private boolean allowMatureContent = false;

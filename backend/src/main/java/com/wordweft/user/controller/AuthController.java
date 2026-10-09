@@ -261,6 +261,9 @@ public class AuthController {
                 }
             }
 
+            if (user.isSuspended()) {
+                return ResponseEntity.status(403).body("This account has been suspended. Contact support for assistance.");
+            }
             // Generate JWT directly (bypassing AuthenticationManager since there's no
             // password)
             String jwt = jwtUtils.generateTokenForUser(user.getUsername());

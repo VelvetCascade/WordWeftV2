@@ -252,7 +252,7 @@ public class ChapterPublishingService {
     }
 
     public boolean publishDue(Book book, Instant now) {
-        if (!"published".equals(book.getPublicationStatus())) return false;
+        if (!"published".equals(book.getPublicationStatus()) || book.isModerationRemoved()) return false;
         var precondition = publicationQuery(book);
         boolean changed = false;
         while (true) {
@@ -287,6 +287,9 @@ public class ChapterPublishingService {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "You do not have permission to manage this story.");
+        }
+        if (book.isModerationRemoved()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This story is unavailable following an administrative review.");
         }
         return book;
     }

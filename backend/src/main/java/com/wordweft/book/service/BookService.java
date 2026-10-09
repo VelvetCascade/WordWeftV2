@@ -264,6 +264,7 @@ public class BookService {
                 Query.query(Criteria.where("_id").is(id))), Book.class);
 
         if (book != null) {
+            if (book.isModerationRemoved() && !(currentUserId != null && currentUserId.equals(book.getAuthorId()))) return null;
             if (!"published".equals(book.getPublicationStatus()) && !(currentUserId != null && currentUserId.equals(book.getAuthorId()))) {
                 return null;
             }

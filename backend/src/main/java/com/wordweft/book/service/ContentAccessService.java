@@ -115,13 +115,14 @@ public class ContentAccessService {
     }
 
     public boolean canDiscover(Book book) {
-        return allowedRatings().contains(effectiveRating(book));
+        return book != null && !book.isModerationRemoved() && allowedRatings().contains(effectiveRating(book));
     }
 
     /** Shared pre-pagination visibility predicate; callers capture viewer ratings once per request. */
     public static Criteria discoverableCriteria(Set<AgeRating> allowedRatings) {
         List<Criteria> filters = new ArrayList<>();
         filters.add(Criteria.where("publicationStatus").is("published"));
+        filters.add(Criteria.where("moderationRemoved").ne(true));
         filters.add(new Criteria().orOperator(
                 Criteria.where("ageRating").in(allowedRatings),
                 Criteria.where("ageRating").exists(false),
@@ -143,7 +144,7 @@ public class ContentAccessService {
 
     public boolean canAccess(Book book) {
         String userId = currentUserId();
-        return (userId != null && userId.equals(book.getAuthorId())) || canDiscover(book);
+        return book != null && ((userId != null && userId.equals(book.getAuthorId())) || canDiscover(book));
     }
 
     public void validateAuthorCanPostRating(User author, AgeRating rating) {

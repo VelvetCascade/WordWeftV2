@@ -23,6 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .or(() -> userRepository.findAuthenticationByUsername(username))
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username/email: " + username));
 
+        if (user.isSuspended()) throw new UsernameNotFoundException("Account is not available.");
         return UserDetailsImpl.build(user);
     }
 }
