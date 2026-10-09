@@ -464,6 +464,9 @@ public class BookController {
         }
 
         String status = String.valueOf(payload.get("status"));
+        if ("published".equals(status) && book.isModerationRemoved()) {
+            return ResponseEntity.status(403).body("This story is unavailable following an administrative review.");
+        }
 
         if ("published".equals(status)) {
             Object selected = payload.get("chapterIds");
