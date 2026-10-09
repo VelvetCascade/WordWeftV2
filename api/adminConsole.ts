@@ -12,13 +12,13 @@ export interface AdminPage<T> { items: T[]; total: number; page: number; size: n
 export interface AdminUser {
   id: string; username: string; email: string; avatarUrl: string | null;
   joinedAt: string | null; emailVerified: boolean; authProvider: string;
-  roles: string[]; publishedStories: number;
+  roles: string[]; publishedStories: number; suspended: boolean;
 }
 export interface AdminStory {
   id: string; title: string; authorId: string; authorName: string;
   status: string; createdAt: string | null; publishedAt: string | null;
   chapters: number; publishedChapters: number; reads: number; views: number;
-  category: string | null; coverUrl: string | null;
+  category: string | null; coverUrl: string | null; removed: boolean;
 }
 export type ReportStatus = 'PENDING' | 'RESOLVED' | 'DISMISSED';
 export interface AdminReport {
