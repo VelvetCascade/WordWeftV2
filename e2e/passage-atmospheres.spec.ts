@@ -23,32 +23,37 @@ for (const width of [390, 1440]) for (const theme of ['light', 'sepia', 'dark'])
             await scrollToMood(page, mood);
             const layer = page.locator(`.ww-atmosphere-${mood}[data-state=open]`);
             await expect(layer).toHaveCount(1);
-            await expect(layer.locator(mood === 'eerie' ? '.ww-atmosphere-veil' : '.ww-ambient-detail').first()).not.toHaveCSS('animation-name', 'none');
+            await expect(layer.locator(mood === 'eerie' ? '.ww-atmosphere-veil' : mood === 'serene' ? '.ww-atmosphere-ripple' : '.ww-ambient-detail').first()).not.toHaveCSS('animation-name', 'none');
             await expect(layer.locator('svg')).toHaveCount(0);
+            if (['tense', 'serene', 'triumphant'].includes(mood)) await expect(layer.locator('img[src*=fog-veil]')).toHaveCount(0);
+            expect(parseFloat(await layer.evaluate(el => getComputedStyle(el).transitionDuration)) * 1000).toBeLessThanOrEqual(500);
             await expect.poll(() => layer.locator('img').evaluateAll(images => images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBeTruthy();
             await expect(page.locator('.ww-atmospheres')).toHaveCSS('pointer-events', 'none');
             expect(await page.locator('.reader-copy').evaluate(element => getComputedStyle(element).color)).toBe(ink);
             const edges = await layer.locator('.ww-atmosphere-edge').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().width));
-            expect(Math.max(...edges)).toBeLessThanOrEqual(width === 390 ? 21 : 320);
+            if (width === 390) expect(Math.max(...edges)).toBeGreaterThanOrEqual(width);
+            else expect(Math.max(...edges)).toBeLessThanOrEqual(320);
             const geometry = await page.locator('.ww-atmospheres').evaluate(element => {
                 const copy = document.querySelector('.reader-copy')!.getBoundingClientRect();
                 const left = element.querySelector('.ww-atmosphere-layer[data-state=open] .ww-atmosphere-edge-left')!.getBoundingClientRect();
                 const right = element.querySelector('.ww-atmosphere-layer[data-state=open] .ww-atmosphere-edge-right')!.getBoundingClientRect();
                 return { left: left.right, right: right.left, textLeft: copy.left, textRight: copy.right };
             });
-            expect(geometry.left).toBeLessThanOrEqual(geometry.textLeft);
-            expect(geometry.right).toBeGreaterThanOrEqual(geometry.textRight);
+            if (width > 720) {
+                expect(geometry.left).toBeLessThanOrEqual(geometry.textLeft);
+                expect(geometry.right).toBeGreaterThanOrEqual(geometry.textRight);
+            }
             if (mood === 'melancholy') await expect(layer.locator('.ww-ambient-detail img').first()).toHaveCSS('height', width === 390 ? '42px' : '52px');
             if (mood === 'romantic') await expect(layer.locator('.ww-ambient-detail img').first()).toHaveCSS('width', width === 390 ? '20px' : '28px');
             if (mood === 'eerie') {
                 await expect(layer.locator('.ww-atmosphere-veil')).toHaveCount(4);
-                await expect(layer.locator('.ww-atmosphere-scenery')).toHaveCSS('opacity', '0.65');
+                await expect(layer.locator('.ww-atmosphere-scenery')).toHaveCSS('opacity', width === 390 ? '0.247' : '0.65');
                 expect(await layer.locator('.ww-atmosphere-veil').first().evaluate(element => element.getBoundingClientRect().width)).toBeGreaterThan(width === 390 ? 380 : 700);
             }
 
-            if (mood === 'melancholy' || mood === 'romantic' || mood === 'eerie') {
+            {
                 await expect(layer).toHaveCSS('opacity', '1');
-                const animated = layer.locator(mood === 'eerie' ? '.ww-atmosphere-veil' : '.ww-ambient-detail').first();
+                const animated = layer.locator(mood === 'eerie' ? '.ww-atmosphere-veil' : mood === 'serene' ? '.ww-atmosphere-ripple' : '.ww-ambient-detail').first();
                 const transform = await animated.evaluate(element => getComputedStyle(element).transform);
                 await expect.poll(() => animated.evaluate(element => getComputedStyle(element).transform)).not.toBe(transform);
                 await page.screenshot({ path: `test-results/evidence/atmospheres/${mood}-${theme}-${width}.png` });
@@ -134,6 +139,7 @@ for (const width of [390, 1440]) test(`writer scopes selected passages, changes 
             const canvas = preview.locator('.ww-reading-preview-canvas');
             await canvas.evaluate(element => { const passage = element.querySelector('.reader-copy [data-mood=romantic]')!; element.scrollTop += passage.getBoundingClientRect().top - element.getBoundingClientRect().top - element.clientHeight * .32 + 10; });
             await expect(preview.locator('.ww-atmospheres')).toHaveAttribute('data-active-atmosphere', 'romantic');
+            expect(await preview.locator('.ww-atmosphere-edge-left').evaluate(el => el.getBoundingClientRect().width)).toBeCloseTo(await canvas.evaluate(el => el.clientWidth), 0);
             await expect(canvas).toHaveAttribute('data-preview-theme', theme);
         }
         await page.screenshot({ path: `test-results/evidence/atmospheres/writer-preview-${width}.png` });
@@ -148,7 +154,7 @@ test('wide Full mode stays visible between the manuscript and both sidebar cards
     await page.route('**/api/books/*/chapters/*/content', async route => { const response = await route.fetch(); await route.fulfill({ response, json: { ...await response.json(), content: manuscript, access: 'FULL' } }); });
     await page.goto('/book/local-story-spring/chapter/local-story-spring-chapter-1');
     await expect(page.locator('.reader-conversation-rail')).toBeVisible();
-    for (const mood of ['eerie', 'melancholy', 'romantic']) {
+    for (const mood of moods) {
         await scrollToMood(page, mood);
         const layer = page.locator(`.ww-atmosphere-${mood}[data-state=open]`);
         await expect(layer).toHaveCSS('opacity', '1');
@@ -171,12 +177,36 @@ test('wide Full mode stays visible between the manuscript and both sidebar cards
                 return element.contains(document.elementFromPoint(bounds.left + 10, bounds.top + 10));
             })).toBeTruthy();
         }
-        await expect(layer.locator('.ww-atmosphere-veil')).toHaveCount(4);
-        await expect(layer.locator('.ww-atmosphere-scenery')).not.toHaveCSS('mask-image', 'none');
-        if (mood !== 'eerie') {
+        if (['eerie', 'melancholy', 'romantic'].includes(mood)) {
+            await expect(layer.locator('.ww-atmosphere-veil')).toHaveCount(4);
+            await expect(layer.locator('.ww-atmosphere-scenery')).not.toHaveCSS('mask-image', 'none');
+        }
+        if (mood === 'romantic' || mood === 'melancholy') {
             const strength = await layer.locator('.ww-ambient-detail').evaluateAll(elements => Math.max(...elements.map(element => parseFloat(getComputedStyle(element).opacity))));
             expect(strength).toBeGreaterThan(.65);
         }
         await page.screenshot({ path: `test-results/evidence/atmospheres/full-wide-${mood}.png` });
+    }
+});
+
+
+test('quick passage changes leave one active mood and reduced motion stills every motif', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.route('**/api/books/*/chapters/*/content', async route => { const response = await route.fetch(); await route.fulfill({ response, json: { ...await response.json(), content: manuscript, access: 'PREVIEW' } }); });
+    await page.goto('/book/local-story-spring/chapter/local-story-spring-chapter-1');
+    await expect(page.locator('.reader-copy')).toBeVisible();
+    for (const mood of ['romantic', 'tense', 'eerie', 'romantic', 'serene']) await scrollToMood(page, mood);
+    await expect(page.locator('.ww-atmosphere-layer[data-state=open]')).toHaveCount(1);
+    await expect(page.locator('.ww-atmosphere-layer[data-state=closed]')).toHaveCount(0);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (const mood of moods) {
+        await scrollToMood(page, mood);
+        const layer = page.locator(`.ww-atmosphere-${mood}[data-state=open]`);
+        expect(await layer.locator('.ww-atmosphere-veil, .ww-ambient-detail, .ww-atmosphere-ripple').evaluateAll(elements => elements.every(el => getComputedStyle(el).animationName === 'none'))).toBeTruthy();
+        await expect(layer).toHaveCSS('transition-duration', '0s');
+        expect(await page.locator('.reader-copy').evaluate(el => {
+            const bounds = el.getBoundingClientRect();
+            return el.contains(document.elementFromPoint(bounds.left + 40, 350));
+        })).toBeTruthy();
     }
 });
