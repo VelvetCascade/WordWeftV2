@@ -46,6 +46,7 @@ public class User {
 
     private String website;
 
+    @Indexed
     private LocalDate joinDate;
     private LocalDate dateOfBirth;
     private boolean allowMatureContent = false;
