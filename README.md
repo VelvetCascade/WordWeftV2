@@ -60,3 +60,7 @@ Do not move cover, avatar, or character uploads to R2. Do not use the Render fil
 ## Deployment
 
 The exact Vercel, Render, and Cloudflare configuration is documented in [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md). Public SEO setup is documented separately in [`docs/SEO-LAUNCH.md`](./docs/SEO-LAUNCH.md).
+
+## GitHub integration smoke test
+
+This temporary documentation-only note verifies that the connected GitHub integration can create a branch, commit a README change, and open a pull request. No application code is changed.
