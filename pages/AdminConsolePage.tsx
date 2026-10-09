@@ -140,7 +140,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
     if (!isAdmin || section === 'settings') return;
     let active = true;
     setLoading(true); setError('');
-    const request = section === 'overview' ? getAdminOverview()
+    const request: Promise<AdminOverview | AdminPage<AdminUser> | AdminPage<AdminStory> | AdminPage<AdminReport>> = section === 'overview' ? getAdminOverview()
       : section === 'members' ? getAdminUsers(page, debouncedQuery, filter)
       : section === 'stories' ? getAdminStories(page, debouncedQuery, filter)
       : getAdminReports(page, filter);
