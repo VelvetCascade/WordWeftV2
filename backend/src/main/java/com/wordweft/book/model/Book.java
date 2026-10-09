@@ -69,6 +69,7 @@ public class Book {
     private String publicationStatus = "draft"; // "draft" or "published"
     private LocalDate publishedDate;
     private LocalDate lastUpdatedAt;
+    @org.springframework.data.mongodb.core.index.Indexed
     private LocalDate createdAt;
     private AgeRating ageRating = AgeRating.ALL_AGES;
     private List<String> contentWarnings = new ArrayList<>();
