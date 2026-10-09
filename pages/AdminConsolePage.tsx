@@ -1,19 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Activity, ArrowDownRight, ArrowRight, BookOpen, CheckCircle2, ClipboardList,
-  BarChart3, FileText, History, LayoutDashboard, LockKeyhole, RefreshCw, Search, Settings2,
+  FileText, History, LayoutDashboard, LockKeyhole, RefreshCw, Search, Settings2,
   ShieldAlert, ShieldCheck, Users, XCircle } from 'lucide-react';
 import {
-  getAdminOverview, getAdminReports, getAdminStories, getAdminUsers, getAdminSheetAnalytics, getAdminAudit, resolveAdminReport,
-  type AdminOverview, type AdminPage, type AdminReport, type AdminStory, type AdminUser, type AdminSheetAnalytics, type AdminAuditPage, type AdminModerationResult,
+  getAdminOverview, getAdminReports, getAdminStories, getAdminUsers, getAdminAudit, resolveAdminReport,
+  type AdminOverview, type AdminPage, type AdminReport, type AdminStory, type AdminUser, type AdminAuditPage, type AdminModerationResult,
 } from '../api/adminConsole';
 import { AdminDecisionModal, type AdminActionTarget } from '../components/admin/AdminDecisionModal';
 import '../styles/admin-console.css';
 
-type Section = 'overview' | 'analytics' | 'members' | 'stories' | 'reports' | 'audit' | 'settings';
+type Section = 'overview' | 'members' | 'stories' | 'reports' | 'audit' | 'settings';
 
 const sections: { key: Section; label: string; icon: typeof LayoutDashboard }[] = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { key: 'analytics', label: 'Analytics', icon: BarChart3 },
   { key: 'members', label: 'Members', icon: Users },
   { key: 'stories', label: 'Stories', icon: BookOpen },
   { key: 'reports', label: 'Reports', icon: ShieldAlert },
@@ -92,40 +91,6 @@ function Overview({ data, navigate }: { data: AdminOverview; navigate: (section:
   </>;
 }
 
-function SheetAnalytics({ data, days, onDays }: { data: AdminSheetAnalytics; days: 7 | 30 | 90; onDays: (days: 7 | 30 | 90) => void }) {
-  return <section className="ac-sheet">
-    <div className="ac-panel ac-sheet-source"><div><span className="ac-kicker">READ-ONLY SOURCE / GOOGLE SHEETS</span><h2>Traffic & engagement</h2>
-      <p>Page visits, device breakdown, event activity and session totals from the existing analytics spreadsheet. No analytics events are stored in WordWeft's MongoDB.</p></div>
-      <label className="ac-select">Period <select value={days} onChange={event => onDays(Number(event.target.value) as 7 | 30 | 90)}>
-      <option value={7}>Last 7 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option></select></label>
-    </div>
-    {data.status !== 'connected' ? <div className="ac-panel ac-sheet-disconnected" role="status"><ShieldAlert size={27} /><h3>Spreadsheet analytics not connected</h3>
-      <p>{data.detail}</p><p>The spreadsheet and its historical data remain unchanged. Configure the read-only adapter described in <code>docs/ADMIN-CONSOLE.md</code> to see live reports.</p></div>
-    : <>
-      <div className="ac-metrics ac-sheet-metrics">
-        <Metric label="Page views" value={data.pageViews} detail="Tracked page-view events" />
-        <Metric label="Sessions" value={data.sessions} detail="Unique tracked session identifiers" />
-        <Metric label="Events" value={data.events} detail="Interaction events received in the spreadsheet" />
-      </div>
-      <div className="ac-panel"><span className="ac-kicker">Activity by date / UTC</span><h2>Visits & interactions</h2>
-      <div className="ac-sheet-table-wrap"><table className="ac-table"><thead><tr><th>Date</th><th>Page views</th><th>Events</th></tr></thead><tbody>
-      {data.daily.map(row => <tr key={row.day}><td>{row.day}</td><td>{number(row.pageViews)}</td><td>{number(row.events)}</td></tr>)}
-      {!data.daily.length && <tr><td colSpan={3} className="ac-empty">No analytics records for this period.</td></tr>}
-      </tbody></table></div></div>
-      <div className="ac-sheet-grid">{[
-        { title: 'Most visited pages', rows: data.topPages, key: 'path' as const },
-        { title: 'Devices', rows: data.devices, key: 'name' as const },
-        { title: 'Browsers', rows: data.browsers, key: 'name' as const },
-        { title: 'Tracked event actions', rows: data.actions, key: 'name' as const },
-      ].map(group => <section className="ac-panel" key={group.title}><span className="ac-kicker">Breakdown</span><h2>{group.title}</h2>
-      <div className="ac-sheet-breakdown">{group.rows.map((item, index) => <div key={index}><span>{item[group.key] || 'Unknown'}</span><strong>{number(item.count)}</strong></div>)}
-        {!group.rows.length && <p>No records for this period.</p>}
-      </div></section>)}</div>
-      <p className="ac-sheet-note">These totals reflect the events recorded in Google Sheets. They may differ from Google Analytics, ad impressions or distinct human visitors.</p>
-    </>}
-  </section>;
-}
-
 function Directory<T>({ heading, description, placeholder, filterOptions, filter, onFilter, query, onQuery,
   pageData, page, onPage, loading, error, onRetry, children }: {
     heading: string; description: string; placeholder: string;
@@ -150,8 +115,6 @@ function Directory<T>({ heading, description, placeholder, filterOptions, filter
 export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
   const [section, setSection] = useState<Section>('overview');
   const [overview, setOverview] = useState<AdminOverview | null>(null);
-  const [sheet, setSheet] = useState<AdminSheetAnalytics | null>(null);
-  const [sheetDays, setSheetDays] = useState<7 | 30 | 90>(30);
   const [users, setUsers] = useState<AdminPage<AdminUser> | null>(null);
   const [stories, setStories] = useState<AdminPage<AdminStory> | null>(null);
   const [reports, setReports] = useState<AdminPage<AdminReport> | null>(null);
@@ -181,8 +144,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
     if (!isAdmin || section === 'settings') return;
     let active = true;
     setLoading(true); setError('');
-    const request: Promise<AdminOverview | AdminPage<AdminUser> | AdminPage<AdminStory> | AdminPage<AdminReport> | AdminSheetAnalytics | AdminAuditPage> = section === 'overview' ? getAdminOverview()
-      : section === 'analytics' ? getAdminSheetAnalytics(sheetDays)
+    const request: Promise<AdminOverview | AdminPage<AdminUser> | AdminPage<AdminStory> | AdminPage<AdminReport> | AdminAuditPage> = section === 'overview' ? getAdminOverview()
       : section === 'members' ? getAdminUsers(page, debouncedQuery, filter)
       : section === 'stories' ? getAdminStories(page, debouncedQuery, filter)
       : section === 'audit' ? getAdminAudit(page)
@@ -190,7 +152,6 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
     void request.then(result => {
       if (!active) return;
       if (section === 'overview') setOverview(result as AdminOverview);
-      if (section === 'analytics') setSheet(result as AdminSheetAnalytics);
       if (section === 'members') setUsers(result as AdminPage<AdminUser>);
       if (section === 'stories') setStories(result as AdminPage<AdminStory>);
       if (section === 'reports') setReports(result as AdminPage<AdminReport>);
@@ -198,7 +159,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
     }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : 'Unable to load the data.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [isAdmin, section, page, filter, debouncedQuery, reload, sheetDays]);
+  }, [isAdmin, section, page, filter, debouncedQuery, reload]);
 
   const review = async (id: string, status: 'RESOLVED' | 'DISMISSED') => {
     if (reason.trim().length < 10 || saving) return;
@@ -215,7 +176,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
 
   const decisionComplete = (result: AdminModerationResult) => {
     setDecisionTarget(null);
-    setActionMessage(`${result.action} completed. ${result.emailQueued ? 'An email was queued through the existing mail service.' : 'No email address was available.'}${result.auditRecorded ? '' : ' Warning: the audit-log write failed; contact engineering.'}`);
+    setActionMessage(`${result.action} completed. No email was sent.${result.auditRecorded ? '' : ' Warning: the audit-log write failed; contact engineering.'}`);
     setReload(value => value + 1);
   };
 
@@ -239,7 +200,6 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
       <header className="ac-topbar"><span><span className="ac-live-dot" /> Production workspace</span><button type="button" disabled={loading} onClick={() => setReload(value => value + 1)}><RefreshCw size={16} className={loading ? 'ac-spin' : ''} /> Refresh</button></header>
       <div className="ac-content">
         <div className="ac-intro"><div><p className="ac-kicker">WORDWEFT / ADMINISTRATION</p><h1>{sections.find(item => item.key === section)?.label}</h1><p>{section === 'overview' ? 'A clear view of the people, stories and activity behind the platform.'
-          : section === 'analytics' ? 'Explore the page visits, sessions and events already tracked in Google Sheets.'
           : section === 'members' ? 'Find accounts, check verification and see publishing activity.'
           : section === 'stories' ? 'Inspect published work and drafts without opening private manuscripts.'
           : section === 'reports' ? 'Review safety reports with a recorded decision and reason.'
@@ -249,8 +209,6 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
         </div>
 
         {section === 'overview' && (loading && !overview ? <Loading /> : error ? <ErrorState message={error} retry={() => setReload(v => v + 1)} /> : overview ? <Overview data={overview} navigate={navigate} /> : <Loading />)}
-
-        {section === 'analytics' && (loading ? <Loading /> : error ? <ErrorState message={error} retry={() => setReload(v => v + 1)} /> : sheet ? <SheetAnalytics data={sheet} days={sheetDays} onDays={setSheetDays} /> : <Loading />)}
 
         {actionMessage && section !== 'reports' && <p className="ac-action-message" role="status">{actionMessage}</p>}
 
@@ -319,7 +277,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
         </section>}
 
         {section === 'audit' && <section className="ac-panel ac-directory"><div className="ac-panel-heading"><div><span className="ac-kicker">Accountability</span><h2>Moderation history</h2><p>Staff actions recorded in the existing moderation audit collection. Decisions include the acting admin ID, time and reason.</p></div><span className="ac-count">{number(audit?.total)}</span></div>
-          {loading ? <Loading /> : error ? <ErrorState message={error} retry={() => setReload(v => v + 1)} /> : <><div className="ac-table-scroll"><table className="ac-table"><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Actor</th><th>Reason / notification</th></tr></thead><tbody>
+          {loading ? <Loading /> : error ? <ErrorState message={error} retry={() => setReload(v => v + 1)} /> : <><div className="ac-table-scroll"><table className="ac-table"><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Actor</th><th>Reason / internal note</th></tr></thead><tbody>
             {audit?.items.map((row, index) => <tr key={row.targetId + row.createdAt + index}><td>{date(row.createdAt)}</td><td><Badge text={row.action} /></td><td>{row.targetType} · {row.targetId}</td><td>{row.actorId}</td><td className="ac-audit-reason">{row.reason}</td></tr>)}
             {!audit?.items.length && <tr><td colSpan={5} className="ac-empty">No moderation actions recorded.</td></tr>}
           </tbody></table></div>
