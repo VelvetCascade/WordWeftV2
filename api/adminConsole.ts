@@ -73,3 +73,23 @@ export interface AdminSheetAnalytics {
 }
 export const getAdminSheetAnalytics = (days: 7 | 30 | 90) =>
   adminRequest<AdminSheetAnalytics>('/analytics' + params({ days }));
+
+export interface AdminModerationDecision {
+  action: 'SUSPEND' | 'REINSTATE' | 'REMOVE' | 'RESTORE';
+  reason: string; message: string; reportId?: string;
+}
+export interface AdminModerationResult {
+  targetType: 'USER' | 'BOOK'; targetId: string;
+  action: string; state: string; emailQueued: boolean; auditRecorded: boolean;
+}
+export interface AdminAuditItem { actorId: string; targetType: string; targetId: string; action: string; reason: string; createdAt: string }
+export interface AdminAuditPage { items: AdminAuditItem[]; total: number; page: number }
+export const moderateAdminUser = (id: string, decision: AdminModerationDecision) =>
+  adminRequest<AdminModerationResult>('/users/' + encodeURIComponent(id) + '/moderation', {
+    method: 'POST', body: JSON.stringify(decision),
+  });
+export const moderateAdminStory = (id: string, decision: AdminModerationDecision) =>
+  adminRequest<AdminModerationResult>('/stories/' + encodeURIComponent(id) + '/moderation', {
+    method: 'POST', body: JSON.stringify(decision),
+  });
+export const getAdminAudit = (page: number) => adminRequest<AdminAuditPage>('/audit' + params({ page }));
