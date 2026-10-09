@@ -193,13 +193,14 @@ public class AdminConsoleController {
     public ResponseEntity<ReportRow> resolve(@PathVariable String id,
             @Valid @RequestBody ResolveRequest request, @AuthenticationPrincipal UserDetailsImpl admin) {
         if (admin == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        Query pending = Query.query(Criteria.where("_id").is(id).and("status").is("PENDING"));
+        Query pending = Query.query(Criteria.where("_id").is(id).and("status").is("PENDING")
+                .and("targetType").nin("COMMUNITY_POST", "COMMUNITY_COMMENT"));
         Update update = new Update().set("status", request.status())
                 .set("resolutionReason", request.reason().trim()).set("resolvedBy", admin.getId())
                 .set("updatedAt", Instant.now());
         Report report = mongo.findAndModify(pending, update, FindAndModifyOptions.options().returnNew(true), Report.class);
         if (report == null) throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Report not found or already reviewed. Refresh the queue.");
+                "Report not found, already reviewed, or requires the community moderation desk. Refresh the queue.");
         return noStore(reportRow(report));
     }
 
