@@ -32,7 +32,7 @@ const ChapterItem: React.FC<{ bookId: string; chapter: Book['chapters'][0]; inde
     const accessLabel = chapter.accessLabel ?? 'FULL';
     const actionLabel = chapter.status !== 'published' ? 'Not released' : accessLabel === 'PREVIEW' ? 'Preview' : accessLabel === 'SIGN_IN' ? 'Sign in to read' : isCompleted ? 'Finished' : current ? 'Continue' : index === 0 ? 'Start here' : 'Unread';
     return (
-        <article className={`ww-chapter-timeline-row ${isCompleted ? 'is-finished' : ''} ${current ? 'is-current' : ''} ${chapter.status !== 'published' ? 'is-unreleased' : ''}`}>
+        <article className={`ww-chapter-timeline-row ww-arrive-quiet ${isCompleted ? 'is-finished' : ''} ${current ? 'is-current' : ''} ${chapter.status !== 'published' ? 'is-unreleased' : ''}`}>
             <span className="ww-chapter-timeline-marker" aria-hidden="true">{isCompleted ? '✓' : current ? '•' : index + 1}</span>
             <div className="ww-chapter-timeline-content">
                 <div className="ww-chapter-timeline-meta"><span>Chapter {String(index + 1).padStart(2, '0')}</span><span>{actionLabel}</span></div>
@@ -88,7 +88,7 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
     };
 
     return (
-        <div className="bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
+        <div className="ww-story-review-item ww-arrive-quiet bg-surface dark:bg-dark-surface p-6 rounded-2xl border border-gray-200/80 dark:border-dark-border">
             <div className="flex items-start gap-4">
                 <img
                     src={review.user.avatarUrl}
@@ -600,7 +600,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         {book.nextScheduledReleaseAt && <div className="ww-next-release"><span>Next chapter</span><strong>{new Date(book.nextScheduledReleaseAt).toLocaleString()}</strong><small>Scheduled by {book.author.name}</small></div>}
                         {(book.contentWarnings?.length > 0 || book.customDisclaimer) && <div className="book-content-guidance"><strong>Content guidance</strong>{book.contentWarnings?.length > 0 && <div className="content-warning-list">{book.contentWarnings.map(warning => <span key={warning}>{warningLabel(warning)}</span>)}</div>}{book.customDisclaimer && <p>{book.customDisclaimer}</p>}</div>}
                         <a href={discussLink(book.id, null, currentUser?.id === book.author.id)} className="ww-story-community-link"><ChatBubbleLeftIcon className="w-4 h-4" />Discuss in Community</a>
-                        {showLibraryNudge && <div className="ww-library-saved-nudge"><span>Saved to your library. Share this story?</span><button onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}>Share</button></div>}
+                        {showLibraryNudge && <div className="ww-library-saved-nudge ww-arrive-quiet"><span>Saved to your library. Share this story?</span><button onClick={() => { setShowLibraryNudge(false); setIsShareModalOpen(true); }}>Share</button></div>}
                     </div>
                     <aside className="ww-story-contents-rail" aria-label="Table of contents"><span className="ww-page-eyebrow">Table of contents</span><h2>{book.chapters.length} {book.chapters.length === 1 ? 'chapter' : 'chapters'}</h2><p>Read in chapter order</p><div className="ww-story-contents-scroll">{book.chapters.slice(0, 8).map((chapter, index) => <ChapterItem key={chapter.id} bookId={book.id} chapter={chapter} index={index} progress={readingProgress?.chapters?.[chapter.id]?.progress || 0} current={hasStartedReading && !isFinished && resumeIndex === index} onRead={() => handleReadChapterClick(index)} onToggleLike={handleToggleChapterLike} isLikePending={pendingChapterLikes.has(chapter.id)} />)}</div><button className="ww-story-view-contents" onClick={() => { setActiveTab('Chapters'); requestAnimationFrame(() => document.getElementById('story-guide-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>View all chapters<ArrowLeftIcon className="w-4 h-4 rotate-180" /></button></aside>
                 </section>

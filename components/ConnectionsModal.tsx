@@ -85,7 +85,7 @@ export const ConnectionsModal: React.FC<ConnectionsModalProps> = ({ isOpen, onCl
                     ) : (
                         <div className="space-y-1">
                             {users.map(user => (
-                                <div key={user.id} className="ww-connection-row flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-dark-surface-alt rounded-xl transition-colors group">
+                                <div key={user.id} className="ww-connection-row ww-arrive-quiet flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-dark-surface-alt rounded-xl transition-colors group">
                                     <button type="button" className="ww-connection-profile" onClick={() => { onClose(); window.location.hash = `/author/${user.id}`; }}>
                                         <ResilientImage src={user.avatarUrl} alt={user.name} fallbackLabel={user.name} className="w-10 h-10 rounded-full object-cover" />
                                         <div>

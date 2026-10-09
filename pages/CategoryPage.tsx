@@ -51,7 +51,7 @@ const readCatalogJourney = (genre: string | null): CatalogJourney => {
 };
 
 const BookListItem: React.FC<{ book: Book; onClick: () => void }> = ({ book, onClick }) => (
-  <div className="v2-story-list-item flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
+  <div className="v2-story-list-item ww-arrive flex flex-col sm:flex-row gap-6 p-4 bg-white dark:bg-dark-surface rounded-2xl shadow-soft hover:shadow-lifted cursor-pointer transition-all duration-300 hover:-translate-y-1">
     <ResilientImage src={book.coverUrl} alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" className="w-full sm:w-32 h-48 sm:h-auto object-cover rounded-xl" />
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">

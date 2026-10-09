@@ -15,7 +15,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
 
   return (
     <div
-      className="ww-book-card group"
+      className="ww-book-card ww-arrive group"
       onClick={event => { if (!(event.target instanceof Element && event.target.closest('a,button'))) onClick(); }}
       aria-label={`Open ${book.title} by ${book.author.name}`}
     >

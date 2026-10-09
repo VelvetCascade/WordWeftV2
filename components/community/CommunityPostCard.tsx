@@ -53,7 +53,7 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
       setAction(null); setReason('');
     } catch (err) { setError(communityError(err)); } finally { setPending(false); }
   };
-  return <article className={`community-post community-post-${post.type.toLowerCase()}`}>
+  return <article className={`community-post community-post-${post.type.toLowerCase()} ${detail ? '' : 'ww-arrive-quiet'}`}>
     <header className="community-post-header"><CommunityAuthor author={post.author} date={post.createdAt} /><div className="community-post-menu"><button className="community-icon-button" aria-label="Post actions" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} /></button>{menuOpen && <div className="community-menu">
       {post.canEdit && post.status === 'ACTIVE' && <><button onClick={() => { setMenuOpen(false); setEditing(true); }}>Edit post</button><button onClick={() => { setMenuOpen(false); setAction('DELETE'); }}>Delete post</button></>}
       {!own && post.status === 'ACTIVE' && <button onClick={() => { setMenuOpen(false); if (requireAuth()) setReporting(true); }}>Report post</button>}

@@ -262,7 +262,7 @@ const BookResultCard: React.FC<{ book: SearchBookResult; index: number }> = ({ b
     <button
         type="button"
         className="search-book-card"
-        style={{ animationDelay: `${index * 60}ms` }}
+        style={{ animationDelay: `${Math.min(index * 60, 180)}ms` }}
         onClick={() => { navigatePath(`/book/${book.id}`); }}
         aria-label={`Open ${book.title}${book.author ? ` by ${book.author.name}` : ''}`}
     >
@@ -320,7 +320,7 @@ const AuthorResultCard: React.FC<{ author: SearchAuthorResult; index: number }> 
     <button
         type="button"
         className="search-author-card"
-        style={{ animationDelay: `${index * 80}ms` }}
+        style={{ animationDelay: `${Math.min(index * 80, 180)}ms` }}
         onClick={() => { navigatePath(`/author/${author.id}`); }}
     >
         <ResilientImage

@@ -91,3 +91,40 @@ html { scroll-behavior: auto; }
 }
 
 .ww-reader-placeholder .reader-chapter-intro > span > .ww-skeleton-block { display: inline-block; height: .65em; vertical-align: baseline; }
+
+/* Search-style arrivals: only explicitly opted-in content, never manuscript text.
+   Backwards fill releases transforms after entry, preserving hover feedback and
+   avoiding a permanent containing block for fixed descendants. Stable keys keep
+   existing items still when more results arrive or their data changes. */
+.ww-arrive,
+.ww-arrive-quiet {
+  --ww-arrival-delay: 160ms;
+  animation: ww-content-arrive 300ms cubic-bezier(.2, .65, .3, 1) var(--ww-arrival-delay) backwards;
+}
+.ww-arrive-quiet { animation-name: ww-content-fade; animation-duration: 220ms; }
+:is(.ww-arrive, .ww-arrive-quiet):nth-child(1) { --ww-arrival-delay: 0ms; }
+:is(.ww-arrive, .ww-arrive-quiet):nth-child(2) { --ww-arrival-delay: 35ms; }
+:is(.ww-arrive, .ww-arrive-quiet):nth-child(3) { --ww-arrival-delay: 70ms; }
+:is(.ww-arrive, .ww-arrive-quiet):nth-child(4) { --ww-arrival-delay: 105ms; }
+:is(.ww-arrive, .ww-arrive-quiet):nth-child(5) { --ww-arrival-delay: 140ms; }
+/* Focus reveals the control immediately; a dialog must never inherit fading. */
+:is(.ww-arrive, .ww-arrive-quiet):is(:focus-within, :has([role="dialog"], [role="alertdialog"])) {
+  animation-duration: 0s;
+  animation-delay: 0s;
+}
+@keyframes ww-content-arrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ww-content-fade { from { opacity: .4; } to { opacity: 1; } }
+
+/* Keep the search's original entrance, but release its transform for hover and
+   cap pagination delays in the card component. No invisible, focused results. */
+.search-book-card, .search-author-card { animation-fill-mode: backwards; }
+:is(.search-book-card, .search-author-card):focus { animation-duration: 0s; animation-delay: 0s !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-arrive, .ww-arrive-quiet, .search-book-card, .search-author-card {
+    animation: none !important;
+  }
+}

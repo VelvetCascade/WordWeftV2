@@ -233,7 +233,7 @@ const CommentDrawer: React.FC<{
                         <div className="text-center py-8 text-gray-500">No comments yet. Be the first!</div>
                     ) : (
                         topLevelComments.map(c => (
-                            <div key={c.id}>
+                            <div key={c.id} className="reader-thread-comment ww-arrive-quiet">
                             {c.paragraphIndex !== null && <button type="button" className="reader-return-passage" onClick={() => onReturnToPassage(c.paragraphIndex!)}>Return to passage {c.paragraphIndex + 1}</button>}
                             <CommentItem
                                 comment={c}
