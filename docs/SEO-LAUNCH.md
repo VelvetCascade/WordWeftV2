@@ -10,13 +10,13 @@ Public pages return meaningful HTML before JavaScript runs. Existing interactive
 
 | Content | Search policy |
 | --- | --- |
-| Homepage, About, Contact, policies, and nine discovery/comparison pages | Public HTML, distinct metadata, canonical URLs, visible FAQs and matching structured data |
-| `/features` | Same feature showcase as the anonymous homepage; canonical points to `/` |
+| Homepage, About, Contact, policies, and eleven discovery/comparison/guides pages | Public HTML, distinct metadata, canonical URLs, visible FAQs and matching structured data |
+| `/features` | Independent features page with its own canonical URL, descriptive metadata and sitemap entry |
 | Published book with at least one published chapter, ALL_AGES or TEEN_13 | Indexable synopsis, author, genres, tags, cover and chapter links |
 | First published chapter of eligible books | Indexable, deterministic excerpt followed by a clear sign-in gate; the complete manuscript is never placed in anonymous HTML |
-| Later published chapters of eligible books | Indexable title, story context, canonical navigation, and `Sign in to read` actions; no manuscript text is included |
+| Later published chapters of eligible books | Accessible title, story context, canonical navigation and sign-in gate; **noindex** because the page has no substantive public manuscript. Only the first preview chapter is included in the chapter sitemap |
 | Authors with eligible published books | Public bio and paginated book directory; empty portfolios are noindex |
-| Genre pages with eligible books | Indexable, paginated directory |
+| Genre pages with eligible books | Indexable paginated directory with distinct editorial genre context and related populated-genre links |
 | Tags shared by at least three eligible books | Indexable, paginated directory; thinner tags remain browsable with noindex |
 | Draft/scheduled chapters, unpublished books, mature/age-restricted stories | Excluded from the anonymous HTML feed and sitemaps; direct public HTML returns 404 |
 | Writing studio, account pages, authentication, reset tokens, internal search, community/activity utilities | Noindex; existing account and content permissions still apply |
@@ -36,6 +36,8 @@ These are intent clusters observed in current public search results, not invente
 | `/writing-tools` | online novel writing tools, story writing app, online story editor | organize chapters, manuscript import, character profiles |
 | `/publish-stories` | publish stories online, share writing online | publish a web novel, serialize a story, schedule chapters |
 | `/world-building-tools` | worldbuilding tools for writers, character profiles for writers | organize story lore, character notes, fictional world planning |
+| `/how-to-write-a-web-novel` | how to write a web novel, web novel chapter planning | serial pacing, publishing buffer, consistent release schedule |
+| `/how-to-plan-a-novel` | how to plan a novel, novel outline guide | characters, scene cards, story bible, turning points |
 | `/wattpad-alternatives` | Wattpad alternatives, sites like Wattpad, apps like Wattpad | Wattpad alternative for writers, where to publish stories online |
 | `/webnovel-alternatives` | Webnovel alternatives, sites like Webnovel | web novel publishing platforms, serial fiction platforms |
 | `/royal-road-alternatives` | Royal Road alternatives, sites like Royal Road | where to publish serial fiction, fiction platforms across genres |
@@ -46,7 +48,7 @@ These are intent clusters observed in current public search results, not invente
 | `/book/<id>` and its chapters | book title, title + author, chapter title | Synopsis, tags, genre and stable chapter links |
 | `/author/<id>` | author name, author name + stories | Public portfolio and book discovery |
 
-The nine acquisition pages contain useful product-specific explanations, practical steps, FAQs, internal links, and working calls to action. The three competitor pages are decision guides, not doorway pages: each covers a distinct audience and explains what WordWeft does not promise. Do not clone them for every competitor, add dynamic years to titles, or make unsupported claims such as print distribution, guaranteed income, offline apps, or AI manuscript generation. Broad terms such as “writing tools” are competitive; accurate longer queries and individual story/genre searches provide more specific opportunities.
+The eleven acquisition pages contain useful product-specific explanations, practical steps, FAQs, internal links, and working calls to action. The three competitor pages are decision guides, not doorway pages: each covers a distinct audience and explains what WordWeft does not promise. Do not clone them for every competitor, add dynamic years to titles, or make unsupported claims such as print distribution, guaranteed income, offline apps, or AI manuscript generation. Broad terms such as “writing tools” are competitive; accurate longer queries and individual story/genre searches provide more specific opportunities.
 
 ## Deployment order
 
@@ -61,10 +63,12 @@ The reader release must preserve the exact public labels `Preview` and `Sign in 
 
 The dynamic renderer has a 12-second upstream deadline. Keep the backend available and monitor response times; frequent cold starts/timeouts will return 503 and hurt crawling. Dynamic pages deliberately avoid CDN caching so unpublishing a story takes effect on the next request. Public static pages use one-hour CDN caching; previews stay uncached. Hashed application assets receive immutable caching. Tailwind is compiled during the build instead of running the CDN compiler in visitors' browsers.
 
+This update is based on the October 9, 2026 WordWeft Search Console exports; see `docs/SEO-SEARCH-CONSOLE-AUDIT-2026-10.md` for the actual indexing baseline, query opportunities and verification priorities. Google may take days or weeks to discover and process changes; a sitemap is a discovery hint, not an indexing guarantee.
+
 ## Search Console and Bing: account steps
 
 1. Open [Google Search Console](https://search.google.com/search-console) and add a **Domain property** for `wordweftstudio.com`. Add the exact TXT record it provides to your DNS provider, then verify. This requires your account/domain access; no verification token has been invented or published by this implementation.
-2. Submit `https://www.wordweftstudio.com/sitemap.xml` in Sitemaps. This is a live sitemap index: public static pages plus partitions for eligible books, chapters, authors, genres and tags. Each child holds at most 1,000 entries. New publications appear automatically; a frontend rebuild is not needed for each story.
+2. Submit `https://www.wordweftstudio.com/sitemap.xml` in Sitemaps. This is a live sitemap index: public static pages plus partitions for eligible books, **opening preview chapters**, authors, genres and tags. Each child holds at most 1,000 entries. New publications appear automatically; a frontend rebuild is not needed for each story.
 3. After deploying these changes, submit the sitemap again. Use URL Inspection → Test Live URL for `/`, `/wattpad-alternatives`, `/webnovel-alternatives`, `/royal-road-alternatives`, `/online-fiction-platform`, `/read-original-fiction-online`, one genre, one book and one chapter. Check rendered text, selected canonical, indexing permission and the referring sitemap. Request indexing for the five new hubs; do not manually request every catalog URL.
 4. Check that a draft book, account/profile page and search-results page are not indexable. Test a known mature story while signed out and confirm it is absent from the public sitemap. These checks must use the correct account/content context.
 5. Add the site in [Bing Webmaster Tools](https://www.bing.com/webmasters/) and submit the same sitemap, or use its Search Console import if available to your account.
