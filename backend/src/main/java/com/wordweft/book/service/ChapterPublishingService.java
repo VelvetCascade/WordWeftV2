@@ -251,7 +251,7 @@ public class ChapterPublishingService {
     }
 
     public boolean publishDue(Book book, Instant now) {
-        if (!"published".equals(book.getPublicationStatus())) return false;
+        if (!"published".equals(book.getPublicationStatus()) || book.isModerationRemoved()) return false;
         var precondition = publicationQuery(book);
         boolean changed = false;
         while (true) {
