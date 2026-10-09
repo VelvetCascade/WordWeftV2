@@ -62,3 +62,14 @@ export const resolveAdminReport = (id: string, status: 'RESOLVED' | 'DISMISSED',
   adminRequest<AdminReport>('/reports/' + encodeURIComponent(id), {
     method: 'PATCH', body: JSON.stringify({ status, reason }),
   });
+
+export interface SheetCount { name?: string; path?: string; count: number }
+export interface AdminSheetAnalytics {
+  source: 'google_sheets'; status: 'connected' | 'unavailable'; detail: string; days: number;
+  pageViews: number; sessions: number; events: number;
+  daily: { day: string; pageViews: number; events: number }[];
+  topPages: SheetCount[]; devices: SheetCount[]; browsers: SheetCount[]; actions: SheetCount[];
+  generatedAt: string;
+}
+export const getAdminSheetAnalytics = (days: 7 | 30 | 90) =>
+  adminRequest<AdminSheetAnalytics>('/analytics' + params({ days }));
