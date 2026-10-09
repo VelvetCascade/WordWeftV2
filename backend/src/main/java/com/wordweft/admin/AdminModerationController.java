@@ -2,7 +2,6 @@ package com.wordweft.admin;
 
 import com.wordweft.book.model.Book;
 import com.wordweft.community.model.CommunityModerationEvent;
-import com.wordweft.notification.service.EmailService;
 import com.wordweft.report.model.Report;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
@@ -39,20 +38,17 @@ import java.util.Set;
 public class AdminModerationController {
     private static final Logger log = LoggerFactory.getLogger(AdminModerationController.class);
     private final MongoTemplate mongo;
-    private final EmailService email;
-
-    public AdminModerationController(MongoTemplate mongo, EmailService email) {
+    public AdminModerationController(MongoTemplate mongo) {
         this.mongo = mongo;
-        this.email = email;
     }
 
     public record Decision(
             @NotBlank String action,
             @NotBlank @Size(min = 10, max = 1000) String reason,
-            @Size(max = 2000) String message,
+            @Size(max = 2000) String note,
             String reportId) {}
     public record ActionResult(String targetType, String targetId, String action,
-                               String state, boolean emailQueued, boolean auditRecorded) {}
+                               String state, boolean auditRecorded) {}
     public record AuditItem(String actorId, String targetType, String targetId,
                             String action, String reason, Instant createdAt) {}
     public record AuditPage(List<AuditItem> items, long total, int page) {}
@@ -86,9 +82,8 @@ public class AdminModerationController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Account status has changed. Refresh this list.");
         boolean audited = audit(actor.getId(), "ADMIN_USER", id, decision);
         resolveLinked(report, actor, decision);
-        boolean notified = notifyAccount(changed, decision);
         return noStore(new ActionResult("USER", id, decision.action(),
-                suspend ? "SUSPENDED" : "ACTIVE", notified, audited));
+                suspend ? "SUSPENDED" : "ACTIVE", audited));
     }
 
     @PostMapping("/stories/{id}/moderation")
@@ -115,10 +110,8 @@ public class AdminModerationController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Story status has changed. Refresh this list.");
         boolean audited = audit(actor.getId(), "ADMIN_BOOK", id, decision);
         resolveLinked(report, actor, decision);
-        User author = existing.getAuthorId() == null ? null : mongo.findById(existing.getAuthorId(), User.class);
-        boolean notified = notifyAuthor(author, changed.getTitle(), decision);
         return noStore(new ActionResult("BOOK", id, decision.action(),
-                remove ? "REMOVED" : "AVAILABLE", notified, audited));
+                remove ? "REMOVED" : "AVAILABLE", audited));
     }
 
     @GetMapping("/audit")
@@ -157,8 +150,8 @@ public class AdminModerationController {
             event.setActorId(adminId); event.setTargetType(targetType); event.setTargetId(targetId);
             event.setAction(decision.action());
             event.setReason(decision.reason().trim()
-                    + (decision.message() == null || decision.message().isBlank() ? ""
-                    : "\nNotification message: " + decision.message().trim()));
+                    + (decision.note() == null || decision.note().isBlank() ? ""
+                    : "\nInternal staff note: " + decision.note().trim()));
             mongo.insert(event); // Reuse existing moderation history collection.
             return true;
         } catch (RuntimeException e) {
@@ -167,18 +160,6 @@ public class AdminModerationController {
         }
     }
 
-    private boolean notifyAccount(User user, Decision decision) {
-        if (user.getEmail() == null || user.getEmail().isBlank()) return false;
-        email.sendModerationNotice(user.getEmail(), user.getUsername(), "account", "your WordWeft account",
-                decision.action(), decision.reason(), decision.message());
-        return true; // queued, not a claim that SMTP/Apps Script has delivered it
-    }
-    private boolean notifyAuthor(User user, String title, Decision decision) {
-        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) return false;
-        email.sendModerationNotice(user.getEmail(), user.getUsername(), "story", title,
-                decision.action(), decision.reason(), decision.message());
-        return true;
-    }
     private void requireActor(UserDetailsImpl actor) {
         if (actor == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
