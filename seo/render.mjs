@@ -1,4 +1,4 @@
-import { SITE_ORIGIN, staticPages, primaryDiscoveryLinks } from './content.mjs';
+import { SITE_ORIGIN, staticPages, primaryDiscoveryLinks, genreIntroductions } from './content.mjs';
 import { escapeHtml as h, plainText, excerpt, safeImage, serializeJson, parseRoute, metadataFor, renderHead, bookPath, chapterPath, authorPath, segment, isPublicBook, publicChapters } from './metadata.mjs';
 
 const navigation = `<nav class="seo-public-nav" aria-label="Main navigation"><a href="/">WordWeft</a><a href="/category">Browse stories</a><a href="/writing-tools">Writing tools</a><a href="/features">Features</a><a href="/auth">Sign in</a></nav>`;
@@ -13,7 +13,14 @@ const readerGate = (book, chapters, locked) => `<section class="reader-sign-in-g
 export function renderPublicBody(route, data) {
   if (route.kind === 'catalog') {
     const label = route.value ? `${route.value} stories` : 'Stories and novels';
-    return wrapPublic(`<header class="seo-hero"><p class="ww-page-eyebrow">Read online</p><h1>${h(label)}</h1><p>${h(metadataFor(route, data).description)}</p><p>Browse published stories, meet their authors, and find a chapter to begin.</p></header>${bookCards(data.books)}${data.books.length ? '' : '<p>There are no published stories here yet.</p>'}${pagination(route, data)}`);
+    const introduction = route.filter === 'genre' ? genreIntroductions[route.value] : null;
+    // Link to genuine neighboring genres found in the current inventory only.
+    const representedGenres = [...new Set(data.books.flatMap(book => book.genres || []))]
+      .filter(genre => genre && genre !== route.value).slice(0, 10);
+    const genreNavigation = representedGenres.length
+      ? `<nav class="seo-related-genres" aria-label="More genres"><h2>Explore more genres</h2><div class="seo-tags">${links(representedGenres, 'genre')}</div></nav>`
+      : '';
+    return wrapPublic(`<header class="seo-hero"><p class="ww-page-eyebrow">Read online</p><h1>${h(label)}</h1><p>${h(metadataFor(route, data).description)}</p>${introduction ? `<p>${h(introduction)}</p>` : '<p>Browse published stories, meet their authors, and find a chapter to begin.</p>'}</header>${bookCards(data.books)}${data.books.length ? '' : '<p>There are no published stories here yet.</p>'}${pagination(route, data)}${genreNavigation}`);
   }
   if (route.kind === 'author') {
     return wrapPublic(`<header class="seo-hero"><p class="ww-page-eyebrow">Author on WordWeft</p><h1>${h(data.author.name)}</h1>${paragraphs(data.author.bio)}</header><h2>Published stories</h2>${bookCards(data.books)}${pagination(route, data)}`);
