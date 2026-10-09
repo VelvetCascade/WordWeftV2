@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Mail, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import {
   moderateAdminStory, moderateAdminUser,
   type AdminModerationDecision, type AdminModerationResult,
@@ -15,7 +15,7 @@ export const AdminDecisionModal: React.FC<{
   onComplete: (result: AdminModerationResult) => void;
 }> = ({ target, onClose, onComplete }) => {
   const [reason, setReason] = useState('');
-  const [message, setMessage] = useState('');
+  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const focusRef = useRef<HTMLTextAreaElement>(null);
@@ -31,7 +31,7 @@ export const AdminDecisionModal: React.FC<{
     if (saving || reason.trim().length < 10) return;
     setSaving(true); setError('');
     const payload: AdminModerationDecision = {
-      action: target.action, reason: reason.trim(), message: message.trim(),
+      action: target.action, reason: reason.trim(), note: note.trim(),
       ...(target.reportId ? { reportId: target.reportId } : {}),
     };
     try {
@@ -65,13 +65,12 @@ export const AdminDecisionModal: React.FC<{
         <textarea id="ac-decision-reason" ref={focusRef} minLength={10} maxLength={1000} required
           value={reason} onChange={event => setReason(event.target.value)}
           placeholder="Describe the policy issue, evidence, or reason for reversal." />
-        <small>Saved to moderation history and included in the notification. At least 10 characters.</small>
-        <label htmlFor="ac-decision-message">Custom message to the member <span>Optional</span></label>
-        <textarea id="ac-decision-message" value={message} maxLength={2000}
-          onChange={event => setMessage(event.target.value)}
-          placeholder="Add a personal explanation, next steps, or an appeal invitation…" />
-        <div className="ac-email-preview"><Mail size={19} /><span><strong>Email notification</strong>
-          <small>A notice containing the reason and your custom message will be queued through WordWeft’s existing email service, if the member has an email address. Delivery is not guaranteed.</small></span></div>
+        <small>Saved to MongoDB moderation history. No email is sent. At least 10 characters.</small>
+        <label htmlFor="ac-decision-note">Internal case note <span>Optional · admin-only</span></label>
+        <textarea id="ac-decision-note" value={note} maxLength={2000}
+          onChange={event => setNote(event.target.value)}
+          placeholder="Additional context for other administrators reviewing this action…" />
+        <small>Notes are recorded in the existing MongoDB moderation audit log. This action does not send an email.</small>
         {error && <p className="ac-decision-error" role="alert">{error}</p>}
         <div className="ac-dialog-actions">
           <button type="button" onClick={onClose} disabled={saving}>Cancel</button>
