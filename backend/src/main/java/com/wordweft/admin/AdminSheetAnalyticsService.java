@@ -3,15 +3,13 @@ package com.wordweft.admin;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.CacheControl;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Read-only analytics adapter. No event ingestion, Mongo writes, sheet writes
@@ -24,7 +22,14 @@ public class AdminSheetAnalyticsService {
     @Value("${wordweft.analytics.sheet-read-token:}")
     private String readToken;
 
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest = createClient();
+
+    private static RestTemplate createClient() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+        return new RestTemplate(factory);
+    }
     private final ObjectMapper json;
 
     public AdminSheetAnalyticsService(ObjectMapper json) {
