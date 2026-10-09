@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Activity, ArrowDownRight, ArrowRight, BookOpen, CheckCircle2, ClipboardList,
-  BarChart3, FileText, LayoutDashboard, LockKeyhole, RefreshCw, Search, Settings2,
+  BarChart3, FileText, History, LayoutDashboard, LockKeyhole, RefreshCw, Search, Settings2,
   ShieldAlert, ShieldCheck, Users, XCircle } from 'lucide-react';
 import {
-  getAdminOverview, getAdminReports, getAdminStories, getAdminUsers, getAdminSheetAnalytics, resolveAdminReport,
-  type AdminOverview, type AdminPage, type AdminReport, type AdminStory, type AdminUser, type AdminSheetAnalytics,
+  getAdminOverview, getAdminReports, getAdminStories, getAdminUsers, getAdminSheetAnalytics, getAdminAudit, resolveAdminReport,
+  type AdminOverview, type AdminPage, type AdminReport, type AdminStory, type AdminUser, type AdminSheetAnalytics, type AdminAuditPage, type AdminModerationResult,
 } from '../api/adminConsole';
+import { AdminDecisionModal, type AdminActionTarget } from '../components/admin/AdminDecisionModal';
 import '../styles/admin-console.css';
 
-type Section = 'overview' | 'analytics' | 'members' | 'stories' | 'reports' | 'settings';
+type Section = 'overview' | 'analytics' | 'members' | 'stories' | 'reports' | 'audit' | 'settings';
 
 const sections: { key: Section; label: string; icon: typeof LayoutDashboard }[] = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -16,6 +17,7 @@ const sections: { key: Section; label: string; icon: typeof LayoutDashboard }[] 
   { key: 'members', label: 'Members', icon: Users },
   { key: 'stories', label: 'Stories', icon: BookOpen },
   { key: 'reports', label: 'Reports', icon: ShieldAlert },
+  { key: 'audit', label: 'Activity log', icon: History },
   { key: 'settings', label: 'Operations', icon: Settings2 },
 ];
 
@@ -153,6 +155,8 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
   const [users, setUsers] = useState<AdminPage<AdminUser> | null>(null);
   const [stories, setStories] = useState<AdminPage<AdminStory> | null>(null);
   const [reports, setReports] = useState<AdminPage<AdminReport> | null>(null);
+  const [audit, setAudit] = useState<AdminAuditPage | null>(null);
+  const [decisionTarget, setDecisionTarget] = useState<AdminActionTarget | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
@@ -177,10 +181,11 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
     if (!isAdmin || section === 'settings') return;
     let active = true;
     setLoading(true); setError('');
-    const request: Promise<AdminOverview | AdminPage<AdminUser> | AdminPage<AdminStory> | AdminPage<AdminReport> | AdminSheetAnalytics> = section === 'overview' ? getAdminOverview()
+    const request: Promise<AdminOverview | AdminPage<AdminUser> | AdminPage<AdminStory> | AdminPage<AdminReport> | AdminSheetAnalytics | AdminAuditPage> = section === 'overview' ? getAdminOverview()
       : section === 'analytics' ? getAdminSheetAnalytics(sheetDays)
       : section === 'members' ? getAdminUsers(page, debouncedQuery, filter)
       : section === 'stories' ? getAdminStories(page, debouncedQuery, filter)
+      : section === 'audit' ? getAdminAudit(page)
       : getAdminReports(page, filter);
     void request.then(result => {
       if (!active) return;
@@ -189,6 +194,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
       if (section === 'members') setUsers(result as AdminPage<AdminUser>);
       if (section === 'stories') setStories(result as AdminPage<AdminStory>);
       if (section === 'reports') setReports(result as AdminPage<AdminReport>);
+      if (section === 'audit') setAudit(result as AdminAuditPage);
     }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : 'Unable to load the data.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -205,6 +211,12 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
     } catch (cause) {
       setActionMessage(cause instanceof Error ? cause.message : 'Could not update report.');
     } finally { setSaving(false); }
+  };
+
+  const decisionComplete = (result: AdminModerationResult) => {
+    setDecisionTarget(null);
+    setActionMessage(`${result.action} completed. ${result.emailQueued ? 'An email was queued through the existing mail service.' : 'No email address was available.'}${result.auditRecorded ? '' : ' Warning: the audit-log write failed; contact engineering.'}`);
+    setReload(value => value + 1);
   };
 
   if (!isAdmin) return <div className="ac-denied"><LockKeyhole size={32} /><h1>Administrator access required</h1><p>This private area is only available to WordWeft administrators.</p><a href="/">Return to WordWeft</a></div>;
@@ -231,6 +243,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
           : section === 'members' ? 'Find accounts, check verification and see publishing activity.'
           : section === 'stories' ? 'Inspect published work and drafts without opening private manuscripts.'
           : section === 'reports' ? 'Review safety reports with a recorded decision and reason.'
+          : section === 'audit' ? 'See who performed moderation actions and why.'
           : 'Security, access and the tools running the platform.'}</p></div>
           <span className="ac-as-of">{overview ? `Updated ${date(overview.generatedAt)}` : 'Live production data'}</span>
         </div>
@@ -239,31 +252,37 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
 
         {section === 'analytics' && (loading ? <Loading /> : error ? <ErrorState message={error} retry={() => setReload(v => v + 1)} /> : sheet ? <SheetAnalytics data={sheet} days={sheetDays} onDays={setSheetDays} /> : <Loading />)}
 
+        {actionMessage && section !== 'reports' && <p className="ac-action-message" role="status">{actionMessage}</p>}
+
         {section === 'members' && <Directory heading="Member directory" description="Results show only operational account fields. Passwords and private profile data are never returned."
           placeholder="Search name or email" query={query} onQuery={setQuery} filter={filter} onFilter={value => { setFilter(value); setPage(0); }}
           filterOptions={[{ value: 'ALL', label: 'All members' }, { value: 'ROLE_ADMIN', label: 'Admins' }, { value: 'ROLE_MODERATOR', label: 'Moderators' }, { value: 'ROLE_USER', label: 'Regular members' }]}
           page={page} onPage={setPage} pageData={users} loading={loading} error={error} onRetry={() => setReload(v => v + 1)}>
-          <table className="ac-table"><thead><tr><th>Member</th><th>Access</th><th>Joined</th><th>Verification</th><th>Published</th><th>Profile</th></tr></thead><tbody>
+          <table className="ac-table"><thead><tr><th>Member</th><th>Access</th><th>Joined</th><th>Verification</th><th>Published</th><th>Account</th><th>Action</th></tr></thead><tbody>
             {users?.items.map(user => <tr key={user.id}><td><div className="ac-person"><span className="ac-initial">{user.username?.slice(0, 1).toUpperCase() || '?'}</span><div><strong>{user.username}</strong><small>{user.email}</small></div></div></td>
               <td><Badge text={user.roles?.includes('ROLE_ADMIN') ? 'Admin' : user.roles?.includes('ROLE_MODERATOR') ? 'Moderator' : 'Member'} /></td>
               <td>{date(user.joinedAt)}</td><td><Badge text={user.emailVerified ? 'Verified' : 'Unverified'} /></td>
-              <td>{number(user.publishedStories)}</td><td><a className="ac-table-link" href={`/author/${encodeURIComponent(user.id)}`} target="_blank" rel="noopener noreferrer">View <ArrowRight size={15} /></a></td></tr>)}
-            {!users?.items.length && <tr><td colSpan={6} className="ac-empty">No members match your search.</td></tr>}
+              <td>{number(user.publishedStories)}</td><td><Badge text={user.suspended ? 'Suspended' : 'Active'} /></td>
+              <td>{user.roles?.includes('ROLE_ADMIN') ? <span className="ac-muted">Protected admin</span>
+                : <button className="ac-table-action" type="button" onClick={() => setDecisionTarget({ kind: 'USER', id: user.id, label: user.username, action: user.suspended ? 'REINSTATE' : 'SUSPEND' })}>
+                  {user.suspended ? 'Reinstate' : 'Suspend'}</button>}</td></tr>)}
+            {!users?.items.length && <tr><td colSpan={7} className="ac-empty">No members match your search.</td></tr>}
           </tbody></table>
         </Directory>}
 
         {section === 'stories' && <Directory heading="Story directory" description="Find titles, publishing state, chapters and readership. Private chapter text is not loaded."
           placeholder="Search story title" query={query} onQuery={setQuery} filter={filter} onFilter={value => { setFilter(value); setPage(0); }}
-          filterOptions={[{ value: 'ALL', label: 'All stories' }, { value: 'published', label: 'Published' }, { value: 'draft', label: 'Drafts' }]}
+          filterOptions={[{ value: 'ALL', label: 'All stories' }, { value: 'published', label: 'Published' }, { value: 'draft', label: 'Drafts' }, { value: 'removed', label: 'Removed by staff' }]}
           page={page} onPage={setPage} pageData={stories} loading={loading} error={error} onRetry={() => setReload(v => v + 1)}>
-          <table className="ac-table"><thead><tr><th>Story</th><th>Status</th><th>Chapters</th><th>Reads</th><th>Views</th><th>Created</th><th>Details</th></tr></thead><tbody>
+          <table className="ac-table"><thead><tr><th>Story</th><th>Status</th><th>Chapters</th><th>Reads</th><th>Views</th><th>Created</th><th>Details</th><th>Action</th></tr></thead><tbody>
             {stories?.items.map(story => <tr key={story.id}>
               <td><div className="ac-story"><span className="ac-story-cover">{story.coverUrl ? <img src={story.coverUrl} alt="" loading="lazy" /> : <BookOpen size={20} />}</span><div><strong>{story.title || 'Untitled story'}</strong><small>by {story.authorName} · {story.category || 'Uncategorized'}</small></div></div></td>
-              <td><Badge text={story.status || 'draft'} /></td>
+              <td><Badge text={story.removed ? 'Removed' : story.status || 'draft'} /></td>
               <td>{story.publishedChapters}/{story.chapters}</td><td>{number(story.reads)}</td><td>{number(story.views)}</td><td>{date(story.createdAt)}</td>
-              <td>{story.status === 'published' ? <a className="ac-table-link" href={`/book/${encodeURIComponent(story.id)}`} target="_blank" rel="noopener noreferrer">Open <ArrowRight size={15} /></a> : <span className="ac-muted">Private draft</span>}</td>
+              <td>{story.status === 'published' && !story.removed ? <a className="ac-table-link" href={`/book/${encodeURIComponent(story.id)}`} target="_blank" rel="noopener noreferrer">Open <ArrowRight size={15} /></a> : <span className="ac-muted">{story.removed ? 'Removed' : 'Private draft'}</span>}</td>
+              <td><button className="ac-table-action" type="button" onClick={() => setDecisionTarget({ kind: 'BOOK', id: story.id, label: story.title, action: story.removed ? 'RESTORE' : 'REMOVE' })}>{story.removed ? 'Restore' : 'Remove'}</button></td>
             </tr>)}
-            {!stories?.items.length && <tr><td colSpan={7} className="ac-empty">No stories match your search.</td></tr>}
+            {!stories?.items.length && <tr><td colSpan={8} className="ac-empty">No stories match your search.</td></tr>}
           </tbody></table>
         </Directory>}
 
@@ -280,6 +299,11 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
               <p>{report.category} · Reported member: {report.reportedUsername || 'Unknown'} · Submitted by {report.reporterUsername || 'Unknown'}</p>
               <blockquote>{report.description || 'No additional details provided.'}</blockquote>
               {report.status === 'PENDING' && (report.targetType === 'COMMUNITY_POST' || report.targetType === 'COMMUNITY_COMMENT') ? <div className="ac-community-handoff"><p>Community posts and comments are handled by the existing moderation workflow, which records content actions and audit history.</p><a className="ac-text-button" href="/community">Open Community, then select the Moderation desk shield icon <ArrowRight size={16} /></a></div> : report.status === 'PENDING' ? <>
+                {(report.targetType === 'BOOK' || report.targetType === 'USER') && <button className="ac-outline ac-report-action" type="button" onClick={() => setDecisionTarget({
+                  kind: report.targetType === 'BOOK' ? 'BOOK' : 'USER', id: report.targetId,
+                  label: report.targetTitle || report.reportedUsername || report.targetId,
+                  action: report.targetType === 'BOOK' ? 'REMOVE' : 'SUSPEND', reportId: report.id,
+                })}>{report.targetType === 'BOOK' ? 'Remove reported story' : 'Suspend reported account'} <ArrowRight size={15} /></button>}
                 {reviewId === report.id ? <div className="ac-review-form"><label htmlFor="ac-reason">Decision reason (required, minimum 10 characters)</label>
                   <textarea id="ac-reason" maxLength={1000} value={reason} onChange={event => setReason(event.target.value)} placeholder="Write a specific reason for this decision." />
                   <div><button type="button" className="ac-primary" disabled={saving || reason.trim().length < 10} onClick={() => void review(report.id, 'RESOLVED')}><CheckCircle2 size={16} /> Resolve</button>
@@ -294,6 +318,15 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
           </>}
         </section>}
 
+        {section === 'audit' && <section className="ac-panel ac-directory"><div className="ac-panel-heading"><div><span className="ac-kicker">Accountability</span><h2>Moderation history</h2><p>Staff actions recorded in the existing moderation audit collection. Decisions include the acting admin ID, time and reason.</p></div><span className="ac-count">{number(audit?.total)}</span></div>
+          {loading ? <Loading /> : error ? <ErrorState message={error} retry={() => setReload(v => v + 1)} /> : <><div className="ac-table-scroll"><table className="ac-table"><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Actor</th><th>Reason / notification</th></tr></thead><tbody>
+            {audit?.items.map((row, index) => <tr key={row.targetId + row.createdAt + index}><td>{date(row.createdAt)}</td><td><Badge text={row.action} /></td><td>{row.targetType} · {row.targetId}</td><td>{row.actorId}</td><td className="ac-audit-reason">{row.reason}</td></tr>)}
+            {!audit?.items.length && <tr><td colSpan={5} className="ac-empty">No moderation actions recorded.</td></tr>}
+          </tbody></table></div>
+          {audit && <Pager page={page} total={audit.total} size={30} onChange={setPage} />}
+          </>}
+        </section>}
+
         {section === 'settings' && <div className="ac-settings-grid">
           <section className="ac-panel"><span className="ac-kicker">Account security</span><h2>Administrator access</h2><p>Only accounts with the server-assigned <code>ROLE_ADMIN</code> role can access the console APIs. No self-service role changes are available.</p><div className="ac-settings-foot"><LockKeyhole size={18} /> Access controlled by Spring Security</div></section>
           <section className="ac-panel"><span className="ac-kicker">Editorial workflow</span><h2>Founding Writers</h2><p>Review writer applications, download submitted manuscripts and manage application decisions in the existing review desk.</p><a className="ac-text-button" href="/admin/founding-writers">Open writer applications <ArrowRight size={17} /></a></section>
@@ -304,5 +337,7 @@ export const AdminConsolePage: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) =>
         <footer className="ac-footer"><ShieldCheck size={15} /> Restricted administrative data · Do not share screenshots containing member emails.</footer>
       </div>
     </main>
+    {decisionTarget && <AdminDecisionModal target={decisionTarget}
+      onClose={() => setDecisionTarget(null)} onComplete={decisionComplete} />}
   </div>;
 };
