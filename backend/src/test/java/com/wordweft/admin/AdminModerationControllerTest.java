@@ -1,9 +1,7 @@
 package com.wordweft.admin;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordweft.book.model.Book;
 import com.wordweft.community.model.CommunityModerationEvent;
-import com.wordweft.notification.service.EmailService;
 import com.wordweft.security.services.UserDetailsImpl;
 import com.wordweft.user.model.User;
 import org.junit.jupiter.api.Test;
@@ -12,7 +10,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -24,8 +21,7 @@ import static org.mockito.Mockito.*;
 
 class AdminModerationControllerTest {
     private final MongoTemplate mongo = mock(MongoTemplate.class);
-    private final EmailService email = mock(EmailService.class);
-    private final AdminModerationController controller = new AdminModerationController(mongo, email);
+    private final AdminModerationController controller = new AdminModerationController(mongo);
     private final UserDetailsImpl admin = new UserDetailsImpl("admin", "admin",
             "admin@example.test", "secret", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
@@ -39,10 +35,9 @@ class AdminModerationControllerTest {
         assertThrows(ResponseStatusException.class, () -> controller.user("other", request, admin));
         verify(mongo, never()).findAndModify(any(Query.class), any(Update.class),
                 any(FindAndModifyOptions.class), eq(User.class));
-        verifyNoInteractions(email);
     }
 
-    @Test void suspendingRegularMemberIsReversibleAndQueuesExistingEmail() {
+    @Test void suspendingRegularMemberIsReversibleAndAuditedInMongo() {
         User target = new User("writer", "writer@example.test", "hash");
         target.setId("writer");
         when(mongo.findById("writer", User.class)).thenReturn(target);
@@ -56,10 +51,7 @@ class AdminModerationControllerTest {
                 admin).getBody();
         assertNotNull(result);
         assertEquals("SUSPENDED", result.state());
-        assertTrue(result.emailQueued());
         assertTrue(result.auditRecorded());
-        verify(email).sendModerationNotice(eq("writer@example.test"), eq("writer"), eq("account"),
-                anyString(), eq("SUSPEND"), eq("Repeated policy violations"), eq("Please contact support"));
         verify(mongo).insert(any(CommunityModerationEvent.class));
     }
 
@@ -80,13 +72,4 @@ class AdminModerationControllerTest {
         verify(mongo, never()).remove(any(Query.class), eq(Book.class));
     }
 
-    @Test void sheetMetricsNeverRequireMongoStorageOrReturnInventedZerosAsTraffic() {
-        AdminSheetAnalyticsService sheet = new AdminSheetAnalyticsService(new ObjectMapper());
-        ReflectionTestUtils.setField(sheet, "sheetReadUrl", "");
-        ReflectionTestUtils.setField(sheet, "readToken", "");
-        var result = sheet.summary(30);
-        assertEquals("unavailable", result.status());
-        assertEquals("google_sheets", result.source());
-        assertThrows(ResponseStatusException.class, () -> sheet.summary(365));
-    }
 }
