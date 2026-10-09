@@ -76,7 +76,7 @@ public class AdminConsoleController {
         long verified = mongo.count(Query.query(Criteria.where("isEmailVerified").is(true)), User.class);
         long recentUsers = mongo.count(Query.query(Criteria.where("joinDate").gte(week)), User.class);
         long stories = mongo.count(new Query(), Book.class);
-        long published = mongo.count(Query.query(Criteria.where("publicationStatus").is("published")), Book.class);
+        long published = mongo.count(Query.query(Criteria.where("publicationStatus").is("published").and("moderationRemoved").ne(true)), Book.class);
         long newStories = mongo.count(Query.query(Criteria.where("createdAt").gte(week)), Book.class);
         long drafts = mongo.count(Query.query(Criteria.where("publicationStatus").is("draft")), Book.class);
         long reports = mongo.count(Query.query(Criteria.where("status").is("PENDING")), Report.class);
@@ -84,10 +84,10 @@ public class AdminConsoleController {
         long pendingApplications = mongo.count(Query.query(Criteria.where("status").is(FoundingWriterApplicationStatus.PENDING)),
                 com.wordweft.foundingwriter.model.FoundingWriterApplication.class);
         long authors = aggregateCount(Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("authorId").ne(null).and("publicationStatus").is("published")),
+                Aggregation.match(Criteria.where("authorId").ne(null).and("publicationStatus").is("published").and("moderationRemoved").ne(true)),
                 Aggregation.group("authorId"), Aggregation.count().as("total")), "books");
         long publishedChapters = aggregateCount(Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("publicationStatus").is("published")),
+                Aggregation.match(Criteria.where("publicationStatus").is("published").and("moderationRemoved").ne(true)),
                 Aggregation.unwind("chapters"),
                 Aggregation.match(Criteria.where("chapters.status").is("published")),
                 Aggregation.count().as("total")), "books");
@@ -216,7 +216,7 @@ public class AdminConsoleController {
     private Map<String, Long> publishedStoryCounts(Set<String> authorIds) {
         if (authorIds.isEmpty()) return Map.of();
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("publicationStatus").is("published").and("authorId").in(authorIds)),
+                Aggregation.match(Criteria.where("publicationStatus").is("published").and("authorId").in(authorIds).and("moderationRemoved").ne(true)),
                 Aggregation.group("authorId").count().as("total"));
         Map<String, Long> counts = new HashMap<>();
         for (Document item : mongo.aggregate(aggregation, "books", Document.class).getMappedResults()) {
