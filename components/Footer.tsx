@@ -10,6 +10,9 @@ const footerGroups = [
       ['Browse genres', '/category'],
       ['Platform features', '/features'],
       ['Read stories online', '/read-online'],
+      ['Wattpad alternatives', '/wattpad-alternatives'],
+      ['Royal Road alternatives', '/royal-road-alternatives'],
+      ['Webnovel alternatives', '/webnovel-alternatives'],
     ],
   },
   {
@@ -19,6 +22,8 @@ const footerGroups = [
       ['Publish stories', '/publish-stories'],
       ['Founding Writers', '/founding-writers'],
       ['World-building tools', '/world-building-tools'],
+      ['How to write a web novel', '/how-to-write-a-web-novel'],
+      ['How to plan a novel', '/how-to-plan-a-novel'],
       ['Writer studio', '/write'],
       ['Start a story', '/write/book/create'],
       ['Share feedback', '/feedback'],
