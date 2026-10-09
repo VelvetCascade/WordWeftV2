@@ -63,24 +63,13 @@ export const resolveAdminReport = (id: string, status: 'RESOLVED' | 'DISMISSED',
     method: 'PATCH', body: JSON.stringify({ status, reason }),
   });
 
-export interface SheetCount { name?: string; path?: string; count: number }
-export interface AdminSheetAnalytics {
-  source: 'google_sheets'; status: 'connected' | 'unavailable'; detail: string; days: number;
-  pageViews: number; sessions: number; events: number;
-  daily: { day: string; pageViews: number; events: number }[];
-  topPages: SheetCount[]; devices: SheetCount[]; browsers: SheetCount[]; actions: SheetCount[];
-  generatedAt: string;
-}
-export const getAdminSheetAnalytics = (days: 7 | 30 | 90) =>
-  adminRequest<AdminSheetAnalytics>('/analytics' + params({ days }));
-
 export interface AdminModerationDecision {
   action: 'SUSPEND' | 'REINSTATE' | 'REMOVE' | 'RESTORE';
-  reason: string; message: string; reportId?: string;
+  reason: string; note: string; reportId?: string;
 }
 export interface AdminModerationResult {
   targetType: 'USER' | 'BOOK'; targetId: string;
-  action: string; state: string; emailQueued: boolean; auditRecorded: boolean;
+  action: string; state: string; auditRecorded: boolean;
 }
 export interface AdminAuditItem { actorId: string; targetType: string; targetId: string; action: string; reason: string; createdAt: string }
 export interface AdminAuditPage { items: AdminAuditItem[]; total: number; page: number }
