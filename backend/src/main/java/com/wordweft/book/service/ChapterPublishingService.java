@@ -287,6 +287,9 @@ public class ChapterPublishingService {
                     HttpStatus.FORBIDDEN,
                     "You do not have permission to manage this story.");
         }
+        if (book.isModerationRemoved()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This story is unavailable following an administrative review.");
+        }
         return book;
     }
 
