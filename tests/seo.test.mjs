@@ -209,3 +209,21 @@ test('writing guides provide distinct search-oriented help and crawlable destina
     assert.ok(meta.graph.some(item => item['@type'] === 'FAQPage'));
   }
 });
+
+test('populated genre pages have distinct context and cross-links only to represented genres', async () => {
+  const grouped = { ...book, genres: ['Fantasy', 'Romance'] };
+  const result = await response('/genre/Fantasy', { fetchJson: async () => ({ books: [grouped], hasMore: false }) });
+  assert.match(result.body, /Fantasy stories can begin with a small impossible detail/);
+  assert.match(result.body, /href="\/genre\/Romance"/);
+  assert.doesNotMatch(result.body, /href="\/genre\/Unrepresented"/);
+  assert.match(metadataFor(parseRoute('/genre/Fantasy'), { books: [grouped] }).description, /Fantasy stories/);
+});
+
+test('competitor guides provide actual tradeoffs and source references', () => {
+  for (const path of ['/wattpad-alternatives', '/royal-road-alternatives', '/webnovel-alternatives']) {
+    const page = landingPages[path];
+    assert.ok(page.sources.length > 0);
+    for (const source of page.sources) assert.match(source.href, /^https:\/\//);
+    assert.ok(page.sections.some(([title]) => /^When /.test(title)));
+  }
+});
