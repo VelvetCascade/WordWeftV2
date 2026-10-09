@@ -131,6 +131,43 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+
+    /**
+     * Transactional moderation notice. Custom text is escaped, not interpreted as HTML.
+     * Delivery is best effort through the existing Apps Script sender.
+     */
+    @Async
+    public void sendModerationNotice(String toEmail, String username, String targetType, String title,
+                                     String action, String reason, String message) {
+        String outcome = switch (action) {
+            case "SUSPEND" -> "Your account has been suspended";
+            case "REINSTATE" -> "Your account has been reinstated";
+            case "REMOVE" -> "Your story has been removed from public view";
+            case "RESTORE" -> "Your story is available again";
+            default -> "An update about your WordWeft account";
+        };
+        String subject = "WordWeft: " + outcome;
+        String custom = message == null || message.isBlank() ? ""
+            : "<h3 style='font-family:Arial,sans-serif'>A message from our team</h3><p>"
+               + safeHtml(message).replace("\n", "<br>") + "</p>";
+        String html = "<div style='max-width:580px;margin:auto;padding:30px;background:#fffaf5;color:#3d3029;"
+                + "font-family:Arial,sans-serif;border:1px solid #e7ddd3;border-radius:12px'>"
+                + "<h1 style='font-size:24px'>WordWeft account notice</h1>"
+                + "<p>Hi " + safeHtml(username) + ",</p><p>" + safeHtml(outcome) + ".</p>"
+                + "<p><strong>Item:</strong> " + safeHtml(title) + "</p>"
+                + "<p><strong>Reason:</strong> " + safeHtml(reason).replace("\n", "<br>") + "</p>"
+                + custom
+                + "<p>You may reply through WordWeft support if you believe this was a mistake.</p>"
+                + "<p style='font-size:12px;color:#806c60'>— WordWeft Support</p></div>";
+        sendHtmlEmail(toEmail, subject, html);
+    }
+
+    private static String safeHtml(String raw) {
+        if (raw == null) return "";
+        return raw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
     private void sendHtmlEmail(String toEmail, String subject, String htmlContent) {
         if (appsScriptUrl == null || appsScriptUrl.trim().isEmpty()) {
             System.err.println("❌ Apps Script URL not configured! Set GMAIL_APPS_SCRIPT_URL in environment. Email to " + toEmail + " was NOT sent.");
