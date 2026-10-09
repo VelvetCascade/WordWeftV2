@@ -71,9 +71,11 @@ public class AdminModerationController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin accounts cannot be suspended or reinstated here.");
         Report report = linkedReport(decision.reportId(), "USER", id);
         boolean suspend = decision.action().equals("SUSPEND");
-        Query precondition = Query.query(Criteria.where("_id").is(id).and("suspended").is(suspend ? false : true));
-        // Older users lack the suspended field; allow legacy accounts to be suspended.
-        if (suspend) precondition = Query.query(Criteria.where("_id").is(id).and("suspended").ne(true));
+        // Both the initial read and atomic update reject administrators, preventing
+        // role-promotion races or accidentally locking out other staff accounts.
+        Query precondition = suspend
+                ? Query.query(Criteria.where("_id").is(id).and("roles").ne("ROLE_ADMIN").and("suspended").ne(true))
+                : Query.query(Criteria.where("_id").is(id).and("roles").ne("ROLE_ADMIN").and("suspended").is(true));
         Update update = suspend
                 ? new Update().set("suspended", true).set("suspensionReason", decision.reason().trim())
                     .set("suspendedBy", actor.getId()).set("suspendedAt", Instant.now())
