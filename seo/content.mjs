@@ -110,6 +110,8 @@ export const landingPages = {
       ['Publishing control', 'Confirm that you can keep chapters private, publish selected chapters, schedule releases, and clearly show whether a story is ongoing or complete.'],
     ],
     sections: [
+      ['When Wattpad may be the better fit', 'Wattpad has an established international reader-and-writer community, mobile apps, in-story comments, and social discovery. If your primary goal is to meet an existing large audience or participate in a particular fan-fiction community, compare that experience directly before choosing a smaller platform.'],
+      ['When WordWeft offers something different', 'WordWeft is a newer browser-first option with a connected manuscript editor, chapter planning, character records, scenes, lore, and flexible reader controls. These features may matter more if you want to organize a long project before publishing it. Audience size and distribution are not equivalent to Wattpad.'],
       ['Write the book before promoting it', 'WordWeft keeps chapter drafting, manuscript import, story notes, characters, and publishing controls together. Draft and scheduled chapters remain private until you decide to release them.'],
       ['Build a public home for the story', 'Each published story has a cover, synopsis, genres, tags, age rating, content guidance, author link, and chapter list. Readers can understand the premise before opening chapter one.'],
       ['Give readers control of the page', 'The browser reader includes adjustable typography, width, line spacing, themes, and focus mode. Readers can save books, organize shelves, follow writers, and join discussions with an account.'],
@@ -123,6 +125,7 @@ export const landingPages = {
       ['Does WordWeft pay writers?', 'Paid publishing is not currently live. WordWeft does not promise earnings, contracts, or a particular number of readers.'],
     ],
     related: ['/writing-tools', '/publish-stories', '/read-original-fiction-online'],
+    sources: [{ label: 'Wattpad — official app features', href: 'https://apps.apple.com/us/app/wattpad-read-write-stories/id306310789' }],
   },
   '/webnovel-alternatives': {
     title: 'Webnovel Alternatives for Serial Writers | WordWeft',
@@ -137,6 +140,8 @@ export const landingPages = {
       ['Author presence', 'A useful author profile should connect the writer, their published books, and the next chapter a reader can open.'],
     ],
     sections: [
+      ['When Webnovel may be a stronger match', 'Webnovel has an established serialized-reading catalog and a formal author program with information about contracts and potential income. If monetization programs or participation in that readership are essential, read its current author terms and eligibility carefully; WordWeft does not currently offer equivalent paid publishing.'],
+      ['Where WordWeft differs', 'WordWeft keeps book planning, characters, scenes, lore, drafting, and chapter publishing together, while providing an adjustable browser reader. Evaluate those workflows independently of marketing claims about audience size or earnings.'],
       ['Plan a serial chapter by chapter', 'Create a book, organize chapters, import an existing manuscript, and keep characters, scenes, and world notes near the draft. Revision history helps you revisit earlier saved versions.'],
       ['Release only what is ready', 'A book and its chapters have explicit publishing states. You can keep unfinished work in draft, release selected chapters, or schedule a chapter for later.'],
       ['Help the right readers find the story', 'Public story pages use the synopsis, genres, tags, age rating, content notes, author profile, and published chapter list to set clear expectations.'],
@@ -150,6 +155,7 @@ export const landingPages = {
       ['Does WordWeft have coins or paid chapters?', 'Paid publishing is not currently live. The present experience focuses on reading, writing, publishing, and community features.'],
     ],
     related: ['/publish-stories', '/writing-tools', '/wattpad-alternatives'],
+    sources: [{ label: 'Webnovel — official author help center', href: 'https://www.webnovel.com/inkstone/help/list?id=9' }],
   },
   '/royal-road-alternatives': {
     title: 'Royal Road Alternatives for Fiction Writers | WordWeft',
@@ -164,6 +170,8 @@ export const landingPages = {
       ['Mobile reading', 'Many readers meet a serial on a phone. Test the actual chapter page, not only the publishing dashboard.'],
     ],
     sections: [
+      ['When Royal Road may suit you better', 'Royal Road is an established web-fiction community with discovery rankings, reviews, comments, author tools, and organized genres and tags. If established serial-reader habits and rankings are central to your plan, explore its current fiction lists and support documentation before moving a work.'],
+      ['Where WordWeft takes a different approach', 'WordWeft emphasizes a linked drafting workspace for chapters, character profiles, scene notes, and world building, alongside the public reading experience. Its early-stage readership is not comparable to an established serial-fiction community.'],
       ['Support more than the chapter list', 'WordWeft pairs chapter drafting with character profiles, scene planning, world-building notes, manuscript import, revision history, and image support.'],
       ['Publish across the genres you write', 'Writers choose the genres and tags that accurately describe a story. Readers can browse the real catalog rather than a fabricated list of empty SEO categories.'],
       ['Make a long serial comfortable to read', 'Readers can adjust typography, spacing, width, and themes, use focus mode, move through published chapters, and save stories to their library.'],
@@ -177,6 +185,7 @@ export const landingPages = {
       ['Can readers comment on chapters?', 'Signed-in readers can participate in chapter discussion and other community features available on the story.'],
     ],
     related: ['/publish-stories', '/read-original-fiction-online', '/world-building-tools'],
+    sources: [{ label: 'Royal Road — official writing, discovery and reading guide', href: 'https://www.royalroad.com/support/knowledgebase' }],
   },
   '/online-fiction-platform': {
     title: 'Online Fiction Writing & Publishing Platform | WordWeft',
