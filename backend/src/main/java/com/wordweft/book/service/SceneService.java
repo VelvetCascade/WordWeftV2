@@ -24,6 +24,7 @@ public class SceneService {
         Book book = access.requireOwner(scene.getBookId());
         access.validateChapter(book, scene.getChapterId());
         access.validateCharacters(book, scene.getCharacterIds());
+        if (scene.getKind() == null) scene.setKind("SCENE");
         scene.setId(null); // Creation cannot upsert an existing record supplied by a caller.
         if (scene.getChapterId() != null && scene.getChapterId().isBlank()) scene.setChapterId(null);
         return scenes.save(scene);
@@ -42,6 +43,8 @@ public class SceneService {
             scene.setDescription(details.getDescription());
             scene.setSetting(details.getSetting());
             scene.setTime(details.getTime());
+            if (details.getKind() != null) scene.setKind(details.getKind());
+            scene.setChronologyOrder(details.getChronologyOrder());
             scene.setChapterId(details.getChapterId() == null || details.getChapterId().isBlank() ? null : details.getChapterId());
             scene.setCharacterIds(details.getCharacterIds());
             return scenes.save(scene);

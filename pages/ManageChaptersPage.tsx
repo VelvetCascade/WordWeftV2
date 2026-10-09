@@ -6,6 +6,7 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { CharacterList } from '../components/CharacterList';
 import { SceneList } from '../components/SceneList';
+import { StoryBible } from '../components/StoryBible';
 import { NoteList } from '../components/NoteList';
 import { ImageUpload } from '../components/ImageUpload';
 import { ShareModal } from '../components/ShareModal';
@@ -24,7 +25,7 @@ interface ManageChaptersPageProps {
     onUserUpdate: (user: User) => void;
 }
 
-type Tab = 'chapters' | 'characters' | 'scenes' | 'notes';
+type Tab = 'chapters' | 'characters' | 'scenes' | 'notes' | 'bible';
 
 const RATING_SEVERITY: Record<AgeRating, number> = {
     'ALL_AGES': 0,
@@ -537,7 +538,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const { trackEvent } = useAnalytics();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const readTab = (): Tab => { const value = new URLSearchParams(window.location.search).get('tab'); return value === 'characters' || value === 'scenes' || value === 'notes' ? value : 'chapters'; };
+    const readTab = (): Tab => { const value = new URLSearchParams(window.location.search).get('tab'); return value === 'characters' || value === 'scenes' || value === 'notes' || value === 'bible' ? value : 'chapters'; };
     const [activeTab, setActiveTab] = useState<Tab>(readTab);
     useEffect(() => { const sync = () => setActiveTab(readTab()); window.addEventListener('wordweft:navigate', sync); window.addEventListener('popstate', sync); return () => { window.removeEventListener('wordweft:navigate', sync); window.removeEventListener('popstate', sync); }; }, [bookId]);
     const [deleteChapterTarget, setDeleteChapterTarget] = useState<{ id: string; title: string } | null>(null);
@@ -806,11 +807,12 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
 
     const progressCopy = importProgressCopy({ phase: importPhase, percent: importPercent, elapsedSeconds: importElapsedSeconds });
     const privateChapterCount = book.chapters.filter(chapter => chapter.status !== 'published').length;
-    const workspaceTitle = { chapters: book.title, characters: 'Characters', scenes: 'Scenes', notes: 'Private notes' }[activeTab];
+    const workspaceTitle = { chapters: book.title, characters: 'Characters', scenes: 'Scenes & timeline', notes: 'Private notes', bible: 'Story Bible' }[activeTab];
     const workspaceDescription = {
         chapters: `${publishedChapterCount} published ${publishedChapterCount === 1 ? 'chapter' : 'chapters'} · ${privateChapterCount} private ${privateChapterCount === 1 ? 'draft' : 'drafts'} · ${totalWords.toLocaleString()} words`,
         characters: 'Build your cast and link character details to your manuscript.',
-        scenes: 'Plan the moments that connect your chapters.',
+        scenes: 'Connect your chapters, scenes, and story chronology.',
+        bible: 'Build a living world, with chapter-aware reveals for your readers.',
         notes: 'A private space for ideas, research, and reminders.',
     }[activeTab];
 
@@ -826,9 +828,9 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
 
             <div className="ww-manage-workspace">
                 <nav className="ww-manage-tabs" aria-label="Story workspace">
-                    {(['chapters', 'characters', 'scenes', 'notes'] as Tab[]).map((tab) => (
+                    {(['chapters', 'characters', 'bible', 'scenes', 'notes'] as Tab[]).map((tab) => (
                         <button key={tab} aria-current={activeTab === tab ? 'page' : undefined} onClick={() => { setActiveTab(tab); navigatePath(`/write/book/${bookId}/manage${tab === 'chapters' ? '' : `?tab=${tab}`}`); }} className={activeTab === tab ? 'active' : ''}>
-                            <span>{tab === 'notes' ? 'Private notes' : tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
+                            <span>{tab === 'notes' ? 'Private notes' : tab === 'bible' ? 'Story Bible' : tab === 'scenes' ? 'Scenes & timeline' : tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
                             {tab === 'chapters' && <small>{book.chapters.length}</small>}
                         </button>
                     ))}
@@ -877,7 +879,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 )}
 
                 {activeTab === 'characters' && <CharacterList bookId={bookId} ownerId={currentUser.id} compact />}
-                {activeTab === 'scenes' && <SceneList bookId={bookId} ownerId={currentUser.id} chapters={book.chapters} compact />}
+                {activeTab === 'scenes' && <SceneList key={bookId} bookId={bookId} ownerId={currentUser.id} chapters={book.chapters} compact />}
+                {activeTab === 'bible' && <StoryBible key={bookId} bookId={bookId} ownerId={currentUser.id} chapters={book.chapters} />}
                 {activeTab === 'notes' && <NoteList bookId={bookId} ownerId={currentUser.id} compact />}
             </div>
 

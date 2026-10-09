@@ -44,6 +44,8 @@ public class BookService {
     @Autowired
     SceneRepository sceneRepository;
     @Autowired
+    com.wordweft.book.repository.StoryBibleRepository storyBibleRepository;
+    @Autowired
     NoteRepository noteRepository;
     @Autowired
     LibraryRepository libraryRepository;
@@ -67,6 +69,7 @@ public class BookService {
         readingProgressRepository.deleteByBookId(bookId);
         characterRepository.deleteByBookId(bookId);
         sceneRepository.deleteByBookId(bookId);
+        storyBibleRepository.deleteByBookId(bookId);
         noteRepository.deleteByBookId(bookId);
         libraryRepository.deleteByBookId(bookId);
         chapterRevisionRepository.deleteByBookId(bookId);

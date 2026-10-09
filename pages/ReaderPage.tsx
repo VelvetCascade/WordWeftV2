@@ -22,6 +22,9 @@ import { ReportModal } from '../components/ReportModal';
 import parse, { attributesToProps, domToReact } from 'html-react-parser';
 import { replaceReaderChapter, returnToStory } from '../utils/navigation';
 import { readReaderPreferences } from '../utils/runtimeLifecycle';
+import { readLampMode, type LampReadingMode } from '../utils/lampReading';
+import { ReaderLamp } from '../components/ReaderLamp';
+import { ReaderStoryBibleDialog } from '../components/ReaderStoryBible';
 import { manuscriptProgress } from '../utils/readerProgress';
 import { isReadingFinished, mergeReadingSnapshots } from '../utils/readingJourney';
 import { WordWeftLogo } from '../components/icons/WordWeftLogo';
@@ -296,11 +299,21 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const [atmosphereIntensity, setAtmosphereIntensity] = useState<AtmosphereIntensity>(() => { try { return readAtmosphereIntensity(localStorage.getItem('ww_reader_atmosphere')); } catch { return 'full'; } });
     useEffect(() => { try { localStorage.setItem('ww_reader_atmosphere', atmosphereIntensity); } catch { /* Reading remains available without storage. */ } }, [atmosphereIntensity]);
     const [contentTheme, setContentTheme] = useState<ContentTheme>(initialReaderPreferences.contentTheme);
+    const [lampMode, setLampMode] = useState<LampReadingMode>(() => { try { return readLampMode(JSON.parse(localStorage.getItem('ww_reader_preferences') || '{}').lampMode); } catch { return 'off'; } });
     const [readerFont, setReaderFont] = useState<ReaderFont>(initialReaderPreferences.readerFont);
     const [readerWidth, setReaderWidth] = useState<ReaderWidth>(initialReaderPreferences.readerWidth);
     const [lineHeight, setLineHeight] = useState(initialReaderPreferences.lineHeight);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [readingProgress, setReadingProgress] = useState<BookProgress | null>(null);
+    const [isStoryBibleOpen, setIsStoryBibleOpen] = useState(false);
+    const [confirmedBibleChapters, setConfirmedBibleChapters] = useState('');
+    const knownBibleRevision = `${currentUser?.id || 'guest'}:${confirmedBibleChapters}`;
+    useEffect(() => {
+        // A local progress observation cannot unlock a server-gated reveal. Refresh
+        // an open guide only after completion is confirmed, not on every scroll save.
+        if (readingProgress?.pendingSync || readingProgress?.syncError) return;
+        setConfirmedBibleChapters(Object.entries(readingProgress?.chapters ?? {}).filter(([, value]) => value.progress >= 90).map(([id]) => id).sort().join(','));
+    }, [readingProgress]);
     const [progressSaveState, setProgressSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isToolbarVisible, setIsToolbarVisible] = useState(true);
@@ -523,11 +536,11 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
 
     useEffect(() => {
         try {
-            localStorage.setItem('ww_reader_preferences', JSON.stringify({ fontSize, contentTheme, readerFont, readerWidth, lineHeight }));
+            localStorage.setItem('ww_reader_preferences', JSON.stringify({ fontSize, contentTheme, readerFont, readerWidth, lineHeight, lampMode }));
         } catch {
             // Reader preferences are optional when storage is unavailable.
         }
-    }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight]);
+    }, [fontSize, contentTheme, readerFont, readerWidth, lineHeight, lampMode]);
 
     const calculateProgress = useCallback(() => {
         const manuscript = moodContentRef.current || contentRef.current;
@@ -875,6 +888,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             </li>;
                         })}
                     </ul>
+                    <button className="ww-bible-guide-action" onClick={() => { setIsTocVisible(false); requestAnimationFrame(() => setIsStoryBibleOpen(true)); }}>Open Story Bible</button>
                     <button className="reader-toc-return" onClick={() => setIsTocVisible(false)}>Return to chapter {currentChapterIndex + 1}</button>
                 </div>
             </div>
@@ -882,7 +896,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     }
 
     useEffect(() => {
-        setIsPassageToolsOpen(false); setPassageIndex(null); setViewingCharacter(null);
+        setIsPassageToolsOpen(false); setPassageIndex(null); setViewingCharacter(null); setIsStoryBibleOpen(false);
         if (!book || !selectedChapterId) return;
         let active = true;
         api.getCharactersByBookId(book.id, selectedChapterId).then(items => { if (active) setCharacters(items); }).catch(() => {});
@@ -1029,7 +1043,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     blockIndex = 0;
 
     return (
-        <div onPointerDownCapture={() => { keyboardNavigationRef.current = false; }} className={`reader-experience reader-v2 transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[contentTheme]} ${isFocusMode ? 'reader-focus-mode' : ''} ${quietControls && !isToolbarVisible ? 'reader-quiet-hidden' : ''}`}>
+        <div onPointerDownCapture={() => { keyboardNavigationRef.current = false; }} className={`reader-experience reader-v2 transition-colors duration-300 min-h-screen flex flex-col ${contentThemeClasses[lampMode === 'off' ? contentTheme : 'dark']} ${lampMode !== 'off' ? 'reader-lamp' : ''} ${isFocusMode ? 'reader-focus-mode' : ''} ${quietControls && !isToolbarVisible ? 'reader-quiet-hidden' : ''}`}>
             <div className="sr-only" role="status" aria-live="polite">{resumeAnnouncement}</div>
             {/* Contextual Reader Onboarding */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? (
@@ -1038,6 +1052,8 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     hasSpoilers={chapter?.content?.includes('data-spoiler') || chapter?.content?.includes('spoiler-text')}
                 />
             ) : null}
+
+            <ReaderLamp mode={lampMode} contentRef={moodContentRef} />
 
             {/* Mood Atmosphere — page-level immersive overlay */}
             <MoodAtmosphere contentRef={moodContentRef} intensity={atmosphereIntensity} active={chapterContent.access !== 'AUTH_REQUIRED'} />
@@ -1268,10 +1284,15 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     <div className="reader-setting-group">
                         <label>Theme</label>
                         <div className="reader-theme-options">
-                            <button onClick={() => changeAppearance(() => setContentTheme('light'))} aria-pressed={contentTheme === 'light'} className={contentTheme === 'light' ? 'active' : ''}><i className="reader-swatch-light" /><span>Paper</span></button>
-                            <button onClick={() => changeAppearance(() => setContentTheme('sepia'))} aria-pressed={contentTheme === 'sepia'} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
+                            <button onClick={() => changeAppearance(() => { setLampMode('off'); setContentTheme('light'); })} aria-pressed={contentTheme === 'light'} className={contentTheme === 'light' ? 'active' : ''}><i className="reader-swatch-light" /><span>Paper</span></button>
+                            <button onClick={() => changeAppearance(() => { setLampMode('off'); setContentTheme('sepia'); })} aria-pressed={contentTheme === 'sepia'} className={contentTheme === 'sepia' ? 'active' : ''}><i className="reader-swatch-sepia" /><span>Sepia</span></button>
                             <button onClick={() => changeAppearance(() => setContentTheme('dark'))} aria-pressed={contentTheme === 'dark'} className={contentTheme === 'dark' ? 'active' : ''}><i className="reader-swatch-dark" /><span>Night</span></button>
                         </div>
+                    </div>
+                    <div className="reader-setting-group reader-setting-group-wide">
+                        <label>Lamp Reading</label>
+                        <div className="reader-segmented" role="group" aria-label="Lamp Reading">{(['off', 'reading', 'pointer'] as const).map(value => <button key={value} type="button" aria-pressed={lampMode === value} className={lampMode === value ? 'active' : ''} onClick={() => { setLampMode(value); if (value !== 'off') setContentTheme('dark'); }}>{value === 'off' ? 'Off' : value === 'reading' ? 'Reading position' : 'Pointer'}</button>)}</div>
+                        <p>A quiet pool of light on Night paper. Text stays readable everywhere. On touch screens, the light stays with your reading position; reduced motion keeps it steady.</p>
                     </div>
                     <div className="reader-setting-group reader-setting-group-wide">
                         <label>Passage atmospheres</label>
@@ -1329,12 +1350,15 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             /> : null}
 
             {chapterContent.access !== 'AUTH_REQUIRED' && <ReaderPassageTools open={isPassageToolsOpen} onClose={() => setIsPassageToolsOpen(false)} bookId={book.id} chapterId={chapter.id} chapters={book.chapters} userId={currentUser?.id} paragraphIndex={passageIndex} getParagraphs={getParagraphs} onFind={scrollToParagraph} onSignIn={() => handleAuthenticate('login')} onNavigate={bookmark => { const index = book.chapters.findIndex(item => item.id === bookmark.chapterId && item.status === 'published'); if (index < 0) { setReaderActionError('This saved chapter is no longer released.'); return; } pendingPassageRef.current = bookmark; if (index === currentChapterIndex) { const resolved = resolvePassageIndex(getParagraphs(), bookmark.paragraphIndex, bookmark.quote); pendingPassageRef.current = null; if (resolved !== null) scrollToParagraph(resolved); else setReaderActionError('This passage has changed. Your saved quote and note remain available.'); } else { goToChapter(index); setResumedChapterId(bookmark.chapterId); } }} />}
+            <ReaderStoryBibleDialog isOpen={isStoryBibleOpen} bookId={book.id} chapterId={chapter.id} characters={characters} chapters={book.chapters} refreshKey={knownBibleRevision} onClose={() => setIsStoryBibleOpen(false)} />
             <CharacterPreview
                 character={viewingCharacter}
                 isOpen={!!viewingCharacter}
                 onClose={() => setViewingCharacter(null)}
                 chapters={book.chapters}
                 previewChapterId={chapter.id}
+                characters={characters}
+                knownRevision={knownBibleRevision}
             />
 
             <ShareModal 

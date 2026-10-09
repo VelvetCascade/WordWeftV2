@@ -106,9 +106,11 @@ export function formDraftStore(owner: string) {
 }
 
 /** Validate known fields, without interpreting browser data as executable content. */
-export function isCompatibleForm<T extends object>(initial: T, candidate: unknown): candidate is T {
+export function isCompatibleForm<T extends object>(initial: T, candidate: unknown, optionalFields: (keyof T)[] = []): candidate is T {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
     return Object.entries(initial).every(([key, value]) => {
+        // Older saved forms may predate an additive field; supplied fields must still be valid.
+        if (optionalFields.includes(key as keyof T) && !(key in candidate)) return true;
         const incoming = (candidate as Record<string, unknown>)[key];
         if (Array.isArray(value)) return Array.isArray(incoming) && incoming.every(item => typeof item === 'string');
         if (value === null) return incoming === null || typeof incoming === 'string';
