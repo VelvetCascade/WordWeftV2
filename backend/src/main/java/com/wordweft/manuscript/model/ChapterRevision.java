@@ -26,6 +26,7 @@ public class ChapterRevision {
     private String disclaimerNote;
     private int wordCount;
     private String reason;
+    private String label;
     private String contentHash;
     private String plainTextPreview;
     private Instant createdAt;

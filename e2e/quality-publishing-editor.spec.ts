@@ -61,7 +61,7 @@ test('later editor release reviews earlier warnings and private story before app
     await expect(review.getByRole('button', { name: 'Publish this release', exact: true })).toBeDisabled();
     expect((await api(request, `/books/${book.id}`)).publicationStatus).toBe('draft');
     await page.screenshot({ path: 'test-results/evidence/publishing/editor-complete-release-desktop.png', fullPage: true });
-    await approveRelease(page); await expect(page.getByRole('heading', { name: 'Chapter Published!', exact: true })).toBeVisible();
+    await approveRelease(page); await expect(page.getByRole('heading', { name: 'Chapter published', exact: true })).toBeVisible();
     const firstSession = await api(request, `/books/${book.id}/chapters/${first}/edit-session`);
     const secondSession = await api(request, `/books/${book.id}/chapters/${second}/edit-session`);
     expect(firstSession.status).toBe('published'); expect(secondSession.status).toBe('published');
@@ -87,7 +87,7 @@ test('scheduled status is consistent and publishing a later chapter discloses it
     const middle = await api(request, `/books/${book.id}/chapters/${second}/edit-session`);
     await api(request, `/books/${book.id}/chapters/${second}/schedule`, { scheduledAt, expectedRevision: middle.editRevision }, 'PUT');
     await editor(page, book.id, second); await expect(page.locator('.ww-editor-context')).toContainText('Scheduled');
-    await expect(page.locator('.ww-editor-title-block')).toContainText('Scheduled'); await expect(page.locator('.ww-editor-context')).toContainText(/in (1 day|24 hours)/);
+    await expect(page.locator('.ww-editor-title-block')).toContainText('Scheduled'); await expect(page.locator('.ww-editor-detail-section').first()).toContainText(/in (1 day|24 hours)/);
     await expect(page.getByRole('button', { name: 'Cancel schedule', exact: true })).toBeVisible();
     await page.screenshot({ path: 'test-results/evidence/publishing/editor-scheduled-desktop.png', fullPage: true });
     await page.getByRole('button', { name: 'Cancel schedule', exact: true }).click();
@@ -97,7 +97,7 @@ test('scheduled status is consistent and publishing a later chapter discloses it
     await api(request, `/books/${book.id}/chapters/${second}/schedule`, { scheduledAt, expectedRevision: cancelled.editRevision }, 'PUT');
     await editor(page, book.id, third); await page.getByRole('button', { name: 'Publish', exact: true }).click();
     const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true }); await expect(review).toContainText('This schedule will be replaced by publication now');
-    await expect(review).toContainText('Scheduled middle'); await approveRelease(page); await expect(page.getByRole('heading', { name: 'Chapter Published!', exact: true })).toBeVisible();
+    await expect(review).toContainText('Scheduled middle'); await approveRelease(page); await expect(page.getByRole('heading', { name: 'Chapter published', exact: true })).toBeVisible();
     expect((await api(request, `/books/${book.id}/chapters/${second}/edit-session`)).scheduledAt).toBeNull();
 });
 
@@ -110,7 +110,7 @@ test('failed online save offers verified device leave and export when device sto
     await expect(exit).toContainText('Your changes are not saved online'); await expect(exit.getByRole('button', { name: 'Discard changes and leave', exact: true })).toBeDisabled();
     await page.evaluate(() => { const set = Storage.prototype.setItem; (window as any).__draftStorageSet = set; Storage.prototype.setItem = function(key, value) { if (key.startsWith('ww:writer-draft:')) throw new DOMException('Blocked', 'QuotaExceededError'); return set.call(this, key, value); }; });
     await exit.getByRole('button', { name: 'Keep device draft and leave', exact: true }).click(); await expect(exit).toContainText('Device storage could not be verified');
-    const download = page.waitForEvent('download'); await exit.getByRole('button', { name: 'Export manuscript', exact: true }).click(); expect((await download).suggestedFilename()).toBe('wordweft-device-draft.html');
+    const download = page.waitForEvent('download'); await exit.getByRole('button', { name: 'Export manuscript', exact: true }).click(); expect((await download).suggestedFilename()).toBe('Recoverable chapter.html');
     await page.screenshot({ path: 'test-results/evidence/publishing/editor-failed-save-exit.png', fullPage: true });
     await page.evaluate(() => { Storage.prototype.setItem = (window as any).__draftStorageSet; });
     await exit.getByRole('button', { name: 'Keep device draft and leave', exact: true }).click();

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useDialog } from '../hooks/useDialog';
 import { X, RotateCcw, RotateCw, Grid3x3, ZoomIn, ZoomOut, Check, Crop, Move, Maximize2 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     onConfirm,
     onCancel,
 }) => {
+    const dialogRef = useDialog(true, onCancel);
     // Image loading
     const [imgSrc, setImgSrc] = useState('');
     const [natW, setNatW] = useState(0);
@@ -171,20 +173,6 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             return next;
         });
     };
-
-    // ── Keyboard shortcuts ────────────────────────────────────────────────────
-
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            // Do not handle Enter here — that would conflict with button focus
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                onCancelRef.current();
-            }
-        };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-    }, []); // Empty deps — uses onCancelRef to stay fresh
 
     // ── Document-level pointer listeners for drag ────────────────────────────
 
@@ -585,7 +573,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             className="crop-modal-backdrop"
             onClick={(e) => { if (e.target === e.currentTarget) onCancelRef.current(); }}
         >
-            <div className="crop-modal-container">
+            <div ref={dialogRef} className="crop-modal-container" role="dialog" aria-modal="true" aria-label={`Crop ${contextLabel}`} tabIndex={-1}>
 
                 {/* ── Header ───────────────────────────────────────────── */}
                 <div className="crop-modal-header">
@@ -593,6 +581,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         type="button"
                         onClick={() => onCancelRef.current()}
                         className="crop-modal-close-btn"
+                        aria-label="Cancel cropping"
                         title="Cancel (Esc)"
                     >
                         <X className="w-5 h-5" />
@@ -606,6 +595,8 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         onClick={handleConfirm}
                         disabled={isExporting || !loaded}
                         className="crop-modal-confirm-btn"
+                        aria-label={isExporting ? 'Processing image' : 'Use cropped image'}
+                        aria-busy={isExporting}
                         title="Confirm"
                     >
                         <Check className="w-4 h-4" />

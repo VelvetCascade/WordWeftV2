@@ -18,6 +18,7 @@ public class Chapter {
     private int wordCount;
     private String content; 
     private String status = "draft"; // "draft", "scheduled", or "published"
+    private String importBatchId; // Writer-only provenance; public projections omit this.
     private long editRevision; // Missing legacy field reads as zero.
     private Instant scheduledAt;
     private Instant publishedAt;
@@ -38,10 +39,6 @@ public class Chapter {
     private Set<String> likes = new HashSet<>(); // Set of User IDs
     
     public void updateWordCount() {
-        if (content != null) {
-            this.wordCount = content.split("\\s+").length;
-        } else {
-            this.wordCount = 0;
-        }
+        this.wordCount = com.wordweft.manuscript.service.ManuscriptText.wordCount(content);
     }
 }

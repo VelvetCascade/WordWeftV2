@@ -45,7 +45,7 @@ export async function loadWriterComments(
 export type WriterInboxFilter = 'all' | 'new' | 'unanswered' | 'replied';
 /** Replies by other readers do not resolve the writer's inbox. New means reader activity since the previous visit. */
 export function filterWriterComments(comments: readonly ReaderComment[], writerId: string, filter: WriterInboxFilter, bookId = '', lastVisit: string | null = null): ReaderComment[] {
-    return comments.filter(comment => !comment.parentId && (!bookId || comment.bookId === bookId)).filter(comment => {
+    return comments.filter(comment => !comment.parentId && comment.userId !== writerId && (!bookId || comment.bookId === bookId)).filter(comment => {
         const replies = comments.filter(reply => reply.parentId === comment.id);
         const replied = replies.some(reply => reply.userId === writerId);
         if (filter === 'replied') return replied;

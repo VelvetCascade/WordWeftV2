@@ -1033,7 +1033,40 @@ export async function toggleChapterPublication(userId: string, bookId: string, c
     return mapBackendUserToFrontend(await handleResponse(response));
 }
 
-export async function importManuscript(bookId: string, file: File, onProgress?: (phase: 'uploading' | 'processing', percent: number) => void): Promise<{ user: User; importedChapters: number; totalChapters: number; embeddedImages: number; uploadedImages: number; characterCandidates: string[] }> {
+export interface ManuscriptPreflight {
+    chapters: { title: string; wordCount: number }[];
+    warnings: string[];
+    embeddedImages?: number;
+}
+
+export async function preflightManuscript(bookId: string, file: File): Promise<ManuscriptPreflight> {
+    const formData = new FormData(); formData.append('file', file);
+    return uploadFormData<ManuscriptPreflight>(`${API_BASE_URL}/books/${bookId}/import/preflight`, formData, {
+        authorization: getHeaders().Authorization, timeoutMs: 180_000,
+        networkErrorMessage: 'The manuscript could not reach WordWeft. Check your connection and retry.',
+        timeoutErrorMessage: 'The manuscript preview took too long. Please retry.',
+        cancelledErrorMessage: 'The manuscript preview was cancelled.',
+    });
+}
+
+export async function undoManuscriptImport(bookId: string, importId: string): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/import/undo`, {
+        method: 'POST', headers: getHeaders(), body: JSON.stringify({ importId }),
+    });
+    const result = await handleResponse(response);
+    return mapBackendUserToFrontend(result.user);
+}
+
+export async function duplicateChapter(bookId: string, chapterId: string): Promise<User> {
+    const result = await handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/duplicate`, { method: 'POST', headers: getHeaders() }));
+    return mapBackendUserToFrontend(result.user);
+}
+
+export async function reorderChapters(bookId: string, chapterIds: string[]): Promise<User> {
+    return mapBackendUserToFrontend(await handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/order`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ chapterIds }) })));
+}
+
+export async function importManuscript(bookId: string, file: File, onProgress?: (phase: 'uploading' | 'processing', percent: number) => void): Promise<{ user: User; importedChapters: number; totalChapters: number; embeddedImages: number; uploadedImages: number; characterCandidates: string[]; importId?: string; chapterIds?: string[] }> {
     const formData = new FormData();
     formData.append('file', file);
     onProgress?.('uploading', 0);
@@ -1055,6 +1088,8 @@ export async function importManuscript(bookId: string, file: File, onProgress?: 
         embeddedImages: data.result.embeddedImages || 0,
         uploadedImages: data.result.uploadedImages || 0,
         characterCandidates: data.result.characterCandidates || [],
+        importId: data.result.importId,
+        chapterIds: data.result.chapterIds,
     };
 }
 
@@ -1082,8 +1117,18 @@ export async function getChapterRevisions(bookId: string, chapterId: string): Pr
     return await handleResponse(response);
 }
 
-export async function restoreChapterRevision(bookId: string, chapterId: string, revisionId: string, expectedRevision?: number): Promise<ManuscriptWriteResult> {
-    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}/restore${expectedRevision === undefined ? '' : `?expectedRevision=${expectedRevision}`}`, {
+export async function getChapterRevision(bookId: string, chapterId: string, revisionId: string): Promise<ChapterRevision> {
+    return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}`, { headers: getHeaders(), cache: 'no-store' }));
+}
+
+export async function createChapterCheckpoint(bookId: string, chapterId: string, label: string, expectedRevision?: number): Promise<ChapterRevision> {
+    return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ label, expectedRevision }) }));
+}
+
+export async function restoreChapterRevision(bookId: string, chapterId: string, revisionId: string, expectedRevision?: number, mode: 'working-draft' | 'withdraw' = 'withdraw'): Promise<ManuscriptWriteResult> {
+    const params = new URLSearchParams({ mode });
+    if (expectedRevision !== undefined) params.set('expectedRevision', String(expectedRevision));
+    const response = await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/revisions/${revisionId}/restore?${params}`, {
         method: 'POST',
         headers: getHeaders()
     });
@@ -1094,6 +1139,10 @@ export async function getWriterAnalytics(bookId?: string): Promise<WriterAnalyti
     const query = bookId ? `?bookId=${encodeURIComponent(bookId)}` : '';
     const response = await fetch(`${API_BASE_URL}/writer/analytics${query}`, { headers: getHeaders() });
     return await handleResponse(response);
+}
+
+export async function getWriterQuickStart(): Promise<{ characters: boolean; mentions: boolean; atmosphere: boolean; planning: boolean }> {
+    return handleResponse(await fetch(`${API_BASE_URL}/writer/quickstart`, { headers: getHeaders(), cache: 'no-store' }));
 }
 
 export async function deleteBook(bookId: string): Promise<User> {

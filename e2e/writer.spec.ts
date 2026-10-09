@@ -118,7 +118,7 @@ test('chapter rails preserve the correct state and review, preview, schedule, an
   await review.getByRole('checkbox', { name: /I approve every chapter/ }).check();
   await review.getByRole('checkbox', { name: /Artwork in this story/ }).check();
   await review.getByRole('button', { name: 'Publish this release', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Chapter Published!', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Chapter published', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Back to studio', exact: true }).click();
   await openEditor(page, book.id, first);
   await page.getByRole('navigation', { name: 'Chapters', exact: true }).getByRole('button', { name: /The long way home/ }).click();
@@ -129,14 +129,16 @@ test('chapter rails preserve the correct state and review, preview, schedule, an
   const future = new Date(Date.now() + 86400_000);
   const two = (value: number) => String(value).padStart(2, '0');
   await schedule.getByLabel('Release date and time', { exact: true }).fill(`${future.getFullYear()}-${two(future.getMonth()+1)}-${two(future.getDate())}T${two(future.getHours())}:${two(future.getMinutes())}`);
+  await schedule.getByRole('checkbox', { name: /I approve this release/ }).check();
   await schedule.getByRole('button', { name: 'Schedule chapter', exact: true }).click();
   await expect(schedule).not.toBeVisible();
   await expect(page.locator('.ww-editor-detail-section').first()).toContainText('Scheduled ·');
   await page.getByRole('button', { name: 'View revisions', exact: true }).click();
   const versions = page.getByRole('dialog', { name: 'Version history', exact: true });
-  await expect(versions.getByRole('button', { name: 'Restore', exact: true }).first()).toBeVisible();
-  await versions.getByRole('button', { name: 'Restore', exact: true }).first().click();
-  await page.getByRole('alertdialog', { name: 'Restore this version?', exact: true }).getByRole('button', { name: 'Restore version', exact: true }).click();
+  await versions.getByRole('button', { name: 'Compare and restore', exact: true }).first().click();
+  await versions.getByText('Publication changes', { exact: true }).click();
+  await versions.getByRole('button', { name: 'Restore and withdraw release', exact: true }).click();
+  await page.getByRole('alertdialog', { name: 'Restore and withdraw release?', exact: true }).getByRole('button', { name: 'Restore and withdraw', exact: true }).click();
   await expect(versions).not.toBeVisible();
   await expect(page.locator('.ww-editor-detail-section').first()).toContainText('Your chapter stays private');
   await expect(page.getByLabel('Chapter title', { exact: true })).toHaveValue('The long way home');

@@ -86,10 +86,15 @@ public class ChapterWriteService {
         if (mongo.updateFirst(snapshot, update, Book.class).getMatchedCount() != 1) throw conflict();
     }
 
+    public void restoreWorkingDraft(Book book, Chapter chapter, Query snapshot) {
+        int index = book.getChapters().indexOf(chapter);
+        if (mongo.updateFirst(snapshot, draftUpdate("chapters." + index + ".", chapter), Book.class).getMatchedCount() != 1) throw conflict();
+    }
+
     public void updateMetadata(Book book, Query snapshot) {
         Update update = new Update().set("title", book.getTitle()).set("description", book.getDescription())
                 .set("summary", book.getSummary()).set("coverUrl", book.getCoverUrl()).set("coverFileId", book.getCoverFileId())
-                .set("genres", book.getGenres()).set("category", book.getCategory()).set("readingStatus", book.getReadingStatus())
+                .set("genres", book.getGenres()).set("tags", book.getTags()).set("category", book.getCategory()).set("readingStatus", book.getReadingStatus())
                 .set("ageRating", book.getAgeRating()).set("isMature", book.isMature()).set("contentWarnings", book.getContentWarnings())
                 .set("customDisclaimer", book.getCustomDisclaimer()).set("isAIGenerated", book.isAIGenerated())
                 .set("lastUpdatedAt", book.getLastUpdatedAt());

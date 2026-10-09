@@ -73,7 +73,7 @@ public class ChapterRevisionService {
         revision.setContent(chapter.getContent());
         revision.setContentWarnings(chapter.getContentWarnings() == null ? java.util.List.of() : new java.util.ArrayList<>(chapter.getContentWarnings()));
         revision.setDisclaimerNote(chapter.getDisclaimerNote());
-        revision.setWordCount(chapter.getWordCount());
+        revision.setWordCount(ManuscriptText.wordCount(chapter.getContent()));
         revision.setReason(reason);
         revision.setContentHash(hash);
         revision.setPlainTextPreview(preview(chapter.getContent()));
@@ -86,7 +86,7 @@ public class ChapterRevisionService {
     public List<ChapterRevision> list(String authorId, String bookId, String chapterId) {
         OwnedChapter owned = requireOwnedChapter(authorId, bookId, chapterId);
         List<ChapterRevision> result = revisions.findByChapterIdOrderByCreatedAtDesc(owned.chapter().getId());
-        return result == null ? List.of() : result.stream().limit(MAX_REVISIONS).toList();
+        return result == null ? List.of() : result.stream().limit(MAX_REVISIONS).map(this::semanticRevision).toList();
     }
 
     public Book restore(String authorId, String bookId, String chapterId, String revisionId) {
@@ -94,14 +94,55 @@ public class ChapterRevisionService {
     }
 
     public Book restore(String authorId, String bookId, String chapterId, String revisionId, Long expectedRevision) {
+        return restore(authorId, bookId, chapterId, revisionId, expectedRevision, false);
+    }
+
+    public ChapterRevision get(String authorId, String bookId, String chapterId, String revisionId) {
+        requireOwnedChapter(authorId, bookId, chapterId);
+        return semanticRevision(requireRevision(authorId, bookId, chapterId, revisionId));
+    }
+
+    public ChapterRevision checkpoint(String authorId, String bookId, String chapterId, String label) {
+        return checkpoint(authorId, bookId, chapterId, label, null);
+    }
+
+    public ChapterRevision checkpoint(String authorId, String bookId, String chapterId, String label, Long expectedRevision) {
         OwnedChapter owned = requireOwnedChapter(authorId, bookId, chapterId);
         com.wordweft.book.service.ChapterWriteService.requireRevision(owned.chapter(), expectedRevision);
-        var snapshot = com.wordweft.book.service.ChapterWriteService.snapshotQuery(owned.book());
-        ChapterRevision revision = revisions.findById(revisionId)
+        if (label != null && label.length() > 100) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Checkpoint names must be 100 characters or fewer.");
+        ChapterRevision revision = new ChapterRevision();
+        revision.setAuthorId(authorId); revision.setBookId(bookId); revision.setChapterId(chapterId);
+        revision.setTitle(owned.chapter().getTitle()); revision.setContent(owned.chapter().getContent());
+        revision.setContentWarnings(owned.chapter().getContentWarnings() == null ? List.of() : new java.util.ArrayList<>(owned.chapter().getContentWarnings()));
+        revision.setDisclaimerNote(owned.chapter().getDisclaimerNote());
+        revision.setWordCount(ManuscriptText.wordCount(revision.getContent())); revision.setReason("CHECKPOINT");
+        revision.setPlainTextPreview(preview(revision.getContent())); revision.setCreatedAt(clock.instant());
+        revision.setContentHash(hash(revision.getTitle() + "\n" + revision.getContent() + "\n" + revision.getContentWarnings() + "\n" + revision.getDisclaimerNote()));
+        revision.setLabel(label == null || label.isBlank() ? null : label.trim());
+        ChapterRevision saved = revisions.save(revision);
+        prune(chapterId);
+        return saved == null ? revision : saved;
+    }
+
+    private ChapterRevision semanticRevision(ChapterRevision revision) {
+        revision.setWordCount(ManuscriptText.wordCount(revision.getContent()));
+        revision.setPlainTextPreview(preview(revision.getContent()));
+        return revision;
+    }
+
+    private ChapterRevision requireRevision(String authorId, String bookId, String chapterId, String revisionId) {
+        return revisions.findById(revisionId)
                 .filter(candidate -> bookId.equals(candidate.getBookId()))
                 .filter(candidate -> chapterId.equals(candidate.getChapterId()))
                 .filter(candidate -> authorId.equals(candidate.getAuthorId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revision not found."));
+    }
+
+    public Book restore(String authorId, String bookId, String chapterId, String revisionId, Long expectedRevision, boolean workingDraft) {
+        OwnedChapter owned = requireOwnedChapter(authorId, bookId, chapterId);
+        com.wordweft.book.service.ChapterWriteService.requireRevision(owned.chapter(), expectedRevision);
+        var snapshot = com.wordweft.book.service.ChapterWriteService.snapshotQuery(owned.book());
+        ChapterRevision revision = requireRevision(authorId, bookId, chapterId, revisionId);
 
         capture(authorId, owned.book(), owned.chapter(), "PRE_RESTORE", true);
         PublishedChapterView.preserveLegacySnapshot(owned.chapter());
@@ -112,6 +153,13 @@ public class ChapterRevisionService {
             owned.chapter().setDisclaimerNote(revision.getDisclaimerNote());
         }
         owned.chapter().updateWordCount();
+        if (workingDraft) {
+            long previousRevision = owned.chapter().getEditRevision();
+            owned.chapter().setEditRevision(previousRevision + 1);
+            if (chapterWrites == null) return books.save(owned.book());
+            chapterWrites.restoreWorkingDraft(owned.book(), owned.chapter(), snapshot);
+            return owned.book();
+        }
         int restoredIndex = owned.book().getChapters().indexOf(owned.chapter());
         for (int index = restoredIndex; index < owned.book().getChapters().size(); index++) {
             Chapter affected = owned.book().getChapters().get(index);
@@ -156,7 +204,7 @@ public class ChapterRevisionService {
     }
 
     private String stripHtml(String content) {
-        return content == null ? "" : content.replaceAll("<[^>]*>", " ");
+        return ManuscriptText.plainText(content);
     }
 
     private boolean blank(String value) {

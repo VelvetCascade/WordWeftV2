@@ -79,6 +79,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         e.preventDefault();
         if (isSubmittingRef.current || isCoverUploading) return;
         setSubmitError('');
+        if (!title.trim()) { setSubmitError('Give your story a title.'); return; }
 
         if (ageRating === 'MATURE_18' || ageRating === 'ADULT_21') {
             if (!currentUser.dateOfBirth) {
@@ -93,10 +94,10 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
         const finalCategory = category === 'Other' ? customCategory : category;
 
         const newBookData = {
-            title,
+            title: title.trim(),
             description,
             summary: summary.trim() || description.substring(0, 150) + (description.length > 150 ? '...' : ''),
-            coverUrl: coverUrl || new URL('/design-v2/assets/met-53681.jpg', window.location.origin).href,
+            coverUrl: coverUrl.trim(),
             coverFileId,
             genres: selectedGenres,
             category: finalCategory,
@@ -140,7 +141,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                     <div>
                         <span className="ww-create-eyebrow">New story</span>
                         <h1>Story details</h1>
-                        <p>Add the title, introduction, and artwork readers will see.</p>
+                        <p>Start with a title. Add your introduction and artwork whenever you’re ready.</p>
                     </div>
                 </header>
 
@@ -174,8 +175,8 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <input id="story-summary" type="text" maxLength={200} value={summary} onChange={event => setSummary(event.target.value)} placeholder="One line that invites the reader in." />
                             </div>
                             <div className="ww-create-field">
-                                <div className="ww-create-label-row"><label htmlFor="description">Synopsis</label><span>{description.length} characters</span></div>
-                                <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} required rows={6} placeholder="What makes this story impossible to put down?" />
+                                <div className="ww-create-label-row"><label htmlFor="description">Synopsis <small>(optional)</small></label><span>{description.length} characters</span></div>
+                                <textarea id="description" aria-label="Synopsis" value={description} onChange={e => setDescription(e.target.value)} rows={6} placeholder="What makes this story impossible to put down?" />
                             </div>
                         </section>
 
@@ -190,7 +191,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 <div className="ww-create-genres">
                                     {genresError && <p role="alert">{genresError}</p>}
                                     {isLoadingGenres ? <p>Loading genres…</p> : filteredGenres.map(g => (
-                                        <button key={g} type="button" onClick={() => toggleGenre(g)} className={selectedGenres.includes(g) ? 'selected' : ''}>
+                                        <button key={g} type="button" aria-pressed={selectedGenres.includes(g)} onClick={() => toggleGenre(g)} className={selectedGenres.includes(g) ? 'selected' : ''}>
                                             {selectedGenres.includes(g) && <Check size={13} />}{g}
                                         </button>
                                     ))}
@@ -223,7 +224,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                             <div className="ww-create-field">
                                 <label>Content warnings</label>
                                 <div className="ww-create-genres">
-                                    {WARNING_OPTIONS.map(item => <button key={item.value} type="button" className={contentWarnings.includes(item.value) ? 'selected' : ''} onClick={() => setContentWarnings(prev => prev.includes(item.value) ? prev.filter(w => w !== item.value) : [...prev, item.value])}>{contentWarnings.includes(item.value) && <span>✓</span>}{item.label}</button>)}
+                                    {WARNING_OPTIONS.map(item => <button key={item.value} type="button" aria-pressed={contentWarnings.includes(item.value)} className={contentWarnings.includes(item.value) ? 'selected' : ''} onClick={() => setContentWarnings(prev => prev.includes(item.value) ? prev.filter(w => w !== item.value) : [...prev, item.value])}>{contentWarnings.includes(item.value) && <span>✓</span>}{item.label}</button>)}
                                 </div>
                             </div>
                             <div className="ww-create-field">
@@ -243,7 +244,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 value={coverUrl}
                                 onChange={(url, fileId) => { setCoverUrl(url); setCoverFileId(fileId); }}
                                 label="Story cover (optional)"
-                                fallbackUrl="/design-v2/assets/met-53681.jpg"
+                                fallbackUrl="/images/unchosen-story-cover.svg"
                                 aspectRatio={2/3}
                                 cropShape="rect"
                                 onBusyChange={setIsCoverUploading}
@@ -274,7 +275,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                             </p>
                         )}
                         <button className="ww-create-cancel" type="button" onClick={() => goBackOrReplace('/write')} disabled={isSubmitting || isCoverUploading}>Cancel</button>
-                        <button className="ww-create-submit" type="submit" disabled={!title || !description || isSubmitting || isCoverUploading}>
+                        <button className="ww-create-submit" type="submit" disabled={!title.trim() || isSubmitting || isCoverUploading}>
                             {isCoverUploading ? 'Uploading cover…' : isSubmitting ? 'Creating story…' : 'Save as draft'} <ArrowRight size={18} />
                         </button>
                     </footer>

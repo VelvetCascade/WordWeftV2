@@ -1,0 +1,23 @@
+.ww-manage-chapter-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin: 1.5rem 0; font-size: .85rem; }
+.ww-manage-chapter-filters label { display: flex; align-items: center; gap: .6rem; }
+.ww-manage-chapter-filters label:first-child { flex: 1; min-width: 200px; }
+.ww-manage-chapter-filters input, .ww-manage-chapter-filters select { color: inherit; background: var(--studio-paper, var(--ww-paper, transparent)); border: 1px solid var(--studio-line, var(--ww-line, #938a7338)); border-radius: .5rem; min-height: 44px; padding: .65rem .8rem; }
+.ww-manage-chapter-filters input { width: 100%; }
+.ww-analytics-feedback { min-height: 3rem; margin: 1rem 0; }
+.ww-analytics-feedback button { text-decoration: underline; margin-left: 1rem; }
+.ww-analytics-refresh { border: 1px solid var(--studio-line, var(--ww-line, #938a7350)); border-radius: .5rem; padding: .65rem .9rem; min-height: 44px; }
+.ww-studio-recent-thought { padding: 1rem 0; border-top: 1px solid var(--studio-line, var(--ww-line, #938a7330)); }
+.ww-studio-recent-thought p { overflow-wrap: anywhere; }
+.ww-studio-recent-thought small { display: block; margin-bottom: .5rem; }
+.writer-qs-progress-fill { height: 100%; transition: width .4s ease; }
+@media (prefers-reduced-motion: reduce) { .writer-qs-progress-fill { transition: none; } }
+@media (max-width: 640px) { .ww-manage-chapter-filters { gap: .75rem; } .ww-manage-chapter-filters label:first-child { flex-basis: 100%; } }
+.ww-import-preview > p { margin: .8rem 0; font-size: .9rem; line-height: 1.6; }
+.ww-import-preview-chapters { margin: 1rem 0; max-height: 32vh; overflow-y: auto; }
+.ww-import-preview-chapters li { display: flex; gap: 1rem; justify-content: space-between; padding: .65rem 0; border-bottom: 1px solid var(--studio-line, var(--ww-line, #938a7330)); }
+.ww-import-preview-chapters small { white-space: nowrap; }
+.ww-import-preview-warnings { padding: .75rem 1.5rem; background: #c2941720; border-radius: .5rem; list-style: disc; }
+.ww-manage-import-notice small { display: block; margin-top: .4rem; }
+@media (prefers-reduced-motion: reduce) { .writer-qs-milestone { transition: none; } .writer-qs-milestone:not(:disabled):hover { transform: none; } }
+
+@media (max-width: 640px) { .ww-manage-chapter-filters input, .ww-manage-chapter-filters select { font-size: 16px; } }

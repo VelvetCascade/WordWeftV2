@@ -108,7 +108,7 @@ test('writer inbox filters and passage links preserve account-scoped replies acr
     await page.getByRole('combobox',{name:'Story',exact:true}).selectOption(book.id);
     const card=page.locator('.ww-studio-comment');await expect(card).toHaveCount(1);
     await expect(card.getByRole('link',{name:'Open passage 1',exact:true})).toHaveAttribute('href',`/book/${book.id}/chapter/${chapterId}?paragraph=0`);
-    await page.getByRole('button',{name:'Unanswered',exact:true}).click();await expect(card).toHaveCount(1);
+    await page.getByRole('button',{name:/^Unanswered(?: \d+)?$/,exact:true}).click();await expect(card).toHaveCount(1);
     await card.getByRole('button',{name:'Reply',exact:true}).click();await card.getByLabel('Your reply',{exact:true}).fill('Thank you for noticing that detail.');
     await card.getByRole('button',{name:'Cancel',exact:true}).click();await card.getByRole('button',{name:'Reply',exact:true}).click();await expect(card.getByLabel('Your reply',{exact:true})).toHaveValue('Thank you for noticing that detail.');
     await page.goto('/write?view=stories');await page.goto('/write?view=comments');
@@ -117,7 +117,7 @@ test('writer inbox filters and passage links preserve account-scoped replies acr
     await page.evaluate(readerToken=>localStorage.setItem('planning_test_token',readerToken),readerToken);await page.reload();
     await expect(page.getByRole('heading',{name:'Reader comments',exact:true})).toBeVisible();await expect(page.getByRole('textbox',{name:'Your reply',exact:true})).toHaveCount(0);await expect(page.locator('body')).not.toContainText('Thank you for noticing that detail.');
     await page.evaluate(()=>localStorage.removeItem('planning_test_token'));await page.reload();
-    await page.getByRole('combobox',{name:'Story',exact:true}).selectOption(book.id);await page.getByRole('button',{name:'Unanswered',exact:true}).click();
+    await page.getByRole('combobox',{name:'Story',exact:true}).selectOption(book.id);await page.getByRole('button',{name:/^Unanswered(?: \d+)?$/,exact:true}).click();
     await card.getByRole('button',{name:'Reply',exact:true}).click();await expect(card.getByLabel('Your reply',{exact:true})).toHaveValue('Thank you for noticing that detail.');
     const axe=await new AxeBuilder({page}).include('.ww-studio-comments').withTags(['wcag2a','wcag2aa']).analyze();expect(axe.violations.filter(item=>['label','select-name'].includes(item.id))).toEqual([]);
     await page.screenshot({path:`${artifactDir}/inbox-open-reply-desktop.png`,fullPage:true});
@@ -125,7 +125,7 @@ test('writer inbox filters and passage links preserve account-scoped replies acr
     await page.setViewportSize({width:1440,height:1000});
     let reloads=0;page.on('request',request=>{if(request.method()==='GET'&&request.url().endsWith(`/chapters/${chapterId}/comments`))reloads++;});
     await delayedSave(page,`/books/${book.id}/chapters/${chapterId}/comments`,'.ww-studio-comment form',()=>card.getByRole('button',{name:'Post reply',exact:true}).click());await expect(card).toHaveCount(0);
-    await page.getByRole('button',{name:'Replied',exact:true}).click();await expect(card).toHaveCount(1);await expect(card).toContainText('Thank you for noticing that detail.');
+    await page.getByRole('button',{name:/^Replied(?: \d+)?$/,exact:true}).click();await expect(card).toHaveCount(1);await expect(card).toContainText('Thank you for noticing that detail.');
     await expect(page.getByText('Loading reader conversations…',{exact:true})).not.toBeVisible();expect(reloads).toBe(0);
     const replies=await api(request,`/books/${book.id}/chapters/${chapterId}/comments`);expect(replies.some((reply:any)=>reply.content==='Thank you for noticing that detail.'&&reply.parentId)).toBeTruthy();
 });

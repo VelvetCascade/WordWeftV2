@@ -624,3 +624,18 @@ html .ww-app .ww-writer-v2 .ww-editor-title-block > textarea { display: block; w
   .ww-editor-scanner h2 { font-size: 21px; }
   .ww-editor-scanner > footer { padding: 15px 20px; }
 }
+
+/* Context belongs to the review, not to an unexplained name chip. */
+.ww-character-suggestions { display: grid; gap: 10px; }
+.ww-character-suggestions > button { width: 100%; padding: 14px; border: 1px solid var(--studio-line); border-radius: 7px; background: var(--studio-surface); color: var(--studio-ink); text-align: left; transition: border-color 120ms ease, background-color 120ms ease; }
+.ww-character-suggestions > button[aria-pressed=true] { border-color: var(--studio-blue); background: var(--studio-blue-soft); }
+.ww-character-suggestions > button:disabled { cursor: wait; opacity: .65; }
+.ww-character-suggestion-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.ww-character-suggestion-heading strong { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.ww-character-suggestion-heading > span:last-child { margin-left: auto; color: var(--studio-muted); font-size: 11px; }
+.ww-character-suggestion-check { display: grid; flex: 0 0 20px; place-items: center; width: 20px; height: 20px; border: 1px solid var(--studio-line); border-radius: 4px; background: var(--studio-paper); }
+button[aria-pressed=true] .ww-character-suggestion-check { border-color: var(--studio-blue); background: var(--studio-blue); color: #fff; }
+.ww-character-suggestion-context { display: grid; gap: 6px; margin-top: 10px; color: var(--studio-muted); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.ww-character-suggestion-context q { color: var(--studio-ink); font-size: 13px; }
+.ww-character-suggestions > .ww-character-suggestions-more { text-align: center; font-size: 13px; }
+.ww-editor-scanner-empty button { display: block; margin-top: 12px; min-height: 44px; color: var(--studio-blue); text-decoration: underline; }

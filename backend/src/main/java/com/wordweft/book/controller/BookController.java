@@ -66,6 +66,8 @@ public class BookController {
     @Autowired
     ChapterRevisionService chapterRevisionService;
     @Autowired
+    com.wordweft.book.service.ChapterOrganizationService chapterOrganizationService;
+    @Autowired
     ChapterContentService chapterContentService;
     @Autowired
     com.wordweft.book.service.ChapterWriteService chapterWriteService;
@@ -86,11 +88,12 @@ public class BookController {
     }
 
     private String getCurrentUserId() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
         if (principal instanceof UserDetailsImpl) {
             return ((UserDetailsImpl) principal).getId();
         }
-        throw new RuntimeException("User not authenticated");
+        throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Sign in to manage this story.");
     }
 
     private String getOptionalCurrentUserId() {
@@ -247,6 +250,36 @@ public class BookController {
                 "user", userService.getUserProfile(userId)));
     }
 
+    @PostMapping(value = "/{bookId}/import/preflight", consumes = "multipart/form-data")
+    public ResponseEntity<?> preflightManuscript(@PathVariable String bookId, @RequestPart("file") MultipartFile file) throws java.io.IOException {
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(manuscriptImportService.preflight(getCurrentUserId(), bookId, file.getOriginalFilename(), file.getBytes()));
+    }
+
+    public record UndoImportRequest(String importId) {}
+    @PostMapping("/{bookId}/import/undo")
+    public ResponseEntity<?> undoManuscriptImport(@PathVariable String bookId, @RequestBody UndoImportRequest request) {
+        String userId = getCurrentUserId();
+        int removed = manuscriptImportService.undo(userId, bookId, request.importId());
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(Map.of("removedChapters", removed, "user", userService.getUserProfile(userId)));
+    }
+
+    @PostMapping("/{bookId}/chapters/{chapterId}/duplicate")
+    public ResponseEntity<?> duplicateChapter(@PathVariable String bookId, @PathVariable String chapterId) {
+        String userId = getCurrentUserId();
+        Chapter copy = chapterOrganizationService.duplicate(userId, bookId, chapterId);
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(Map.of("chapterId", copy.getId(), "user", userService.getUserProfile(userId)));
+    }
+
+    public record ChapterOrderRequest(List<String> chapterIds) {}
+    @PutMapping("/{bookId}/chapters/order")
+    public ResponseEntity<?> reorderChapters(@PathVariable String bookId, @RequestBody ChapterOrderRequest request) {
+        String userId = getCurrentUserId();
+        chapterOrganizationService.reorder(userId, bookId, request.chapterIds());
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(userService.getUserProfile(userId));
+    }
+
     @PostMapping(value = "/{bookId}/chapters/images", consumes = "multipart/form-data")
     public ResponseEntity<?> uploadChapterImage(
             @PathVariable String bookId,
@@ -293,9 +326,6 @@ public class BookController {
             User author = userRepository.findById(userDetails.getId()).orElse(null);
             contentAccessService.validateAuthorCanPostRating(author, book.getAgeRating());
         }
-        if (book.getCoverUrl() == null || book.getCoverUrl().isEmpty()) {
-            book.setCoverUrl("https://picsum.photos/seed/" + System.currentTimeMillis() + "/400/600");
-        }
         bookRepository.save(book);
 
         return ResponseEntity.ok(userService.getUserProfile(userDetails.getId()));
@@ -303,7 +333,29 @@ public class BookController {
 
     // Update Book Details (Title, Description, Cover)
     @PatchMapping("/{bookId}")
-    public ResponseEntity<?> updateBookDetails(@PathVariable String bookId, @RequestBody Book updates) {
+    public ResponseEntity<?> patchBookDetails(@PathVariable String bookId, @RequestBody Map<String, Object> payload) {
+        final Book updates;
+        try {
+            updates = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+                    .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    .convertValue(payload, Book.class);
+        } catch (IllegalArgumentException invalid) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Check the story metadata values.");
+        }
+        // Model defaults belong to creation, not sparse metadata updates.
+        if (!payload.containsKey("genres")) updates.setGenres(null);
+        if (!payload.containsKey("tags")) updates.setTags(null);
+        if (!payload.containsKey("readingStatus")) updates.setReadingStatus(null);
+        if (!payload.containsKey("ageRating")) updates.setAgeRating(null);
+        if (!payload.containsKey("contentWarnings")) updates.setContentWarnings(null);
+        return updateBookDetails(bookId, updates, payload.containsKey("isAIGenerated"));
+    }
+
+    public ResponseEntity<?> updateBookDetails(String bookId, Book updates) {
+        return updateBookDetails(bookId, updates, true);
+    }
+
+    private ResponseEntity<?> updateBookDetails(String bookId, Book updates, boolean updateAiDeclaration) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
@@ -328,6 +380,8 @@ public class BookController {
         }
         if (updates.getGenres() != null)
             book.setGenres(updates.getGenres());
+        if (updates.getTags() != null)
+            book.setTags(updates.getTags());
         if (updates.getCategory() != null)
             book.setCategory(updates.getCategory());
         if (updates.getReadingStatus() != null) {
@@ -353,7 +407,7 @@ public class BookController {
             book.setContentWarnings(updates.getContentWarnings());
         if (updates.getCustomDisclaimer() != null)
             book.setCustomDisclaimer(updates.getCustomDisclaimer());
-        if (updates.isAIGenerated() != book.isAIGenerated())
+        if (updateAiDeclaration && updates.isAIGenerated() != book.isAIGenerated())
             book.setAIGenerated(updates.isAIGenerated());
 
         if ("published".equals(book.getPublicationStatus())) book.setLastUpdatedAt(LocalDate.now());
@@ -508,7 +562,22 @@ public class BookController {
     public ResponseEntity<List<ChapterRevision>> getChapterRevisions(
             @PathVariable String bookId,
             @PathVariable String chapterId) {
-        return ResponseEntity.ok(chapterRevisionService.list(getCurrentUserId(), bookId, chapterId));
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(chapterRevisionService.list(getCurrentUserId(), bookId, chapterId));
+    }
+
+    @GetMapping("/{bookId}/chapters/{chapterId}/revisions/{revisionId}")
+    public ResponseEntity<ChapterRevision> getChapterRevision(@PathVariable String bookId, @PathVariable String chapterId, @PathVariable String revisionId) {
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(chapterRevisionService.get(getCurrentUserId(), bookId, chapterId, revisionId));
+    }
+
+    public record CheckpointRequest(String label, Long expectedRevision) {}
+    @PostMapping("/{bookId}/chapters/{chapterId}/revisions")
+    public ResponseEntity<ChapterRevision> checkpointChapter(@PathVariable String bookId, @PathVariable String chapterId, @RequestBody(required = false) CheckpointRequest request) {
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "private, no-store").body(chapterRevisionService.checkpoint(getCurrentUserId(), bookId, chapterId, request == null ? null : request.label(), request == null ? null : request.expectedRevision()));
+    }
+
+    public ResponseEntity<?> restoreChapterRevision(String bookId, String chapterId, String revisionId, Long expectedRevision) {
+        return restoreChapterRevision(bookId, chapterId, revisionId, expectedRevision, null);
     }
 
     @PostMapping("/{bookId}/chapters/{chapterId}/revisions/{revisionId}/restore")
@@ -516,9 +585,12 @@ public class BookController {
             @PathVariable String bookId,
             @PathVariable String chapterId,
             @PathVariable String revisionId,
-            @RequestParam(required = false) Long expectedRevision) {
+            @RequestParam(required = false) Long expectedRevision,
+            @RequestParam(required = false) String mode) {
         String userId = getCurrentUserId();
-        Book committed = expectedRevision == null ? chapterRevisionService.restore(userId, bookId, chapterId, revisionId)
+        if (mode != null && !java.util.Set.of("working-draft", "withdraw").contains(mode)) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Choose working-draft or withdraw restore mode.");
+        Book committed = "working-draft".equals(mode) ? chapterRevisionService.restore(userId, bookId, chapterId, revisionId, expectedRevision, true)
+                : expectedRevision == null ? chapterRevisionService.restore(userId, bookId, chapterId, revisionId)
                 : chapterRevisionService.restore(userId, bookId, chapterId, revisionId, expectedRevision);
         return revisionResponse(userId, committed, chapterId);
     }

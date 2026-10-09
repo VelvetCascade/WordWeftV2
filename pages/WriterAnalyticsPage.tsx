@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as api from '../api/client';
 import type { WriterAnalytics, WriterStoryAnalytics } from '../types';
 import { formatRate, normalizeDailyTrend } from '../utils/writerAnalytics';
+import { navigatePath } from '../utils/navigation';
+import '../styles/writer-experience.css';
 
 const EMPTY_ANALYTICS: WriterAnalytics = {
     summary: {
@@ -23,6 +25,7 @@ const EMPTY_ANALYTICS: WriterAnalytics = {
 
 export const WriterAnalyticsPage: React.FC = () => {
     const [analytics, setAnalytics] = useState<WriterAnalytics>(EMPTY_ANALYTICS);
+    const [loadedBookId, setLoadedBookId] = useState<string | null>(null);
     const [storyOptions, setStoryOptions] = useState<WriterStoryAnalytics[]>([]);
     const [selectedBookId, setSelectedBookId] = useState(() => new URLSearchParams(window.location.search).get('book') || '');
     const [isLoading, setIsLoading] = useState(true);
@@ -30,11 +33,18 @@ export const WriterAnalyticsPage: React.FC = () => {
     const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
+        const sync = () => setSelectedBookId(new URLSearchParams(window.location.search).get('book') || '');
+        window.addEventListener('wordweft:navigate', sync);
+        window.addEventListener('popstate', sync);
+        return () => { window.removeEventListener('wordweft:navigate', sync); window.removeEventListener('popstate', sync); };
+    }, []);
+
+    useEffect(() => {
         if (!selectedBookId || storyOptions.length) return;
         let active = true;
         api.getWriterAnalytics().then(result => { if (active) setStoryOptions(result.stories); }).catch(() => {});
         return () => { active = false; };
-    }, [selectedBookId]);
+    }, [selectedBookId, refreshKey]);
 
     useEffect(() => {
         let active = true;
@@ -44,7 +54,8 @@ export const WriterAnalyticsPage: React.FC = () => {
             .then(result => {
                 if (!active) return;
                 setAnalytics(result);
-                if (!selectedBookId) setStoryOptions(result.stories);
+                setLoadedBookId(selectedBookId);
+                setStoryOptions(previous => selectedBookId && previous.length ? previous : result.stories);
             })
             .catch(failure => {
                 if (active) setError(failure instanceof Error ? failure.message : 'Could not load analytics.');
@@ -65,22 +76,8 @@ export const WriterAnalyticsPage: React.FC = () => {
         return releases;
     }, [analytics.releaseMarkers]);
 
-    if (isLoading) {
-        return <div className="ww-analytics-state" role="status">Gathering your reader signals…</div>;
-    }
-
-    if (error) {
-        return (
-            <div className="ww-analytics-state is-error">
-                <strong>Analytics could not load.</strong>
-                <p>{error}</p>
-                <button onClick={() => setRefreshKey(value => value + 1)}>Try again</button>
-            </div>
-        );
-    }
-
     return (
-        <div className="ww-writer-analytics">
+        <div className="ww-writer-analytics" aria-busy={isLoading}>
             <header className="ww-analytics-header">
                 <div>
                     <span>Reader growth</span>
@@ -89,21 +86,24 @@ export const WriterAnalyticsPage: React.FC = () => {
                 </div>
                 <label>
                     Story
-                    <select aria-label="Story" value={selectedBookId} onChange={event => setSelectedBookId(event.target.value)}>
+                    <select aria-label="Story" value={selectedBookId} onChange={event => { const params = new URLSearchParams(window.location.search); if (event.target.value) params.set('book', event.target.value); else params.delete('book'); navigatePath(`/write/analytics${params.size ? `?${params}` : ''}`); }}>
                         <option value="">All stories</option>
+                        {selectedBookId && !storyOptions.some(story => story.bookId === selectedBookId) && <option value={selectedBookId}>Selected story</option>}
                         {storyOptions.map(story => <option key={story.bookId} value={story.bookId}>{story.title}</option>)}
                     </select>
                 </label>
+                <button className="ww-analytics-refresh" onClick={() => setRefreshKey(value => value + 1)} disabled={isLoading}>{isLoading ? 'Refreshing…' : 'Refresh statistics'}</button>
             </header>
+            <div className="ww-analytics-feedback" aria-live="polite">{isLoading && <p role="status">Gathering your reader signals…</p>}{error && <p role="alert">Statistics could not load: {error}<button onClick={() => setRefreshKey(value => value + 1)}>Try again</button></p>}</div>
 
-            {storyOptions.length === 0 ? (
+            {!isLoading && !error && storyOptions.length === 0 ? (
                 <section className="ww-analytics-empty">
                     <span>01</span>
                     <h2>Publish your first story to begin.</h2>
                     <p>Analytics will appear here as readers open chapters and save their progress.</p>
                     <button onClick={() => { window.location.hash = '/write/book/create'; }}>Create a story</button>
                 </section>
-            ) : (
+            ) : loadedBookId === selectedBookId && storyOptions.length > 0 ? (
                 <>
                     <section className="ww-analytics-summary" aria-label="Analytics summary">
                         <MetricCard label="Unique readers" value={analytics.summary.uniqueReaders.toLocaleString()} note="distinct readers in the last 400 days, plus saved progress" />
@@ -186,7 +186,7 @@ export const WriterAnalyticsPage: React.FC = () => {
                         </aside>
                     </div>
                 </>
-            )}
+            ) : null}
         </div>
     );
 };

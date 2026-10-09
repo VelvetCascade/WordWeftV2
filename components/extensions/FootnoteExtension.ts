@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { createFootnoteNumberingPlugin } from '../../utils/editorFootnotes';
 
 /**
  * Footnote Extension — inline node that creates superscript footnote markers.
@@ -14,6 +15,8 @@ export const Footnote = Node.create({
     group: 'inline',
     inline: true,
     atom: true,
+
+    addProseMirrorPlugins() { return [createFootnoteNumberingPlugin()]; },
 
     addAttributes() {
         return {

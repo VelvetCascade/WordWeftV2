@@ -111,6 +111,7 @@ export interface ChapterRevision {
   content: string;
   wordCount: number;
   reason: string;
+  label?: string;
   contentWarnings?: ContentWarning[];
   disclaimerNote?: string;
   plainTextPreview: string;
@@ -397,6 +398,7 @@ export interface LibraryBook extends Book {
 
 
 export interface Character {
+  aliases?: string[];
   descriptionVisibility?: 'PUBLIC' | 'PRIVATE';
   goalVisibility?: 'PUBLIC' | 'PRIVATE';
   spoilerDetails?: string;
