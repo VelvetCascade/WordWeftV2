@@ -20,4 +20,8 @@ Evidence: `/tmp/ww-compare-{tense,serene,eerie,triumphant}.png` combines each so
 **Remaining test gap**
 - Physical iPhone/WebKit performance was not measured; mobile checks used Chromium at phone widths. Motion phase and live manuscript wrapping naturally vary from the still concepts.
 
+**Serene / Triumphant visibility follow-up**
+- User requested stronger presence for these two moods only. Serene now has three broader, higher-contrast contours; Triumphant uses six elongated amber light strokes per desktop margin and six across mobile. Other mood treatments and reader controls are unchanged.
+- Before/after evidence: `/tmp/ww-fuller-compare-{serene,triumphant}.png`, with current captures at `/tmp/ww-fuller-built-{serene,triumphant}-{1920,390}.png`. Same authenticated chapter, light appearance, 1x density and proportional comparison scaling. Mobile/desktop, sepia/dark, intensity and writer-preview journeys pass. Extra transparent padding was trimmed from the amber export to preserve its intended visible size. No actionable P0/P1/P2 findings remain; page errors in current captures: none.
+
 final result: passed

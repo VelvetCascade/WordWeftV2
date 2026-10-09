@@ -68,7 +68,7 @@ const PARTICLES: Record<MoodType, { image: string; count: number; duration: numb
     romantic: { image: 'petal', count: 12, duration: 10 },
     eerie: { image: 'light-mote', count: 0, duration: 24 },
     tense: { image: 'shadow-trace', count: 2, duration: 6 },
-    triumphant: { image: 'light-mote', count: 4, duration: 7 },
+    triumphant: { image: 'amber-stroke', count: 6, duration: 7 },
     serene: { image: 'light-mote', count: 0, duration: 10 },
 };
 const Layer: React.FC<{ mood: MoodType; open: boolean }> = ({ mood, open }) => {
@@ -82,7 +82,7 @@ const Layer: React.FC<{ mood: MoodType; open: boolean }> = ({ mood, open }) => {
             </div>)}
         </div>}
         {mood === 'serene' && <div className="ww-atmosphere-water">
-            {[0, 1].map(index => <img key={index} className={`ww-atmosphere-ripple ww-atmosphere-ripple-${index}`} src="/assets/atmospheres/water-ripple.webp" alt="" width="768" height="768" decoding="async" />)}
+            {[0, 1, 2].map(index => <img key={index} className={`ww-atmosphere-ripple ww-atmosphere-ripple-${index}`} src="/assets/atmospheres/water-ripple.webp" alt="" width="768" height="768" decoding="async" />)}
         </div>}
         {['left', 'right'].map(side => <div key={side} className={`ww-atmosphere-edge ww-atmosphere-edge-${side}`}>
             {Array.from({ length: particles.count }, (_, index) => <div key={index} className="ww-ambient-detail" style={{ '--detail-x': `${4 + (((index + (side === 'right' ? 3 : 0)) * 19) % 76)}%`, '--detail-y': `${6 + ((index * 17) % 82)}%`, '--detail-delay': `${-(index + (side === 'right' ? .7 : 0)) * 2.3}s`, '--detail-duration': `${particles.duration + (index % 7) * (mood === 'melancholy' ? .18 : .7)}s`, '--detail-rotation': `${index * 37}deg` } as React.CSSProperties}>
