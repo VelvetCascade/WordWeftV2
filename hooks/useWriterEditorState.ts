@@ -1,5 +1,6 @@
 import { useEditorState, type Editor } from '@tiptap/react';
 import { editorSelectionContext } from '../utils/editorSelectionContext';
+import { canMakePullQuote } from '../utils/editorStructuredBlocks';
 
 /** Subscribe the controls, not the manuscript, to meaningful editor state changes. */
 export function useWriterEditorState(editor: Editor | null) {
@@ -15,6 +16,8 @@ export function useWriterEditorState(editor: Editor | null) {
             table: current.isActive('table'), blockquote: current.isActive('blockquote'),
             codeBlock: current.isActive('codeBlock'), details: current.isActive('details'),
             pullQuote: current.isActive('pullQuote'),
+            canPullQuote: canMakePullQuote(current.state),
+            canChangeStyle: current.can().setParagraph() || current.can().setHeading({ level: 2 }),
             canBold: current.can().toggleBold(), canItalic: current.can().toggleItalic(),
             canUnderline: current.can().toggleUnderline(), canStrike: current.can().toggleStrike(),
             canCode: current.can().toggleCode(), canSpoiler: current.can().toggleSpoiler(),

@@ -202,7 +202,7 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
                 <ToolbarGroup label="Text formatting" primary>
                     <label className="rte-block-style-label">
                         <span className="sr-only">Text style</span>
-                        <select value={currentBlockStyle} onChange={(event) => setBlockStyle(event.target.value)} aria-label="Text style" disabled={currentBlockStyle === 'image'}>
+                        <select value={currentBlockStyle} onChange={(event) => setBlockStyle(event.target.value)} aria-label="Text style" disabled={!context.canChangeStyle || currentBlockStyle === 'image'}>
                             {currentBlockStyle === 'image' && <option value="image">Image selected</option>}
                             {currentBlockStyle === 'mixed' && <option value="mixed" disabled>Mixed styles</option>}
                             {currentBlockStyle === 'code-block' && <option value="code-block" disabled>Code block</option>}
@@ -272,7 +272,7 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
                     <ToolbarButton onClick={() => (editor.chain().focus() as any).setDetails().run()} isActive={context.details} title="Collapsible section">
                         <DetailsIcon />
                     </ToolbarButton>
-                    <ToolbarButton onClick={() => (editor.chain().focus() as any).insertPullQuote().run()} isActive={context.pullQuote} title="Pull quote or epigraph">
+                    <ToolbarButton onClick={() => (editor.chain().focus() as any).insertPullQuote().run()} disabled={!context.canPullQuote} isActive={context.pullQuote} title="Pull quote or epigraph">
                         <PullQuoteIcon />
                     </ToolbarButton>
                 </ToolbarGroup>

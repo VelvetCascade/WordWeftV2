@@ -158,9 +158,9 @@ test('typing during a pending passage save preserves the newer note until it is 
 test('inline shelves stay private by default and preserve story context through create and save', async ({ page, request }) => {
   const saved = await request.post(`/api/library/books/${bookId}/shelves`, { headers: headers(), data: { shelfIds: [] } });
   expect(saved.ok()).toBeTruthy();
-  await open(page, `/book/${bookId}`); await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 390, height: 844 }); await open(page, `/book/${bookId}`);
   const readAction = page.locator('.ww-story-read-action'); await expect(readAction).toBeVisible();
-  expect((await readAction.boundingBox())!.y).toBeLessThan(700);
+  await expect.poll(async () => (await readAction.boundingBox())?.y ?? Infinity).toBeLessThan(700);
   await page.getByRole('button', { name: 'Organize shelves', exact: true }).click();
   const picker = page.getByRole('dialog', { name: 'Manage shelves' });
   await picker.getByText('New shelf', { exact: true }).click();

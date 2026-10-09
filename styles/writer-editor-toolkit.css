@@ -1,4 +1,5 @@
 /* Scoped writer tools: use the studio theme when present, with editor defaults. */
+.rte-document { position:relative; isolation:isolate; }
 .rte-toolkit {
   --tool-paper: var(--studio-surface, var(--ww-paper, #fff));
   --tool-ink: var(--studio-ink, var(--ww-ink, #293650));
@@ -80,3 +81,7 @@
   .rte-find-options { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .rte-toolkit *, .rte-mood-dialog *, .rte-bubble-menu * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+.rte-content .pull-quote-text:has(> br.ProseMirror-trailingBreak:only-child)::before,
+.rte-content .pull-quote-cite:has(> br.ProseMirror-trailingBreak:only-child)::before { color:var(--studio-muted); pointer-events:none; float:left; height:0; font-style:italic; }
+.rte-content .pull-quote-text:has(> br.ProseMirror-trailingBreak:only-child)::before { content:'Write a quote…'; }
+.rte-content .pull-quote-cite:has(> br.ProseMirror-trailingBreak:only-child)::before { content:'Attribution (optional)'; }

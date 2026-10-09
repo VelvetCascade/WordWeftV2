@@ -67,7 +67,7 @@ export const MoodBlock = Node.create({
 
                 // Only handle if at the end of the block and current paragraph is empty
                 const parentNode = $from.parent;
-                if (parentNode.textContent.length === 0 && parentNode.type.name === 'paragraph' && $from.index(moodDepth) === $from.node(moodDepth).childCount - 1) {
+                if ($from.depth === moodDepth + 1 && parentNode.content.size === 0 && parentNode.type.name === 'paragraph' && $from.index(moodDepth) === $from.node(moodDepth).childCount - 1) {
                     if ($from.node(moodDepth).childCount === 1) return editor.commands.unsetMoodBlock();
                     // Delete the empty paragraph and insert one after the mood block
                     const endPos = $from.end(moodDepth) + 1;
