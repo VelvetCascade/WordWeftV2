@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Flower2, Wind, CloudRain, Sunrise, Moon, Waves } from 'lucide-react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
@@ -20,6 +20,7 @@ import { Details, DetailsSummary, DetailsContent } from './extensions/DetailsExt
 import { Spoiler } from './extensions/SpoilerExtension';
 import { Footnote } from './extensions/FootnoteExtension';
 import { MoodBlock } from './extensions/MoodExtension';
+import { WriterTrailingNode } from './extensions/WriterTrailingNode';
 import { PullQuote, PullQuoteText, PullQuoteCite } from './extensions/PullQuoteExtension';
 import * as api from '../api/client';
 import { ImageCropModal } from './ImageCropModal';
@@ -27,6 +28,8 @@ import imageCompression from 'browser-image-compression';
 import { ResizableImage } from './extensions/ResizableImageExtension';
 import { useDialog } from '../hooks/useDialog';
 import '../styles/writing-controls.css';
+import '../styles/writer-editor-toolkit.css';
+import { EditorEntryButton, EditorNavigation, EditorBlockActions, preserveEditorSelection } from './EditorToolkit';
 
 // ─── SVG Icon Components ───────────────────────────────────────────
 const Icon: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -73,6 +76,9 @@ interface ToolbarButtonProps {
 const ToolbarButton: React.FC<ToolbarButtonProps> = ({ onClick, isActive, disabled, title, children }) => (
     <button
         type="button"
+        data-editor-command="true"
+        data-tool-label={title.replace(/\s*\([^)]*\)$/, '')}
+        onPointerDown={preserveEditorSelection}
         onClick={onClick}
         disabled={disabled}
         title={title}
@@ -85,7 +91,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ onClick, isActive, disabl
 );
 
 const ToolbarGroup: React.FC<{ label: string; primary?: boolean; children: React.ReactNode }> = ({ label, primary, children }) => (
-    <div className={`rte-toolbar-group ${primary ? 'rte-toolbar-group-primary' : ''}`} role="group" aria-label={label}>
+    <div className={`rte-toolbar-group ${primary ? 'rte-toolbar-group-primary' : ''}`} role="group" aria-label={label} data-label={label}>
         {children}
     </div>
 );
@@ -100,9 +106,10 @@ const MOOD_OPTIONS = [
     { mood: 'serene', Icon: Waves, label: 'Serene', detail: 'Quiet haze' },
 ] as const;
 
-const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
+const MoodPicker: React.FC<{ editor: Editor; label?: string; contextual?: boolean }> = ({ editor, label = 'Atmosphere', contextual = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const selectionRef = useRef({ from: 0, to: 0 });
+    const id = useId();
     const dialogRef = useDialog(isOpen, () => setIsOpen(false));
     const inMood = editor.isActive('moodBlock');
     const currentMood = editor.getAttributes('moodBlock').mood;
@@ -110,21 +117,20 @@ const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
         const chain = editor.chain().focus().setTextSelection(selectionRef.current).command(({ tr }) => { closeHistory(tr); return true; });
         if (action === 'remove') chain.unsetMoodBlock().run();
         else if (action === 'end') chain.endMoodBlock().run();
-        else if (inMood || selectionRef.current.from !== selectionRef.current.to) chain.setMoodBlock(mood!).run();
-        else chain.insertMoodBlock(mood!).run();
+        else chain.setMoodBlock(mood!).run();
         setIsOpen(false);
         requestAnimationFrame(() => editor.commands.focus());
     };
     return <>
-        <button type="button" onClick={() => { selectionRef.current = { from: editor.state.selection.from, to: editor.state.selection.to }; setIsOpen(!isOpen); }}
-            className={`rte-toolbar-btn ${inMood || isOpen ? 'rte-toolbar-btn-active' : ''}`} title="Set atmosphere" aria-label="Set atmosphere" aria-haspopup="dialog" aria-expanded={isOpen}><MoodIcon /></button>
+        <button type="button" onPointerDown={preserveEditorSelection} onClick={() => { selectionRef.current = { from: editor.state.selection.from, to: editor.state.selection.to }; setIsOpen(!isOpen); }}
+            className={`rte-toolbar-btn rte-atmosphere-trigger ${inMood || isOpen ? 'rte-toolbar-btn-active' : ''}`} title="Set atmosphere" aria-label={contextual ? 'Set atmosphere for selection' : label === 'Change' ? 'Change atmosphere' : 'Set atmosphere'} aria-haspopup="dialog" aria-expanded={isOpen}><MoodIcon /><span>{label}</span></button>
         {isOpen && createPortal(<div className="rte-mood-backdrop" onMouseDown={event => event.target === event.currentTarget && setIsOpen(false)}>
-            <div className="rte-mood-dialog" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="rte-mood-title" tabIndex={-1}>
-                <header><h2 id="rte-mood-title">Passage atmosphere</h2><button type="button" aria-label="Close atmosphere picker" onClick={() => setIsOpen(false)}><X size={20} aria-hidden="true" /></button></header>
-                <p>{inMood ? 'Change the atmosphere of this entire section, or continue writing outside it.' : selectionRef.current.from !== selectionRef.current.to ? 'Apply an atmosphere to the selected paragraphs. Your words stay unchanged.' : 'Start a mood section at your cursor. Write several paragraphs inside it; each chapter can have different moods.'}</p>
+            <div className="rte-mood-dialog" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} tabIndex={-1}>
+                <header><h2 id={`${id}-title`}>Passage atmosphere</h2><button type="button" aria-label="Close atmosphere picker" onClick={() => setIsOpen(false)}><X size={20} aria-hidden="true" /></button></header>
+                <p>{selectionRef.current.from !== selectionRef.current.to ? 'Apply an atmosphere to the selected paragraphs or story blocks. Partial paragraphs are included in full; surrounding paragraphs keep their atmosphere.' : inMood ? 'Change the atmosphere of this entire passage, or continue writing outside it.' : 'Apply an atmosphere to the paragraph or story block at your cursor. Continue writing inside it for a longer passage.'} Your words and formatting stay unchanged.</p>
                 <div className="rte-mood-options">{MOOD_OPTIONS.map(({ mood, Icon: Symbol, label, detail }) => <button key={mood} type="button" className={`rte-mood-option rte-mood-option--${mood}`} aria-label={label} aria-pressed={inMood && currentMood === mood} onClick={() => apply('set', mood)}><Symbol size={24} aria-hidden="true" /><span>{label}</span><small>{detail}</small></button>)}</div>
-                {inMood && <div className="rte-mood-section-actions"><button type="button" onClick={() => apply('end')}>Continue without a mood</button><button type="button" onClick={() => apply('remove')}>Remove this atmosphere</button></div>}
-                <p className="rte-mood-help">Select whole paragraphs for a passage. To finish a section, press Enter on an empty final paragraph. Check the motion in Reader preview.</p>
+                {(inMood || selectionRef.current.from !== selectionRef.current.to) && <div className="rte-mood-section-actions">{inMood && <button type="button" onClick={() => apply('end')}>Continue without a mood</button>}<button type="button" onClick={() => apply('remove')}>{selectionRef.current.from !== selectionRef.current.to ? 'Remove atmosphere from selection' : 'Remove this atmosphere'}</button></div>}
+                <p className="rte-mood-help">Lists, tables, and collapsible sections each count as one story block. To finish a passage, press Enter on an empty final paragraph. Check the motion in Reader preview.</p>
             </div>
         </div>, document.body)}
     </>;
@@ -133,18 +139,19 @@ const MoodPicker: React.FC<{ editor: Editor }> = ({ editor }) => {
 // ─── Menu Bar ──────────────────────────────────────────────────────
 const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; addImage: () => void; imageUploading: boolean }) => {
     const [showShortcuts, setShowShortcuts] = useState(false);
+    const [showMore, setShowMore] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [overflow, setOverflow] = useState(false);
+    const [scrollEnd, setScrollEnd] = useState(false);
+    useEffect(() => {
+        const element = scrollRef.current;
+        if (!element) return;
+        const update = () => { setOverflow(element.scrollWidth > element.clientWidth + 2); setScrollEnd(element.scrollLeft + element.clientWidth >= element.scrollWidth - 2); };
+        const observer = new ResizeObserver(update);
+        observer.observe(element); element.addEventListener('scroll', update); update();
+        return () => { observer.disconnect(); element.removeEventListener('scroll', update); };
+    }, [editor]);
     if (!editor) return null;
-
-    const setLink = () => {
-        const previousUrl = editor.getAttributes('link').href;
-        const url = window.prompt('Enter URL:', previousUrl);
-        if (url === null) return;
-        if (url === '') {
-            editor.chain().focus().extendMarkRange('link').unsetLink().run();
-            return;
-        }
-        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-    };
 
     const currentBlockStyle = editor.isActive('heading', { level: 1 })
         ? 'heading-1'
@@ -163,8 +170,20 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
     };
 
     return (
-        <div className="rte-toolbar" role="toolbar" aria-label="Chapter formatting">
-            <div className="rte-toolbar-scroll">
+        <div className="rte-toolbar rte-toolkit" role="toolbar" aria-label="Chapter formatting" onKeyDown={event => {
+            if (event.defaultPrevented || (event.target as HTMLElement).closest('[role="dialog"]')) return;
+            if (event.key === 'Escape') { setShowMore(false); setShowShortcuts(false); editor.commands.focus(); }
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || (event.target as HTMLElement).tagName !== 'BUTTON') return;
+            const row = (event.target as HTMLElement).closest('.rte-toolbar-main, .rte-more-tools');
+            if (!row) return;
+            const buttons = Array.from(row.querySelectorAll<HTMLButtonElement>('button:not([disabled])')).filter(button => button.getClientRects().length);
+            const index = buttons.indexOf(event.target as HTMLButtonElement);
+            if (index < 0 || !buttons.length) return;
+            event.preventDefault(); buttons[(index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length].focus();
+        }}>
+            <div className="rte-toolbar-main">
+            <div className="rte-toolbar-scroll-wrap">
+            <div ref={scrollRef} className="rte-toolbar-scroll" aria-label="Core formatting; scroll for more options">
                 <ToolbarGroup label="Text formatting" primary>
                     <label className="rte-block-style-label">
                         <span className="sr-only">Text style</span>
@@ -189,6 +208,21 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
                     </ToolbarButton>
                 </ToolbarGroup>
 
+                <MoodPicker editor={editor} />
+                <EditorEntryButton editor={editor} kind="link" shortcut><LinkIconSvg /></EditorEntryButton>
+            </div>
+            {overflow && <button className="rte-scroll-cue" type="button" onPointerDown={preserveEditorSelection} aria-label={scrollEnd ? 'Scroll to first formatting tools' : 'Scroll to more formatting tools'} onClick={() => scrollRef.current?.scrollBy({ left: scrollEnd ? -scrollRef.current.scrollWidth : 180, behavior: 'auto' })}>{scrollEnd ? '‹' : '›'}</button>}
+            </div>
+            <EditorNavigation editor={editor} />
+            <div className="rte-toolbar-pinned" role="group" aria-label="History and more tools">
+                <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl/Cmd+Z)"><UndoIcon /></ToolbarButton>
+                <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl/Cmd+Shift+Z)"><RedoIcon /></ToolbarButton>
+                <button type="button" onPointerDown={preserveEditorSelection} className="rte-more-trigger" onClick={() => setShowMore(!showMore)} aria-expanded={showMore} aria-controls="rte-more-tools">More <span aria-hidden="true">{showMore ? '−' : '+'}</span></button>
+            </div>
+            </div>
+            {showMore && <div className="rte-more-tools" id="rte-more-tools" onClick={event => {
+                if ((event.target as HTMLElement).closest('button[data-editor-command]')) setShowMore(false);
+            }}>
                 <ToolbarGroup label="More text options">
                     <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline code">
                         <CodeIcon />
@@ -223,13 +257,9 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
                     <ToolbarButton onClick={() => (editor.chain().focus() as any).insertPullQuote().run()} isActive={editor.isActive('pullQuote')} title="Pull quote or epigraph">
                         <PullQuoteIcon />
                     </ToolbarButton>
-                    <MoodPicker editor={editor} />
                 </ToolbarGroup>
 
                 <ToolbarGroup label="Insert">
-                    <ToolbarButton onClick={setLink} isActive={editor.isActive('link')} title="Add link">
-                        <LinkIconSvg />
-                    </ToolbarButton>
                     {editor.isActive('link') && (
                         <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} title="Remove link">
                             <UnlinkIcon />
@@ -241,21 +271,9 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
                     <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Insert table">
                         <TableIconSvg />
                     </ToolbarButton>
-                    <ToolbarButton onClick={() => {
-                        const note = window.prompt('Enter footnote / author\'s note:');
-                        if (note) (editor.chain().focus() as any).insertFootnote({ note }).run();
-                    }} title="Add footnote">
-                        <FootnoteIcon />
-                    </ToolbarButton>
+                    <EditorEntryButton editor={editor} kind="footnote"><FootnoteIcon /></EditorEntryButton>
                 </ToolbarGroup>
 
-                <ToolbarGroup label="History and help">
-                    <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl+Z)">
-                        <UndoIcon />
-                    </ToolbarButton>
-                    <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Shift+Z)">
-                        <RedoIcon />
-                    </ToolbarButton>
                     <button
                         type="button"
                         className={`rte-toolbar-help ${showShortcuts ? 'active' : ''}`}
@@ -267,8 +285,15 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
                         <span aria-hidden="true">?</span>
                         <span>Shortcuts</span>
                     </button>
-                </ToolbarGroup>
-            </div>
+            </div>}
+            {editor.isActive('moodBlock') && <div className="rte-atmosphere-context" role="group" aria-label="Current passage atmosphere">
+                <span>{MOOD_OPTIONS.find(option => option.mood === editor.getAttributes('moodBlock').mood)?.label || 'Passage'} atmosphere</span>
+                <MoodPicker editor={editor} label="Change" />
+                <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().unsetMoodBlock().run()}>Remove atmosphere</button>
+                <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().endMoodBlock().run()}>Continue without atmosphere</button>
+                <small>{editor.state.selection.empty ? 'Whole passage' : 'Selected blocks'}</small>
+            </div>}
+            <EditorBlockActions editor={editor} />
 
             {editor.isActive('table') && (
                 <div className="rte-table-toolbar" role="toolbar" aria-label="Table editing">
@@ -284,10 +309,16 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
 
             {showShortcuts && (
                 <div id="rte-shortcuts-panel" className="rte-shortcuts-panel" role="status">
-                    <span><kbd>Ctrl</kbd> + <kbd>B</kbd> Bold</span>
-                    <span><kbd>Ctrl</kbd> + <kbd>I</kbd> Italic</span>
-                    <span><kbd>Ctrl</kbd> + <kbd>U</kbd> Underline</span>
-                    <span><kbd>Ctrl</kbd> + <kbd>Z</kbd> Undo</span>
+                    <span>Use Ctrl on Windows/Linux, ⌘ on Mac.</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>B</kbd> Bold</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>I</kbd> Italic</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>U</kbd> Underline</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>Z</kbd> Undo</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> Redo</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>F</kbd> Find / replace</span>
+                    <span><kbd>Ctrl/⌘</kbd> + <kbd>K</kbd> Link</span>
+                    <span><kbd>Esc</kbd> Close a tool panel</span>
+                    <span>Atmosphere: Enter on an empty final paragraph to exit.</span>
                     <span>Select text for quick formatting</span>
                 </div>
             )}
@@ -299,28 +330,24 @@ const MenuBar = ({ editor, addImage, imageUploading }: { editor: Editor | null; 
 const BubbleMenuContent: React.FC<{ editor: Editor }> = ({ editor }) => {
     return (
         <>
-            <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'is-active' : ''} title="Bold">
+            <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'is-active' : ''} title="Bold" aria-label="Bold">
                 <BoldIcon />
             </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'is-active' : ''} title="Italic">
+            <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'is-active' : ''} title="Italic" aria-label="Italic">
                 <ItalicIcon />
             </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={editor.isActive('underline') ? 'is-active' : ''} title="Underline">
+            <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().toggleUnderline().run()} className={editor.isActive('underline') ? 'is-active' : ''} title="Underline" aria-label="Underline">
                 <UnderlineIcon />
             </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'is-active' : ''} title="Strikethrough">
+            <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'is-active' : ''} title="Strikethrough" aria-label="Strikethrough">
                 <StrikethroughIcon />
             </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={editor.isActive('code') ? 'is-active' : ''} title="Inline Code">
+            <button type="button" onPointerDown={preserveEditorSelection} onClick={() => editor.chain().focus().toggleCode().run()} className={editor.isActive('code') ? 'is-active' : ''} title="Inline Code" aria-label="Inline Code">
                 <CodeIcon />
             </button>
-            <button type="button" onClick={() => {
-                const url = window.prompt('Enter URL:');
-                if (url) editor.chain().focus().setLink({ href: url }).run();
-            }} className={editor.isActive('link') ? 'is-active' : ''} title="Link">
-                <LinkIconSvg />
-            </button>
-            <button type="button" onClick={() => (editor.chain().focus() as any).toggleSpoiler().run()} className={editor.isActive('spoiler') ? 'is-active' : ''} title="Spoiler">
+            <EditorEntryButton editor={editor} kind="link"><LinkIconSvg /></EditorEntryButton>
+            <MoodPicker editor={editor} contextual />
+            <button type="button" onPointerDown={preserveEditorSelection} onClick={() => (editor.chain().focus() as any).toggleSpoiler().run()} className={editor.isActive('spoiler') ? 'is-active' : ''} title="Spoiler" aria-label="Spoiler">
                 <SpoilerIcon />
             </button>
         </>
@@ -357,6 +384,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const [imageUploadError, setImageUploadError] = useState('');
     const [retryImageFile, setRetryImageFile] = useState<File | null>(null);
     const imageUploadingRef = useRef(false);
+    const externalValueRef = useRef(value);
 
     // Use a ref so the mention suggestion always sees the *latest* characters,
     // even though useEditor freezes extensions config at mount time.
@@ -418,7 +446,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 heading: { levels: [1, 2, 3] },
                 link: false,
                 underline: false,
+                trailingNode: false,
             }),
+            WriterTrailingNode,
             Underline,
             ResizableImage,
             Link.configure({
@@ -495,6 +525,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }, [editor, readOnly]);
 
     useEffect(() => {
+        // Tiptap normalizes HTML attributes/classes at its first parse. Reapplying
+        // the same server value is not an edit and can activate append plugins.
+        if (!editor || externalValueRef.current === value) return;
+        externalValueRef.current = value;
         if (editor && editor.getHTML() !== value) {
             if (editor.isEmpty && value === '<p></p>') return;
             if (!editor.isFocused) {

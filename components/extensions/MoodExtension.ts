@@ -1,6 +1,8 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { isMood } from '../../utils/atmosphere';
 import { TextSelection } from '@tiptap/pm/state';
+import { atmosphereTransaction } from '../../utils/editorAtmosphere';
+import { closeHistory } from '@tiptap/pm/history';
 
 /**
  * Mood Block Extension — wraps content in an atmosphere/mood container.
@@ -66,7 +68,7 @@ export const MoodBlock = Node.create({
                 // Only handle if at the end of the block and current paragraph is empty
                 const parentNode = $from.parent;
                 if (parentNode.textContent.length === 0 && parentNode.type.name === 'paragraph' && $from.index(moodDepth) === $from.node(moodDepth).childCount - 1) {
-                    if ($from.node(moodDepth).childCount === 1) return editor.commands.lift(this.name);
+                    if ($from.node(moodDepth).childCount === 1) return editor.commands.unsetMoodBlock();
                     // Delete the empty paragraph and insert one after the mood block
                     const endPos = $from.end(moodDepth) + 1;
                     const { tr } = state;
@@ -101,8 +103,8 @@ export const MoodBlock = Node.create({
                 if (moodDepth < 0) return false;
 
                 // Only act if cursor is at the very beginning of the mood block's content
-                if ($from.parentOffset === 0 && $from.index(moodDepth) === 0) {
-                    return editor.commands.lift(this.name);
+                if ($from.parentOffset === 0 && $from.index(moodDepth) === 0 && $from.index(moodDepth + 1) === 0) {
+                    return editor.commands.unsetMoodBlock();
                 }
 
                 return false;
@@ -112,14 +114,21 @@ export const MoodBlock = Node.create({
 
     addCommands() {
         return {
-            unsetMoodBlock: () => ({ commands }) => commands.lift(this.name),
+            unsetMoodBlock: () => ({ state, dispatch }) => {
+                const tr = atmosphereTransaction(state, null);
+                if (!tr) return false;
+                if (dispatch) dispatch(tr);
+                return true;
+            },
             endMoodBlock: () => ({ state, dispatch }) => {
                 const { $from } = state.selection;
-                for (let depth = $from.depth; depth > 0; depth--) {
+                for (let depth = 1; depth <= $from.depth; depth++) {
                     if ($from.node(depth).type.name !== this.name) continue;
                     const position = $from.after(depth);
                     if (dispatch) {
-                        const tr = state.tr.insert(position, state.schema.nodes.paragraph.create());
+                        const next = state.doc.nodeAt(position);
+                        const tr = closeHistory(state.tr);
+                        if (!next || next.type.name !== 'paragraph' || next.content.size !== 0) tr.insert(position, state.schema.nodes.paragraph.create());
                         tr.setSelection(TextSelection.near(tr.doc.resolve(position + 1)));
                         dispatch(tr.scrollIntoView());
                     }
@@ -127,9 +136,12 @@ export const MoodBlock = Node.create({
                 }
                 return false;
             },
-            setMoodBlock: (mood: string) => ({ commands, editor }) => {
+            setMoodBlock: (mood: string) => ({ state, dispatch }) => {
                 if (!isMood(mood)) return false;
-                return editor.isActive(this.name) ? commands.updateAttributes(this.name, { mood }) : commands.wrapIn(this.name, { mood });
+                const tr = atmosphereTransaction(state, mood);
+                if (!tr) return false;
+                if (dispatch) dispatch(tr);
+                return true;
             },
             insertMoodBlock: (mood: string) => ({ commands }) => {
                 if (!isMood(mood)) return false;

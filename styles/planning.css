@@ -23,3 +23,36 @@
 .ww-studio-comments .ww-studio-comment form .ww-draft-notice { justify-content:space-between; align-items:center; flex-wrap:wrap; }
 
 .ww-planning-edit-fields { min-width:0; margin:0; padding:0; border:0; }
+
+.ww-planning-controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:20px 0; }
+.ww-planning-controls label { display:grid; gap:6px; flex:1 1 170px; min-width:0; font-size:.8rem; font-weight:600; }
+.ww-planning-controls label:first-child { flex-grow:2; }
+.ww-planning-controls :is(input,select) { width:100%; min-width:0; min-height:44px; padding:10px 12px; border:1px solid var(--ww-line-strong,#c6bbb0); border-radius:10px; background:transparent; color:inherit; font-weight:400; }
+.ww-planning-controls :is(input,select):focus-visible,.ww-story-tool button:focus-visible,.ww-note-editor-expanded button:focus-visible { outline:2px solid var(--ww-brand,#ad5f43); outline-offset:3px; }
+.ww-planning-badges { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 14px; font-size:.7rem; line-height:1.5; }
+.ww-planning-badges span { padding:3px 8px; border:1px solid var(--ww-line,#c6bbb055); border-radius:999px; max-width:100%; overflow-wrap:anywhere; color:var(--ww-text-muted,inherit); }
+.ww-planning-aliases,.ww-planning-help { margin:10px 0 16px; font-size:.8rem; line-height:1.6; color:var(--ww-text-muted,inherit); overflow-wrap:anywhere; }
+.ww-planning-scope { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.ww-planning-scope button { min-height:44px; padding:8px 12px; border:1px solid var(--ww-line-strong,#c6bbb0); border-radius:999px; font-size:.8rem; }
+.ww-planning-scope button[aria-pressed=true] { background:var(--ww-brand,#9b5138); color:var(--ww-on-brand,#fff); border-color:var(--ww-brand,#9b5138); }
+.ww-story-tool button:disabled { cursor:default; opacity:.55; }
+.ww-planning-load { padding:14px 0; font-size:.875rem; line-height:1.6; }
+.ww-planning-load button,.ww-planning-no-results button { text-decoration:underline; min-height:44px; padding:8px 12px; }
+.ww-planning-no-results { font-size:.875rem; padding:12px 0; }
+.ww-note-editor-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+.ww-note-editor-heading h4 { font-weight:600; }
+.ww-note-editor-heading button { min-height:44px; padding:8px 12px; border:1px solid var(--ww-line-strong,#c6bbb0); border-radius:10px; font-size:.8rem; }
+.ww-planning-field .ww-note-content { min-height:220px; }
+.ww-note-card-content,.ww-story-tool article { overflow-wrap:anywhere; }
+.ww-note-editor-expanded { position:fixed; inset:32px; max-width:980px; margin:auto; z-index:70; overflow:auto; overscroll-behavior:contain; padding:18px; background:var(--ww-paper,#fffdf9); color:inherit; border:1px solid var(--ww-line-strong,#c6bbb0); border-radius:20px; box-shadow:0 0 0 100vmax #17120dcc,0 24px 70px #17120d55; }
+.dark .ww-note-editor-expanded { background:var(--ww-paper,#211d1b); }
+.ww-note-editor-expanded .ww-planning-form { border:0; margin:0; padding:12px; }
+.ww-note-editor-expanded .ww-note-content { min-height:45vh; }
+.ww-note-editor-expanded .ww-planning-actions { position:sticky; bottom:0; background:var(--ww-paper,#fffdf9); }
+.dark .ww-note-editor-expanded .ww-planning-actions { background:var(--ww-paper,#211d1b); }
+.ww-editor-world-guide.ww-guide-manage { max-width:720px; }
+.ww-guide-manage .ww-story-tool-heading { margin-bottom:16px; padding-bottom:16px; }
+@media(max-width:760px) { .ww-note-editor-expanded { inset:8px; padding:8px; border-radius:14px; }.ww-note-editor-expanded .ww-note-content { min-height:38vh; }.ww-planning-controls label { flex-basis:100%; }.ww-planning-scope button { flex:1; }.ww-planning-field :is(input,textarea,select),.ww-planning-controls :is(input,select) { font-size:16px; } }
+@media(prefers-reduced-motion:reduce) { .ww-story-tool *, .ww-note-editor-expanded * { scroll-behavior:auto; transition:none!important; animation:none!important; } }
+
+.ww-writer-v2 .ww-editor-world-guide.ww-guide-manage { width:min(720px,100vw); }

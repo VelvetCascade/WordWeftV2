@@ -31,7 +31,7 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
 
         // 1. Extract Names
         const commonWords = new Set(['The', 'A', 'An', 'He', 'She', 'It', 'They', 'We', 'I', 'You', 'But', 'And', 'Or', 'So', 'Because', 'At', 'In', 'On', 'For', 'With', 'To', 'From']);
-        const existingNames = new Set(charactersRef.current.map(c => c.name.toLowerCase()));
+        const existingNames = new Set(charactersRef.current.flatMap(c => [c.name, ...(c.aliases || [])]).map(name => name.toLowerCase()));
         
         // Find Title Case words (not at start of a sentence if possible, but basic regex is fine for heuristic)
         const wordRegex = /\b[A-Z][a-z]+\b/g;
@@ -72,7 +72,7 @@ export const SmartPasteAssistant: React.FC<SmartPasteAssistantProps> = ({
         setIsProcessing(true);
         setError('');
         try {
-            const existingNames = new Set(existingCharacters.map(character => character.name.toLowerCase()));
+            const existingNames = new Set(existingCharacters.flatMap(character => [character.name, ...(character.aliases || [])]).map(name => name.toLowerCase()));
             const namesToAdd = Array.from(selectedNames).filter(name => !existingNames.has(name.toLowerCase()));
             if (namesToAdd.length > 0) {
                 await onAddCharacters(namesToAdd);

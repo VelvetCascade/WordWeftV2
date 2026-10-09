@@ -1,0 +1,81 @@
+/* Scoped writer tools: use the studio theme when present, with editor defaults. */
+.rte-toolkit {
+  --tool-paper: var(--studio-surface, var(--ww-paper, #fff));
+  --tool-ink: var(--studio-ink, var(--ww-ink, #293650));
+  --tool-muted: var(--studio-muted, var(--ww-muted, #62718c));
+  --tool-line: var(--studio-line, var(--ww-line, #dce2ec));
+  --tool-soft: var(--studio-canvas, var(--ww-canvas, #f5f7fb));
+  --tool-accent: var(--studio-accent, #344e83);
+  font-family: Rubik, sans-serif;
+}
+.dark .rte-toolkit { --tool-paper: var(--studio-surface, #202a39); --tool-ink: var(--studio-ink, #edf0f5); --tool-muted: var(--studio-muted, #a8b2c2); --tool-line: var(--studio-line, #344155); --tool-soft: var(--studio-canvas, #171e2a); --tool-accent: #aabde8; }
+.rte-toolkit .rte-toolbar-main { display: flex; align-items: center; gap: 6px; padding: 5px 8px; min-width: 0; }
+.rte-toolkit .rte-toolbar-scroll-wrap { position: relative; flex: 1 1 auto; min-width: 0; }
+.rte-toolkit .rte-toolbar-scroll { padding: 2px 26px 2px 0 !important; min-height: 44px !important; gap: 5px !important; scrollbar-width: thin !important; }
+.rte-toolkit .rte-toolbar-scroll::-webkit-scrollbar { display: block !important; height: 3px; }
+.rte-toolkit .rte-toolbar-group-primary { position: static !important; margin-left: 0 !important; background: transparent !important; box-shadow: none !important; }
+.rte-toolkit .rte-toolbar-pinned { display: flex; align-items: center; flex: 0 0 auto; gap: 2px; border-left: 1px solid var(--tool-line); padding-left: 5px; }
+.rte-toolkit .rte-scroll-cue { position: absolute; z-index: 3; right: 0; top: 0; bottom: 3px; width: 25px; min-height: 40px; color: var(--tool-accent); background: var(--tool-paper); box-shadow: -6px 0 8px -5px var(--tool-muted); font-size: 25px; border-left: 1px solid var(--tool-line); }
+.rte-toolkit .rte-toolbar-btn { min-width: 40px; min-height: 40px; flex-shrink: 0; }
+.rte-toolkit .rte-atmosphere-trigger { width: auto !important; flex-basis: auto !important; gap: 6px; padding: 0 9px; font-size: 11px; }
+.rte-toolkit .rte-atmosphere-trigger:not(.rte-toolbar-btn-active) { color: var(--tool-ink) !important; }
+.rte-toolkit .rte-atmosphere-trigger.rte-toolbar-btn-active { color: #fff !important; background: #344e83 !important; }
+.rte-toolkit .rte-navigation { display: contents; }
+.rte-navigation-buttons { display: flex; flex: 0 0 auto; gap: 2px; }
+.rte-toolkit .rte-navigation-buttons button, .rte-toolkit .rte-more-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 8px; color: var(--tool-muted); font-size: 11px; border-radius: 5px; }
+.rte-toolkit button:focus-visible, .rte-toolkit input:focus-visible, .rte-toolkit select:focus-visible { outline: 2px solid var(--tool-accent); outline-offset: 2px; }
+.rte-toolkit .rte-more-trigger[aria-expanded=true], .rte-toolkit .rte-navigation-buttons button[aria-expanded=true] { background: var(--tool-soft); color: var(--tool-accent); }
+.rte-toolkit .rte-more-tools { display: grid; grid-template-columns: repeat(auto-fit,minmax(175px,1fr)); align-items: start; gap: 14px; max-height: min(360px,45dvh); overflow-y: auto; overscroll-behavior-y: contain; padding: 12px; background: var(--tool-paper); border-top: 1px solid var(--tool-line); }
+.rte-toolkit .rte-more-tools .rte-toolbar-group { position: relative; flex-wrap: wrap; justify-content: flex-start; align-items: flex-start; padding-top: 19px; gap: 3px; border-right: 0; min-width: 0; }
+.rte-toolkit .rte-more-tools .rte-toolbar-group::before { content: attr(data-label); position: absolute; top: 0; left: 3px; color: var(--tool-muted); font-size: 10px; white-space: nowrap; }
+.rte-toolkit .rte-more-tools .rte-toolbar-btn[data-tool-label] { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 7px; flex: 1 1 78px !important; width: auto !important; max-width: 115px; min-height: 66px !important; height: auto !important; padding: 8px 5px; }
+.rte-toolkit .rte-more-tools .rte-toolbar-btn[data-tool-label]:not(.rte-toolbar-btn-active) { color: var(--tool-ink) !important; }
+.rte-toolkit .rte-more-tools .rte-toolbar-btn[data-tool-label]::after { content: attr(data-tool-label); font-size: 11px; line-height: 1.45; text-align: center; white-space: normal; overflow-wrap: anywhere; }
+.rte-toolkit .rte-atmosphere-context { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; padding: 5px 12px; border-top: 1px solid var(--tool-line); background: var(--tool-paper); color: var(--tool-muted); font-size: 11px; }
+.rte-toolkit .rte-atmosphere-context > span { color: var(--tool-ink); font-weight: 500; }
+.rte-toolkit .rte-atmosphere-context > button { padding: 0 8px; min-height: 44px; border: 1px solid var(--tool-line); border-radius: 5px; }
+.rte-toolkit .rte-atmosphere-context > small { margin-left: auto; font-size: 10px; }
+.rte-toolkit .rte-tool-panel { position: absolute; top: 100%; right: 0; z-index: 35; width: min(570px, 100%); max-height: min(460px, 65dvh); overflow: auto; padding: 16px; border: 1px solid var(--tool-line); border-radius: 0 0 8px 8px; background: var(--tool-paper); color: var(--tool-ink); box-shadow: 0 12px 24px #17203119; font-size: 12px; }
+.rte-tool-panel > header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.rte-tool-panel button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 9px; border: 1px solid var(--tool-line); border-radius: 5px; white-space: nowrap; }
+.rte-tool-panel button:disabled { opacity: .45; }
+.rte-tool-panel > header button { border: 0; min-width: 36px; }
+.rte-find-row { display: flex; align-items: center; gap: 6px; }
+.rte-find-row > label { flex: 0 0 49px; color: var(--tool-muted); }
+.rte-find-row input { flex: 1 1 auto; width: 0; min-width: 0; min-height: 38px; padding: 7px 9px; border: 1px solid var(--tool-line); border-radius: 5px; background: var(--tool-soft); color: var(--tool-ink); }
+.rte-find-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 12px 55px; color: var(--tool-muted); font-size: 11px; }
+.rte-find-options label { display: inline-flex; gap: 6px; align-items: center; }
+.rte-tool-panel > p { margin-top: 12px; color: var(--tool-muted); line-height: 1.7; }
+.rte-replace-confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px; margin-top: 12px; background: var(--tool-soft); border: 1px solid var(--tool-line); border-radius: 5px; }
+.rte-replace-confirm > span { flex-basis: 100%; overflow-wrap: anywhere; }
+.rte-outline-list { list-style: none; margin: 0; padding: 0; }
+.rte-outline-list li + li { margin-top: 4px; }
+.rte-outline-list button { display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left; white-space: normal; }
+.rte-outline-list span { overflow-wrap: anywhere; }
+.rte-outline-list small { color: var(--tool-muted); flex-shrink: 0; font-size: 10px; }
+.rte-content .rte-find-match { background: #e3bd5838; border-bottom: 1px solid #ba8c38; }
+.rte-content .rte-find-current { background: #e3bd5870; outline: 1px solid #ba8c38; }
+.rte-entry-dialog form { display: grid; gap: 9px; }
+.rte-entry-dialog form > label { color: var(--mood-ink); font-size: 13px; }
+.rte-entry-dialog input, .rte-entry-dialog textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--mood-line); border-radius: 6px; background: var(--mood-surface); color: var(--mood-ink); font-size: 14px; resize: vertical; }
+.rte-entry-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.rte-entry-actions button { min-height: 44px; padding: 0 15px; border: 1px solid var(--mood-line); border-radius: 6px; font-size: 13px; }
+.rte-entry-actions button[type=submit] { background: var(--mood-blue); color: var(--mood-paper); }
+.rte-tool-error { color: #b44339; font-size: 12px; }
+.rte-bubble-menu .rte-atmosphere-trigger { width: auto; gap: 5px; padding-inline: 8px; font-size: 11px; }
+.rte-bubble-menu { max-width: calc(100vw - 24px); flex-wrap: wrap; }
+@media (max-width: 620px) {
+  .rte-toolkit .rte-toolbar-main { gap: 2px; padding-inline: 6px; }
+  .rte-toolkit .rte-navigation-buttons button { width: 38px; padding: 0; }
+  .rte-navigation-buttons button > span { display: none; }
+  .rte-toolkit .rte-toolbar-pinned { gap: 0; padding-left: 2px; }
+  .rte-toolkit .rte-toolbar-pinned .rte-toolbar-btn { min-width: 36px !important; width: 36px !important; flex-basis: 36px !important; }
+  .rte-toolkit .rte-more-trigger { padding-inline: 5px; }
+  .rte-toolkit .rte-more-tools { gap: 12px; padding: 10px; }
+  .rte-toolkit .rte-tool-panel { padding: 12px; }
+  .rte-find-row { flex-wrap: wrap; }
+  .rte-find-row > label { flex-basis: 100%; }
+  .rte-find-row input { min-width: 90px; }
+  .rte-find-options { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .rte-toolkit *, .rte-mood-dialog *, .rte-bubble-menu * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }

@@ -157,7 +157,7 @@ test('phone writers can reach every formatting tool and choose an atmosphere wit
   }
   const mood = toolbar.getByRole('button', { name: /Set atmosphere/i });
   await mood.click();
-  const picker = page.getByRole('dialog', { name: 'Set chapter atmosphere', exact: true });
+  const picker = page.getByRole('dialog', { name: 'Passage atmosphere', exact: true });
   await expect(picker).toBeVisible();
   const close = picker.getByRole('button', { name: 'Close atmosphere picker', exact: true });
   await close.focus();
@@ -213,7 +213,7 @@ test('a failed character profile save keeps the review and chapter draft availab
   expect(savedUser.writtenBooks.find((book: any) => book.id === bookId).chapters.find((chapter: any) => chapter.id === chapterId).status).toBe('draft');
   await page.unroute('**/api/characters/*');
   await page.getByRole('button', { name: 'Finish & Publish', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Chapter Published!', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Chapter published', exact: true })).toBeVisible();
 });
 
 test('the first visit tour marks itself seen and can still be reopened', async ({ page, request }) => {

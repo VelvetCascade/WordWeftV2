@@ -1,30 +1,41 @@
 import { Character } from '../types';
 
-export const analyzeMentions = (html: string, characters: Character[]): { newHtml: string, count: number } => {
-    if (!html || characters.length === 0) return { newHtml: html, count: 0 };
+export const analyzeMentions = (html: string, characters: Character[]): { newHtml: string, count: number, occurrences: { name: string; label: string; count: number }[] } => {
+    if (!html || characters.length === 0) return { newHtml: html, count: 0, occurrences: [] };
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     let replacementCount = 0;
 
     // Sort characters by name length (longest first) so "Jon Snow" matches before "Jon"
-    const sortedCharacters = [...characters].sort((a, b) => b.name.length - a.name.length);
+    const nameMap = new Map<string, Character>();
+    for (const character of characters) if (character.name.trim()) nameMap.set(character.name.toLowerCase(), character);
+    const canonicalNames = new Set(nameMap.keys());
+    const ambiguous = new Set<string>();
+    for (const character of characters) for (const alias of character.aliases || []) {
+        const key = alias.trim().toLowerCase();
+        if (!key || canonicalNames.has(key) || ambiguous.has(key)) continue;
+        const existing = nameMap.get(key);
+        if (existing && existing.id !== character.id) { nameMap.delete(key); ambiguous.add(key); }
+        else nameMap.set(key, character);
+    }
 
     // Build a regex pattern: match any character name exactly, not bounded by other word characters
     // Using simple \b or word boundary checks
-    const nameMap = new Map(sortedCharacters.map(c => [c.name.toLowerCase(), c]));
     
     // Escape regex specifics
     const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const namePattern = sortedCharacters.map(c => escapeRegExp(c.name)).join('|');
-    const regex = new RegExp(`\\b(${namePattern})\\b`, 'gi');
+    const namePattern = [...nameMap.keys()].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|');
+    if (!namePattern) return { newHtml: html, count: 0, occurrences: [] };
+    const regex = new RegExp(`(?<![\\p{L}\\p{N}_])(${namePattern})(?![\\p{L}\\p{N}_])`, 'giu');
+    const occurrences = new Map<string, { name: string; label: string; count: number }>();
 
     const walkAndReplace = (node: Node) => {
         // Stop condition if we hit a node that shouldn't be altered
         if (node.nodeType === Node.ELEMENT_NODE) {
             const el = node as HTMLElement;
             // Skip code, pre, or already marked mentions
-            if (['CODE', 'PRE'].includes(el.tagName)) return;
+            if (['CODE', 'PRE', 'A', 'SCRIPT', 'STYLE'].includes(el.tagName)) return;
             if (el.getAttribute('data-type') === 'mention') return;
             if (el.classList.contains('mention')) return;
         }
@@ -33,6 +44,7 @@ export const analyzeMentions = (html: string, characters: Character[]): { newHtm
             const text = node.textContent;
 
             // Fast check
+            regex.lastIndex = 0;
             if (!regex.test(text)) return;
             regex.lastIndex = 0;
 
@@ -55,11 +67,15 @@ export const analyzeMentions = (html: string, characters: Character[]): { newHtm
                     span.setAttribute('data-type', 'mention');
                     span.setAttribute('class', 'mention');
                     span.setAttribute('data-id', charMatch.id);
-                    span.setAttribute('data-label', charMatch.name); // Using plain name or @name depending on preference
-                    span.textContent = `@${charMatch.name}`; // Prefix with @ for UI presentation
+                    span.setAttribute('data-label', matchStr);
+                    span.textContent = matchStr;
                     
                     fragments.push(span);
                     replacementCount++;
+                    const key = `${charMatch.id}:${matchStr.toLowerCase()}`;
+                    const occurrence = occurrences.get(key);
+                    if (occurrence) occurrence.count++;
+                    else occurrences.set(key, { name: charMatch.name, label: matchStr, count: 1 });
                     
                     lastIndex = regex.lastIndex;
                 }
@@ -89,6 +105,7 @@ export const analyzeMentions = (html: string, characters: Character[]): { newHtm
 
     return {
         newHtml: doc.body.innerHTML,
-        count: replacementCount
+        count: replacementCount,
+        occurrences: [...occurrences.values()],
     };
 };

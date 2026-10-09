@@ -144,6 +144,7 @@ public class ChapterPublishingService {
                     "Choose a release time within the next year.");
         }
 
+        validateScheduledRating(book, chapter);
         chapter.setEditRevision(chapter.getEditRevision() + 1);
         chapter.setStatus("scheduled");
         chapter.setScheduledAt(releaseAt);
@@ -332,7 +333,7 @@ public class ChapterPublishingService {
     }
 
     private String stripHtml(String value) {
-        return value == null ? "" : value.replaceAll("<[^>]*>", " ");
+        return com.wordweft.manuscript.service.ManuscriptText.plainText(value);
     }
 
     private void publishChapter(Chapter chapter, Instant publishedAt) {
@@ -372,6 +373,16 @@ public class ChapterPublishingService {
         notifications.notifyFollowers(
                 book.getAuthorId(), "AUTHOR_NEW_STORY", "BOOK", book.getId(),
                 "published a new story \"" + book.getTitle() + "\"", metadata);
+    }
+
+    private void validateScheduledRating(Book book, Chapter chapter) {
+        AgeRating required = ContentAccessService.requiredRatingForWarnings(chapter.getContentWarnings());
+        AgeRating current = book.getAgeRating() == null ? AgeRating.ALL_AGES : book.getAgeRating();
+        AgeRating resulting = required.getMinimumAge() > current.getMinimumAge() ? required : current;
+        if (contentAccessService != null && userRepository != null && resulting.getMinimumAge() >= 18) {
+            var author = userRepository.findById(book.getAuthorId()).orElse(null);
+            contentAccessService.validateAuthorCanPostRating(author, resulting);
+        }
     }
 
     private void ensureBookAgeRating(Book book, Chapter chapter) {

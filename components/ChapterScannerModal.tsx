@@ -22,7 +22,7 @@ export const ChapterScannerModal: React.FC<ChapterScannerModalProps> = ({ isOpen
     const sourceRef = useRef({ htmlContent, existingCharacters });
     sourceRef.current = { htmlContent, existingCharacters };
     const dialogRef = useDialog(isOpen, onClose, !isProcessing);
-    const linkResult = useMemo(() => isOpen ? analyzeMentions(htmlContent, existingCharacters) : { newHtml: htmlContent, count: 0 }, [isOpen, htmlContent, existingCharacters]);
+    const linkResult = useMemo(() => isOpen ? analyzeMentions(htmlContent, existingCharacters) : { newHtml: htmlContent, count: 0, occurrences: [] }, [isOpen, htmlContent, existingCharacters]);
 
     // Starting a scan resets its review; refreshing the cast must keep the current step.
     useEffect(() => {
@@ -33,7 +33,7 @@ export const ChapterScannerModal: React.FC<ChapterScannerModalProps> = ({ isOpen
         const document = new DOMParser().parseFromString(source.htmlContent, 'text/html');
         document.querySelectorAll('code,pre,[data-type="mention"],.mention').forEach(element => element.remove());
         const commonWords = new Set(['The', 'A', 'An', 'He', 'She', 'It', 'They', 'We', 'I', 'You', 'But', 'And', 'Or', 'So', 'Because', 'At', 'In', 'On', 'For', 'With', 'To', 'From']);
-        const existingNames = new Set(source.existingCharacters.map(character => character.name.toLowerCase()));
+        const existingNames = new Set(source.existingCharacters.flatMap(character => [character.name, ...(character.aliases || [])]).map(name => name.toLowerCase()));
         const matches = (document.body.textContent || '').match(/\b[A-Z][a-z]+\b/g) || [];
         const counts = new Map<string, number>();
         for (const word of matches) if (!commonWords.has(word) && !existingNames.has(word.toLowerCase())) counts.set(word, (counts.get(word) || 0) + 1);
@@ -43,7 +43,7 @@ export const ChapterScannerModal: React.FC<ChapterScannerModalProps> = ({ isOpen
     }, [isOpen]);
 
     if (!isOpen) return null;
-    const existingNames = new Set(existingCharacters.map(character => character.name.toLowerCase()));
+    const existingNames = new Set(existingCharacters.flatMap(character => [character.name, ...(character.aliases || [])]).map(name => name.toLowerCase()));
     const candidates = potentialNames.filter(name => !existingNames.has(name.toLowerCase()));
     const selected = candidates.filter(name => selectedNames.has(name));
     const toggleName = (name: string) => setSelectedNames(previous => { const next = new Set(previous); if (next.has(name)) next.delete(name); else next.add(name); return next; });
@@ -73,6 +73,7 @@ export const ChapterScannerModal: React.FC<ChapterScannerModalProps> = ({ isOpen
                         <small>Characters are added to this story’s guide. Nothing is linked in your text until you choose the next step.</small>
                     </> : <>
                         <p>Turn plain character names in this chapter into profiles readers can open. Newly added characters are included.</p>
+                        {linkResult.occurrences.length > 0 && <ul className="ww-character-scan-occurrences" aria-label="Names to link">{linkResult.occurrences.map(occurrence => <li key={`${occurrence.name}:${occurrence.label}`}><strong>{occurrence.label}</strong><span>{occurrence.label !== occurrence.name ? ` → ${occurrence.name} · ` : ''}{occurrence.count} {occurrence.count === 1 ? 'occurrence' : 'occurrences'}</span></li>)}</ul>}
                         <div className="ww-editor-scanner-result"><Link2 size={27} aria-hidden="true" /><strong>{linkResult.count} {linkResult.count === 1 ? 'name' : 'names'} ready to link</strong><p>{linkResult.count ? 'Existing mentions and code stay as they are. Linking changes this draft and saves automatically.' : 'There are no plain names matching your cast. Add characters in the story guide or type @ to insert a mention yourself.'}</p></div>
                     </>}
                 </div>

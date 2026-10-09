@@ -55,6 +55,7 @@ class BookSchedulingControllerTest {
     @MockBean ChapterPublishingService publishing;
     @MockBean com.wordweft.book.service.ChapterWriteService chapterWriteService;
     @MockBean ChapterContentService chapterContentService;
+    @MockBean com.wordweft.book.service.ChapterOrganizationService chapterOrganizationService;
     @MockBean ChapterReadEventService readEvents;
     @MockBean ManuscriptImportService manuscriptImportService;
     @MockBean ChapterRevisionService chapterRevisionService;
@@ -67,6 +68,79 @@ class BookSchedulingControllerTest {
     private final UserDetailsImpl author = new UserDetailsImpl(
             "author", "writer", "writer@example.com", "password",
             List.of(new SimpleGrantedAuthority("ROLE_USER")));
+
+    @Test
+    void malformedMetadataReturnsBadRequestBeforeWriting() throws Exception {
+        mvc.perform(patch("/api/books/book").with(user(author)).contentType("application/json").content("{\"ageRating\":\"invalid\"}"))
+                .andExpect(status().isBadRequest());
+        org.mockito.Mockito.verifyNoInteractions(chapterWriteService);
+    }
+
+    @Test
+    void sparseMetadataPatchUpdatesSummaryAndPreservesTagsAndOtherOmittedFields() throws Exception {
+        var book = new com.wordweft.book.model.Book(); book.setId("book"); book.setAuthorId("author"); book.setTitle("Before");
+        book.setTags(List.of("family")); book.setGenres(List.of("Fantasy")); book.setReadingStatus("Hiatus"); book.setAgeRating(com.wordweft.book.model.AgeRating.TEEN_13); book.setAIGenerated(true);
+        when(bookRepository.findById("book")).thenReturn(java.util.Optional.of(book)); when(userService.getUserProfile("author")).thenReturn(Map.of("id", "author"));
+        mvc.perform(patch("/api/books/book").with(user(author)).contentType("application/json").content("{\"summary\":\"Independent summary\"}"))
+                .andExpect(status().isOk());
+        verify(chapterWriteService).updateMetadata(org.mockito.ArgumentMatchers.argThat(saved -> saved.getTags().equals(List.of("family")) && saved.getGenres().equals(List.of("Fantasy"))
+                && "Independent summary".equals(saved.getSummary()) && "Hiatus".equals(saved.getReadingStatus()) && saved.getAgeRating() == com.wordweft.book.model.AgeRating.TEEN_13 && saved.isAIGenerated()), any());
+    }
+
+    @Test
+    void metadataPatchAppliesExplicitTagsAndCanClearThem() throws Exception {
+        var book = new com.wordweft.book.model.Book(); book.setId("book"); book.setAuthorId("author"); book.setTags(List.of("family"));
+        when(bookRepository.findById("book")).thenReturn(java.util.Optional.of(book)); when(userService.getUserProfile("author")).thenReturn(Map.of("id", "author"));
+        mvc.perform(patch("/api/books/book").with(user(author)).contentType("application/json").content("{\"tags\":[\"family\",\"homecoming\"],\"summary\":\"Independent\",\"author\":\"Display author\"}"))
+                .andExpect(status().isOk());
+        org.junit.jupiter.api.Assertions.assertEquals(List.of("family", "homecoming"), book.getTags());
+        mvc.perform(patch("/api/books/book").with(user(author)).contentType("application/json").content("{\"tags\":[]}"))
+                .andExpect(status().isOk());
+        org.junit.jupiter.api.Assertions.assertTrue(book.getTags().isEmpty());
+    }
+
+    @Test
+    void titleOnlyPrivateDraftKeepsBlankDescriptionAndCover() throws Exception {
+        when(userService.getUserProfile("author")).thenReturn(Map.of("id", "author"));
+        mvc.perform(post("/api/books").with(user(author)).contentType("application/json")
+                        .content("{\"title\":\"Title only private draft\",\"description\":\"\",\"coverUrl\":\"\"}"))
+                .andExpect(status().isOk());
+        verify(bookRepository).save(org.mockito.ArgumentMatchers.argThat(book -> "draft".equals(book.getPublicationStatus())
+                && "".equals(book.getDescription()) && "".equals(book.getCoverUrl()) && "author".equals(book.getAuthorId())));
+    }
+
+    @Test
+    void guestsCannotReadFullRevisionContent() throws Exception {
+        mvc.perform(get("/api/books/book/chapters/chapter/revisions/revision")).andExpect(status().isUnauthorized());
+        org.mockito.Mockito.verifyNoInteractions(chapterRevisionService);
+    }
+
+    @Test
+    void checkpointCarriesTheSavedDraftRevisionIntoItsConcurrencyGuard() throws Exception {
+        var checkpoint = new com.wordweft.manuscript.model.ChapterRevision(); checkpoint.setId("checkpoint");
+        when(chapterRevisionService.checkpoint("author", "book", "chapter", "Before ending", 3L)).thenReturn(checkpoint);
+        mvc.perform(post("/api/books/book/chapters/chapter/revisions").with(user(author)).contentType("application/json")
+                .content("{\"label\":\"Before ending\",\"expectedRevision\":3}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value("checkpoint"));
+        verify(chapterRevisionService).checkpoint("author", "book", "chapter", "Before ending", 3L);
+    }
+
+    @Test
+    void workingDraftRestoreExplicitlySelectsNonWithdrawingBehavior() throws Exception {
+        when(userService.getUserProfile("author")).thenReturn(Map.of("id", "author"));
+        mvc.perform(post("/api/books/book/chapters/chapter/revisions/revision/restore")
+                        .queryParam("mode", "working-draft").queryParam("expectedRevision", "3").with(user(author)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "private, no-store"));
+        verify(chapterRevisionService).restore("author", "book", "chapter", "revision", 3L, true);
+    }
+
+    @Test
+    void chapterOrderPassesOnlyTheOwnerAndCompleteIdListToTheGuardedService() throws Exception {
+        when(userService.getUserProfile("author")).thenReturn(Map.of("id", "author"));
+        mvc.perform(put("/api/books/book/chapters/order").with(user(author)).contentType("application/json").content("{\"chapterIds\":[\"a\",\"b\"]}"))
+                .andExpect(status().isOk());
+        verify(chapterOrganizationService).reorder("author", "book", List.of("a", "b"));
+    }
 
     @Test
     void ownerCanScheduleAChapter() throws Exception {

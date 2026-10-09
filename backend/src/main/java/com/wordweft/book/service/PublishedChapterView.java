@@ -36,6 +36,7 @@ public final class PublishedChapterView {
     public static void capture(Chapter chapter) {
         chapter.setPublishedTitle(chapter.getTitle());
         chapter.setPublishedContent(Objects.requireNonNullElse(chapter.getContent(), ""));
+        chapter.updateWordCount();
         chapter.setPublishedWordCount(chapter.getWordCount());
         chapter.setPublishedContentWarnings(new ArrayList<>(
                 Objects.requireNonNullElse(chapter.getContentWarnings(), List.of())));
