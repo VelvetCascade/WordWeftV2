@@ -55,11 +55,11 @@ public class AdminConsoleController {
     public record PageResult<T>(List<T> items, long total, int page, int size) {}
     public record UserRow(String id, String username, String email, String avatarUrl,
                           LocalDate joinedAt, boolean emailVerified, String authProvider,
-                          Set<String> roles, long publishedStories) {}
+                          Set<String> roles, long publishedStories, boolean suspended) {}
     public record StoryRow(String id, String title, String authorId, String authorName,
                            String status, LocalDate createdAt, LocalDate publishedAt,
                            int chapters, int publishedChapters, int reads, int views,
-                           String category, String coverUrl) {}
+                           String category, String coverUrl, boolean removed) {}
     public record ReportRow(String id, String ticketNumber, String targetType, String targetId,
                             String targetTitle, String category, String description, String status,
                             String reporterUsername, String reportedUsername,
@@ -125,14 +125,14 @@ public class AdminConsoleController {
         query.with(Sort.by(Sort.Direction.DESC, "joinDate", "_id"))
                 .skip(window.skip()).limit(window.size());
         query.fields().include("_id").include("username").include("email").include("avatarUrl")
-                .include("joinDate").include("isEmailVerified").include("authProvider").include("roles");
+                .include("joinDate").include("isEmailVerified").include("authProvider").include("roles").include("suspended");
         List<User> people = mongo.find(query, User.class);
         Map<String, Long> publishedByAuthor = publishedStoryCounts(
                 people.stream().map(User::getId).collect(Collectors.toSet()));
         List<UserRow> rows = people.stream().map(user -> new UserRow(user.getId(), user.getUsername(),
                 user.getEmail(), user.getAvatarUrl(), user.getJoinDate(), user.isEmailVerified(),
                 user.getAuthProvider(), user.getRoles() == null ? Set.of() : Set.copyOf(user.getRoles()),
-                publishedByAuthor.getOrDefault(user.getId(), 0L))).toList();
+                publishedByAuthor.getOrDefault(user.getId(), 0L), user.isSuspended())).toList();
         return noStore(new PageResult<>(rows, total, window.page(), window.size()));
     }
 
@@ -144,9 +144,11 @@ public class AdminConsoleController {
         Query query = new Query();
         if (!q.isBlank()) query.addCriteria(Criteria.where("title").regex(safeSearch(q)));
         if (!"ALL".equals(status)) {
-            if (!Set.of("draft", "published").contains(status))
+            if (!Set.of("draft", "published", "removed").contains(status))
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status filter.");
-            query.addCriteria(Criteria.where("publicationStatus").is(status));
+            query.addCriteria("removed".equals(status)
+                    ? Criteria.where("moderationRemoved").is(true)
+                    : Criteria.where("publicationStatus").is(status));
         }
         long total = mongo.count(query, Book.class);
         query.with(Sort.by(Sort.Direction.DESC, "createdAt", "_id"))
@@ -170,7 +172,7 @@ public class AdminConsoleController {
                     chapters.size(), (int) chapters.stream().filter(c -> "published".equals(c.getStatus())).count(),
                     book.getReadCount() == null ? 0 : book.getReadCount(),
                     book.getViewCount() == null ? 0 : book.getViewCount(),
-                    book.getCategory(), book.getCoverUrl());
+                    book.getCategory(), book.getCoverUrl(), book.isModerationRemoved());
         }).toList();
         return noStore(new PageResult<>(rows, total, window.page(), window.size()));
     }
