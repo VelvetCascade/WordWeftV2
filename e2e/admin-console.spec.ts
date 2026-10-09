@@ -87,3 +87,33 @@ test('non-admin UI does not render management data', async ({ page }) => {
   await expect(page.getByText('Administrator access required')).toBeVisible();
   await expect(page.getByText('Total members')).toHaveCount(0);
 });
+
+test('admin can inspect moderation actions without changing real data', async ({ page }) => {
+  await session(page, adminToken);
+  await page.goto('/admin');
+  await page.getByRole('button', { name: 'Members', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Member directory' })).toBeVisible();
+  const action = page.getByRole('button', { name: /^Suspend$|^Reinstate$/ }).first();
+  if (await action.count()) {
+    await action.click();
+    const dialog = page.getByRole('dialog', { name: /Suspend member|Reinstate member/ });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel(/Reason for this action/)).toBeVisible();
+    await expect(dialog.getByLabel(/Custom message to the member/)).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).not.toBeVisible();
+  }
+  await page.getByRole('button', { name: 'Analytics', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Traffic & engagement' })).toBeVisible();
+  await expect(page.getByText('Google Sheets', { exact: false }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Activity log', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Moderation history' })).toBeVisible();
+});
+
+test('anonymous and ordinary readers cannot request spreadsheet analytics or moderation audit', async ({ request }) => {
+  const unauthorized = await request.get('/api/admin/console/analytics?days=30');
+  expect([401, 403]).toContain(unauthorized.status());
+  const headers = { Authorization: `Bearer ${readerToken}` };
+  expect((await request.get('/api/admin/console/analytics?days=30', { headers })).status()).toBe(403);
+  expect((await request.get('/api/admin/console/audit', { headers })).status()).toBe(403);
+});
