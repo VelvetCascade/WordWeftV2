@@ -35,6 +35,7 @@
 .rte-toolkit .rte-atmosphere-context > span { color: var(--tool-ink); font-weight: 500; }
 .rte-toolkit .rte-atmosphere-context > button { padding: 0 8px; min-height: 44px; border: 1px solid var(--tool-line); border-radius: 5px; }
 .rte-toolkit .rte-atmosphere-context > small { margin-left: auto; font-size: 10px; }
+.rte-toolkit .rte-footnote-context .rte-toolbar-btn { width: auto !important; flex-basis: auto !important; padding-inline: 10px; white-space: nowrap; }
 .rte-toolkit .rte-tool-panel { position: absolute; top: 100%; right: 0; z-index: 35; width: min(570px, 100%); max-height: min(460px, 65dvh); overflow: auto; padding: 16px; border: 1px solid var(--tool-line); border-radius: 0 0 8px 8px; background: var(--tool-paper); color: var(--tool-ink); box-shadow: 0 12px 24px #17203119; font-size: 12px; }
 .rte-tool-panel > header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .rte-tool-panel button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 9px; border: 1px solid var(--tool-line); border-radius: 5px; white-space: nowrap; }

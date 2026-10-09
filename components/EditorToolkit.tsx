@@ -1,11 +1,14 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Editor } from '@tiptap/react';
-import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection, NodeSelection } from '@tiptap/pm/state';
+import { closeHistory } from '@tiptap/pm/history';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { Search, ListTree, Link as LinkIcon, NotebookPen, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useDialog } from '../hooks/useDialog';
 import { editorOutline, findEditorMatches, replaceEditorMatches, removeEditorBlockFormatting, continueAfterEditorBlock } from '../utils/editorTools';
+import { useWriterEditorState } from '../hooks/useWriterEditorState';
+import { mapEditorEntryTarget, type EditorEntryTarget } from '../utils/editorEntryTarget';
 
 const editorSignals = new WeakMap<Editor, EventTarget>();
 function signalsFor(editor: Editor) {
@@ -18,8 +21,9 @@ function signalsFor(editor: Editor) {
 export const preserveEditorSelection = (event: React.PointerEvent) => { if (event.button === 0) event.preventDefault(); };
 
 export function EditorBlockActions({ editor }: { editor: Editor }) {
+    const context = useWriterEditorState(editor);
     const options = [{ name: 'table', label: 'Table' }, { name: 'details', label: 'Collapsible section' }, { name: 'pullQuote', label: 'Pull quote' }, { name: 'codeBlock', label: 'Code block' }, { name: 'blockquote', label: 'Blockquote' }];
-    const active = options.find(option => editor.isActive(option.name));
+    const active = options.find(option => context?.block === option.name);
     if (!active) return null;
     const run = (remove: boolean) => {
         const transaction = remove ? removeEditorBlockFormatting(editor.state, active.name) : continueAfterEditorBlock(editor.state, active.name);
@@ -35,17 +39,31 @@ export function EditorBlockActions({ editor }: { editor: Editor }) {
 }
 
 export function EditorEntryButton({ editor, kind, children, shortcut = false }: { editor: Editor; kind: 'link' | 'footnote'; children?: React.ReactNode; shortcut?: boolean }) {
+    const context = useWriterEditorState(editor);
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState('');
     const [error, setError] = useState('');
-    const selection = useRef({ from: 0, to: 0 });
+    const selection = useRef<EditorEntryTarget>({ from: 0, to: 0, notePosition: null, deleted: false });
+    const formOpen = useRef(false);
+    const [editingNote, setEditingNote] = useState(false);
     const id = useId();
-    const dialog = useDialog(open, () => setOpen(false));
+    const close = () => { formOpen.current = false; setOpen(false); };
+    const dialog = useDialog(open, close);
     const start = () => {
-        selection.current = { from: editor.state.selection.from, to: editor.state.selection.to };
-        setValue(kind === 'link' ? editor.getAttributes('link').href || '' : '');
-        setError(''); setOpen(true);
+        const selected = editor.state.selection;
+        const note = kind === 'footnote' && selected instanceof NodeSelection && selected.node.type.name === 'footnote' ? selected.node : null;
+        selection.current = { from: selected.from, to: selected.to, notePosition: note ? selected.from : null, deleted: false };
+        setEditingNote(!!note);
+        setValue(kind === 'link' ? editor.getAttributes('link').href || '' : note?.attrs.note || '');
+        setError(''); formOpen.current = true; setOpen(true);
     };
+    useEffect(() => {
+        const followTarget = ({ transaction }: { transaction: import('@tiptap/pm/state').Transaction }) => {
+            if (formOpen.current) selection.current = mapEditorEntryTarget(selection.current, transaction);
+        };
+        editor.on('transaction', followTarget);
+        return () => { editor.off('transaction', followTarget); formOpen.current = false; };
+    }, [editor]);
     useEffect(() => {
         if (kind !== 'link' || !shortcut) return;
         const listener = () => start();
@@ -55,6 +73,7 @@ export function EditorEntryButton({ editor, kind, children, shortcut = false }: 
     }, [editor, kind, shortcut]);
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
+        if (selection.current.deleted) { setError('The selected content changed while this form was open. Close it and select the content again.'); return; }
         const input = value.trim();
         if (kind === 'link' && input) {
             const candidate = /^(https?:|mailto:|tel:|\/|#)/i.test(input) ? input : `https://${input}`;
@@ -66,32 +85,51 @@ export function EditorEntryButton({ editor, kind, children, shortcut = false }: 
             editor.chain().focus().setTextSelection(selection.current).extendMarkRange('link').unsetLink().run();
         } else {
             if (!input) { setError('Write a note before adding it.'); return; }
-            // A footnote belongs at the end of the selected passage; it never replaces the words.
-            editor.chain().focus().setTextSelection(selection.current.to).insertFootnote({ note: input }).run();
+            if (selection.current.notePosition !== null) {
+                const position = selection.current.notePosition;
+                if (editor.state.doc.nodeAt(position)?.type.name !== 'footnote') { setError('This note moved. Close this form and select it again.'); return; }
+                editor.chain().focus().setNodeSelection(position).command(({ tr }) => { closeHistory(tr); return true; }).updateAttributes('footnote', { note: input }).setNodeSelection(position).run();
+            } else {
+                // A footnote belongs after the selected words; it never replaces them.
+                editor.chain().focus().setTextSelection(selection.current.to).insertFootnote({ note: input }).run();
+            }
         }
-        setOpen(false); requestAnimationFrame(() => editor.commands.focus());
+        close(); requestAnimationFrame(() => editor.commands.focus());
     };
     return <>
         <button type="button" className={`rte-toolbar-btn ${kind === 'link' && editor.isActive('link') ? 'rte-toolbar-btn-active' : ''}`}
             data-tool-label={kind === 'link' ? 'Link' : 'Footnote'}
-            onPointerDown={preserveEditorSelection} onClick={start} aria-label={kind === 'link' ? 'Add or edit link' : 'Add footnote'}
-            title={kind === 'link' ? 'Add or edit link (Ctrl/Cmd+K)' : 'Add footnote'} aria-haspopup="dialog" aria-expanded={open}>
+            onPointerDown={preserveEditorSelection} onClick={start} aria-label={kind === 'link' ? 'Add or edit link' : context?.footnote ? 'Edit footnote' : 'Add footnote'}
+            title={kind === 'link' ? 'Add or edit link (Ctrl/Cmd+K)' : context?.footnote ? 'Edit footnote' : 'Add footnote'} aria-haspopup="dialog" aria-expanded={open}>
             {children || (kind === 'link' ? <LinkIcon size={16} /> : <NotebookPen size={16} />)}
         </button>
-        {open && createPortal(<div className="rte-mood-backdrop" onMouseDown={event => event.target === event.currentTarget && setOpen(false)}>
+        {open && createPortal(<div className="rte-mood-backdrop" onMouseDown={event => event.target === event.currentTarget && close()}>
             <div ref={dialog} className="rte-mood-dialog rte-entry-dialog" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} tabIndex={-1}>
-                <header><h2 id={`${id}-title`}>{kind === 'link' ? 'Add a link' : 'Add a footnote'}</h2><button type="button" onClick={() => setOpen(false)} aria-label="Close"><X size={20} /></button></header>
-                <p>{kind === 'link' ? 'Link the selected words. Leave the address empty to remove an existing link.' : 'Your note appears after the selected words and opens when a reader selects its marker.'}</p>
+                <header><h2 id={`${id}-title`}>{kind === 'link' ? 'Add a link' : editingNote ? 'Edit footnote' : 'Add a footnote'}</h2><button type="button" onClick={close} aria-label="Close"><X size={20} /></button></header>
+                <p>{kind === 'link' ? 'Link the selected words. Leave the address empty to remove an existing link.' : editingNote ? 'Update this note in place. The surrounding words stay unchanged.' : 'Your note appears after the selected words and opens when a reader selects its marker.'}</p>
                 <form onSubmit={submit}>
                     <label htmlFor={`${id}-value`}>{kind === 'link' ? 'Web address' : 'Note text'}</label>
                     {kind === 'link' ? <input id={`${id}-value`} data-dialog-focus value={value} onChange={event => setValue(event.target.value)} placeholder="https://example.com" inputMode="url" autoComplete="url" aria-describedby={error ? `${id}-error` : undefined} aria-invalid={!!error} />
                         : <textarea id={`${id}-value`} data-dialog-focus rows={4} value={value} onChange={event => setValue(event.target.value)} aria-describedby={error ? `${id}-error` : undefined} aria-invalid={!!error} />}
                     {error && <p id={`${id}-error`} role="alert" className="rte-tool-error">{error}</p>}
-                    <div className="rte-entry-actions"><button type="button" onClick={() => setOpen(false)}>Cancel</button><button type="submit">{kind === 'link' ? value.trim() ? 'Save link' : 'Remove link' : 'Add note'}</button></div>
+                    <div className="rte-entry-actions"><button type="button" onClick={close}>Cancel</button><button type="submit">{kind === 'link' ? value.trim() ? 'Save link' : 'Remove link' : editingNote ? 'Save note' : 'Add note'}</button></div>
                 </form>
             </div>
         </div>, document.body)}
     </>;
+}
+
+export function EditorFootnoteActions({ editor }: { editor: Editor }) {
+    const context = useWriterEditorState(editor);
+    if (!context?.footnote) return null;
+    return <div className="rte-atmosphere-context rte-footnote-context" role="group" aria-label="Selected footnote">
+        <span>Footnote {context.footnote.index}</span>
+        <EditorEntryButton editor={editor} kind="footnote">Edit footnote</EditorEntryButton>
+        <button type="button" onPointerDown={preserveEditorSelection} onClick={() => {
+            editor.chain().focus().command(({ tr }) => { closeHistory(tr); return true; }).deleteSelection().run();
+        }}>Remove footnote</button>
+        <small>Your words stay unchanged</small>
+    </div>;
 }
 
 export function EditorNavigation({ editor }: { editor: Editor }) {
