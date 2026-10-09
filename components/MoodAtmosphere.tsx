@@ -65,24 +65,27 @@ export function useMoodDetector(contentRef: React.RefObject<HTMLElement | null>,
 // Artwork supplies the atmosphere; movement never uses mood icons as particles.
 const PARTICLES: Record<MoodType, { image: string; count: number; duration: number }> = {
     melancholy: { image: 'rain-streak', count: 28, duration: 2.7 },
-    romantic: { image: 'petal', count: 12, duration: 14 },
+    romantic: { image: 'petal', count: 12, duration: 10 },
     eerie: { image: 'light-mote', count: 0, duration: 24 },
-    tense: { image: 'rain-streak', count: 18, duration: 1.8 },
-    triumphant: { image: 'light-mote', count: 18, duration: 12 },
-    serene: { image: 'light-mote', count: 7, duration: 26 },
+    tense: { image: 'shadow-trace', count: 2, duration: 6 },
+    triumphant: { image: 'light-mote', count: 4, duration: 7 },
+    serene: { image: 'light-mote', count: 0, duration: 10 },
 };
 const Layer: React.FC<{ mood: MoodType; open: boolean }> = ({ mood, open }) => {
-    const present = usePresence(open, 1000);
+    const present = usePresence(open, 500);
     if (!present) return null;
     const particles = PARTICLES[mood];
     return <div className={`ww-atmosphere-layer ww-atmosphere-${mood}`} data-state={open ? 'open' : 'closed'} data-mood-layer={mood}>
-        <div className="ww-atmosphere-scenery">
+        {['romantic', 'melancholy', 'eerie'].includes(mood) && <div className="ww-atmosphere-scenery">
             {['left', 'right'].map(side => <div key={side} className={`ww-atmosphere-cloudbank ww-atmosphere-cloudbank-${side}`}>
                 {[0, 1].map(index => <img key={index} className={`ww-atmosphere-veil ww-atmosphere-veil-${index}`} src="/assets/atmospheres/fog-veil.webp" alt="" width="960" height="960" decoding="async" />)}
             </div>)}
-        </div>
+        </div>}
+        {mood === 'serene' && <div className="ww-atmosphere-water">
+            {[0, 1].map(index => <img key={index} className={`ww-atmosphere-ripple ww-atmosphere-ripple-${index}`} src="/assets/atmospheres/water-ripple.webp" alt="" width="768" height="768" decoding="async" />)}
+        </div>}
         {['left', 'right'].map(side => <div key={side} className={`ww-atmosphere-edge ww-atmosphere-edge-${side}`}>
-            {Array.from({ length: particles.count }, (_, index) => <div key={index} className="ww-ambient-detail" style={{ '--detail-x': `${4 + (((index + (side === 'right' ? 3 : 0)) * 19) % 76)}%`, '--detail-y': `${6 + ((index * 17) % 82)}%`, '--detail-delay': `${-(index + (side === 'right' ? .7 : 0)) * 2.3}s`, '--detail-duration': `${particles.duration + (index % 7) * (mood === 'melancholy' || mood === 'tense' ? .18 : 1.7)}s`, '--detail-rotation': `${index * 37}deg` } as React.CSSProperties}>
+            {Array.from({ length: particles.count }, (_, index) => <div key={index} className="ww-ambient-detail" style={{ '--detail-x': `${4 + (((index + (side === 'right' ? 3 : 0)) * 19) % 76)}%`, '--detail-y': `${6 + ((index * 17) % 82)}%`, '--detail-delay': `${-(index + (side === 'right' ? .7 : 0)) * 2.3}s`, '--detail-duration': `${particles.duration + (index % 7) * (mood === 'melancholy' ? .18 : .7)}s`, '--detail-rotation': `${index * 37}deg` } as React.CSSProperties}>
                 <img src={`/assets/atmospheres/${particles.image}.webp`} alt="" width="24" height="64" decoding="async" />
             </div>)}
         </div>)}

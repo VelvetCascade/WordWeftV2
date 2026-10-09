@@ -1,21 +1,23 @@
-# Reading atmosphere correction — visual QA
+# Reader atmosphere visual check
 
-Source: user attachment 2 (1487×1058); target is its diffuse mist treatment, with the existing WordWeft reader layout preserved.
-Rendered evidence: /workspace/wordweft-environment-evidence/, all six moods in light/sepia/dark at 2048×1224 and 390×844, device scale 1.
+**Final result: passed**
 
-Comparison history:
-- P1: repeated narrow mist ribbons. Replaced with broad transparent fog artwork, independently drifting layers and a feathered reading boundary.
-- P2: first new asset was too cloud-like. Regenerated as thinner diffuse veils; final wide/mobile captures reviewed.
-- P1: background painted above chapter sidebar. Added its stacking level and browser assertions for both panels.
+Source: approved Tense (`exec-242d8ec7`), Serene (`exec-84672547`), Eerie (`exec-d8989dd3`), and Triumphant (`exec-6a651549`) boards in `/workspace/generated_images`. Romantic and Melancholy use the existing production appearance.
 
-Fidelity surfaces:
-- Typography: existing reader fonts, sizes and line height preserved; artwork paints beneath the manuscript.
-- Layout: chapter outline, conversation panel, responsive breakpoints, controls and manuscript dimensions preserved. Their presence differs intentionally from the reference; wide evidence includes both panels.
-- Colors: existing light, sepia and dark tokens preserved; atmospheric artwork adapts to each.
-- Imagery: real transparent raster fog, rain and light sprites; existing petals retained. No mood icons used as animated particles.
-- Content: existing mood values and passage boundaries preserved; writer descriptions match new storm/haze effects.
+Evidence: `/tmp/ww-compare-{tense,serene,eerie,triumphant}.png` combines each source board with browser-rendered implementation captures. Actual captures: `/tmp/ww-built-{mood}-{1920,390}.png`. Desktop 1920×1080 and mobile 390×844, deviceScaleFactor 1, authenticated local fixture chapter, light appearance, active mid-chapter atmosphere. Boards and captures were scaled proportionally for comparison; image-generated prose wrapping is not a pixel specification.
 
-Checked mood changes, neutral gaps, reduced motion, Subtle/Off persistence, image loading, pointer transparency, sidebar stacking, overflow and writer preview in browser tests. Captured 36 final reader views and two recordings with no page errors.
-Scope: reference-inspired atmospheric rendering, not a pixel-identical recreation of the reference's different reader layout. Mobile tests use desktop browser engines at mobile widths; no physical iPhone claim.
+**Fidelity checks**
+- Typography and copy: existing reader fonts, prose and chrome retained; no new headings, UI labels or controls.
+- Layout: centered manuscript and both desktop rails retained; mobile uses its existing reader controls without overflow.
+- Colors: existing reader tokens retained. Light, sepia and dark browser journeys verify unchanged ink, background coverage and motion.
+- Artwork: real transparent WebP shadows and ripples, existing petals/rain/motes/mist; no substituted CSS drawings. Broader mobile coverage remains behind ink and controls.
+- Focused checks: full-resolution mobile captures inspected for text visibility, ripple cropping and particle size; desktop captures inspected for artwork around both rails.
+
+**Comparison history**
+- P2: initial mobile upper ripple partly off-screen, motes undersized, shadows clustered. Fixed ripple crop/rotation, mote size/orientation and shadow placement; final combined comparisons above show the corrections. Ripple visibility now remains steadier through its cycle.
+- Browser journeys cover six moods, three appearances, rapid passage changes, neutral exits, reduced motion, intensity persistence, writer phone previews, and both wide-screen sidebars. Page errors checked: none in atmosphere journeys or fixture captures.
+
+**Remaining test gap**
+- Physical iPhone/WebKit performance was not measured; mobile checks used Chromium at phone widths. Motion phase and live manuscript wrapping naturally vary from the still concepts.
 
 final result: passed

@@ -1,10 +1,10 @@
-/* Broad artwork lives behind the reading surface; foreground particles stay outside words. */
+/* Artwork stays behind prose and controls; mobile coverage uses softer opacity. */
 .reader-experience .ww-atmospheres { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; contain: layout paint; }
 .ww-reading-preview-canvas.reader-experience .ww-atmospheres { position: sticky; top: 0; height: 0; overflow: visible; contain: none; }
 .reader-experience.reader-v2 .reader-outline-rail { z-index: 11; }
-.ww-atmosphere-layer { position: absolute; inset: 0; height: var(--atmosphere-height,100dvh); opacity: 1; transition: opacity 900ms ease; overflow: hidden; --veil-strength: .55; --veil-filter: none; }
+.ww-atmosphere-layer { position: absolute; inset: 0; height: var(--atmosphere-height,100dvh); opacity: 1; transition: opacity 450ms ease; overflow: hidden; --veil-strength: .55; --veil-filter: none; }
 .ww-atmosphere-layer[data-state=closed] { opacity: 0; }
-.ww-atmosphere-layer[data-state=open] { animation: ww-atmosphere-arrive 900ms ease both; }
+.ww-atmosphere-layer[data-state=open] { animation: ww-atmosphere-arrive 450ms ease both; }
 /* This mask is a reading safety boundary, not the artwork: diffuse near the words, clear at the center. */
 .ww-atmosphere-scenery { position: absolute; inset: 0; overflow: hidden; opacity: var(--veil-strength); mask-image: linear-gradient(to right,#000,#000 calc(var(--atmosphere-copy-left,25vw) - 90px),#00000090 var(--atmosphere-copy-left,25vw),transparent calc(var(--atmosphere-copy-left,25vw) + 60px),transparent calc(var(--atmosphere-copy-right,75vw) - 60px),#00000090 var(--atmosphere-copy-right,75vw),#000 calc(var(--atmosphere-copy-right,75vw) + 90px),#000); }
 .ww-atmosphere-cloudbank { position: absolute; top: -10%; bottom: -10%; width: max(380px,55%); }
@@ -27,56 +27,89 @@
 .ww-atmosphere-romantic .ww-ambient-detail { animation-name: ww-petal-drift; }
 .ww-atmosphere-romantic .ww-ambient-detail img { width: 28px; height: 36px; object-fit: contain; }
 .ww-atmosphere-eerie { --veil-strength: .65; --veil-filter: saturate(.4); }
-.ww-atmosphere-tense { --veil-strength: .58; --veil-filter: saturate(.2) brightness(.75); }
-.ww-atmosphere-tense .ww-atmosphere-veil { animation-duration: 18s; }
-.ww-atmosphere-tense .ww-ambient-detail { animation-name: ww-storm-fall; top: 0; }
-.ww-atmosphere-tense .ww-ambient-detail img { width: 2px; height: 65px; rotate: 12deg; }
-.ww-atmosphere-triumphant { --veil-strength: .28; --veil-filter: sepia(.9) saturate(1.2); }
+.ww-atmosphere-eerie .ww-atmosphere-veil { animation-duration: 18s; }
+.ww-atmosphere-tense .ww-ambient-detail { animation-name: ww-shadow-draw; animation-timing-function: ease-in-out; }
+.ww-atmosphere-tense .ww-ambient-detail img { width: 100px; height: 520px; rotate: -8deg; opacity: .32; }
+.ww-atmosphere-tense .ww-atmosphere-edge-right .ww-ambient-detail img { rotate: 9deg; }
 .ww-atmosphere-triumphant .ww-ambient-detail { animation-name: ww-light-rise; }
-.ww-atmosphere-triumphant .ww-ambient-detail img { width: 7px; height: 18px; }
-.ww-atmosphere-serene { --veil-strength: .3; --veil-filter: sepia(.25) saturate(.6); }
-.ww-atmosphere-serene .ww-atmosphere-veil { animation-duration: 60s; }
-.ww-atmosphere-serene .ww-ambient-detail { animation-name: ww-dust-drift; }
-.ww-atmosphere-serene .ww-ambient-detail img { width: 4px; height: 9px; filter: saturate(.3); }
+.ww-atmosphere-triumphant .ww-ambient-detail img { width: 10px; height: 26px; object-fit: contain; }
+.ww-atmosphere-water { position: absolute; inset: 0; overflow: hidden; mask-image: linear-gradient(to right,#000,#000 var(--atmosphere-copy-left,25vw),transparent calc(var(--atmosphere-copy-left,25vw) + 40px),transparent calc(var(--atmosphere-copy-right,75vw) - 40px),#000 var(--atmosphere-copy-right,75vw),#000); }
+.ww-atmosphere-ripple { --ripple-strength: .45; position: absolute; width: min(620px,48vw); height: auto; max-width: none; opacity: var(--ripple-strength); animation: ww-water-settle 10s ease-out infinite; }
+.ww-atmosphere-ripple-0 { left: -100px; top: 5%; rotate: 30deg; }
+.ww-atmosphere-ripple-1 { right: -140px; bottom: -5%; rotate: 190deg; animation-delay: -5s; }
+.reader-theme-dark .ww-atmosphere-tense .ww-ambient-detail img { filter: invert(1); opacity: .22; }
+.reader-theme-dark .ww-atmosphere-ripple { --ripple-strength: .24; }
+.reader-theme-sepia .ww-atmosphere-ripple { filter: sepia(.2); }
 .reader-theme-dark .ww-atmosphere-scenery { filter: brightness(1.65); }
-.reader-theme-dark .ww-atmosphere-melancholy .ww-ambient-detail img,
-.reader-theme-dark .ww-atmosphere-tense .ww-ambient-detail img { filter: brightness(2); }
+.reader-theme-dark .ww-atmosphere-melancholy .ww-ambient-detail img { filter: brightness(2); }
 .reader-theme-dark .ww-atmosphere-romantic .ww-ambient-detail img { filter: brightness(1.15); }
 .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-scenery { opacity: calc(var(--veil-strength) * .35); }
-.ww-atmospheres[data-intensity=subtle] .ww-atmosphere-edge { opacity: .4; }
+.ww-atmospheres[data-intensity=subtle] :is(.ww-atmosphere-edge,.ww-atmosphere-water) { opacity: .4; }
 .ww-atmospheres[data-intensity=subtle] .ww-ambient-detail:nth-child(n+5) { display: none; }
-.ww-atmospheres[data-paused] :is(.ww-ambient-detail,.ww-atmosphere-veil) { animation-play-state: paused; }
+.ww-atmospheres[data-paused] :is(.ww-ambient-detail,.ww-atmosphere-veil,.ww-atmosphere-ripple) { animation-play-state: paused; }
 .reader-experience .ww-prose .mood-block::before { content: attr(data-mood); position: static; display: block; width: auto; height: auto; margin-bottom: 16px; transform: none; background: none !important; color: var(--reader-muted); opacity: 1; font: italic 13px/1.5 'WordWeft Serif',serif; text-transform: capitalize; }
 @keyframes ww-atmosphere-arrive { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ww-veil-drift { from { transform: translate3d(-16px,-14px,0) scale(.98); } to { transform: translate3d(18px,22px,0) scale(1.04); } }
 @keyframes ww-rain-fall { 0% { opacity: 0; transform: translateY(-60px); } 12%,85% { opacity: .85; } 100% { opacity: 0; transform: translateY(calc(var(--atmosphere-height) - 100px)); } }
-@keyframes ww-storm-fall { 0% { opacity: 0; transform: translate(20px,-65px); } 12%,85% { opacity: .85; } 100% { opacity: 0; transform: translate(-35px,calc(var(--atmosphere-height) - 100px)); } }
+@keyframes ww-shadow-draw { 0%,100% { opacity: .35; transform: translate3d(-8px,-8px,0); } 50% { opacity: .7; transform: translate3d(10px,10px,0); } }
+@keyframes ww-water-settle { 0% { opacity: calc(var(--ripple-strength) * .65); transform: scale(.9); } 30% { opacity: var(--ripple-strength); } 100% { opacity: calc(var(--ripple-strength) * .65); transform: scale(1.12); } }
 @keyframes ww-petal-drift { 0% { opacity: 0; transform: translate(-6px,-90px) rotate(var(--detail-rotation)); } 18%,75% { opacity: .8; } 100% { opacity: 0; transform: translate(12px,180px) rotate(calc(var(--detail-rotation) + 85deg)); } }
-@keyframes ww-light-rise { 0% { opacity: 0; transform: translateY(90px) rotate(var(--detail-rotation)); } 20%,75% { opacity: .9; } 100% { opacity: 0; transform: translateY(-170px) rotate(var(--detail-rotation)); } }
-@keyframes ww-dust-drift { 0%,100% { opacity: 0; transform: translate(-8px,0); } 30%,70% { opacity: .6; } 90% { transform: translate(12px,-35px); } }
+@keyframes ww-light-rise { 0% { opacity: 0; transform: translateY(90px); } 20%,75% { opacity: .9; } 100% { opacity: 0; transform: translateY(-170px); } }
 @media (max-width:720px) {
- .ww-atmosphere-cloudbank { width: 120%; }
- .ww-atmosphere-cloudbank-left { left: -76%; }
- .ww-atmosphere-cloudbank-right { right: -76%; }
+/* The same rules apply to a phone and to the writer's phone-size preview. */
+ .ww-atmosphere-scenery { mask-image: none; opacity: calc(var(--veil-strength) * .38); }
+ .ww-atmosphere-cloudbank { width: 160%; }
+ .ww-atmosphere-cloudbank-left { left: -45%; }
+ .ww-atmosphere-cloudbank-right { right: -75%; }
+ .ww-atmosphere-edge-left { left: 0; width: 100%; opacity: .4; }
+ .ww-atmosphere-edge-right { display: none; }
  .ww-ambient-detail:nth-child(n+13) { display: none; }
  .ww-atmosphere-melancholy .ww-ambient-detail img { width: 2px; height: 42px; }
- .ww-atmosphere-romantic .ww-ambient-detail { left: calc(var(--detail-x) / 4); }
  .ww-atmosphere-romantic .ww-ambient-detail img { width: 20px; height: 28px; }
+ .ww-atmosphere-tense .ww-atmosphere-edge-left { opacity: .85; }
+ .ww-atmosphere-triumphant .ww-atmosphere-edge-left { opacity: .65; }
+ .ww-atmosphere-tense .ww-ambient-detail { left: -2%; }
+ .ww-atmosphere-tense .ww-ambient-detail:nth-child(2) { left: 66%; top: 30%; }
+ .ww-atmosphere-tense .ww-ambient-detail img { width: 105px; height: 460px; }
+ .ww-atmosphere-water { mask-image: none; opacity: .65; }
+ .ww-atmosphere-ripple { width: 110%; --ripple-strength: .6; }
+ .reader-theme-dark .ww-atmosphere-ripple { --ripple-strength: .32; }
+ .ww-atmosphere-ripple-0 { left: -35%; top: 6%; rotate: 0deg; }
+ .ww-atmosphere-ripple-1 { right: -40%; bottom: 5%; rotate: 180deg; }
+ .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-scenery { opacity: calc(var(--veil-strength) * .14); }
+ .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-edge-left { opacity: .12; }
+ .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-water { opacity: .2; }
 }
 @container manuscript-preview (max-width:720px) {
- .ww-atmosphere-cloudbank { width: 120%; }
- .ww-atmosphere-cloudbank-left { left: -76%; }
- .ww-atmosphere-cloudbank-right { right: -76%; }
+/* The same rules apply to a phone and to the writer's phone-size preview. */
+ .ww-atmosphere-scenery { mask-image: none; opacity: calc(var(--veil-strength) * .38); }
+ .ww-atmosphere-cloudbank { width: 160%; }
+ .ww-atmosphere-cloudbank-left { left: -45%; }
+ .ww-atmosphere-cloudbank-right { right: -75%; }
+ .ww-atmosphere-edge-left { left: 0; width: 100%; opacity: .4; }
+ .ww-atmosphere-edge-right { display: none; }
  .ww-ambient-detail:nth-child(n+13) { display: none; }
  .ww-atmosphere-melancholy .ww-ambient-detail img { width: 2px; height: 42px; }
- .ww-atmosphere-romantic .ww-ambient-detail { left: calc(var(--detail-x) / 4); }
  .ww-atmosphere-romantic .ww-ambient-detail img { width: 20px; height: 28px; }
+ .ww-atmosphere-tense .ww-atmosphere-edge-left { opacity: .85; }
+ .ww-atmosphere-triumphant .ww-atmosphere-edge-left { opacity: .65; }
+ .ww-atmosphere-tense .ww-ambient-detail { left: -2%; }
+ .ww-atmosphere-tense .ww-ambient-detail:nth-child(2) { left: 66%; top: 30%; }
+ .ww-atmosphere-tense .ww-ambient-detail img { width: 105px; height: 460px; }
+ .ww-atmosphere-water { mask-image: none; opacity: .65; }
+ .ww-atmosphere-ripple { width: 110%; --ripple-strength: .6; }
+ .reader-theme-dark .ww-atmosphere-ripple { --ripple-strength: .32; }
+ .ww-atmosphere-ripple-0 { left: -35%; top: 6%; rotate: 0deg; }
+ .ww-atmosphere-ripple-1 { right: -40%; bottom: 5%; rotate: 180deg; }
+ .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-scenery { opacity: calc(var(--veil-strength) * .14); }
+ .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-edge-left { opacity: .12; }
+ .ww-atmospheres[data-intensity=subtle] .ww-atmosphere-water { opacity: .2; }
 }
 @media (prefers-reduced-motion:reduce) {
  .ww-atmosphere-layer { transition: none; animation: none !important; }
  .ww-atmosphere-layer[data-state=closed] { display: none; }
- .ww-atmosphere-veil { animation: none !important; }
+ .ww-atmosphere-veil,.ww-atmosphere-ripple { animation: none !important; }
  .ww-ambient-detail { animation: none !important; opacity: .35; }
- .ww-atmosphere-melancholy .ww-ambient-detail,.ww-atmosphere-tense .ww-ambient-detail { top: var(--detail-y); }
+ .ww-atmosphere-melancholy .ww-ambient-detail { top: var(--detail-y); }
 }
 @media (forced-colors:active) { .ww-atmospheres { display: none; } }
