@@ -14,7 +14,10 @@ import { useDialog } from '../hooks/useDialog';
 import { validateManuscriptFile } from '../utils/manuscriptImport';
 import { importProgressCopy, type ImportProgressPhase } from '../utils/importProgress';
 import { lockNavigation, navigatePath } from '../utils/navigation';
-import { ArrowRight, ExternalLink, Plus, Upload } from 'lucide-react';
+import { ArrowRight, ExternalLink, Plus, Search, Upload } from 'lucide-react';
+import '../styles/writer-experience.css';
+import { movePrivateChapter, parseImportUndo } from '../utils/writerExperience';
+import { readOptionalSessionValue, writeOptionalSessionValue } from '../utils/optionalStorage';
 interface ManageChaptersPageProps {
     currentUser: User;
     bookId: string;
@@ -40,6 +43,8 @@ const BOOK_CATEGORIES = [
 const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book; currentUserDateOfBirth?: string; onUpdate: (updates: Partial<Book>) => Promise<void> }> = ({ isOpen, onClose, book, currentUserDateOfBirth, onUpdate }) => {
     const [title, setTitle] = useState(book.title);
     const [description, setDescription] = useState(book.description || '');
+    const [summary, setSummary] = useState(book.summary || '');
+    const [tags, setTags] = useState((book.tags || []).join(', '));
     const [coverUrl, setCoverUrl] = useState(book.coverUrl);
     const [coverFileId, setCoverFileId] = useState<string | null>(book.coverFileId || null);
     const [category, setCategory] = useState(book.category || '');
@@ -54,13 +59,23 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const [isSaving, setIsSaving] = useState(false);
     const [isCoverUploading, setIsCoverUploading] = useState(false);
     const [saveError, setSaveError] = useState('');
-    const dialogRef = useDialog(isOpen, onClose, !isSaving && !isCoverUploading);
+    const [showDiscard, setShowDiscard] = useState(false);
+    const parsedTags = tags === (book.tags || []).join(', ') ? book.tags || [] : tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const draftDetails = { title, description, summary, tags: parsedTags, coverUrl, coverFileId, category, readingStatus, genres, ageRating, contentWarnings, customDisclaimer, isAIGenerated };
+    const initialDetails = { title: book.title, description: book.description || '', summary: book.summary || '', tags: book.tags || [], coverUrl: book.coverUrl, coverFileId: book.coverFileId || null, category: book.category || '', readingStatus: book.readingStatus || 'Ongoing', genres: book.genres || [], ageRating: book.ageRating || 'ALL_AGES', contentWarnings: book.contentWarnings || [], customDisclaimer: book.customDisclaimer || '', isAIGenerated: book.isAIGenerated || false };
+    const isDirty = JSON.stringify(draftDetails) !== JSON.stringify(initialDetails);
+    const requestClose = () => { if (isSaving || isCoverUploading) return; if (isDirty) setShowDiscard(true); else onClose(); };
+    const dialogRef = useDialog(isOpen, requestClose, !isSaving && !isCoverUploading);
+    useEffect(() => { if (!isOpen || !isDirty) return; return lockNavigation('Save or discard your story detail changes before leaving.'); }, [isOpen, isDirty]);
 
     useEffect(() => {
         if (isOpen) {
             api.getGenres().then(setAllGenres).catch(() => setAllGenres(book.genres || []));
             setTitle(book.title);
             setDescription(book.description || '');
+            setSummary(book.summary || '');
+            setTags((book.tags || []).join(', '));
+            setShowDiscard(false);
             setCoverUrl(book.coverUrl);
             setCoverFileId(book.coverFileId || null);
             setCategory(book.category || '');
@@ -73,7 +88,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
             setSaveError('');
             setIsSaving(false);
         }
-    }, [isOpen, book]);
+    }, [isOpen, book.id]);
 
     const minRequiredRating: AgeRating = useMemo(() => {
         let min = 0;
@@ -98,6 +113,7 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSaving || isCoverUploading) return;
+        if (!title.trim()) { setSaveError('Give your story a title.'); return; }
         setSaveError('');
         if (RATING_SEVERITY[ageRating] < RATING_SEVERITY[minRequiredRating]) {
             setSaveError(`This story contains chapters requiring at least ${minRequiredRating === 'MATURE_18' ? 'Mature (18+)' : 'Teen (13+)'}. Choose that rating or higher.`);
@@ -110,9 +126,10 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
         try {
             setIsSaving(true);
             await onUpdate({
-                title,
+                title: title.trim(),
                 description,
-                summary: description.substring(0, 150) + (description.length > 150 ? '...' : ''),
+                summary,
+                tags: parsedTags,
                 coverUrl,
                 coverFileId,
                 category,
@@ -140,14 +157,14 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
     const filteredGenres = allGenres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
     return (
-        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onMouseDown={event => { if (event.target === event.currentTarget && !isSaving && !isCoverUploading) onClose(); }}>
+        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onMouseDown={event => { if (event.target === event.currentTarget && !isSaving && !isCoverUploading) requestClose(); }}>
             <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="story-details-title" aria-busy={isSaving || isCoverUploading} className="ww-story-details-dialog bg-white dark:bg-dark-surface w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-6 border-b dark:border-dark-border flex justify-between items-center">
                     <h3 id="story-details-title" className="text-xl font-bold dark:text-dark-text-rich">Story details</h3>
-                    <button onClick={onClose} disabled={isSaving || isCoverUploading} aria-label="Close story details"><XMarkIcon className="w-6 h-6 text-gray-500" /></button>
+                    <button onClick={requestClose} disabled={isSaving || isCoverUploading} aria-label="Close story details"><XMarkIcon className="w-6 h-6 text-gray-500" /></button>
                 </div>
                 <div className="p-6 overflow-y-auto">
-                    <form id="edit-book-form" onSubmit={handleSave} className="space-y-4">
+                    <form id="edit-book-form" onSubmit={handleSave}><fieldset disabled={isSaving} className="ww-pending-fields space-y-4">
                         <div>
                             <label htmlFor="story-details-name" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Title</label>
                             <input id="story-details-name" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" required />
@@ -159,12 +176,21 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                                 setCoverFileId(fileId);
                             }}
                             label="Book Cover"
-                            fallbackUrl="https://picsum.photos/seed/newbook/400/600"
+                            fallbackUrl="/images/unchosen-story-cover.svg"
                             aspectRatio={2/3}
                             cropShape="rect"
                             onBusyChange={setIsCoverUploading}
                             disabled={isSaving}
                         />
+                        <div>
+                            <label htmlFor="story-details-summary" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Short introduction (optional)</label>
+                            <input id="story-details-summary" value={summary} maxLength={200} onChange={event => setSummary(event.target.value)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
+                        </div>
+                        <div>
+                            <label htmlFor="story-details-tags" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Tags (optional)</label>
+                            <input id="story-details-tags" value={tags} onChange={event => setTags(event.target.value)} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" aria-describedby="story-details-tags-help" />
+                            <p id="story-details-tags-help" className="mt-1 text-xs text-gray-500">Separate tags with commas.</p>
+                        </div>
                         <div>
                             <label htmlFor="story-details-description" className="block text-sm font-bold mb-1 dark:text-dark-text-body">Description</label>
                             <textarea id="story-details-description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-2 rounded-lg border dark:bg-dark-surface-alt dark:border-dark-border" />
@@ -258,16 +284,17 @@ const EditBookModal: React.FC<{ isOpen: boolean; onClose: () => void; book: Book
                                 </div>
                             </label>
                         </div>
-                    </form>
+                    </fieldset></form>
                 </div>
                 <div className="p-6 border-t dark:border-dark-border flex justify-end gap-3">
                     {saveError && <p className="mr-auto max-w-sm text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{saveError}</p>}
-                    <button onClick={onClose} disabled={isSaving || isCoverUploading} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50">Cancel</button>
+                    <button onClick={requestClose} disabled={isSaving || isCoverUploading} className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50">Cancel</button>
                     <button form="edit-book-form" type="submit" disabled={isSaving || isCoverUploading} className="px-4 py-2 text-sm font-bold text-white bg-accent hover:bg-primary rounded-lg disabled:opacity-50">
                         {isCoverUploading ? 'Uploading cover…' : isSaving ? 'Saving…' : 'Save Changes'}
                     </button>
                 </div>
             </div>
+            <ConfirmDialog isOpen={showDiscard} title="Discard story detail changes?" message="Your changes have not been saved. Keep editing to save them, or discard them to close story details." confirmLabel="Discard changes" processingLabel="Discarding…" onConfirm={onClose} onCancel={() => setShowDiscard(false)} />
         </div>
     );
 };
@@ -424,7 +451,32 @@ const ImportCharacterReviewDialog: React.FC<{
     );
 };
 
-const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, isBusy?: boolean, onPublishToggle: () => void, onCancelSchedule: () => void, onDelete: () => void, onShare: () => void }> = ({ chapter, bookId, index, isBusy = false, onPublishToggle, onCancelSchedule, onDelete, onShare }) => (
+const ManuscriptPreflightDialog: React.FC<{ file: File; preview: api.ManuscriptPreflight | null; error: string; onClose: () => void; onConfirm: () => void; onRetry: () => void }> = ({ file, preview, error, onClose, onConfirm, onRetry }) => {
+    const dialogRef = useDialog(true, onClose);
+    return (
+        <div className="ww-studio-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+            <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="import-preview-title" className="ww-import-preview bg-white dark:bg-dark-surface rounded-2xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto">
+                <h2 id="import-preview-title" className="text-xl font-bold">Review manuscript import</h2>
+                <p>{file.name} · {(file.size / 1024).toFixed(1)} KB</p>
+                {!preview && !error && <p role="status">Checking chapter boundaries and images…</p>}
+                {error && <p role="alert">{error} <button className="ww-studio-text-link" onClick={onRetry}>Check manuscript again</button></p>}
+                {preview && <>
+                    <p>{preview.chapters.length} {preview.chapters.length === 1 ? 'chapter' : 'chapters'} · {preview.chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0).toLocaleString()} words{preview.embeddedImages ? ` · ${preview.embeddedImages} embedded images` : ''}</p>
+                    <p>These chapters will be added after your existing manuscript as private drafts. Your current chapters stay saved.</p>
+                    {preview.warnings.length > 0 && <ul className="ww-import-preview-warnings">{preview.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
+                    <ol className="ww-import-preview-chapters">{preview.chapters.map((chapter, index) => <li key={index}><span>{index + 1}. {chapter.title}</span><small>{chapter.wordCount.toLocaleString()} words</small></li>)}</ol>
+                    <p>You can undo the whole imported chapter batch while every imported chapter is unchanged and private.</p>
+                </>}
+                <div className="flex justify-end gap-3 mt-6">
+                    <button className="px-4 py-2" onClick={onClose}>Cancel import</button>
+                    <button className="ww-studio-primary" disabled={!preview || preview.chapters.length === 0} onClick={onConfirm}>Import private drafts</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: number, isBusy?: boolean, onPublishToggle: () => void, onCancelSchedule: () => void, onDelete: () => void, onShare: () => void, onDuplicate: () => void, onMove: (direction: -1 | 1) => void, canMoveUp: boolean, canMoveDown: boolean }> = ({ chapter, bookId, index, isBusy = false, onPublishToggle, onCancelSchedule, onDelete, onShare, onDuplicate, onMove, canMoveUp, canMoveDown }) => (
     <div className="ww-manage-chapter-card flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-dark-surface rounded-lg border dark:border-dark-border group hover:border-accent/30 transition-colors gap-4">
         <div className="ww-manage-chapter-main flex items-center gap-4">
             <span className="font-sans font-bold text-gray-400 dark:text-gray-500 w-6 text-center">{index + 1}</span>
@@ -466,6 +518,8 @@ const ChapterListItem: React.FC<{ chapter: Chapter, bookId: string, index: numbe
                     <ShareIcon className="w-4 h-4" /> Share
                 </button>
             )}
+            <button onClick={onDuplicate} disabled={isBusy}>Duplicate as private draft</button>
+            {chapter.status === 'draft' && !chapter.publishedAt && <><button onClick={() => onMove(-1)} disabled={isBusy || !canMoveUp}>Move up</button><button onClick={() => onMove(1)} disabled={isBusy || !canMoveDown}>Move down</button></>}
             <button
                 onClick={onDelete}
                 disabled={isBusy}
@@ -504,8 +558,16 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     const [importReview, setImportReview] = useState<{ candidates: string[]; embeddedImages: number; uploadedImages: number } | null>(null);
     const [isCreatingImportedCharacters, setIsCreatingImportedCharacters] = useState(false);
     const importInputRef = useRef<HTMLInputElement>(null);
+    const [stagedImport, setStagedImport] = useState<{ file: File; preview: api.ManuscriptPreflight | null; error: string } | null>(null);
+    const preflightSequence = useRef(0);
+    const importUndoKey = `ww:import-undo:${currentUser.id}:${bookId}`;
+    const [undoImport, setUndoImport] = useState<{ importId: string; count: number } | null>(() => { try { return parseImportUndo(JSON.parse(readOptionalSessionValue(importUndoKey) || 'null')); } catch { return null; } });
+    const [showUndoImport, setShowUndoImport] = useState(false);
+    useEffect(() => { try { const value = JSON.parse(readOptionalSessionValue(importUndoKey) || 'null'); setUndoImport(parseImportUndo(value)); } catch { setUndoImport(null); } setShowUndoImport(false); setStagedImport(null); }, [importUndoKey]);
     const [isNavigatingNewChapter, setIsNavigatingNewChapter] = useState(false);
     const [pendingAction, setPendingAction] = useState<string | null>(null);
+    const [chapterSearch, setChapterSearch] = useState('');
+    const [chapterFilter, setChapterFilter] = useState<'all' | 'draft' | 'published' | 'scheduled'>('all');
     const [showPublishStoryDialog, setShowPublishStoryDialog] = useState(false);
     const [releaseTarget, setReleaseTarget] = useState<string | null>(null);
     const [showReturnDraftConfirm, setShowReturnDraftConfirm] = useState(false);
@@ -535,6 +597,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
     // Derived state
     const publishedChapterCount = book?.chapters.filter(c => c.status === 'published').length || 0;
     const isBookPublished = book?.publicationStatus === 'published';
+    const visibleChapters = (book?.chapters || []).filter(chapter => (chapterFilter === 'all' || chapter.status === chapterFilter) && chapter.title.toLowerCase().includes(chapterSearch.toLowerCase()));
     const totalWords = book?.chapters.reduce((sum, chapter) => sum + (chapter.wordCount || 0), 0) || 0;
 
     const performChapterPublishToggle = async (chapterId: string) => {
@@ -655,6 +718,35 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
         onUserUpdate(updatedUser);
     };
 
+    const prepareManuscriptImport = async (file?: File) => {
+        if (!file || isImportingRef.current) return;
+        setErrorMsg(null);
+        if (importInputRef.current) importInputRef.current.value = '';
+        try { validateManuscriptFile(file.name, file.size); } catch (failure) { setErrorMsg(failure instanceof Error ? failure.message : 'Choose a supported manuscript.'); return; }
+        const sequence = ++preflightSequence.current;
+        setStagedImport({ file, preview: null, error: '' });
+        try { const preview = await api.preflightManuscript(bookId, file); if (sequence === preflightSequence.current) setStagedImport({ file, preview, error: '' }); }
+        catch (failure) { if (sequence === preflightSequence.current) setStagedImport({ file, preview: null, error: failure instanceof Error ? failure.message : 'Could not check this manuscript.' }); }
+    };
+    const cancelPreflight = () => { preflightSequence.current++; setStagedImport(null); };
+    useEffect(() => () => { preflightSequence.current++; }, [bookId]);
+    const performChapterAction = async (chapterId: string, direction?: -1 | 1) => {
+        if (!book || pendingAction) return;
+        const chapterIds = direction ? movePrivateChapter(book.chapters, chapterId, direction) : null;
+        if (direction && !chapterIds) return;
+        setPendingAction(direction ? 'reorder-chapters' : `duplicate-chapter:${chapterId}`);
+        setErrorMsg(null);
+        try { onUserUpdate(direction ? await api.reorderChapters(bookId, chapterIds!) : await api.duplicateChapter(bookId, chapterId)); }
+        catch (failure) { setErrorMsg(failure instanceof Error ? failure.message : 'The chapter could not be changed.'); }
+        finally { setPendingAction(null); }
+    };
+    const undoManuscript = async () => {
+        if (!undoImport || pendingAction) return;
+        setPendingAction('undo-import');
+        try { onUserUpdate(await api.undoManuscriptImport(bookId, undoImport.importId)); setUndoImport(null); writeOptionalSessionValue(importUndoKey, 'null'); setShowUndoImport(false); setImportReview(null); setImportNotice('The imported chapter batch was removed. Your previous manuscript stays saved.'); setErrorMsg(null); }
+        catch (failure) { setErrorMsg(failure instanceof Error ? failure.message : 'The import could not be undone.'); setShowUndoImport(false); }
+        finally { setPendingAction(null); }
+    };
     const handleManuscriptImport = async (file?: File) => {
         if (!file || isImportingRef.current) return;
         isImportingRef.current = true;
@@ -673,6 +765,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 setImportPercent(percent);
             });
             onUserUpdate(result.user);
+            if (result.importId) { const undo = { importId: result.importId, count: result.importedChapters }; setUndoImport(undo); writeOptionalSessionValue(importUndoKey, JSON.stringify(undo)); }
             const imageSummary = result.embeddedImages > 0 ? ` ${result.uploadedImages} embedded ${result.uploadedImages === 1 ? 'image was' : 'images were'} placed in the imported chapters.` : '';
             setImportNotice(`${result.importedChapters} ${result.importedChapters === 1 ? 'chapter' : 'chapters'} imported as private drafts.${imageSummary}`);
             if (result.characterCandidates.length > 0) {
@@ -729,6 +822,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
             </header>
             {errorMsg && <div className="ww-manage-error" role="alert">{errorMsg}</div>}
             {importNotice && <div className="ww-manage-import-notice" role="status">{importNotice}</div>}
+            {undoImport && <div className="ww-manage-import-notice">{undoImport.count} imported {undoImport.count === 1 ? 'chapter' : 'chapters'} in your latest batch. <button className="ww-studio-text-link" onClick={() => setShowUndoImport(true)} disabled={pendingAction !== null}>Undo chapter import</button><small>Available while all imported chapters are unchanged and private.</small></div>}
 
             <div className="ww-manage-workspace">
                 <nav className="ww-manage-tabs" aria-label="Story workspace">
@@ -741,7 +835,7 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                     <button onClick={() => setIsEditModalOpen(true)}>Story details</button>
                     <button onClick={() => navigatePath(`/write/analytics?book=${bookId}`)}>Statistics</button>
                 </nav>
-                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span>{isBookPublished && <a className="ww-studio-text-link" href={`/book/${book.id}`}>Preview story <ExternalLink size={16} /></a>}<DisclosureMenu label="Story actions"><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></DisclosureMenu><input ref={importInputRef} className="sr-only" type="file" aria-label="Import manuscript file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => handleManuscriptImport(event.target.files?.[0])} /></div>
+                <div className="ww-manage-workspace-toolbar"><span className={`ww-studio-status ${book.publicationStatus}`}>{isBookPublished ? 'Published' : 'Private story'}</span><a className="ww-studio-text-link" href={`/book/${book.id}`}>{isBookPublished ? 'Preview story' : 'Preview private story'} <ExternalLink size={16} /></a><DisclosureMenu label="Story actions"><button onClick={() => importInputRef.current?.click()} disabled={isImporting}><Upload size={16} />{isImporting ? 'Importing…' : 'Import manuscript'}</button><button onClick={handleBookPublishToggle} disabled={pendingAction !== null}>{pendingAction === 'book-status' ? 'Updating…' : isBookPublished ? 'Return to draft' : 'Publish story'}</button><button onClick={() => setIsEditModalOpen(true)}>Edit story details</button><button className="danger" onClick={() => setShowDeleteBookConfirm(true)} disabled={pendingAction !== null}>Delete story</button></DisclosureMenu><input ref={importInputRef} className="sr-only" type="file" aria-label="Import manuscript file" accept=".txt,.md,.markdown,.docx" disabled={isImporting} onChange={event => prepareManuscriptImport(event.target.files?.[0])} /></div>
                 {activeTab !== 'chapters' && <div className="ww-manage-guide-note">Private notes stay visible only to you. Public character fields linked in your manuscript appear in the reader’s story guide. Private fields stay hidden; spoiler details follow their reveal rules.</div>}
                 {activeTab === 'chapters' && (
                     <section className="ww-manage-chapters">
@@ -749,18 +843,23 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                             <div><span>Manuscript</span><h2>Chapters</h2></div>
                             <p>{publishedChapterCount} of {book.chapters.length} published</p>
                         </div>
+                        {book.chapters.length > 0 && <div className="ww-manage-chapter-filters"><label><Search size={17} /><input type="search" aria-label="Search chapters" placeholder="Search chapter titles" value={chapterSearch} onChange={event => setChapterSearch(event.target.value)} /></label><label>Status<select aria-label="Chapter status" value={chapterFilter} onChange={event => setChapterFilter(event.target.value as typeof chapterFilter)}><option value="all">All chapters</option><option value="draft">Private drafts</option><option value="published">Published</option><option value="scheduled">Scheduled</option></select></label><span role="status">{visibleChapters.length} of {book.chapters.length} chapters</span></div>}
                         <div className="ww-manage-chapter-list">
-                            {book.chapters.length > 0 ? book.chapters.map((chapter, i) => (
+                            {book.chapters.length > 0 ? visibleChapters.map((chapter) => (
                                 <ChapterListItem
                                     key={chapter.id}
                                     chapter={chapter}
                                     bookId={book.id}
-                                    index={i}
-                                    isBusy={pendingAction === `chapter-status:${chapter.id}` || pendingAction === `delete-chapter:${chapter.id}`}
+                                    index={book.chapters.indexOf(chapter)}
+                                    isBusy={pendingAction !== null}
                                     onPublishToggle={() => handlePublishChapterToggle(chapter.id)}
                                     onCancelSchedule={() => handleCancelSchedule(chapter.id)}
                                     onDelete={() => setDeleteChapterTarget({ id: chapter.id, title: chapter.title })}
                                     onShare={() => setShareChapter(chapter)}
+                                    onDuplicate={() => performChapterAction(chapter.id)}
+                                    onMove={direction => performChapterAction(chapter.id, direction)}
+                                    canMoveUp={!!movePrivateChapter(book.chapters, chapter.id, -1)}
+                                    canMoveDown={!!movePrivateChapter(book.chapters, chapter.id, 1)}
                                 />
                             )) : (
                                 <div className="ww-manage-empty">
@@ -773,12 +872,13 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                                 </div>
                             )}
                         </div>
+                        {book.chapters.length > 0 && visibleChapters.length === 0 && <div className="ww-manage-empty"><h3>No chapters match.</h3><p>Try another title or status.</p><button onClick={() => { setChapterSearch(''); setChapterFilter('all'); }}>Show all chapters</button></div>}
                     </section>
                 )}
 
-                {activeTab === 'characters' && <CharacterList bookId={bookId} ownerId={currentUser.id} />}
-                {activeTab === 'scenes' && <SceneList bookId={bookId} ownerId={currentUser.id} chapters={book.chapters} />}
-                {activeTab === 'notes' && <NoteList bookId={bookId} ownerId={currentUser.id} />}
+                {activeTab === 'characters' && <CharacterList bookId={bookId} ownerId={currentUser.id} compact />}
+                {activeTab === 'scenes' && <SceneList bookId={bookId} ownerId={currentUser.id} chapters={book.chapters} compact />}
+                {activeTab === 'notes' && <NoteList bookId={bookId} ownerId={currentUser.id} compact />}
             </div>
 
             <EditBookModal
@@ -798,6 +898,8 @@ export const ManageChaptersPage: React.FC<ManageChaptersPageProps> = ({ currentU
                 onPublish={confirmStoryPublication}
             />
 
+            {stagedImport && <ManuscriptPreflightDialog file={stagedImport.file} preview={stagedImport.preview} error={stagedImport.error} onClose={cancelPreflight} onRetry={() => prepareManuscriptImport(stagedImport.file)} onConfirm={() => { const file = stagedImport.file; cancelPreflight(); void handleManuscriptImport(file); }} />}
+            <ConfirmDialog isOpen={showUndoImport} title="Undo imported chapters?" message={`Remove all ${undoImport?.count || 0} chapters from this import? This only succeeds while every imported chapter is unchanged and private. Characters you added separately stay in your story bible.`} confirmLabel="Undo chapter import" processingLabel="Undoing import…" isProcessing={pendingAction === 'undo-import'} onConfirm={undoManuscript} onCancel={() => setShowUndoImport(false)} />
             {importReview && (
                 <ImportCharacterReviewDialog
                     candidates={importReview.candidates}

@@ -54,6 +54,29 @@ class ChapterPublishingServiceTest {
     }
 
     @Test
+    void scheduleValidatesMatureAuthorEligibilityBeforeAcceptingTheRelease() {
+        var users = mock(com.wordweft.user.repository.UserRepository.class);
+        var author = new com.wordweft.user.model.User(); author.setId("author-1"); author.setDateOfBirth(java.time.LocalDate.of(2015, 1, 1)); author.setAllowMatureContent(false);
+        when(users.findById("author-1")).thenReturn(Optional.of(author));
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "userRepository", users);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "contentAccessService", new ContentAccessService());
+        chapter.setContentWarnings(List.of("GORE"));
+        assertThrows(ResponseStatusException.class, () -> service.schedule("author-1", "book-1", "chapter-1", NOW.plusSeconds(600)));
+        assertEquals("draft", chapter.getStatus()); assertNull(chapter.getScheduledAt()); assertEquals(com.wordweft.book.model.AgeRating.ALL_AGES, book.getAgeRating());
+        verify(books, never()).save(any());
+        author.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1));
+        service.schedule("author-1", "book-1", "chapter-1", NOW.plusSeconds(600));
+        assertEquals("scheduled", chapter.getStatus()); assertEquals(com.wordweft.book.model.AgeRating.ALL_AGES, book.getAgeRating());
+    }
+
+    @Test
+    void schedulingRejectsMarkupContainingOnlyNonbreakingSpaces() {
+        chapter.setContent("<p>&nbsp;<br>&#160;</p>");
+        assertThrows(ResponseStatusException.class, () -> service.schedule("author-1", "book-1", "chapter-1", NOW.plusSeconds(600)));
+        verify(books, never()).save(any());
+    }
+
+    @Test
     void scheduleStoresTheUtcInstantAndScheduledStatus() {
         Instant release = NOW.plus(2, ChronoUnit.HOURS);
 

@@ -64,6 +64,60 @@
   .ww-reading-preview-canvas.reader-experience.reader-v2 .reader-copy { font-size: 18px; padding-inline-end: 20px; }
 }
 .ww-editor-publish-review { max-height: 90dvh; overflow: auto; }
+.ww-editor-chapter-search { display: flex; gap: 8px; align-items: center; border: 1px solid var(--studio-line); border-radius: 7px; margin-bottom: 14px; padding: 0 10px; color: var(--studio-muted); }
+.ww-editor-chapter-search input { width: 100%; min-width: 0; min-height: 40px; background: transparent; color: var(--studio-ink); font-size: 13px; }
+.ww-editor-chapter-rail nav button[hidden], .ww-editor-mobile-sheet nav button[hidden] { display: none; }
+.ww-editor-export-actions { display: grid; gap: 8px; }
+.ww-editor-export-actions button { min-height: 44px; padding: 9px 12px; border: 1px solid var(--studio-line); border-radius: 7px; text-align: left; font-size: 12px; color: var(--studio-ink); background: var(--studio-paper); transition: background-color 140ms ease; }
+.ww-editor-export-actions button:hover { background: var(--studio-surface); }
+.ww-writer-v2 .ww-editor-chapter-rail nav button, .ww-writer-v2 .ww-editor-mobile-sheet nav button { color: var(--studio-muted); }
+.ww-writer-v2 .ww-editor-chapter-number, .ww-writer-v2 .ww-editor-title-block > span, .ww-writer-v2 .ww-editor-manuscript-footer { color: var(--studio-muted); }
+.ww-writer-v2 .ww-editor-paper .rte-content:focus-visible { outline: 0; box-shadow: inset 3px 0 0 var(--studio-blue); }
+.dark .ww-writer-v2 .ww-editor-paper .rte-content:focus-visible { box-shadow: inset 3px 0 0 #9bb4e3; }
+.ww-writer-v2 .ww-editor-preview:focus-visible, .ww-reading-preview-canvas:focus-visible { outline: 2px solid var(--studio-blue, #344e83); outline-offset: -3px; }
+.ww-writer-success-primary, .ww-writer-success-secondary { display: flex; gap: 9px; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 1px solid var(--ww-line, #dce2ec); border-radius: 8px; font-size: 14px; font-weight: 500; }
+.ww-writer-success-primary { background: #344e83; color: #fff; border-color: #344e83; }
+.ww-writer-success-secondary { color: var(--ww-ink); background: var(--ww-paper); }
+.ww-writer-success-secondary:hover { background: var(--ww-canvas); }
+.ww-version-dialog > small { color: var(--ww-muted); line-height: 1.6; margin-bottom: 10px; }
+.ww-version-checkpoint { margin-bottom: 18px; }
+.ww-version-checkpoint label { display: block; margin-bottom: 8px; font-size: 13px; }
+.ww-version-checkpoint > div { display: flex; gap: 8px; }
+.ww-version-checkpoint input { min-width: 0; flex: 1; min-height: 44px; padding: 9px 12px; border: 1px solid var(--ww-line-strong); background: var(--ww-canvas); color: var(--ww-ink); border-radius: 7px; font-size: 13px; }
+.ww-version-checkpoint button, .ww-version-comparison button { min-height: 44px; padding: 10px 12px; border: 1px solid var(--ww-line); border-radius: 7px; font-size: 13px; }
+.ww-version-checkpoint button, .ww-version-restore-actions > button { background: #344e83; color: #fff; }
+.ww-version-comparison { min-height: 0; overflow-y: auto; }
+.ww-version-comparison > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+.ww-version-comparison-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ww-version-comparison-columns section { min-width: 0; }
+.ww-version-comparison-columns h4 { font-size: 12px; color: var(--ww-muted); margin-bottom: 10px; }
+.ww-version-comparison-columns strong { display: block; font-size: 14px; margin-bottom: 12px; }
+.ww-version-comparison-columns [role=region] { max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 16px/1.7 'WordWeft Serif', serif; padding: 14px; border: 1px solid var(--ww-line); border-radius: 8px; background: var(--ww-canvas); }
+.ww-version-restore-actions { display: grid; gap: 14px; margin-top: 20px; }
+.ww-version-restore-actions details { font-size: 13px; }
+.ww-version-restore-actions summary { cursor: pointer; min-height: 44px; display: list-item; padding: 10px 0; color: var(--ww-muted); }
+.ww-version-restore-actions details p { line-height: 1.6; margin: 10px 0; }
+.ww-schedule-summary { display: grid; gap: 8px; padding: 14px; margin: 18px 0; border: 1px solid var(--ww-line); border-radius: 8px; font-size: 13px; overflow-wrap: anywhere; }
+.ww-schedule-summary small { line-height: 1.6; }
+.ww-schedule-dialog .ww-schedule-confirm { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.6; margin-top: 18px; }
+.ww-schedule-dialog .ww-schedule-confirm input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin-top: 2px; accent-color: #344e83; }
+.ww-character-scan-occurrences { display: grid; gap: 8px; margin: 14px 0; padding: 0; list-style: none; }
+.ww-character-scan-occurrences li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--ww-line); border-radius: 7px; font-size: 13px; }
+.ww-character-scan-occurrences span { color: var(--ww-muted); }
+.ww-editor-chapter-empty { padding: 12px 0; color: var(--studio-muted); font-size: 13px; line-height: 1.6; }
+.ww-editor-release-date { display: block; color: var(--studio-muted); margin-bottom: 12px; line-height: 1.6; }
+.ww-writer-v2 .ww-editor-loading-manuscript { width: min(714px, 100%); min-height: 700px; margin: 24px auto 0; padding: 80px 60px; border: 1px solid var(--studio-line); border-radius: 4px; background: var(--studio-paper); }
+.ww-editor-skeleton-title, .ww-editor-skeleton-paragraph span { background: var(--studio-line); border-radius: 3px; }
+.ww-editor-skeleton-title { width: 60%; height: 34px; margin-bottom: 40px; }
+.ww-editor-skeleton-paragraph { display: grid; gap: 14px; margin-bottom: 32px; }
+.ww-editor-skeleton-paragraph span { height: 12px; }
+.ww-editor-skeleton-paragraph span:last-child { width: 72%; }
+@media (max-width: 640px) { .ww-writer-v2 .ww-editor-loading-manuscript { padding: 44px 24px; } }
+@media (max-width: 600px) {
+  .ww-version-checkpoint > div { flex-direction: column; }
+  .ww-version-comparison-columns { grid-template-columns: 1fr; }
+  .ww-version-comparison-columns [role=region] { max-height: 220px; }
+}
 @media (max-width: 600px) {
   .ww-session-dialog { padding: 20px; max-height: calc(100dvh - 24px); padding-bottom: max(20px, env(safe-area-inset-bottom)); }
 }

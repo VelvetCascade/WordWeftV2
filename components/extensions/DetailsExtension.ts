@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { insertStructuredBlock } from '../../utils/editorStructuredBlocks';
 
 /**
  * Custom Details node - wraps content in a collapsible <details> element.
@@ -68,21 +69,11 @@ export const Details = Node.create({
 
     addCommands() {
         return {
-            setDetails: () => ({ commands }) => {
-                return commands.insertContent({
-                    type: this.name,
-                    attrs: { open: true },
-                    content: [
-                        {
-                            type: 'detailsSummary',
-                            content: [{ type: 'text', text: 'Click to expand' }],
-                        },
-                        {
-                            type: 'detailsContent',
-                            content: [{ type: 'paragraph' }],
-                        },
-                    ],
-                });
+            setDetails: () => ({ state, dispatch }) => {
+                const tr = insertStructuredBlock(state, 'details');
+                if (!tr) return false;
+                if (dispatch) dispatch(tr);
+                return true;
             },
             unsetDetails: () => ({ commands }) => {
                 return commands.lift(this.name);

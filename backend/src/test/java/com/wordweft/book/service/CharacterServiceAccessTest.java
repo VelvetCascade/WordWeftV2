@@ -265,6 +265,23 @@ class CharacterServiceAccessTest {
         assertEquals("PRIVATE", saved.getDescriptionVisibility()); assertEquals("PUBLIC",saved.getGoalVisibility());
     }
 
+    @Test
+    void authorAliasesPersistAndFutureDraftRevealNeverLeaksToReaders() {
+        Chapter released = new Chapter(); released.setId("released"); released.setStatus("published");
+        Chapter draft = new Chapter(); draft.setId("future"); book.setChapters(List.of(released, draft));
+        signIn("owner", 1995, false);
+        Character changes = new Character(); changes.setName("Elaria"); changes.setImageUrl(character.getImageUrl());
+        changes.setAliases(List.of(" Lia ", "River Captain")); changes.setSpoilerChapterId("future"); changes.setSpoilerDetails("FUTURE_SECRET");
+        Character saved = service.updateCharacter("cast-member", changes);
+        assertEquals(List.of("Lia", "River Captain"), saved.getAliases()); assertEquals("future", saved.getSpoilerChapterId());
+        assertEquals(List.of("Lia", "River Captain"), service.getCharactersByBookId("story").get(0).get("aliases"));
+        signIn("reader", 1995, false);
+        var view = service.getCharactersByBookId("story", "future").get(0);
+        assertFalse(view.containsKey("aliases")); assertFalse(view.containsKey("spoilerDetails"));
+        draft.setStatus("published");
+        assertEquals("FUTURE_SECRET", service.getCharactersByBookId("story", "future").get(0).get("spoilerDetails"));
+    }
+
     private void signIn(String id, int birthYear, boolean matureOptIn) {
         User user = new User(); user.setId(id); user.setDateOfBirth(LocalDate.of(birthYear, 1, 1));
         user.setAllowMatureContent(matureOptIn);

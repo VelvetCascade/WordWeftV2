@@ -1,5 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
+import { removeEditorBlockFormatting } from '../../utils/editorTools';
+import { insertStructuredBlock } from '../../utils/editorStructuredBlocks';
 
 /**
  * Pull Quote / Epigraph Extension — decorative typography block.
@@ -18,7 +20,7 @@ export const PullQuote = Node.create({
     allowGapCursor: true,
 
     parseHTML() {
-        return [{ tag: 'blockquote[data-pullquote]' }];
+        return [{ tag: 'blockquote[data-pullquote]', priority: 60 }];
     },
 
     renderHTML({ HTMLAttributes }) {
@@ -91,12 +93,9 @@ export const PullQuote = Node.create({
                 // If at start of pullQuoteText and text is empty or at pos 0
                 const startOfPQ = $from.start(pullQuoteDepth);
                 if ($from.pos <= startOfPQ + 1 && $from.parent.textContent.length === 0) {
-                    // Delete the entire pull quote and insert an empty paragraph
-                    const { tr } = state;
-                    const from = $from.before(pullQuoteDepth);
-                    const to = $from.after(pullQuoteDepth);
-                    tr.replaceWith(from, to, state.schema.nodes.paragraph.create());
-                    tr.setSelection(TextSelection.near(tr.doc.resolve(from + 1)));
+                    // Remove the frame while retaining the attribution and marks.
+                    const tr = removeEditorBlockFormatting(state, this.name);
+                    if (!tr) return false;
                     editor.view.dispatch(tr);
                     return true;
                 }
@@ -133,20 +132,11 @@ export const PullQuote = Node.create({
 
     addCommands() {
         return {
-            insertPullQuote: () => ({ commands }) => {
-                return commands.insertContent({
-                    type: this.name,
-                    content: [
-                        {
-                            type: 'pullQuoteText',
-                            content: [{ type: 'text', text: 'Enter your quote here...' }],
-                        },
-                        {
-                            type: 'pullQuoteCite',
-                            content: [{ type: 'text', text: '— Attribution' }],
-                        },
-                    ],
-                });
+            insertPullQuote: () => ({ state, dispatch }) => {
+                const tr = insertStructuredBlock(state, 'pullQuote');
+                if (!tr) return false;
+                if (dispatch) dispatch(tr);
+                return true;
             },
         };
     },
@@ -159,7 +149,7 @@ export const PullQuoteText = Node.create({
     isolating: true,
 
     parseHTML() {
-        return [{ tag: 'blockquote[data-pullquote] > p' }];
+        return [{ tag: 'blockquote[data-pullquote] > p', priority: 60 }];
     },
 
     renderHTML({ HTMLAttributes }) {
@@ -174,7 +164,7 @@ export const PullQuoteCite = Node.create({
     isolating: true,
 
     parseHTML() {
-        return [{ tag: 'blockquote[data-pullquote] > cite' }];
+        return [{ tag: 'blockquote[data-pullquote] > cite', priority: 60 }];
     },
 
     renderHTML({ HTMLAttributes }) {

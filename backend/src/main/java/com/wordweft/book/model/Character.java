@@ -21,6 +21,9 @@ public class Character {
     @NotBlank(message = "Character name is required")
     @Size(max = 100, message = "Name must be less than 100 characters")
     private String name;
+
+    @Size(max = 20)
+    private java.util.List<@jakarta.validation.constraints.NotBlank @Size(max = 100) String> aliases;
     
     @Size(max = 50)
     private String role; // e.g., Protagonist, Antagonist, Supporting

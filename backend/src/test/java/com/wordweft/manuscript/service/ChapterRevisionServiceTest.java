@@ -127,6 +127,41 @@ class ChapterRevisionServiceTest {
     }
 
     @Test
+    void checkpointRejectsStaleTabRevisionBeforeLabelingAnotherTabsDraft() {
+        when(books.findById("book")).thenReturn(Optional.of(book)); chapter.setEditRevision(4);
+        assertEquals(409, assertThrows(ResponseStatusException.class, () -> service.checkpoint("author", "book", "chapter", "My saved draft", 3L)).getStatusCode().value());
+        verify(revisions, never()).save(any());
+    }
+
+    @Test
+    void workingDraftRestoreKeepsTheLiveReleaseAndAllLaterReleasesAndSchedules() {
+        chapter.setPublishedAt(NOW.minusSeconds(120));
+        Chapter later = new Chapter(); later.setId("later"); later.setStatus("published"); later.setPublishedAt(NOW.minusSeconds(60));
+        Chapter scheduled = new Chapter(); scheduled.setId("scheduled"); scheduled.setStatus("scheduled"); scheduled.setScheduledAt(NOW.plusSeconds(3600));
+        book.setPublicationStatus("published"); book.setChapters(List.of(chapter, later, scheduled));
+        ChapterRevision old = new ChapterRevision(); old.setId("revision"); old.setAuthorId("author"); old.setBookId("book"); old.setChapterId("chapter");
+        old.setTitle("Earlier title"); old.setContent("<p>sun<strong>rise</strong>&nbsp;again</p>");
+        when(books.findById("book")).thenReturn(Optional.of(book));
+        when(revisions.findById("revision")).thenReturn(Optional.of(old));
+        service.restore("author", "book", "chapter", "revision", 0L, true);
+        assertEquals("Earlier title", chapter.getTitle()); assertEquals(2, chapter.getWordCount());
+        assertEquals("published", chapter.getStatus()); assertEquals(NOW.minusSeconds(120), chapter.getPublishedAt());
+        assertEquals("Current title", chapter.getPublishedTitle()); assertEquals("<p>Current content</p>", chapter.getPublishedContent());
+        assertEquals("published", later.getStatus()); assertEquals(NOW.minusSeconds(60), later.getPublishedAt()); assertEquals(0, later.getEditRevision());
+        assertEquals("scheduled", scheduled.getStatus()); assertEquals(NOW.plusSeconds(3600), scheduled.getScheduledAt()); assertEquals(0, scheduled.getEditRevision());
+        assertEquals("published", book.getPublicationStatus()); assertEquals(1, chapter.getEditRevision());
+    }
+
+    @Test
+    void revisionContentCannotBeReadAcrossAnAuthorsChapters() {
+        when(books.findById("book")).thenReturn(Optional.of(book));
+        ChapterRevision unrelated = new ChapterRevision(); unrelated.setAuthorId("author"); unrelated.setBookId("another-book"); unrelated.setChapterId("chapter");
+        when(revisions.findById("revision")).thenReturn(Optional.of(unrelated));
+        assertEquals(404, assertThrows(ResponseStatusException.class, () -> service.get("author", "book", "chapter", "revision")).getStatusCode().value());
+        assertEquals(403, assertThrows(ResponseStatusException.class, () -> service.get("reader", "book", "chapter", "revision")).getStatusCode().value());
+    }
+
+    @Test
     void anotherWriterCannotListOrRestoreRevisions() {
         when(books.findById("book")).thenReturn(Optional.of(book));
 

@@ -45,6 +45,7 @@ public class CharacterService {
         requireOwner(character.getBookId(), requireAccount());
         // Creation must not become an upsert of an arbitrary existing character.
         character.setId(null);
+        character.setAliases(normalizeAliases(character.getAliases()));
         if (character.getDescriptionVisibility() == null) character.setDescriptionVisibility("PUBLIC");
         if (character.getGoalVisibility() == null) character.setGoalVisibility("PRIVATE");
         return characterRepository.save(character);
@@ -62,6 +63,7 @@ public class CharacterService {
         return characterRepository.findById(id).map(character -> {
             requireOwner(character.getBookId(), userId);
             character.setName(characterDetails.getName());
+            if (characterDetails.getAliases() != null) character.setAliases(normalizeAliases(characterDetails.getAliases()));
             character.setRole(characterDetails.getRole());
             character.setDescription(characterDetails.getDescription());
             character.setGoal(characterDetails.getGoal());
@@ -97,6 +99,14 @@ public class CharacterService {
             }
             characterRepository.deleteById(id);
         });
+    }
+
+    private List<String> normalizeAliases(List<String> aliases) {
+        if (aliases == null) return List.of();
+        if (aliases.size() > 20 || aliases.stream().anyMatch(a -> a == null || a.isBlank() || a.length() > 100)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use at most 20 aliases of 100 characters or fewer.");
+        }
+        return aliases.stream().map(String::trim).distinct().toList();
     }
 
     private Book visibleBook(String bookId) {
@@ -164,6 +174,7 @@ public class CharacterService {
         if (owner || spoilerPermitted(book, chapterId, character.getSpoilerChapterId())) view.put("spoilerDetails", character.getSpoilerDetails());
         view.put("imageUrl", character.getImageUrl());
         if (owner) {
+            view.put("aliases", character.getAliases() == null ? List.of() : character.getAliases());
             view.put("descriptionVisibility", character.getDescriptionVisibility() == null ? "PUBLIC" : character.getDescriptionVisibility());
             view.put("goalVisibility", character.getGoalVisibility() == null ? "PRIVATE" : character.getGoalVisibility());
             view.put("spoilerChapterId", character.getSpoilerChapterId());

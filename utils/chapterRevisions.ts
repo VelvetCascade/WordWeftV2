@@ -5,6 +5,7 @@ export function revisionReasonLabel(reason: string): string {
         case 'PUBLISH': return 'Before publishing';
         case 'STATUS_CHANGE': return 'Before status change';
         case 'PRE_RESTORE': return 'Before a restore';
+        case 'CHECKPOINT': return 'Named checkpoint';
         default: return 'Saved version';
     }
 }
