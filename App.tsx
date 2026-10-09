@@ -39,6 +39,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(mo
 const AboutPage = lazy(() => import('./pages/AboutPage').then(module => ({ default: module.AboutPage })));
 const FoundingWritersPage = lazy(() => import('./pages/FoundingWritersPage').then(module => ({ default: module.FoundingWritersPage })));
 const FoundingWriterAdminPage = lazy(() => import('./pages/FoundingWriterAdminPage').then(module => ({ default: module.FoundingWriterAdminPage })));
+const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage').then(module => ({ default: module.AdminConsolePage })));
 import { FeedbackToast } from './components/FeedbackToast';
 import { FeedbackModal } from './components/FeedbackModal';
 import { FeedbackBanner } from './components/FeedbackBanner';
@@ -97,6 +98,7 @@ export type Page =
   | { name: 'about' }
   | { name: 'founding-writers' }
   | { name: 'admin-founding-writers' }
+  | { name: 'admin-console' }
   | { name: 'genre-page'; genre: string }
   | { name: 'reset-password'; token: string };
 
@@ -168,6 +170,7 @@ const App: React.FC = () => {
       case 'about': window.location.hash = '/about'; break;
       case 'founding-writers': window.location.hash = '/founding-writers'; break;
       case 'admin-founding-writers': window.location.hash = '/admin/founding-writers'; break;
+      case 'admin-console': window.location.hash = '/admin'; break;
       case 'hook-feed': window.location.hash = '/hooks'; break;
       case 'reading-growth': window.location.hash = '/events'; break;
       default: window.location.hash = '/'; break;
@@ -320,6 +323,8 @@ const App: React.FC = () => {
 
       if (hash.startsWith('admin/founding-writers')) {
         targetPage = { name: 'admin-founding-writers' };
+      } else if (hash === 'admin' || hash.startsWith('admin/overview')) {
+        targetPage = { name: 'admin-console' };
       } else if (hash.startsWith('founding-writers')) {
         targetPage = { name: 'founding-writers' };
       } else if (landingPages[cleanPath]) {
@@ -416,7 +421,7 @@ const App: React.FC = () => {
         targetPage = { name: 'home' };
       }
 
-      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'library', 'edit-profile', 'notifications', 'admin-founding-writers'];
+      const protectedRoutes: Page['name'][] = ['writer-dashboard', 'writer-create-book', 'writer-manage-book', 'writer-edit-chapter', 'writer-analytics', 'writer-settings', 'profile', 'library', 'edit-profile', 'notifications', 'admin-founding-writers', 'admin-console'];
 
       if (protectedRoutes.includes(targetPage.name) && !sessionAuthenticated.current) {
         setIntendedPage(targetPage);
@@ -582,6 +587,8 @@ const App: React.FC = () => {
         return <FoundingWritersPage key={currentUser?.id || 'guest'} currentUser={currentUser} />;
       case 'admin-founding-writers':
         return <FoundingWriterAdminPage isAdmin={currentUser?.roles?.includes('ROLE_ADMIN') === true} />;
+      case 'admin-console':
+        return <AdminConsolePage isAdmin={currentUser?.roles?.includes('ROLE_ADMIN') === true} />;
       case 'reset-password':
         return <ResetPasswordPage token={page.token} />;
       default:
@@ -590,7 +597,7 @@ const App: React.FC = () => {
   };
 
   const isWriterPage = page.name.startsWith('writer-');
-  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'reset-password' && page.name !== 'writer-edit-chapter';
+  const showNavbar = page.name !== 'reader' && page.name !== 'auth' && page.name !== 'reset-password' && page.name !== 'writer-edit-chapter' && page.name !== 'admin-console';
 
   const feedbackCtx = {
     triggerFeedback: feedback.triggerFeedback,

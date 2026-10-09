@@ -67,8 +67,15 @@ public class Book {
     private List<Chapter> chapters = new ArrayList<>();
     private String readingStatus = "Ongoing"; // "Completed" or "Ongoing" status of the book's creation
     private String publicationStatus = "draft"; // "draft" or "published"
+    // A takedown retains manuscripts and can be restored by staff.
+    private boolean moderationRemoved = false;
+    private String moderationPreviousStatus;
+    private String moderationReason;
+    private String moderationBy;
+    private java.time.Instant moderationAt;
     private LocalDate publishedDate;
     private LocalDate lastUpdatedAt;
+    @org.springframework.data.mongodb.core.index.Indexed
     private LocalDate createdAt;
     private AgeRating ageRating = AgeRating.ALL_AGES;
     private List<String> contentWarnings = new ArrayList<>();

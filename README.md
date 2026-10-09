@@ -57,6 +57,10 @@ The browser suite uses the real local API and MongoDB, including OTP/password re
 
 Do not move cover, avatar, or character uploads to R2. Do not use the Render filesystem as durable upload storage.
 
+## Administration
+
+Production administrators can open the private console at `/admin`. See [Admin console](./docs/ADMIN-CONSOLE.md) for role requirements, live metrics, management limits and rollout checks.
+
 ## Deployment
 
 The exact Vercel, Render, and Cloudflare configuration is documented in [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md). Public SEO setup is documented separately in [`docs/SEO-LAUNCH.md`](./docs/SEO-LAUNCH.md).
