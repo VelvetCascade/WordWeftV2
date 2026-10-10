@@ -158,12 +158,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                             onError={(e) => (e.currentTarget.src = fallbackUrl)}
                         />
                         {value && !uploading && !disabled && (
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 onClick={handleRemove}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 focus:opacity-100"
+                                aria-label="Remove uploaded image"
+                                title="Remove image"
+                                className="absolute -top-2 -right-2 flex h-11 w-11 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-colors hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                             >
-                                <X className="w-3 h-3" />
+                                <X className="h-4 w-4" aria-hidden="true" />
                             </button>
                         )}
                     </div>
