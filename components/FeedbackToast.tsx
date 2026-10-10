@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export interface ToastConfig {
     message: string;
@@ -16,31 +16,48 @@ interface Props {
 export const FeedbackToast: React.FC<Props> = ({ config, onRespond, onDismiss }) => {
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
+    const closingRef = useRef(false);
+    const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const onDismissRef = useRef(onDismiss);
+    onDismissRef.current = onDismiss;
 
     useEffect(() => {
-        if (config) {
-            const showTimer = setTimeout(() => setVisible(true), 100);
-            const autoHide = setTimeout(() => handleDismiss(), 8000);
-            return () => { clearTimeout(showTimer); clearTimeout(autoHide); };
-        } else {
+        closingRef.current = false;
+        setExiting(false);
+        if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+        if (!config) {
             setVisible(false);
+            return;
         }
+        const showTimer = setTimeout(() => setVisible(true), 100);
+        const autoHide = setTimeout(() => handleDismiss(), 8000);
+        return () => {
+            clearTimeout(showTimer);
+            clearTimeout(autoHide);
+            if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+            dismissTimerRef.current = null;
+        };
     }, [config]);
 
     const handleDismiss = () => {
+        if (closingRef.current) return;
+        closingRef.current = true;
         setExiting(true);
-        setTimeout(() => {
+        dismissTimerRef.current = setTimeout(() => {
+            dismissTimerRef.current = null;
             setExiting(false);
             setVisible(false);
-            onDismiss();
+            onDismissRef.current();
         }, 300);
     };
 
     const handleRespond = (value: number) => {
-        if (config) {
-            onRespond(config.feedbackType, value);
-            handleDismiss();
-        }
+        if (!config || closingRef.current) return;
+        // Lock immediately, before the parent starts an asynchronous request.
+        const feedbackType = config.feedbackType;
+        handleDismiss();
+        onRespond(feedbackType, value);
     };
 
     if (!config || (!visible && !exiting)) return null;
@@ -48,7 +65,7 @@ export const FeedbackToast: React.FC<Props> = ({ config, onRespond, onDismiss })
     return (
         <div
             className={`ww-feedback-toast fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out
-                ${visible && !exiting ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                ${visible && !exiting ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 translate-y-4'}`}
         >
             <div className="ww-feedback-toast-card bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl shadow-xl px-6 py-4 flex items-center gap-5 max-w-lg">
                 <p className="text-sm text-text-rich dark:text-dark-text-rich font-medium">
