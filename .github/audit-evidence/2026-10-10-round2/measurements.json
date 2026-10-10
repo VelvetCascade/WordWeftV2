@@ -1,0 +1,1680 @@
+[
+  {
+    "name": "community-comment-cleared-newer-draft",
+    "file": "community-comment-cleared-newer-draft.png",
+    "url": "/community/post/local-post-update",
+    "width": 390,
+    "height": 844,
+    "scrollY": 375,
+    "docWidth": 390,
+    "remainingDraft": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-comment-pending-draft",
+    "file": "community-comment-pending-draft.png",
+    "url": "/community/post/local-post-update",
+    "width": 390,
+    "height": 844,
+    "scrollY": 375,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-composer-landscape",
+    "file": "community-composer-landscape.png",
+    "url": "/community",
+    "width": 740,
+    "height": 360,
+    "scrollY": 0,
+    "docWidth": 740,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Release</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Poll</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(4)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Workshop</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(5)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Recommendation</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "community-composer-mobile",
+    "file": "community-composer-mobile.png",
+    "url": "/community",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Release</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Poll</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(4)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Workshop</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(5)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Recommendation</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "community-poll-mobile",
+    "file": "community-poll-mobile.png",
+    "url": "/community",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Release</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Poll</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(4)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Workshop</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(5)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Recommendation</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "community-validation-offscreen",
+    "file": "community-validation-offscreen.png",
+    "url": "/community",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "validationErrors": [
+      {
+        "text": "Choose a circle for your conversation.",
+        "rect": {
+          "x": 21,
+          "y": -408.125,
+          "width": 348,
+          "height": 19.1875,
+          "top": -408.125,
+          "right": 369,
+          "bottom": -388.9375,
+          "left": 21
+        },
+        "role": null
+      },
+      {
+        "text": "Choose a format supported by this circle.",
+        "rect": {
+          "x": 21,
+          "y": -203.765625,
+          "width": 247.78125,
+          "height": 15,
+          "top": -203.765625,
+          "right": 268.78125,
+          "bottom": -188.765625,
+          "left": 21
+        },
+        "role": null
+      },
+      {
+        "text": "Write between 1 and 5,000 characters.",
+        "rect": {
+          "x": 21,
+          "y": 169.34375,
+          "width": 348,
+          "height": 19.1875,
+          "top": 169.34375,
+          "right": 369,
+          "bottom": 188.53125,
+          "left": 21
+        },
+        "role": null
+      }
+    ],
+    "active": "<button type=\"submit\" class=\"community-button primary\">Publish post</button>",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "crop-corrupt-image-stuck",
+    "file": "crop-corrupt-image-stuck.png",
+    "url": "/edit-profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "doneDisabled": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "dark-admin-390",
+    "file": "dark-admin-390.png",
+    "url": "/admin",
+    "width": 390,
+    "height": 844,
+    "docWidth": 390,
+    "role": "admin",
+    "theme": "dark",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "header > button"
+            ],
+            "html": "<button type=\"button\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #f3ece5, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(1)"
+            ],
+            "html": "<p class=\"ac-kicker\">WORDWEFT / ADMINISTRATION</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            "html": "<small>+13 in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            "html": "<small>With at least one published story</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            "html": "<small>8 drafts across the platform</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            "html": "<small>Currently visible chapters</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            "html": "<small>Recorded book read count</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            "html": "<small>Created in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Last seven days</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            "html": "<span>Sun</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            "html": "<span>Mon</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            "html": "<span>Tue</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            "html": "<span>Wed</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            "html": "<span>Thu</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            "html": "<span>Fri</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            "html": "<span>Sat</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Action required</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Catalog snapshot</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-text-button"
+            ],
+            "html": "<button type=\"button\" class=\"ac-text-button\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.23 (foreground color: #77523f, background color: #292420, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-admin-closeup",
+    "file": "dark-admin-closeup.png",
+    "url": "/admin",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "header > button"
+            ],
+            "html": "<button type=\"button\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #f3ece5, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "p:nth-child(1)"
+            ],
+            "html": "<p class=\"ac-kicker\">WORDWEFT / ADMINISTRATION</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            "html": "<small>+4 in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            "html": "<small>With at least one published story</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            "html": "<small>1 drafts across the platform</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            "html": "<small>Currently visible chapters</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            "html": "<small>Recorded book read count</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            "html": "<small>Created in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Last seven days</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            "html": "<span>Sun</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            "html": "<span>Mon</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            "html": "<span>Tue</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            "html": "<span>Wed</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            "html": "<span>Thu</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            "html": "<span>Fri</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            "html": "<span>Sat</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Action required</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Catalog snapshot</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-text-button"
+            ],
+            "html": "<button type=\"button\" class=\"ac-text-button\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.23 (foreground color: #77523f, background color: #292420, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-create-390",
+    "file": "dark-create-390.png",
+    "url": "/write/book/create",
+    "width": 390,
+    "height": 844,
+    "docWidth": 390,
+    "role": "writer",
+    "theme": "dark",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".ww-create-eyebrow"
+            ],
+            "html": "<span class=\"ww-create-eyebrow\">New story</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.04 (foreground color: #344e83, background color: #171e2a, font size: 7.4pt (9.92px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".compact > span"
+            ],
+            "html": "<span>04</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.42 (foreground color: #344e83, background color: #283953, font size: 9.4pt (12.48px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".inline-flex"
+            ],
+            "html": "<label for=\"image-upload-4oghk8\" aria-disabled=\"false\" class=\"inline-flex items-ce...\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.76 (foreground color: #344e83, background color: #202a39, font size: 9.8pt (13px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ww-create-preview-note > span"
+            ],
+            "html": "<span>Next step</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.42 (foreground color: #344e83, background color: #283953, font size: 6.7pt (8.96px), font weight: bold). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-create-closeup",
+    "file": "dark-create-closeup.png",
+    "url": "/write/book/create",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".ww-create-eyebrow"
+            ],
+            "html": "<span class=\"ww-create-eyebrow\">New story</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.04 (foreground color: #344e83, background color: #171e2a, font size: 7.4pt (9.92px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".compact > span"
+            ],
+            "html": "<span>04</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.42 (foreground color: #344e83, background color: #283953, font size: 9.4pt (12.48px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".inline-flex"
+            ],
+            "html": "<label for=\"image-upload-wguegw\" aria-disabled=\"false\" class=\"inline-flex items-ce...\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.76 (foreground color: #344e83, background color: #202a39, font size: 9.8pt (13px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ww-create-preview-note > span"
+            ],
+            "html": "<span>Next step</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.42 (foreground color: #344e83, background color: #283953, font size: 6.7pt (8.96px), font weight: bold). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-features-390",
+    "file": "dark-features-390.png",
+    "url": "/features",
+    "width": 390,
+    "height": 844,
+    "docWidth": 390,
+    "role": "guest",
+    "theme": "dark",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#reader > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Paper, Sepia and Night reading themes</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#reader > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Adjustable type size and saved reading progress</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#reader > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Paragraph discussions, chapter likes and bookmarks</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".wv-reader-demo > .wv-demo-topline"
+            ],
+            "html": "<div class=\"wv-demo-topline\">Reader demonstration</div>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #b2aea6, background color: #fbfaf7, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>A chapter editor and story workspace</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Characters, scenes and notes within reach</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Book settings for your story\u2019s details</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#characters > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Mention characters while writing</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#characters > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Reader access to character profiles</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#characters > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Writer-provided biographies and portraits</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>A spoiler control in the editor</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>A clear reveal action for readers</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Hidden content can be covered again</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".wv-feature-demo > .wv-demo-control[type=\"button\"]"
+            ],
+            "html": "<button type=\"button\" class=\"wv-demo-control\">Reveal spoiler</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.79 (foreground color: #6b432f, background color: #222626, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#mood > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Six atmosphere choices</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#mood > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Writers choose where an atmosphere begins</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#mood > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Reduced motion preferences are respected</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".wv-demo-topline > .wv-demo-control[type=\"button\"]"
+            ],
+            "html": "<button type=\"button\" class=\"wv-demo-control\" aria-pressed=\"false\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.79 (foreground color: #6b432f, background color: #222626, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#search > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Story and author search suggestions</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#search > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Keyboard navigation and Ctrl+K search</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#search > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Genres and a personal story library</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-features-closeup",
+    "file": "dark-features-closeup.png",
+    "url": "/features",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 301,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#reader > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Paper, Sepia and Night reading themes</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#reader > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Adjustable type size and saved reading progress</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#reader > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Paragraph discussions, chapter likes and bookmarks</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".wv-reader-demo > .wv-demo-topline"
+            ],
+            "html": "<div class=\"wv-demo-topline\">Reader demonstration</div>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #b2aea6, background color: #fbfaf7, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>A chapter editor and story workspace</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Characters, scenes and notes within reach</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Book settings for your story\u2019s details</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#characters > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Mention characters while writing</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#characters > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Reader access to character profiles</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#characters > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Writer-provided biographies and portraits</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>A spoiler control in the editor</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>A clear reveal action for readers</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Hidden content can be covered again</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".wv-feature-demo > .wv-demo-control[type=\"button\"]"
+            ],
+            "html": "<button type=\"button\" class=\"wv-demo-control\">Reveal spoiler</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.79 (foreground color: #6b432f, background color: #222626, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#mood > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Six atmosphere choices</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#mood > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Writers choose where an atmosphere begins</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#mood > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Reduced motion preferences are respected</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".wv-demo-topline > .wv-demo-control[type=\"button\"]"
+            ],
+            "html": "<button type=\"button\" class=\"wv-demo-control\" aria-pressed=\"false\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.79 (foreground color: #6b432f, background color: #222626, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#search > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            "html": "<li>Story and author search suggestions</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#search > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            "html": "<li>Keyboard navigation and Ctrl+K search</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#search > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            "html": "<li>Genres and a personal story library</li>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-growth-390",
+    "file": "dark-growth-390.png",
+    "url": "/events",
+    "width": 390,
+    "height": 844,
+    "docWidth": 390,
+    "role": "reader",
+    "theme": "dark",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "article:nth-child(1) > .wv-challenge-meta > span"
+            ],
+            "html": "<span>chapters</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "article:nth-child(2) > .wv-challenge-meta > span"
+            ],
+            "html": "<span>minutes</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "article:nth-child(3) > .wv-challenge-meta > span"
+            ],
+            "html": "<span>books</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "dark-growth-closeup",
+    "file": "dark-growth-closeup.png",
+    "url": "/events",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 254,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "article:nth-child(1) > .wv-challenge-meta > span"
+            ],
+            "html": "<span>chapters</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "article:nth-child(2) > .wv-challenge-meta > span"
+            ],
+            "html": "<span>minutes</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "article:nth-child(3) > .wv-challenge-meta > span"
+            ],
+            "html": "<span>books</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "events-healthy-public-fixture",
+    "file": "events-healthy-public-fixture.png",
+    "url": "/events",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 708,
+    "docWidth": 1440,
+    "publicEventsReturned": 1,
+    "visibleEventCards": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "events-private-failure",
+    "file": "events-private-failure.png",
+    "url": "/events",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "publicEventsReturned": 1,
+    "visibleEventCards": 0,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "growth-concurrent-duplicate-joins",
+    "file": "growth-concurrent-duplicate-joins.png",
+    "url": "/events",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "requests": [
+      "audit-a",
+      "audit-b",
+      "audit-a"
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-new-draft-cleared",
+    "file": "library-new-draft-cleared.png",
+    "url": "/library",
+    "width": 390,
+    "height": 844,
+    "scrollY": 554,
+    "docWidth": 390,
+    "draft": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-previous-save-closes-new-draft",
+    "file": "library-previous-save-closes-new-draft.png",
+    "url": "/library",
+    "width": 390,
+    "height": 844,
+    "scrollY": 554,
+    "docWidth": 390,
+    "openDialogs": 0,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-reopened-shelf-pending",
+    "file": "library-reopened-shelf-pending.png",
+    "url": "/library",
+    "width": 390,
+    "height": 844,
+    "scrollY": 554,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-comment-author-noninteractive",
+    "file": "reader-comment-author-noninteractive.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "authors": [
+      {
+        "text": "A",
+        "tag": "SPAN",
+        "role": "img",
+        "tabindex": null
+      },
+      {
+        "text": "Ari Lane",
+        "tag": "SPAN",
+        "role": null,
+        "tabindex": null
+      },
+      {
+        "text": "A",
+        "tag": "SPAN",
+        "role": "img",
+        "tabindex": null
+      },
+      {
+        "text": "Ari Lane",
+        "tag": "SPAN",
+        "role": null,
+        "tabindex": null
+      },
+      {
+        "text": "A",
+        "tag": "SPAN",
+        "role": "img",
+        "tabindex": null
+      },
+      {
+        "text": "Ari Lane",
+        "tag": "SPAN",
+        "role": null,
+        "tabindex": null
+      },
+      {
+        "text": "A",
+        "tag": "SPAN",
+        "role": "img",
+        "tabindex": null
+      },
+      {
+        "text": "Ari Lane",
+        "tag": "SPAN",
+        "role": null,
+        "tabindex": null
+      },
+      {
+        "text": "A",
+        "tag": "SPAN",
+        "role": "img",
+        "tabindex": null
+      },
+      {
+        "text": "Ari Lane",
+        "tag": "SPAN",
+        "role": null,
+        "tabindex": null
+      }
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-comment-draft-after-submit",
+    "file": "reader-comment-draft-after-submit.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "posts": [
+      {
+        "paragraphIndex": null,
+        "content": "AUDIT ROUND TWO: first submitted comment.",
+        "parentId": null
+      }
+    ],
+    "remainingDraft": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-comment-draft-during-submit",
+    "file": "reader-comment-draft-during-submit.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "posts": [
+      {
+        "paragraphIndex": null,
+        "content": "AUDIT ROUND TWO: first submitted comment.",
+        "parentId": null
+      }
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-settings-dark-light-390",
+    "file": "reader-settings-dark-light-390.png",
+    "url": "/book/6aca28f85a766f705be4c020/chapter/14f11b19-f2b7-4707-a69b-22edf3ae090f",
+    "width": 390,
+    "height": 844,
+    "scrollY": 10355,
+    "docWidth": 390,
+    "globalTheme": "dark",
+    "contentTheme": "light",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#paragraph-22 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">One</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-23 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Two</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-24 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Three</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-25 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Four</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-28 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-29 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-30 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-31 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".z-10 > a"
+            ],
+            "html": "<a href=\"https://example.com/...\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.13 (foreground color: #bcaaa4, background color: #fbfaf7, font size: 13.5pt (18px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "summary"
+            ],
+            "html": "<summary>A quiet secret</summary>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.51 (foreground color: #efebe9, background color: #897973, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reader-settings-dark-sepia-390",
+    "file": "reader-settings-dark-sepia-390.png",
+    "url": "/book/6aca28f85a766f705be4c020/chapter/14f11b19-f2b7-4707-a69b-22edf3ae090f",
+    "width": 390,
+    "height": 844,
+    "scrollY": 10355,
+    "docWidth": 390,
+    "globalTheme": "dark",
+    "contentTheme": "sepia",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#paragraph-22 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">One</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-23 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Two</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-24 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Three</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-25 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Four</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-28 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-29 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-30 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-31 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".z-10 > a"
+            ],
+            "html": "<a href=\"https://example.com/...\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.84 (foreground color: #bcaaa4, background color: #f3e9d5, font size: 13.5pt (18px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "summary"
+            ],
+            "html": "<summary>A quiet secret</summary>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.8 (foreground color: #efebe9, background color: #867367, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-theme-options > button:nth-child(1) > span"
+            ],
+            "html": "<span>Paper</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-theme-options > button:nth-child(3) > span"
+            ],
+            "html": "<span>Night</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Lamp Reading\"] > button[type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Reading position</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Lamp Reading\"] > button[type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Pointer</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Atmosphere intensity\"] > button[type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Subtle</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Atmosphere intensity\"] > button[type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Off</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-stepper > button:nth-child(1)"
+            ],
+            "html": "<button>A\u2212</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-stepper > button:nth-child(3)"
+            ],
+            "html": "<button>A+</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-setting-group:nth-child(6) > .reader-segmented > button:nth-child(2)"
+            ],
+            "html": "<button aria-pressed=\"false\" class=\"\">Modern</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-width-options > button:nth-child(1)"
+            ],
+            "html": "<button aria-pressed=\"false\" class=\"\">Narrow</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-width-options > button:nth-child(3)"
+            ],
+            "html": "<button aria-pressed=\"false\" class=\"\">Wide</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reader-settings-light-sepia-390",
+    "file": "reader-settings-light-sepia-390.png",
+    "url": "/book/6aca28f85a766f705be4c020/chapter/14f11b19-f2b7-4707-a69b-22edf3ae090f",
+    "width": 390,
+    "height": 844,
+    "scrollY": 10355,
+    "docWidth": 390,
+    "globalTheme": "light",
+    "contentTheme": "sepia",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".z-10 > a"
+            ],
+            "html": "<a href=\"https://example.com/...\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.83 (foreground color: #8d6e63, background color: #f3e9d5, font size: 13.5pt (18px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-theme-options > button:nth-child(1) > span"
+            ],
+            "html": "<span>Paper</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-theme-options > button:nth-child(3) > span"
+            ],
+            "html": "<span>Night</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Lamp Reading\"] > button[type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Reading position</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Lamp Reading\"] > button[type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Pointer</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Atmosphere intensity\"] > button[type=\"button\"]:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Subtle</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "div[aria-label=\"Atmosphere intensity\"] > button[type=\"button\"]:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" aria-pressed=\"false\" class=\"\">Off</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-stepper > button:nth-child(1)"
+            ],
+            "html": "<button>A\u2212</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-stepper > button:nth-child(3)"
+            ],
+            "html": "<button>A+</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-setting-group:nth-child(6) > .reader-segmented > button:nth-child(2)"
+            ],
+            "html": "<button aria-pressed=\"false\" class=\"\">Modern</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-width-options > button:nth-child(1)"
+            ],
+            "html": "<button aria-pressed=\"false\" class=\"\">Narrow</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".reader-width-options > button:nth-child(3)"
+            ],
+            "html": "<button aria-pressed=\"false\" class=\"\">Wide</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #71634f, background color: #ede0c9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "report-reopened-before-old-response",
+    "file": "report-reopened-before-old-response.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "requested": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "report-reopened-old-receipt",
+    "file": "report-reopened-old-receipt.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "requested": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "settings-hidden-validation-preferences",
+    "file": "settings-hidden-validation-preferences.png",
+    "url": "/edit-profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 153,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "settings-hidden-validation-security",
+    "file": "settings-hidden-validation-security.png",
+    "url": "/edit-profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 153,
+    "docWidth": 390,
+    "visibleAlerts": [],
+    "buttonEnabled": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "settings-invalid-social-profile",
+    "file": "settings-invalid-social-profile.png",
+    "url": "/edit-profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 153,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "settings-threads-current-domain",
+    "file": "settings-threads-current-domain.png",
+    "url": "/edit-profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 657,
+    "docWidth": 390,
+    "fieldValue": "https://www.threads.com/@wordweft",
+    "error": [
+      "Invalid threads URL format"
+    ],
+    "errors": [],
+    "violations": []
+  }
+]
