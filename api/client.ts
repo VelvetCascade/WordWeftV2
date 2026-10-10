@@ -1,6 +1,6 @@
 
 
-import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, PassageBookmark, BookProgress, Author, Comment, Character, Scene, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
+import type { User, Book, Review, Shelf, LibraryBook, Chapter, ChapterRevision, ChapterContentResult, PassageBookmark, BookProgress, Author, Comment, Character, Scene, StoryBibleEntry, Note, AppNotification, NotificationPreferences, SearchAutocompleteResponse, SearchFullResponse, ContentReport, ReportTargetType, ReportCategory, WriterAnalytics, HookFeedResponse, ReadingChallenge, GenreEvent, FoundingWriterApplication, FoundingWriterApplicationStatus, FoundingWriterApplicationSubmission } from '../types';
 import { invalidateAuthSession, JWT_STORAGE_KEY, shouldInvalidateAuthSession } from '../utils/authSession';
 import type { DiscoveryHeroGroups } from '../utils/discoveryHero';
 import { mergeReadingSnapshots, type ReadingSnapshot } from '../utils/readingJourney';
@@ -1649,4 +1649,22 @@ export async function deletePassageBookmark(id: string): Promise<void> {
 export async function organizeLibraryBooks(bookIds: string[], shelfId: string, operation: 'ADD'|'REMOVE'): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/library/books/shelves`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ bookIds, shelfId, operation }) });
     return mapBackendUserToFrontend(await handleResponse(response));
+}
+
+// Story Bible views are access-aware and never shared or persistently cached.
+export async function getStoryBibleEntries(bookId: string, options: { chapterId?: string; characterId?: string; readerView?: boolean } = {}): Promise<StoryBibleEntry[]> {
+    const params = new URLSearchParams();
+    if (options.chapterId) params.set('chapterId', options.chapterId);
+    if (options.characterId) params.set('characterId', options.characterId);
+    if (options.readerView) params.set('readerView', 'true');
+    const response = await fetch(`${API_BASE_URL}/story-bible/book/${encodeURIComponent(bookId)}?${params}`, { headers: getHeaders(), cache: 'no-store' });
+    return handleResponse(response);
+}
+export async function saveStoryBibleEntry(entry: Omit<StoryBibleEntry, 'id'>, id?: string): Promise<StoryBibleEntry> {
+    const response = await fetch(`${API_BASE_URL}/story-bible${id ? `/${encodeURIComponent(id)}` : ''}`, { method: id ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(entry) });
+    return handleResponse(response);
+}
+export async function deleteStoryBibleEntry(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/story-bible/${encodeURIComponent(id)}`, { method: 'DELETE', headers: getHeaders() });
+    await handleResponse(response);
 }

@@ -22,6 +22,12 @@ public class Scene {
     @NotBlank(message = "Scene title is required")
     @Size(max = 100, message = "Title must be less than 100 characters")
     private String title;
+
+    @jakarta.validation.constraints.Pattern(regexp = "SCENE|EVENT")
+    private String kind;
+    @jakarta.validation.constraints.Min(-100000)
+    @jakarta.validation.constraints.Max(100000)
+    private Integer chronologyOrder;
     
     @Size(max = 2000)
     private String description;

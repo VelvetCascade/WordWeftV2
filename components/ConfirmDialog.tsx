@@ -10,6 +10,7 @@ interface ConfirmDialogProps {
     processingLabel?: string;
     isProcessing?: boolean;
     tone?: 'danger' | 'warning';
+    error?: string;
     onCancel: () => void;
     onConfirm: () => void;
 }
@@ -22,6 +23,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     processingLabel = 'Working…',
     isProcessing = false,
     tone = 'danger',
+    error,
     onCancel,
     onConfirm,
 }) => {
@@ -47,6 +49,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             >
                 <h2 id="confirm-dialog-title" className="font-sans text-xl font-bold text-text-rich dark:text-dark-text-rich">{title}</h2>
                 <p id="confirm-dialog-message" className="mt-3 leading-relaxed text-text-body dark:text-dark-text-body">{message}</p>
+                {error && <p role="alert" className="mt-3 text-sm text-danger dark:text-red-300">{error}</p>}
                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <button
                         data-dialog-focus

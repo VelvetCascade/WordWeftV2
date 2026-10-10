@@ -10,6 +10,7 @@ import * as api from '../api/client';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useFeedback } from '../contexts/FeedbackContext';
 import { CharacterList } from '../components/CharacterList';
+import { ReaderStoryBible } from '../components/ReaderStoryBible';
 import { AIBadge } from '../components/AIBadge';
 import { ShareModal } from '../components/ShareModal';
 import AdUnit from '../components/AdUnit';
@@ -213,7 +214,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [reviewsLoading, setReviewsLoading] = useState(true);
     const [reviewsError, setReviewsError] = useState('');
     const [reviewsAttempt, setReviewsAttempt] = useState(0);
-    const [activeTab, setActiveTab] = useState<'Chapters' | 'Characters' | 'Reviews'>('Chapters');
+    const [activeTab, setActiveTab] = useState<'Chapters' | 'Characters' | 'Story Bible' | 'Reviews'>('Chapters');
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [userComment, setUserComment] = useState('');
@@ -607,7 +608,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
                 {/* Tab Navigation */}
                 <div id="story-guide-tabs" className="ww-story-tabs flex border-b border-gray-200 dark:border-dark-border mb-8 max-w-4xl mx-auto">
-                    {(['Chapters', 'Characters', 'Reviews'] as const).map((tab) => {
+                    {(['Chapters', 'Characters', 'Story Bible', 'Reviews'] as const).map((tab) => {
                         const btn = (
                             <button
                                 key={tab}
@@ -663,6 +664,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         </section>
                     )}
 
+                    {activeTab === 'Story Bible' && <ReaderStoryBible bookId={bookId} chapters={book.chapters} refreshKey={currentUser?.id || 'guest'} />}
                     {activeTab === 'Reviews' && (
                         <section className="animate-fade-in" aria-busy={reviewsLoading}>
                             <h3 className="font-sans text-2xl font-bold text-text-rich dark:text-dark-text-rich mb-6">Community Reviews</h3>

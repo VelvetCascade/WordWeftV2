@@ -1,0 +1,64 @@
+/* Uses the existing studio and reader surfaces; no new visual language. */
+.ww-bible-entries { display: grid; gap: 16px; }
+.ww-bible-entry { padding: 20px; border: 1px solid var(--reader-line, var(--studio-line, var(--ww-line))); border-radius: 9px; background: var(--reader-panel, var(--studio-paper, var(--ww-paper))); overflow-wrap: anywhere; }
+.ww-bible-entry-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 10px; font: 500 11px/1.5 Rubik, sans-serif; color: var(--reader-muted, var(--ww-muted)); }
+.ww-bible-entry h4, .ww-bible-entry summary { font: 600 17px/1.45 Rubik, sans-serif; color: var(--reader-ink, var(--ww-ink)); }
+.ww-bible-entry p { margin-top: 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.75; color: var(--reader-copy, var(--ww-ink)); }
+.ww-bible-entry summary { cursor: pointer; min-height: 44px; }
+.ww-bible-entry summary span { margin-left: 12px; font-size: 11px; font-weight: 400; color: var(--reader-muted, var(--ww-muted)); }
+.ww-bible-entry .ww-bible-linked-cast { font-size: 12px; color: var(--reader-accent, var(--ww-muted)); }
+.ww-bible-entry-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; border-top: 1px solid var(--reader-line, var(--ww-line)); padding-top: 8px; }
+.ww-bible-entry-footer small { font-size: 11px; color: var(--ww-muted); }
+.ww-bible-entry-footer > div { display: flex; gap: 16px; }
+.ww-bible-entry button { min-height: 44px; font-size: 12px; color: var(--studio-accent, var(--ww-brand)); }
+.ww-bible-cast { display: flex; flex-wrap: wrap; gap: 8px; }
+.ww-bible-cast button { border: 1px solid var(--ww-line); padding: 8px 12px; min-height: 44px; border-radius: 6px; font-size: 13px; }
+.ww-bible-cast button[aria-pressed="true"] { background: var(--ww-brand-soft); border-color: var(--ww-brand); }
+.ww-bible-preview { border: 1px solid var(--ww-line); border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+.ww-bible-preview > label { display: grid; gap: 8px; max-width: 360px; font-size: 13px; margin: 16px 0; }
+.ww-bible-preview select { min-height: 44px; padding: 8px; color: var(--ww-ink); background: var(--ww-paper); border: 1px solid var(--ww-line); border-radius: 6px; }
+.ww-bible-help { font-size: 13px; line-height: 1.7; color: var(--reader-muted, var(--ww-muted)); margin: 8px 0 20px; }
+.ww-bible-reader { margin: 24px 0; }
+.ww-bible-reader h3 { margin-bottom: 10px; }
+.ww-bible-overlay { position: fixed; inset: 0; z-index: 95; background: #11151688; display: flex; align-items: center; justify-content: flex-end; padding: 16px; }
+.ww-bible-panel { width: min(520px, 100%); height: 100%; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--reader-line, var(--ww-line)); border-radius: 12px; background: var(--reader-panel-solid, var(--ww-paper)); color: var(--reader-ink, var(--ww-ink)); padding: 26px; }
+.ww-bible-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--reader-line); padding-bottom: 18px; }
+.ww-bible-panel > header h2 { font: 600 24px/1.3 'WordWeft Serif', Georgia, serif; }
+.ww-bible-panel > header button { min-height: 44px; min-width: 44px; }
+.ww-bible-guide-action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--reader-line); border-radius: 7px; color: var(--reader-accent); font: 500 12px Rubik, sans-serif; }
+@media (max-width: 600px) { .ww-bible-entry { padding: 16px; }.ww-bible-panel { padding: 20px; } }
+.ww-plan-viewbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin: 20px 0; }
+.ww-plan-viewbar > span { color: var(--ww-muted); font-size: 12px; }
+.ww-plan-segmented { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--ww-line); background: var(--studio-surface, var(--ww-paper)); border-radius: 8px; }
+.ww-plan-segmented button { min-height: 40px; padding: 8px 14px; border-radius: 5px; font: 500 12px/1.4 Rubik, sans-serif; color: var(--ww-muted); }
+.ww-plan-segmented button[aria-pressed="true"] { background: var(--ww-brand-soft); color: var(--ww-ink); }
+.ww-timeline-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; margin: 28px 0; }
+.ww-timeline-heading h4 { font: 600 22px/1.4 'WordWeft Serif', Georgia, serif; }
+.ww-timeline-heading p { font-size: 12px; line-height: 1.7; color: var(--ww-muted); margin-top: 8px; max-width: 440px; }
+.ww-timeline-chapter { position: relative; padding: 0 0 28px 22px; margin-left: 14px; border-left: 1px solid var(--ww-line); }
+.ww-timeline-chapter > header { display: flex; align-items: center; gap: 14px; padding: 10px 0 16px; }
+.ww-timeline-number { position: absolute; left: -17px; width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--ww-line); border-radius: 50%; background: var(--studio-surface, var(--ww-paper)); font-size: 12px; }
+.ww-timeline-chapter > header h5 { font: 600 16px/1.5 Rubik, sans-serif; }
+.ww-timeline-chapter small, .ww-timeline-card small { display: block; color: var(--ww-muted); font-size: 11px; margin-top: 5px; }
+.ww-timeline-chapter > header > button { margin-left: auto; flex-shrink: 0; min-height: 44px; font-size: 12px; color: var(--studio-accent, var(--ww-brand)); }
+.ww-timeline-moments, .ww-timeline-chronology { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ww-timeline-card { padding: 18px; border: 1px solid var(--ww-line); border-radius: 8px; background: var(--studio-paper, var(--ww-paper)); overflow-wrap: anywhere; }
+.ww-timeline-card-kicker { display: flex; align-items: center; gap: 8px; color: var(--ww-muted); font-size: 11px; margin-bottom: 10px; }
+.ww-timeline-card h4 { font: 600 16px/1.5 Rubik, sans-serif; }
+.ww-timeline-card p { font-size: 13px; line-height: 1.7; white-space: pre-wrap; margin-top: 10px; }
+.ww-timeline-card .ww-timeline-context { font-size: 12px; color: var(--ww-muted); }
+.ww-timeline-card button { min-height: 44px; color: var(--studio-accent, var(--ww-brand)); font-size: 12px; margin-top: 8px; }
+.ww-timeline-reveal { display: flex; align-items: start; gap: 10px; border: 1px dashed var(--ww-line); border-radius: 8px; padding: 16px; grid-column: 1 / -1; overflow-wrap: anywhere; }
+.ww-timeline-reveal > svg { color: var(--ww-muted); margin-top: 3px; flex-shrink: 0; }
+.ww-timeline-reveal span { font-size: 11px; color: var(--ww-muted); }
+.ww-timeline-reveal h6 { font: 500 13px/1.6 Rubik, sans-serif; margin-top: 5px; }
+.ww-timeline-reveal a { display: inline-flex; align-items: center; margin-left: auto; min-height: 44px; flex-shrink: 0; color: var(--studio-accent, var(--ww-brand)); font-size: 12px; }
+.ww-timeline-empty { font-size: 13px; color: var(--ww-muted); padding: 14px 0; }
+.ww-timeline-unplaced { margin-top: 30px; border-top: 1px solid var(--ww-line); padding-top: 24px; }
+.ww-timeline-unplaced h5 { font: 600 17px Rubik, sans-serif; }
+@media (max-width: 600px) { .ww-timeline-moments, .ww-timeline-chronology { grid-template-columns: 1fr; }.ww-timeline-chapter { padding-left: 20px; }.ww-timeline-reveal { flex-wrap: wrap; }.ww-timeline-reveal a { margin-left: 26px; }.ww-timeline-heading .ww-plan-segmented { width: 100%; }.ww-timeline-heading .ww-plan-segmented button { flex: 1; } }
+
+.ww-story-tool-heading-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; flex-shrink: 0; }
+.ww-story-tool-heading-actions > button { min-height: 44px; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+
+.dark :is(.ww-bible-entry button, .ww-timeline-card button, .ww-timeline-reveal a, .ww-timeline-chapter > header > button) { color: var(--reader-accent, var(--ww-blue)); }

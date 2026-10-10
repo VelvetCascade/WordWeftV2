@@ -414,7 +414,21 @@ export interface Character {
   imageFileId?: string;
 }
 
+export type StoryBibleKind = 'CHARACTER' | 'MOTIVATION' | 'RELATIONSHIP' | 'SECRET' | 'LORE';
+export interface StoryBibleEntry {
+  id: string;
+  bookId: string;
+  kind: StoryBibleKind;
+  title: string;
+  detail: string;
+  visibility: 'PUBLIC' | 'PRIVATE';
+  revealChapterId?: string | null;
+  characterIds: string[];
+}
+
 export interface Scene {
+  kind?: 'SCENE' | 'EVENT';
+  chronologyOrder?: number | null;
   id: string;
   bookId: string;
   title: string;

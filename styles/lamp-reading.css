@@ -1,0 +1,15 @@
+/* A dark reading surface with restrained light behind, never above, the text. */
+.reader-experience.reader-v2.reader-theme-dark.reader-lamp {
+  --reader-bg: #111516; --reader-panel: #1c2021; --reader-panel-solid: #1c2021;
+  --reader-ink: #f0ece3; --reader-copy: #dedbd2; --reader-muted: #b9b7ae;
+  --reader-line: #3c4140; --reader-accent: #dcc59e; --reader-accent-soft: #34322b;
+  isolation: isolate;
+}
+.reader-lamp-layer { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; contain: strict; }
+.reader-lamp-light {
+  position: absolute; left: 0; top: 0; width: min(100vw, 1000px); height: min(90dvh, 760px);
+  background: radial-gradient(ellipse at center, #62503952 0%, #4b40312b 36%, transparent 72%);
+}
+.reader-lamp .reader-copy ::selection { background: #7a6549; color: #fffaf0; }
+@media (forced-colors: active) { .reader-lamp-layer { display: none; } }
+@media print { .reader-lamp-layer { display: none; } }

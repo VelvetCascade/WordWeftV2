@@ -4,6 +4,7 @@ import type { Character, Chapter } from '../types';
 import { XMarkIcon } from './icons/Icons';
 import { ResilientImage } from './ResilientImage';
 import { useDialog } from '../hooks/useDialog';
+import { ReaderStoryBible } from './ReaderStoryBible';
 
 interface CharacterPreviewProps {
     character: Character | null;
@@ -11,9 +12,11 @@ interface CharacterPreviewProps {
     onClose: () => void;
     previewChapterId?: string;
     chapters?: Chapter[];
+    characters?: Character[];
+    knownRevision?: string;
 }
 
-export const CharacterPreview: React.FC<CharacterPreviewProps> = ({ character, isOpen, onClose, previewChapterId, chapters }) => {
+export const CharacterPreview: React.FC<CharacterPreviewProps> = ({ character, isOpen, onClose, previewChapterId, chapters, characters, knownRevision }) => {
     const publicCharacter = character ? privateCharacterPreview(character) : null;
     const dialogRef = useDialog(isOpen, onClose);
     if (!isOpen || !publicCharacter) return null;
@@ -30,7 +33,8 @@ export const CharacterPreview: React.FC<CharacterPreviewProps> = ({ character, i
                 {character.description && <section><h3>Background</h3><p>{character.description}</p></section>}
                 {character.goal && <section className="ww-character-preview-goal"><h3>Current goal</h3><p>{character.goal}</p></section>}
                 {character.spoilerDetails && spoilerPermitted ? <section><details><summary>Reveal spoiler details</summary><p>{character.spoilerDetails}</p></details></section> : character.spoilerAvailable || character.spoilerDetails ? <section><p>More details become available later in the story.</p></section> : null}
-                {!character.description && !character.goal && <p className="ww-character-preview-empty">The writer hasn’t added more details about this character yet.</p>}
+                <ReaderStoryBible key={character.id} bookId={character.bookId} chapterId={previewChapterId} characterId={character.id} characters={characters} chapters={chapters} refreshKey={knownRevision} />
+                {!character.description && !character.goal && <p className="ww-character-preview-empty">No initial background or goal has been shared for this character.</p>}
             </div>
         </div>
     );
