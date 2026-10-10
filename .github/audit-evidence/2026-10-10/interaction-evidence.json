@@ -1,0 +1,540 @@
+[
+  {
+    "name": "reader-night-table",
+    "file": "target-03-reader-night-table.png",
+    "url": "http://127.0.0.1:3010/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58",
+    "width": 390,
+    "height": 844,
+    "scrollY": 4170,
+    "docWidth": 390,
+    "focus": "<button class=\"reader-appearance-button\" aria-label=\"Reading appearance and themes\"><span class=\"reader-aa\">Aa</span></button>",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#paragraph-22 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">One</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-23 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Two</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-24 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Three</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-25 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Four</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-26 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Five</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-27 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Six</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-28 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-29 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-30 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-31 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-32 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-33 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "summary"
+            ],
+            "html": "<summary>A quiet secret</summary>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #5d4037, background color: #b4b4b1, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reader-night-disclosure",
+    "file": "target-04-reader-night-disclosure.png",
+    "url": "http://127.0.0.1:3010/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58",
+    "width": 390,
+    "height": 844,
+    "scrollY": 11187,
+    "docWidth": 390,
+    "focus": "<summary>A quiet secret</summary>",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#paragraph-22 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">One</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-23 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Two</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-24 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Three</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-25 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Four</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-26 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Five</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-27 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Six</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #d7ddcd, background color: #efebe9, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-28 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-29 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-30 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-31 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-32 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-33 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.38 (foreground color: #d7ddcd, background color: #ffffff, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reader-sepia-table",
+    "file": "target-05-reader-sepia-table.png",
+    "url": "http://127.0.0.1:3010/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58",
+    "width": 390,
+    "height": 844,
+    "scrollY": 4295,
+    "docWidth": 390,
+    "focus": "<button class=\"reader-appearance-button\" aria-label=\"Reading appearance and themes\"><span class=\"reader-aa\">Aa</span></button>",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-find-limit",
+    "file": "target-06-reader-find-limit.png",
+    "url": "http://127.0.0.1:3010/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "focus": "<input id=\"reader-find\" placeholder=\"A name, phrase, or word\" type=\"search\" value=\"the\" style=\"\">",
+    "renderedResults": 50,
+    "statuses": [
+      "",
+      "Saved online7 min left in this chapter",
+      "54 passages match"
+    ],
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".z-10 > a"
+            ],
+            "html": "<a href=\"https://example.com/...\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.83 (foreground color: #8d6e63, background color: #f3e9d5, font size: 13.5pt (18px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reader-header-long-title",
+    "file": "target-07-reader-header-long-title.png",
+    "url": "http://127.0.0.1:3010/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58",
+    "width": 820,
+    "height": 600,
+    "scrollY": 0,
+    "docWidth": 820,
+    "focus": "<body class=\"bg-background dark:bg-dark-background font-sans text-text-body dark:text-dark-text-body\">\n    <div id=\"root\"><a class=\"v2-skip-link\" href=\"#main-content\">Skip to content</a><div class=\"ww-app ww-route-reader min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20\"><main id=\"main",
+    "title": {
+      "x": 255,
+      "y": 50,
+      "width": 310,
+      "height": 17,
+      "top": 50,
+      "right": 565,
+      "bottom": 67,
+      "left": 255
+    },
+    "actions": {
+      "x": 443,
+      "y": 27,
+      "width": 326,
+      "height": 44,
+      "top": 27,
+      "right": 769,
+      "bottom": 71,
+      "left": 443
+    },
+    "intersects": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "search-keyboard-selected",
+    "file": "target-10-search-keyboard-selected.png",
+    "url": "http://127.0.0.1:3010/",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "focus": "<input enterkeyhint=\"search\" maxlength=\"200\" placeholder=\"Search story titles or people…\" class=\"search-overlay-input\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Search stories and people\" aria-busy=\"false\" data-dialog-focus=\"true\" type=\"search\" value=\"spring\" style=\"\">",
+    "active": 1,
+    "input": "<input enterkeyhint=\"search\" maxlength=\"200\" placeholder=\"Search story titles or people…\" class=\"search-overlay-input\" autocomplete=\"off\" spellcheck=\"false\" aria-label=\"Search stories and people\" aria-busy=\"false\" data-dialog-focus=\"true\" type=\"search\" value=\"spring\">",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".search-overlay-item-subtitle > span:nth-child(1)"
+            ],
+            "html": "<span>by Mira Ellery</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.19 (foreground color: #6b7280, background color: #f2eeec, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ad-before-timeout",
+    "file": "target-11-ad-before-timeout.png",
+    "url": "http://127.0.0.1:3010/search?q=spring",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 687,
+    "docWidth": 1440,
+    "focus": "<h1 tabindex=\"-1\">Find your next story.</h1>",
+    "ad": {
+      "x": 170,
+      "y": 442.453125,
+      "width": 1100,
+      "height": 116,
+      "top": 442.453125,
+      "right": 1270,
+      "bottom": 558.453125,
+      "left": 170
+    },
+    "footer": {
+      "x": 32,
+      "y": 694.453125,
+      "width": 1376,
+      "height": 387.59375,
+      "top": 694.453125,
+      "right": 1408,
+      "bottom": 1082.046875,
+      "left": 32
+    },
+    "y": 687,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".search-book-card-rating"
+            ],
+            "html": "<span class=\"search-book-card-rating\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.05 (foreground color: #f59e0b, background color: #fbfaf7, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ad-after-timeout",
+    "file": "target-12-ad-after-timeout.png",
+    "url": "http://127.0.0.1:3010/search?q=spring",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 621,
+    "docWidth": 1440,
+    "focus": "<h1 tabindex=\"-1\">Find your next story.</h1>",
+    "before": {
+      "ad": {
+        "x": 170,
+        "y": 442.453125,
+        "width": 1100,
+        "height": 116,
+        "top": 442.453125,
+        "right": 1270,
+        "bottom": 558.453125,
+        "left": 170
+      },
+      "footer": {
+        "x": 32,
+        "y": 694.453125,
+        "width": 1376,
+        "height": 387.59375,
+        "top": 694.453125,
+        "right": 1408,
+        "bottom": 1082.046875,
+        "left": 32
+      },
+      "y": 687
+    },
+    "after": {
+      "ad": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "footer": {
+        "x": 32,
+        "y": 612.453125,
+        "width": 1376,
+        "height": 387.59375,
+        "top": 612.453125,
+        "right": 1408,
+        "bottom": 1000.046875,
+        "left": 32
+      },
+      "y": 621
+    },
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".search-book-card-rating"
+            ],
+            "html": "<span class=\"search-book-card-rating\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.05 (foreground color: #f59e0b, background color: #fbfaf7, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "book-http503",
+    "file": "target-13-book-http503.png",
+    "url": "http://127.0.0.1:3010/book/local-story-spring",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "focus": "<h1 tabindex=\"-1\">This story couldn’t be loaded.</h1>",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "book-http503-recovered",
+    "file": "target-14-book-http503-recovered.png",
+    "url": "http://127.0.0.1:3010/book/local-story-spring",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "focus": "<body class=\"bg-background dark:bg-dark-background font-sans text-text-body dark:text-dark-text-body\">\n    <div id=\"root\"><a class=\"v2-skip-link\" href=\"#main-content\">Skip to content</a><div class=\"ww-app ww-route-book-details min-h-screen bg-background dark:bg-dark-background text-text-body dark:text-dark-text-body selection:bg-accent/20\"><header ",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "history-keyboard-skips-summary",
+    "file": "verify-02-history-keyboard-skips-summary.png",
+    "url": "http://127.0.0.1:3010/write/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58/edit",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "active": "<button aria-label=\"Close version history\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></button>",
+    "expected": "Publication changes summary"
+  },
+  {
+    "name": "guide-stable-background",
+    "file": "verify-03-guide-stable-background.png",
+    "url": "http://127.0.0.1:3010/write/book/6ac9e82c9a578552ae2e2ef7/chapter/45e1e804-8104-4957-8680-267df7407d58/edit",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "background": "rgb(255, 255, 255)",
+    "opacity": "1",
+    "z": "85",
+    "ancestors": [
+      "ww-writer-v2",
+      "ww-writer-editor-layout"
+    ],
+    "hasTransform": [
+      {
+        "cls": "v2-route-surface",
+        "transform": "none",
+        "animation": "ww-route-arrive"
+      }
+    ]
+  },
+  {
+    "name": "coach-over-preferences",
+    "file": "verify-04-coach-over-preferences.png",
+    "url": "http://127.0.0.1:3010/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": {
+      "width": 740,
+      "height": 360
+    },
+    "nudge": {
+      "x": 12,
+      "y": 206.15625,
+      "width": 716,
+      "height": 77.84375,
+      "top": 206.15625,
+      "right": 728,
+      "bottom": 284,
+      "left": 12
+    },
+    "dialog": {
+      "x": 0,
+      "y": 54,
+      "width": 740,
+      "height": 306,
+      "top": 54,
+      "right": 740,
+      "bottom": 360,
+      "left": 0
+    },
+    "nudgeZ": "45"
+  },
+  {
+    "name": "focus-mode-invisible-tip-focus",
+    "file": "verify-05-focus-mode-invisible-tip-focus.png",
+    "url": "http://127.0.0.1:3010/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": {
+      "width": 740,
+      "height": 360
+    },
+    "active": "<button type=\"button\" class=\"reader-coach-nudge-dismiss\" aria-label=\"Dismiss tip\">✕</button>",
+    "opacity": "0",
+    "inert": false,
+    "ariaHidden": null
+  }
+]

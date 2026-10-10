@@ -1,0 +1,2915 @@
+[
+  {
+    "name": "home",
+    "path": "/",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "001-home-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Discover Stories & Independent Writers | WordWeft",
+      "heading": [
+        "Read stories. Write your own.Read stories.Write your own."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "browse",
+    "path": "/category",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "002-browse-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Browse Stories & Novels by Genre | WordWeft",
+      "heading": [
+        "Browse stories"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "search",
+    "path": "/search?q=spring",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "003-search-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".search-book-card-rating"
+            ],
+            "html": "<span class=\"search-book-card-rating\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.05 (foreground color: #f59e0b, background color: #fbfaf7, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Search Stories & Authors | WordWeft",
+      "heading": [
+        "Find your next story."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "genre",
+    "path": "/genre/Fantasy",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "004-genre-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Fantasy Stories & Novels to Read Online | WordWeft",
+      "heading": [
+        "Fantasy stories"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "tag",
+    "path": "/tag/Letters",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "005-tag-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Letters Stories & Novels to Read Online | WordWeft",
+      "heading": [
+        "Letters stories"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "book",
+    "path": "/book/local-story-spring",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "006-book-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "The Last Spring in Bellweather by Mira Ellery | WordWeft",
+      "heading": [
+        "The Last Spring in Bellweather"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "reader",
+    "path": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "007-reader-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "The First Light — The Last Spring in Bellweather | WordWeft",
+      "heading": [
+        "The First Light"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "author",
+    "path": "/author/local-writer",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "008-author-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Mira Ellery — Stories & Author Profile | WordWeft",
+      "heading": [
+        "Mira Ellery"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "auth",
+    "path": "/auth",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "009-auth-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Welcome back"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "reset",
+    "path": "/reset-password",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "010-reset-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Request a password reset link"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "about",
+    "path": "/about",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "011-about-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "About WordWeft Studio | Readers & Writers",
+      "heading": [
+        "A place for storiesand the people behind them."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "features",
+    "path": "/features",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "012-features-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Read Stories Online & Write Fiction | WordWeft",
+      "heading": [
+        "Stories worth reading.Tools for making yours."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "privacy",
+    "path": "/privacy",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "013-privacy-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Privacy Policy | WordWeft",
+      "heading": [
+        "Privacy Policy"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "terms",
+    "path": "/terms",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "014-terms-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Terms of Service | WordWeft",
+      "heading": [
+        "Terms of Service"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "safety",
+    "path": "/safety",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "015-safety-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".mt-5 > span:nth-child(1)"
+            ],
+            "html": "<span>Last Updated:</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Community Safety & Content Rules | WordWeft",
+      "heading": [
+        "Safety & Content Rules"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "contact",
+    "path": "/contact",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "016-contact-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Contact WordWeft Studio",
+      "heading": [
+        "How can we help?"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "feedback",
+    "path": "/feedback",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "017-feedback-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Help shape WordWeft."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "founding",
+    "path": "/founding-writers",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "018-founding-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".fw-section-heading > p"
+            ],
+            "html": "<p>Complete the form below. Fields marked <span aria-hidden=\"true\">*</span><span class=\"sr-only\">with an asterisk</span> are required.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".fw-field:nth-child(2) > small"
+            ],
+            "html": "<small>Optional</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "fieldset:nth-child(2) > .fw-field-grid > .fw-field-wide.fw-field > small"
+            ],
+            "html": "<small>Optional</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "em"
+            ],
+            "html": "<em>0/1,000</em>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "fieldset:nth-child(3) > .fw-field-grid > .fw-field-wide.fw-field:nth-child(5) > small"
+            ],
+            "html": "<small>Optional</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".fw-submit-row > p"
+            ],
+            "html": "<p>We use this information only to review and respond to your application.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Apply to Be a Founding Writer | WordWeft",
+      "heading": [
+        "Help shape a newhome for stories."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "community",
+    "path": "/community",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "019-community-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Between the chapters."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "hooks",
+    "path": "/hooks",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "020-hooks-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Find your next read."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "growth",
+    "path": "/events",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "021-growth-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "A little direction.A new story to discover."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "library",
+    "path": "/library",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "022-library-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Your library"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "profile",
+    "path": "/profile",
+    "role": "writer",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "023-profile-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".rounded-md.px-2\\.5.py-1:nth-child(1)"
+            ],
+            "html": "<button type=\"button\" class=\"rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 hover:text-accent dark:bg-dark-surface-alt dark:text-gray-400\">Fantasy</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" class=\"rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 hover:text-accent dark:bg-dark-surface-alt dark:text-gray-400\">Literary Fiction</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" class=\"rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 hover:text-accent dark:bg-dark-surface-alt dark:text-gray-400\">Mystery</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Mira Ellery"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "settings",
+    "path": "/edit-profile",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "024-settings-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Profile settings"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "notifications",
+    "path": "/notifications",
+    "role": "reader",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "025-notifications-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Notifications"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "studio",
+    "path": "/write",
+    "role": "writer",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "026-studio-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Writer studio"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "create",
+    "path": "/write/book/create",
+    "role": "writer",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "027-create-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".text-gray-400"
+            ],
+            "html": "<span class=\"text-gray-400\">(optional)</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f6f7fa, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Story details"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "manage",
+    "path": "/write/book/local-story-draft/manage",
+    "role": "writer",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "028-manage-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "The House Between Seasons"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "editor",
+    "path": "/write/book/local-story-draft/chapter/local-story-draft-chapter-1/edit",
+    "role": "writer",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "029-editor-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "analytics",
+    "path": "/write/analytics",
+    "role": "writer",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "030-analytics-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".ww-trend-axis > span:nth-child(1)"
+            ],
+            "html": "<span>16</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.19 (foreground color: #8191ac, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ww-trend-axis > span:nth-child(2)"
+            ],
+            "html": "<span>12</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.19 (foreground color: #8191ac, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Story statistics"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "admin",
+    "path": "/admin",
+    "role": "admin",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "031-admin-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              "p:nth-child(1)"
+            ],
+            "html": "<p class=\"ac-kicker\">WORDWEFT / ADMINISTRATION</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-as-of"
+            ],
+            "html": "<span class=\"ac-as-of\">Updated Oct 10, 2026</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            "html": "<small>+13 in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            "html": "<small>With at least one published story</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            "html": "<small>8 drafts across the platform</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            "html": "<small>Currently visible chapters</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            "html": "<small>Recorded book read count</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            "html": "<small>Created in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Last seven days</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            "html": "<span>Sun</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            "html": "<span>Mon</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            "html": "<span>Tue</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            "html": "<span>Wed</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            "html": "<span>Thu</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            "html": "<span>Fri</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            "html": "<span>Sat</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Action required</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Catalog snapshot</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "footer"
+            ],
+            "html": "<footer class=\"ac-footer\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Overview"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "admin-founding",
+    "path": "/admin/founding-writers",
+    "role": "admin",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "032-admin-founding-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Founding Writer applications"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "missing",
+    "path": "/not-a-real-page",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "033-missing-1440-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Page Not Found | WordWeft",
+      "heading": [
+        "There’s no story at this address."
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "missing-book",
+    "path": "/book/not-real",
+    "role": "guest",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "file": "034-missing-book-1440-light.png",
+    "errors": [],
+    "failed": [
+      {
+        "url": "books/not-real",
+        "status": 404
+      },
+      {
+        "url": "books/not-real",
+        "status": 404
+      }
+    ],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "This story is unavailable"
+      ],
+      "docWidth": 1440,
+      "overflow": []
+    }
+  },
+  {
+    "name": "home",
+    "path": "/",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "035-home-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Discover Stories & Independent Writers | WordWeft",
+      "heading": [
+        "Read stories. Write your own.Read stories.Write your own."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "browse",
+    "path": "/category",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "036-browse-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Browse Stories & Novels by Genre | WordWeft",
+      "heading": [
+        "Browse stories"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Literary Fiction 2",
+          "right": 419.25
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "2",
+          "right": 408.25
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Mystery 1",
+          "right": 508.53125
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "1",
+          "right": 497.53125
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Poetry 1",
+          "right": 589.84375
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "1",
+          "right": 578.84375
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Romance 1",
+          "right": 686.109375
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "1",
+          "right": 675.109375
+        }
+      ]
+    }
+  },
+  {
+    "name": "search",
+    "path": "/search?q=spring",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "037-search-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".search-book-card-rating"
+            ],
+            "html": "<span class=\"search-book-card-rating\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.05 (foreground color: #f59e0b, background color: #fbfaf7, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Search Stories & Authors | WordWeft",
+      "heading": [
+        "Find your next story."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "genre",
+    "path": "/genre/Fantasy",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "038-genre-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Fantasy Stories & Novels to Read Online | WordWeft",
+      "heading": [
+        "Fantasy stories"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "tag",
+    "path": "/tag/Letters",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "039-tag-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Letters Stories & Novels to Read Online | WordWeft",
+      "heading": [
+        "Letters stories"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "book",
+    "path": "/book/local-story-spring",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "040-book-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "The Last Spring in Bellweather by Mira Ellery | WordWeft",
+      "heading": [
+        "The Last Spring in Bellweather"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "reader",
+    "path": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "041-reader-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "The First Light — The Last Spring in Bellweather | WordWeft",
+      "heading": [
+        "The First Light"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "author",
+    "path": "/author/local-writer",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "042-author-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Mira Ellery — Stories & Author Profile | WordWeft",
+      "heading": [
+        "Mira Ellery"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "auth",
+    "path": "/auth",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "043-auth-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Welcome back"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "reset",
+    "path": "/reset-password",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "044-reset-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Request a password reset link"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "about",
+    "path": "/about",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "045-about-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "About WordWeft Studio | Readers & Writers",
+      "heading": [
+        "A place for storiesand the people behind them."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "features",
+    "path": "/features",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "046-features-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Read Stories Online & Write Fiction | WordWeft",
+      "heading": [
+        "Stories worth reading.Tools for making yours."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "privacy",
+    "path": "/privacy",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "047-privacy-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Privacy Policy | WordWeft",
+      "heading": [
+        "Privacy Policy"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "terms",
+    "path": "/terms",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "048-terms-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Terms of Service | WordWeft",
+      "heading": [
+        "Terms of Service"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "safety",
+    "path": "/safety",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "049-safety-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".mt-5 > span:nth-child(1)"
+            ],
+            "html": "<span>Last Updated:</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Community Safety & Content Rules | WordWeft",
+      "heading": [
+        "Safety & Content Rules"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "contact",
+    "path": "/contact",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "050-contact-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Contact WordWeft Studio",
+      "heading": [
+        "How can we help?"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "feedback",
+    "path": "/feedback",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "051-feedback-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Help shape WordWeft."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "founding",
+    "path": "/founding-writers",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "052-founding-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".fw-section-heading > p"
+            ],
+            "html": "<p>Complete the form below. Fields marked <span aria-hidden=\"true\">*</span><span class=\"sr-only\">with an asterisk</span> are required.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".fw-field:nth-child(2) > small"
+            ],
+            "html": "<small>Optional</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "fieldset:nth-child(2) > .fw-field-grid > .fw-field-wide.fw-field > small"
+            ],
+            "html": "<small>Optional</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "em"
+            ],
+            "html": "<em>0/1,000</em>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "fieldset:nth-child(3) > .fw-field-grid > .fw-field-wide.fw-field:nth-child(5) > small"
+            ],
+            "html": "<small>Optional</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".fw-submit-row > p"
+            ],
+            "html": "<p>We use this information only to review and respond to your application.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Apply to Be a Founding Writer | WordWeft",
+      "heading": [
+        "Help shape a newhome for stories."
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "TABLE",
+          "cls": "fw-commission-table",
+          "text": "Accepted groupWordWeft platform commissionBenefit periodFirs",
+          "right": 541
+        },
+        {
+          "tag": "THEAD",
+          "cls": "",
+          "text": "Accepted groupWordWeft platform commissionBenefit period",
+          "right": 540.5
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "Accepted groupWordWeft platform commissionBenefit period",
+          "right": 540.5
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Benefit period",
+          "right": 540.5
+        },
+        {
+          "tag": "TBODY",
+          "cls": "",
+          "text": "First 10 Founding Writers0%On the first ₹50,000 (or $500) of",
+          "right": 540.5
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "First 10 Founding Writers0%On the first ₹50,000 (or $500) of",
+          "right": 540.5
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "On the first ₹50,000 (or $500) of eligible net earnings, or ",
+          "right": 540.5
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "Next 15 Founding Writers5%",
+          "right": 540.5
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "Next 25 Founding Writers10%",
+          "right": 540.5
+        }
+      ]
+    }
+  },
+  {
+    "name": "community",
+    "path": "/community",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "053-community-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Between the chapters."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "hooks",
+    "path": "/hooks",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "054-hooks-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Find your next read."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "growth",
+    "path": "/events",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "055-growth-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "A little direction.A new story to discover."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "library",
+    "path": "/library",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "056-library-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Your library"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "New chapters0",
+          "right": 430.15625
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "0",
+          "right": 430.15625
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "All stories3",
+          "right": 518.03125
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "3",
+          "right": 518.03125
+        }
+      ]
+    }
+  },
+  {
+    "name": "profile",
+    "path": "/profile",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "057-profile-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".rounded-md.px-2\\.5.py-1:nth-child(1)"
+            ],
+            "html": "<button type=\"button\" class=\"rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 hover:text-accent dark:bg-dark-surface-alt dark:text-gray-400\">Fantasy</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            "html": "<button type=\"button\" class=\"rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 hover:text-accent dark:bg-dark-surface-alt dark:text-gray-400\">Literary Fiction</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ],
+            "html": "<button type=\"button\" class=\"rounded-md bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-500 hover:text-accent dark:bg-dark-surface-alt dark:text-gray-400\">Mystery</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Mira Ellery"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "settings",
+    "path": "/edit-profile",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "058-settings-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Profile settings"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "Privacy policy",
+          "right": 412.078125
+        }
+      ]
+    }
+  },
+  {
+    "name": "notifications",
+    "path": "/notifications",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "059-notifications-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Notifications"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "flex-[1_0_auto] px-3 md:px-0 md:flex-1 py-2 border-none rounded-lg font-sans text-[13px] font-semibold transition-colors",
+          "text": "System",
+          "right": 395.953125
+        }
+      ]
+    }
+  },
+  {
+    "name": "studio",
+    "path": "/write",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "060-studio-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Writer studio"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "writer-qs-milestone is-complete ",
+          "text": "04Set the Mood",
+          "right": 481
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "",
+          "right": 418
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 411
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 409
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "04",
+          "right": 400.71875
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Set the Mood",
+          "right": 446.9375
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "writer-qs-milestone is-complete ",
+          "text": "05Use World Building",
+          "right": 593
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "",
+          "right": 530
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 523
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 521
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "05",
+          "right": 512.390625
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Use World Building",
+          "right": 582
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "writer-qs-milestone is-complete ",
+          "text": "06Publish a Chapter",
+          "right": 705
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "",
+          "right": 642
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 635
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 633
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "06",
+          "right": 624.40625
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Publish a Chapter",
+          "right": 691.578125
+        }
+      ]
+    }
+  },
+  {
+    "name": "create",
+    "path": "/write/book/create",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "061-create-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".text-gray-400"
+            ],
+            "html": "<span class=\"text-gray-400\">(optional)</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f6f7fa, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Story details"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "manage",
+    "path": "/write/book/local-story-draft/manage",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "062-manage-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "The House Between Seasons"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Scenes & timeline",
+          "right": 416.4375
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "Scenes & timeline",
+          "right": 416.4375
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Private notes",
+          "right": 519.375
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "Private notes",
+          "right": 519.375
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Story details",
+          "right": 617.828125
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": "Statistics",
+          "right": 697.046875
+        }
+      ]
+    }
+  },
+  {
+    "name": "editor",
+    "path": "/write/book/local-story-draft/chapter/local-story-draft-chapter-1/edit",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "063-editor-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "rte-toolbar-btn rte-atmosphere-trigger ",
+          "text": "Atmosphere",
+          "right": 439.078125
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "Atmosphere",
+          "right": 430.078125
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "rte-toolbar-btn ",
+          "text": "",
+          "right": 488.078125
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 474.078125
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 472.7071533203125
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 467.4114685058594
+        }
+      ]
+    }
+  },
+  {
+    "name": "analytics",
+    "path": "/write/analytics",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "064-analytics-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              ".ww-trend-axis > span:nth-child(1)"
+            ],
+            "html": "<span>16</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.19 (foreground color: #8191ac, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ww-trend-axis > span:nth-child(2)"
+            ],
+            "html": "<span>12</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.19 (foreground color: #8191ac, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Story statistics"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "TABLE",
+          "cls": "ww-funnel-table",
+          "text": "ChapterReachedViewsFinishedContinuedSignals01The First Light",
+          "right": 688
+        },
+        {
+          "tag": "THEAD",
+          "cls": "",
+          "text": "ChapterReachedViewsFinishedContinuedSignals",
+          "right": 688
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "ChapterReachedViewsFinishedContinuedSignals",
+          "right": 688
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Views",
+          "right": 415
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Finished",
+          "right": 506
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Continued",
+          "right": 597
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Signals",
+          "right": 688
+        },
+        {
+          "tag": "TBODY",
+          "cls": "",
+          "text": "01The First LightA Clockwork Kind of Heart01400%—0 likes · 0",
+          "right": 688
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "01The First LightA Clockwork Kind of Heart01400%—0 likes · 0",
+          "right": 688
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "140",
+          "right": 415
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "0%",
+          "right": 506
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "—",
+          "right": 597
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "0 likes · 0 comments",
+          "right": 688
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "02What the Rain RevealedA Clockwork Kind of Heart01600%—0 li",
+          "right": 688
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "160",
+          "right": 415
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "0%",
+          "right": 506
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "—",
+          "right": 597
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "0 likes · 0 comments",
+          "right": 688
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "01The First LightThe Orchard at the End of October01400%—0 l",
+          "right": 688
+        },
+        {
+          "tag": "TD",
+          "cls": "",
+          "text": "140",
+          "right": 415
+        }
+      ]
+    }
+  },
+  {
+    "name": "admin",
+    "path": "/admin",
+    "role": "admin",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "065-admin-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+        "nodes": [
+          {
+            "target": [
+              "p:nth-child(1)"
+            ],
+            "html": "<p class=\"ac-kicker\">WORDWEFT / ADMINISTRATION</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-as-of"
+            ],
+            "html": "<span class=\"ac-as-of\">Updated Oct 10, 2026</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            "html": "<small>+13 in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            "html": "<small>With at least one published story</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            "html": "<small>8 drafts across the platform</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            "html": "<small>Currently visible chapters</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            "html": "<small>Recorded book read count</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            "html": "<small>Created in the last 7 days</small>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Last seven days</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            "html": "<span>Sun</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            "html": "<span>Mon</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            "html": "<span>Tue</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            "html": "<span>Wed</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            "html": "<span>Thu</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            "html": "<span>Fri</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            "html": "<span>Sat</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Action required</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            "html": "<span class=\"ac-kicker\">Catalog snapshot</span>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "footer"
+            ],
+            "html": "<footer class=\"ac-footer\">",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Overview"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": " Reports ",
+          "right": 404.140625
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": " Activity log ",
+          "right": 517.625
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 435.140625
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 433.265625
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 425.140625
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 430.140625
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "",
+          "text": " Operations ",
+          "right": 629.5
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 548.625
+        },
+        {
+          "tag": "circle",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 546.125
+        },
+        {
+          "tag": "circle",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 539.875
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": " Writer applications ",
+          "right": 811.890625
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 660.5
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 658
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 658
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 800.890625
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 796.515625
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 796.515625
+        }
+      ]
+    }
+  },
+  {
+    "name": "admin-founding",
+    "path": "/admin/founding-writers",
+    "role": "admin",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "066-admin-founding-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Founding Writer applications"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "missing",
+    "path": "/not-a-real-page",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "067-missing-390-light.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Page Not Found | WordWeft",
+      "heading": [
+        "There’s no story at this address."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "missing-book",
+    "path": "/book/not-real",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "file": "068-missing-book-390-light.png",
+    "errors": [],
+    "failed": [
+      {
+        "url": "books/not-real",
+        "status": 404
+      },
+      {
+        "url": "books/not-real",
+        "status": 404
+      }
+    ],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "This story is unavailable"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "home",
+    "path": "/",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "069-home-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Discover Stories & Independent Writers | WordWeft",
+      "heading": [
+        "Read stories. Write your own.Read stories.Write your own."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "book",
+    "path": "/book/local-story-spring",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "070-book-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "The Last Spring in Bellweather by Mira Ellery | WordWeft",
+      "heading": [
+        "The Last Spring in Bellweather"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "reader",
+    "path": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "071-reader-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "The First Light — The Last Spring in Bellweather | WordWeft",
+      "heading": [
+        "The First Light"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "auth",
+    "path": "/auth",
+    "role": "guest",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "072-auth-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Welcome back"
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "community",
+    "path": "/community",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "073-community-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Between the chapters."
+      ],
+      "docWidth": 390,
+      "overflow": []
+    }
+  },
+  {
+    "name": "settings",
+    "path": "/edit-profile",
+    "role": "reader",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "074-settings-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Your WordWeft",
+      "heading": [
+        "Profile settings"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "Privacy policy",
+          "right": 412.078125
+        }
+      ]
+    }
+  },
+  {
+    "name": "studio",
+    "path": "/write",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "075-studio-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [
+        "Writer studio"
+      ],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "writer-qs-milestone is-complete ",
+          "text": "04Set the Mood",
+          "right": 481
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "",
+          "right": 418
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 411
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 409
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "04",
+          "right": 400.71875
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Set the Mood",
+          "right": 446.9375
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "writer-qs-milestone is-complete ",
+          "text": "05Use World Building",
+          "right": 593
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "",
+          "right": 530
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 523
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 521
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "05",
+          "right": 512.390625
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Use World Building",
+          "right": 582
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "writer-qs-milestone is-complete ",
+          "text": "06Publish a Chapter",
+          "right": 705
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "",
+          "right": 642
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 635
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 633
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "06",
+          "right": 624.40625
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Publish a Chapter",
+          "right": 691.578125
+        }
+      ]
+    }
+  },
+  {
+    "name": "editor",
+    "path": "/write/book/local-story-draft/chapter/local-story-draft-chapter-1/edit",
+    "role": "writer",
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "file": "076-editor-390-dark.png",
+    "errors": [],
+    "failed": [],
+    "violations": [],
+    "pageErrors": [],
+    "metrics": {
+      "title": "Writing Studio | WordWeft",
+      "heading": [],
+      "docWidth": 390,
+      "overflow": [
+        {
+          "tag": "BUTTON",
+          "cls": "rte-toolbar-btn rte-atmosphere-trigger ",
+          "text": "Atmosphere",
+          "right": 439.078125
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "Atmosphere",
+          "right": 430.078125
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "rte-toolbar-btn ",
+          "text": "",
+          "right": 488.078125
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 474.078125
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 472.7071533203125
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "text": "",
+          "right": 467.4114685058594
+        }
+      ]
+    }
+  }
+]

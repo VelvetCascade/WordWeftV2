@@ -1,0 +1,962 @@
+[
+  {
+    "name": "sweep-book",
+    "width": 280,
+    "doc": 280
+  },
+  {
+    "name": "sweep-book",
+    "width": 320,
+    "doc": 320
+  },
+  {
+    "name": "sweep-book",
+    "width": 344,
+    "doc": 344
+  },
+  {
+    "name": "sweep-book",
+    "width": 360,
+    "doc": 360
+  },
+  {
+    "name": "sweep-book",
+    "width": 375,
+    "doc": 375
+  },
+  {
+    "name": "sweep-book",
+    "width": 390,
+    "doc": 390
+  },
+  {
+    "name": "sweep-book",
+    "width": 412,
+    "doc": 412
+  },
+  {
+    "name": "sweep-book",
+    "width": 430,
+    "doc": 430
+  },
+  {
+    "name": "sweep-book",
+    "width": 480,
+    "doc": 480
+  },
+  {
+    "name": "sweep-book",
+    "width": 540,
+    "doc": 540
+  },
+  {
+    "name": "sweep-book",
+    "width": 600,
+    "doc": 600
+  },
+  {
+    "name": "sweep-book",
+    "width": 620,
+    "doc": 620
+  },
+  {
+    "name": "sweep-book",
+    "width": 639,
+    "doc": 639
+  },
+  {
+    "name": "sweep-book",
+    "width": 640,
+    "doc": 640
+  },
+  {
+    "name": "sweep-book",
+    "width": 641,
+    "doc": 641
+  },
+  {
+    "name": "sweep-book",
+    "width": 719,
+    "doc": 719
+  },
+  {
+    "name": "sweep-book",
+    "width": 720,
+    "doc": 720
+  },
+  {
+    "name": "sweep-book",
+    "width": 721,
+    "doc": 721
+  },
+  {
+    "name": "sweep-book",
+    "width": 743,
+    "doc": 743
+  },
+  {
+    "name": "sweep-book",
+    "width": 744,
+    "doc": 744
+  },
+  {
+    "name": "sweep-book",
+    "width": 759,
+    "doc": 759
+  },
+  {
+    "name": "sweep-book",
+    "width": 760,
+    "doc": 760
+  },
+  {
+    "name": "sweep-book",
+    "width": 761,
+    "doc": 761
+  },
+  {
+    "name": "sweep-book",
+    "width": 767,
+    "doc": 767
+  },
+  {
+    "name": "sweep-book",
+    "width": 768,
+    "doc": 768
+  },
+  {
+    "name": "sweep-book",
+    "width": 769,
+    "doc": 769
+  },
+  {
+    "name": "sweep-book",
+    "width": 800,
+    "doc": 800
+  },
+  {
+    "name": "sweep-book",
+    "width": 820,
+    "doc": 820
+  },
+  {
+    "name": "sweep-book",
+    "width": 834,
+    "doc": 834
+  },
+  {
+    "name": "sweep-book",
+    "width": 912,
+    "doc": 912
+  },
+  {
+    "name": "sweep-book",
+    "width": 979,
+    "doc": 979
+  },
+  {
+    "name": "sweep-book",
+    "width": 980,
+    "doc": 980
+  },
+  {
+    "name": "sweep-book",
+    "width": 981,
+    "doc": 981
+  },
+  {
+    "name": "sweep-book",
+    "width": 1023,
+    "doc": 1023
+  },
+  {
+    "name": "sweep-book",
+    "width": 1024,
+    "doc": 1024
+  },
+  {
+    "name": "sweep-book",
+    "width": 1025,
+    "doc": 1025
+  },
+  {
+    "name": "sweep-book",
+    "width": 1152,
+    "doc": 1152
+  },
+  {
+    "name": "sweep-book",
+    "width": 1199,
+    "doc": 1199
+  },
+  {
+    "name": "sweep-book",
+    "width": 1200,
+    "doc": 1200
+  },
+  {
+    "name": "sweep-book",
+    "width": 1201,
+    "doc": 1201
+  },
+  {
+    "name": "sweep-book",
+    "width": 1280,
+    "doc": 1280
+  },
+  {
+    "name": "sweep-book",
+    "width": 1366,
+    "doc": 1366
+  },
+  {
+    "name": "sweep-book",
+    "width": 1440,
+    "doc": 1440
+  },
+  {
+    "name": "sweep-book",
+    "width": 1536,
+    "doc": 1536
+  },
+  {
+    "name": "sweep-book",
+    "width": 1600,
+    "doc": 1600
+  },
+  {
+    "name": "sweep-book",
+    "width": 1728,
+    "doc": 1728
+  },
+  {
+    "name": "sweep-book",
+    "width": 1920,
+    "doc": 1920
+  },
+  {
+    "name": "sweep-book",
+    "width": 2560,
+    "doc": 2560
+  },
+  {
+    "name": "sweep-reader",
+    "width": 280,
+    "doc": 280
+  },
+  {
+    "name": "sweep-reader",
+    "width": 320,
+    "doc": 320
+  },
+  {
+    "name": "sweep-reader",
+    "width": 344,
+    "doc": 344
+  },
+  {
+    "name": "sweep-reader",
+    "width": 360,
+    "doc": 360
+  },
+  {
+    "name": "sweep-reader",
+    "width": 375,
+    "doc": 375
+  },
+  {
+    "name": "sweep-reader",
+    "width": 390,
+    "doc": 390
+  },
+  {
+    "name": "sweep-reader",
+    "width": 412,
+    "doc": 412
+  },
+  {
+    "name": "sweep-reader",
+    "width": 430,
+    "doc": 430
+  },
+  {
+    "name": "sweep-reader",
+    "width": 480,
+    "doc": 480
+  },
+  {
+    "name": "sweep-reader",
+    "width": 540,
+    "doc": 540
+  },
+  {
+    "name": "sweep-reader",
+    "width": 600,
+    "doc": 600
+  },
+  {
+    "name": "sweep-reader",
+    "width": 620,
+    "doc": 620
+  },
+  {
+    "name": "sweep-reader",
+    "width": 639,
+    "doc": 639
+  },
+  {
+    "name": "sweep-reader",
+    "width": 640,
+    "doc": 640
+  },
+  {
+    "name": "sweep-reader",
+    "width": 641,
+    "doc": 641
+  },
+  {
+    "name": "sweep-reader",
+    "width": 719,
+    "doc": 719
+  },
+  {
+    "name": "sweep-reader",
+    "width": 720,
+    "doc": 720
+  },
+  {
+    "name": "sweep-reader",
+    "width": 721,
+    "doc": 721
+  },
+  {
+    "name": "sweep-reader",
+    "width": 743,
+    "doc": 743
+  },
+  {
+    "name": "sweep-reader",
+    "width": 744,
+    "doc": 744
+  },
+  {
+    "name": "sweep-reader",
+    "width": 759,
+    "doc": 759
+  },
+  {
+    "name": "sweep-reader",
+    "width": 760,
+    "doc": 760
+  },
+  {
+    "name": "sweep-reader",
+    "width": 761,
+    "doc": 761
+  },
+  {
+    "name": "sweep-reader",
+    "width": 767,
+    "doc": 767
+  },
+  {
+    "name": "sweep-reader",
+    "width": 768,
+    "doc": 768
+  },
+  {
+    "name": "sweep-reader",
+    "width": 769,
+    "doc": 769
+  },
+  {
+    "name": "sweep-reader",
+    "width": 800,
+    "doc": 800
+  },
+  {
+    "name": "sweep-reader",
+    "width": 820,
+    "doc": 820
+  },
+  {
+    "name": "sweep-reader",
+    "width": 834,
+    "doc": 834
+  },
+  {
+    "name": "sweep-reader",
+    "width": 912,
+    "doc": 912
+  },
+  {
+    "name": "sweep-reader",
+    "width": 979,
+    "doc": 979
+  },
+  {
+    "name": "sweep-reader",
+    "width": 980,
+    "doc": 980
+  },
+  {
+    "name": "sweep-reader",
+    "width": 981,
+    "doc": 981
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1023,
+    "doc": 1023
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1024,
+    "doc": 1024
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1025,
+    "doc": 1025
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1152,
+    "doc": 1152
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1199,
+    "doc": 1199
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1200,
+    "doc": 1200
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1201,
+    "doc": 1201
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1280,
+    "doc": 1280
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1366,
+    "doc": 1366
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1440,
+    "doc": 1440
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1536,
+    "doc": 1536
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1600,
+    "doc": 1600
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1728,
+    "doc": 1728
+  },
+  {
+    "name": "sweep-reader",
+    "width": 1920,
+    "doc": 1920
+  },
+  {
+    "name": "sweep-reader",
+    "width": 2560,
+    "doc": 2560
+  },
+  {
+    "name": "sweep-manage",
+    "width": 280,
+    "doc": 280
+  },
+  {
+    "name": "sweep-manage",
+    "width": 320,
+    "doc": 320
+  },
+  {
+    "name": "sweep-manage",
+    "width": 344,
+    "doc": 344
+  },
+  {
+    "name": "sweep-manage",
+    "width": 360,
+    "doc": 360
+  },
+  {
+    "name": "sweep-manage",
+    "width": 375,
+    "doc": 375
+  },
+  {
+    "name": "sweep-manage",
+    "width": 390,
+    "doc": 390
+  },
+  {
+    "name": "sweep-manage",
+    "width": 412,
+    "doc": 412
+  },
+  {
+    "name": "sweep-manage",
+    "width": 430,
+    "doc": 430
+  },
+  {
+    "name": "sweep-manage",
+    "width": 480,
+    "doc": 480
+  },
+  {
+    "name": "sweep-manage",
+    "width": 540,
+    "doc": 540
+  },
+  {
+    "name": "sweep-manage",
+    "width": 600,
+    "doc": 600
+  },
+  {
+    "name": "sweep-manage",
+    "width": 620,
+    "doc": 620
+  },
+  {
+    "name": "sweep-manage",
+    "width": 639,
+    "doc": 639
+  },
+  {
+    "name": "sweep-manage",
+    "width": 640,
+    "doc": 640
+  },
+  {
+    "name": "sweep-manage",
+    "width": 641,
+    "doc": 641
+  },
+  {
+    "name": "sweep-manage",
+    "width": 719,
+    "doc": 719
+  },
+  {
+    "name": "sweep-manage",
+    "width": 720,
+    "doc": 720
+  },
+  {
+    "name": "sweep-manage",
+    "width": 721,
+    "doc": 721
+  },
+  {
+    "name": "sweep-manage",
+    "width": 743,
+    "doc": 743
+  },
+  {
+    "name": "sweep-manage",
+    "width": 744,
+    "doc": 744
+  },
+  {
+    "name": "sweep-manage",
+    "width": 759,
+    "doc": 759
+  },
+  {
+    "name": "sweep-manage",
+    "width": 760,
+    "doc": 760
+  },
+  {
+    "name": "sweep-manage",
+    "width": 761,
+    "doc": 761
+  },
+  {
+    "name": "sweep-manage",
+    "width": 767,
+    "doc": 767
+  },
+  {
+    "name": "sweep-manage",
+    "width": 768,
+    "doc": 768
+  },
+  {
+    "name": "sweep-manage",
+    "width": 769,
+    "doc": 769
+  },
+  {
+    "name": "sweep-manage",
+    "width": 800,
+    "doc": 800
+  },
+  {
+    "name": "sweep-manage",
+    "width": 820,
+    "doc": 820
+  },
+  {
+    "name": "sweep-manage",
+    "width": 834,
+    "doc": 834
+  },
+  {
+    "name": "sweep-manage",
+    "width": 912,
+    "doc": 912
+  },
+  {
+    "name": "sweep-manage",
+    "width": 979,
+    "doc": 979
+  },
+  {
+    "name": "sweep-manage",
+    "width": 980,
+    "doc": 980
+  },
+  {
+    "name": "sweep-manage",
+    "width": 981,
+    "doc": 981
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1023,
+    "doc": 1023
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1024,
+    "doc": 1024
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1025,
+    "doc": 1025
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1152,
+    "doc": 1152
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1199,
+    "doc": 1199
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1200,
+    "doc": 1200
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1201,
+    "doc": 1201
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1280,
+    "doc": 1280
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1366,
+    "doc": 1366
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1440,
+    "doc": 1440
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1536,
+    "doc": 1536
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1600,
+    "doc": 1600
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1728,
+    "doc": 1728
+  },
+  {
+    "name": "sweep-manage",
+    "width": 1920,
+    "doc": 1920
+  },
+  {
+    "name": "sweep-manage",
+    "width": 2560,
+    "doc": 2560
+  },
+  {
+    "name": "sweep-editor",
+    "width": 280,
+    "doc": 280
+  },
+  {
+    "name": "sweep-editor",
+    "width": 320,
+    "doc": 320
+  },
+  {
+    "name": "sweep-editor",
+    "width": 344,
+    "doc": 344
+  },
+  {
+    "name": "sweep-editor",
+    "width": 360,
+    "doc": 360
+  },
+  {
+    "name": "sweep-editor",
+    "width": 375,
+    "doc": 375
+  },
+  {
+    "name": "sweep-editor",
+    "width": 390,
+    "doc": 390
+  },
+  {
+    "name": "sweep-editor",
+    "width": 412,
+    "doc": 412
+  },
+  {
+    "name": "sweep-editor",
+    "width": 430,
+    "doc": 430
+  },
+  {
+    "name": "sweep-editor",
+    "width": 480,
+    "doc": 480
+  },
+  {
+    "name": "sweep-editor",
+    "width": 540,
+    "doc": 540
+  },
+  {
+    "name": "sweep-editor",
+    "width": 600,
+    "doc": 600
+  },
+  {
+    "name": "sweep-editor",
+    "width": 620,
+    "doc": 620
+  },
+  {
+    "name": "sweep-editor",
+    "width": 639,
+    "doc": 639
+  },
+  {
+    "name": "sweep-editor",
+    "width": 640,
+    "doc": 640
+  },
+  {
+    "name": "sweep-editor",
+    "width": 641,
+    "doc": 641
+  },
+  {
+    "name": "sweep-editor",
+    "width": 719,
+    "doc": 719
+  },
+  {
+    "name": "sweep-editor",
+    "width": 720,
+    "doc": 720
+  },
+  {
+    "name": "sweep-editor",
+    "width": 721,
+    "doc": 721
+  },
+  {
+    "name": "sweep-editor",
+    "width": 743,
+    "doc": 743
+  },
+  {
+    "name": "sweep-editor",
+    "width": 744,
+    "doc": 744
+  },
+  {
+    "name": "sweep-editor",
+    "width": 759,
+    "doc": 759
+  },
+  {
+    "name": "sweep-editor",
+    "width": 760,
+    "doc": 760
+  },
+  {
+    "name": "sweep-editor",
+    "width": 761,
+    "doc": 761
+  },
+  {
+    "name": "sweep-editor",
+    "width": 767,
+    "doc": 767
+  },
+  {
+    "name": "sweep-editor",
+    "width": 768,
+    "doc": 768
+  },
+  {
+    "name": "sweep-editor",
+    "width": 769,
+    "doc": 769
+  },
+  {
+    "name": "sweep-editor",
+    "width": 800,
+    "doc": 800
+  },
+  {
+    "name": "sweep-editor",
+    "width": 820,
+    "doc": 820
+  },
+  {
+    "name": "sweep-editor",
+    "width": 834,
+    "doc": 834
+  },
+  {
+    "name": "sweep-editor",
+    "width": 912,
+    "doc": 912
+  },
+  {
+    "name": "sweep-editor",
+    "width": 979,
+    "doc": 979
+  },
+  {
+    "name": "sweep-editor",
+    "width": 980,
+    "doc": 980
+  },
+  {
+    "name": "sweep-editor",
+    "width": 981,
+    "doc": 981
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1023,
+    "doc": 1023
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1024,
+    "doc": 1024
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1025,
+    "doc": 1025
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1152,
+    "doc": 1152
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1199,
+    "doc": 1199
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1200,
+    "doc": 1200
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1201,
+    "doc": 1201
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1280,
+    "doc": 1280
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1366,
+    "doc": 1366
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1440,
+    "doc": 1440
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1536,
+    "doc": 1536
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1600,
+    "doc": 1600
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1728,
+    "doc": 1728
+  },
+  {
+    "name": "sweep-editor",
+    "width": 1920,
+    "doc": 1920
+  },
+  {
+    "name": "sweep-editor",
+    "width": 2560,
+    "doc": 2560
+  }
+]

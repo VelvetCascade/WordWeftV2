@@ -1,0 +1,581 @@
+[
+  {
+    "key": "reader-rich-themes",
+    "title": "[P1] Reader Night appearance leaves tables and disclosures with light backgrounds",
+    "severity": "P1 — reading content becomes nearly illegible",
+    "area": "Reader / rich manuscript content",
+    "route": "/book/:book/chapter/:chapter",
+    "role": "Signed-in reader with full chapter access",
+    "viewport": "390×844; independent reader Night appearance, application Light theme",
+    "observed": "Ordinary prose uses the Night foreground, but table headers and cells retain pale or white backgrounds. Cell text is nearly invisible. A collapsible passage also retains a pale surface. The screenshot shows the reader settings closed and Lamp Reading off, so this is independent of the lamp effect.",
+    "impact": "A reader who selects Night cannot reliably read supported chapter content. Appearance should follow the reader’s choice even when the rest of the application uses a different theme.",
+    "steps": [
+      "Create a disposable story with a two-row, six-column table containing paragraph text and a collapsible block. Publish the chapter.",
+      "Set application appearance to Light. Open the released chapter as a signed-in reader.",
+      "Open Reading preferences, choose Night, leave Lamp Reading off, close preferences and scroll to the table.",
+      "Scroll to the collapsible block and expand it. Repeat in Sepia to check paper/surface consistency."
+    ],
+    "evidence": [
+      "The targeted mobile capture measured table-header text #d7ddcd on #efebe9 at 1.17:1 and body text #d7ddcd on #ffffff at 1.38:1; 12 table text nodes failed the 4.5:1 normal-text threshold.",
+      "The body foreground can change with the active atmosphere; another stress state also failed. The underlying mismatch remains hardcoded light table surfaces.",
+      "Reader-theme selection applies reader-specific classes. Table and disclosure dark overrides depend on the application’s .dark ancestor. This source structure explains the confirmed independent-theme failure."
+    ],
+    "sources": [
+      "[index.css:851](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L851)",
+      "[index.css:872](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L872)",
+      "[pages/ReaderPage.tsx:1046](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/pages/ReaderPage.tsx#L1046)"
+    ],
+    "plan": [
+      "Use reader-scoped ink, surface, border and muted variables for all supported rich blocks, independently of the application theme.",
+      "Cover table headings/cells, disclosures and their content; inspect quotes, links and footnotes for the same dependency before changing shared styles.",
+      "Keep author formatting, artwork, atmosphere and established reader typography intact. Scope overrides to reader/preview surfaces where appropriate."
+    ],
+    "checks": [
+      "Table headers, body cells and expanded/collapsed disclosures remain readable in Paper, Sepia and Night.",
+      "Verify application Light + reader Night and application Dark + reader Paper, then all reader/app-theme combinations.",
+      "Check Lamp off and both lamp modes, atmosphere on/off, reader preview and published reader at desktop and mobile widths.",
+      "Normal text meets at least 4.5:1 against its effective surface; controls remain distinguishable. No new global editor theme regression."
+    ],
+    "screens": [
+      "target-03-reader-night-table.png",
+      "target-04-reader-night-disclosure.png",
+      "target-05-reader-sepia-table.png"
+    ],
+    "related": "#51 and #69 contain broader existing reader/theme work; this ticket isolates the reproduced independent-appearance failure.",
+    "caveat": ""
+  },
+  {
+    "key": "modal-summary-focus",
+    "title": "[P1] Shared dialog focus trap skips the Publication changes disclosure in version history",
+    "severity": "P1 — a writer action is inaccessible through normal keyboard traversal",
+    "area": "Shared dialogs / chapter version history",
+    "route": "/write/book/:book/chapter/:chapter/edit",
+    "role": "Writer who owns the story",
+    "viewport": "1440×1000; keyboard Tab navigation",
+    "observed": "In the version-history comparison, pressing Tab on Restore working draft returns focus to Close version history. The following Publication changes summary is skipped. Its Restore and withdraw release action cannot be discovered through normal forward traversal while the disclosure is closed.",
+    "impact": "Keyboard users cannot reach an existing publication workflow without a pointer. This is a shared focus-management defect, not a request to change publishing behavior.",
+    "steps": [
+      "Open an owned chapter in the writer editor. Use View revisions.",
+      "If no recovery point exists, enter a checkpoint name and choose Save checkpoint.",
+      "Choose Compare and restore on a recovery point. Keep Publication changes collapsed.",
+      "Focus Restore working draft and press Tab once. Observe focus on the dialog Close button rather than the following disclosure.",
+      "Use the pointer to open Publication changes to verify that the omitted summary controls a real existing action. Do not execute restoration or withdrawal during reproduction."
+    ],
+    "evidence": [
+      "A real Tab keypress produced document.activeElement with aria-label=\"Close version history\". The next visible native control is the Publication changes <summary>.",
+      "The shared focusable selector includes anchors, buttons, inputs, selects, textareas and [tabindex=\"0\"], but omits native summary elements.",
+      "Screenshot establishes the control order; the focus trace in verification.json establishes the keyboard failure. A screenshot alone is not sufficient proof of traversal."
+    ],
+    "sources": [
+      "[hooks/useDialog.ts:33](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/hooks/useDialog.ts#L33)",
+      "[components/ChapterVersionHistoryDialog.tsx:111](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/ChapterVersionHistoryDialog.tsx#L111)"
+    ],
+    "plan": [
+      "Correct shared focusable discovery to include supported native controls such as summary and respect visibility, disabled state, inert ancestors and negative tabindex.",
+      "Preserve nested-dialog ownership, Escape handling, scroll locking and focus restoration to the trigger.",
+      "Review callers with native disclosures; do not infer that every caller fails without a focused reproduction."
+    ],
+    "checks": [
+      "Tab reaches Publication changes; Enter/Space opens it; the withdrawal action becomes reachable without submitting it.",
+      "Shift+Tab traverses the reverse sequence and the trap wraps only at the actual first/last focusable controls.",
+      "Closed disclosure children are excluded; opening a disclosure updates traversal without remounting the dialog.",
+      "Escape, nested dialogs, focus return and background scroll remain correct at mobile and desktop sizes."
+    ],
+    "screens": [
+      "verify-02-history-keyboard-skips-summary.png"
+    ],
+    "related": "#78 concerns the version-history feature; this is a specific keyboard regression.",
+    "caveat": "The current release-comparison dialog was inspected too, but the initial expected-next-control assertion was incorrect. It is not being reported as a second confirmed failure."
+  },
+  {
+    "key": "reader-header-title",
+    "title": "[P2] Long chapter titles overlap reader toolbar actions at intermediate widths",
+    "severity": "P2 — content and controls collide",
+    "area": "Reader navigation / responsive header",
+    "route": "/book/:book/chapter/:chapter",
+    "role": "Reader",
+    "viewport": "820×600; long unbroken title with Unicode",
+    "observed": "The central chapter-title text extends into the right-hand action group. Bookmark, appearance and subsequent controls compete with the title in the same header space. Document-level overflow remains zero, so an overflow-only check does not detect this collision.",
+    "impact": "Tablet and small-laptop readers lose a clear separation between chapter context and controls. The layout breaks with supported long content even though normal short fixture titles fit.",
+    "steps": [
+      "Use a chapter title such as AnUnusuallyLongChapterTitleThatMustRemainReadableAcrossAllTheControlsAndMenus世界 🌙.",
+      "Open its released chapter at an 820×600 viewport.",
+      "Keep the reader header visible at the top of the chapter and inspect the central title and right-side toolbar."
+    ],
+    "evidence": [
+      "The measured title rectangle spans x=255–565 and y=50–67. The action group spans x=443–769 and y=27–71. Their rectangles intersect by 122 horizontal pixels.",
+      "The title has a fixed 310px maximum; the central chapter container has a 160px minimum within a three-track header. The title is not constrained to the space actually available beside the controls."
+    ],
+    "sources": [
+      "[index.css:10045](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L10045)",
+      "[index.css:10069](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L10069)",
+      "[styles/reader-v2.css:207](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/reader-v2.css#L207)"
+    ],
+    "plan": [
+      "Constrain the title to its actual grid track using shrinkable tracks/children and a width-relative truncation limit.",
+      "Retain the existing responsive header structure and touch target sizes; only collapse secondary chapter context when space truly requires it.",
+      "Keep the complete title available in the chapter heading and an accessible context mechanism."
+    ],
+    "checks": [
+      "No title/action rectangle intersections at 720, 744, 768, 820, 912, 980, 1024 and 1440px.",
+      "Test short, 100+ character, unbroken, Unicode and RTL titles; icons stay aligned and tappable.",
+      "Reader header visibility transitions, focus mode and back navigation behave as before."
+    ],
+    "screens": [
+      "target-07-reader-header-long-title.png"
+    ],
+    "related": "#69 is related broad reader UI work.",
+    "caveat": ""
+  },
+  {
+    "key": "reader-find-cap",
+    "title": "[P2] Find in chapter reports all matches but makes only the first 50 reachable",
+    "severity": "P2 — valid search results are inaccessible",
+    "area": "Reader / Passages & find",
+    "route": "/book/:book/chapter/:chapter",
+    "role": "Reader with full chapter access",
+    "viewport": "1440×1000; long chapter with 54 matching passages",
+    "observed": "Find in this chapter announces “54 passages match”, but renders exactly 50 result buttons. There is no Show more, pagination or continuation control. A reader cannot jump to matches 51–54 from this tool.",
+    "impact": "Long chapters give an incomplete result set while promising a complete count. Readers searching for a later reference must scroll manually or assume it is missing.",
+    "steps": [
+      "Use a chapter with at least 54 separate passages containing a common query such as “the”.",
+      "Open Passages & find and type that query into Find in this chapter.",
+      "Read the total match count, scroll to the end of the results, and look for a way to reach later matches."
+    ],
+    "evidence": [
+      "Browser status text: “54 passages match”. DOM count: .reader-find-results button = 50.",
+      "ReaderPassageTools renders matches.slice(0, 50) without a continuation control. The count is computed from the unsliced matches collection."
+    ],
+    "sources": [
+      "[components/ReaderPassageTools.tsx:65](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/ReaderPassageTools.tsx#L65)"
+    ],
+    "plan": [
+      "Keep a bounded initial render, but add a lightweight continuation mechanism so every supported match is reachable.",
+      "Make visible/total counts accurate and announce newly available results without resetting query or focus.",
+      "Preserve passage jump, closing behavior, saved passages and independent private-note actions."
+    ],
+    "checks": [
+      "Verify 0, 1, 49, 50, 51, 54 and 200+ matches; all matching passages can be reached.",
+      "Changing/clearing the query resets the visible window appropriately and does not retain stale result focus.",
+      "Keyboard and mobile users can activate a later match and land on the correct passage without an accidental document reload."
+    ],
+    "screens": [
+      "target-06-reader-find-limit.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "reader-coach-context",
+    "title": "[P2] Reader coaching tips cover preferences and leave an invisible focusable control in focus mode",
+    "severity": "P2 — competing overlays and hidden keyboard focus",
+    "area": "Reader / contextual onboarding",
+    "route": "/book/:book/chapter/:chapter",
+    "role": "Reader in a fresh coaching session",
+    "viewport": "740×360 landscape; fresh browser storage",
+    "observed": "A scheduled reader tip appears over the open Reading preferences sheet, covering its quiet-controls/appearance area. Entering focus mode hides the tip with opacity, but the Dismiss tip button remains programmatically focusable and is not inert or aria-hidden.",
+    "impact": "The guidance competes with the settings it is explaining. Hidden interactive UI makes focus-mode navigation confusing and undermines the distraction-free reading setting.",
+    "steps": [
+      "Use a fresh browser session/storage so reader coaching is eligible. Open a released chapter at 740×360.",
+      "Immediately open Reading appearance and themes before the first coaching delay expires; wait for the first tip.",
+      "Observe the tip above the preferences sheet. Close preferences and enter focus mode while the tip is active.",
+      "Inspect the Dismiss tip control: it remains mounted as a normal button even though the tip has opacity 0."
+    ],
+    "evidence": [
+      "Tip bounds: x=12, y=206.16, width=716, height=77.84. Preferences bounds: x=0, y=54, width=740, height=306. They visibly overlap.",
+      "The tip z-index is 45 and preferences is below it. Tip body pointer-events are disabled; this report does not claim that the entire tip blocks all taps.",
+      "In focus mode, document.activeElement can become Dismiss tip; computed opacity=0, inert=false, aria-hidden=null. This particular check used focus(), not a screen-reader session or a full hardware-keyboard traversal trace."
+    ],
+    "sources": [
+      "[pages/ReaderPage.tsx:1050](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/pages/ReaderPage.tsx#L1050)",
+      "[components/ReaderDiscoveryCoach.tsx:168](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/ReaderDiscoveryCoach.tsx#L168)",
+      "[index.css:10094](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L10094)",
+      "[styles/optional-tips.css:7](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/optional-tips.css#L7)"
+    ],
+    "plan": [
+      "Defer or pause reader coaching while a reader settings/dialog surface is open.",
+      "Unmount or correctly hide/inert the coaching UI when focus mode suppresses it; avoid opacity-only interaction hiding.",
+      "Keep session dismissal and coaching progression intact, and avoid replaying a tip immediately after a user dismisses it."
+    ],
+    "checks": [
+      "Fresh-session tips never obscure preferences, chapter contents, comments, sharing or passage tools.",
+      "Focus mode exposes no invisible coaching button in the keyboard/accessibility tree.",
+      "Dismiss, Escape and returning to ordinary reading retain the expected coaching state.",
+      "Test portrait mobile, short landscape, desktop and reduced-motion without adding a new distracting transition."
+    ],
+    "screens": [
+      "verify-04-coach-over-preferences.png",
+      "verify-05-focus-mode-invisible-tip-focus.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "search-active-semantics",
+    "title": "[P2] Search arrow-key selection is visual only and does not expose the active suggestion",
+    "severity": "P2 — keyboard selection lacks accessible state",
+    "area": "Global search overlay",
+    "route": "Any page → Search WordWeft overlay",
+    "role": "Guest or signed-in reader",
+    "viewport": "390×844; keyboard ArrowDown while input remains focused",
+    "observed": "ArrowDown highlights a suggestion and Enter can activate it while focus stays in the input. The input/result DOM does not expose the active suggestion through aria-activedescendant, an equivalent focus transfer, or an active-result announcement.",
+    "impact": "A user relying on assistive technology cannot reliably tell which story/person the next Enter press will open. Ordinary Tab traversal still reaches result buttons, so this is specifically an arrow-selection semantics defect.",
+    "steps": [
+      "Open Search WordWeft, type a query with a matching story (the local fixture uses “spring”), and wait for suggestions.",
+      "Press ArrowDown once without tabbing away from the search input.",
+      "Observe the highlighted row, retained input focus and missing semantic relationship/active selection state."
+    ],
+    "evidence": [
+      "Browser selected-row count is 1, but the focused input is type=search with aria-busy=false and no aria-activedescendant/aria-controls/aria-expanded.",
+      "ArrowDown changes selectedIndex and a CSS class. Result buttons are not represented as an active-descendant option model, and the chosen suggestion is not otherwise announced.",
+      "This is DOM/keyboard evidence. A physical screen-reader session has not been run; acceptance should include one."
+    ],
+    "sources": [
+      "[components/SearchOverlay.tsx:114](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/SearchOverlay.tsx#L114)",
+      "[components/SearchOverlay.tsx:167](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/SearchOverlay.tsx#L167)"
+    ],
+    "plan": [
+      "Choose a consistent accessible search pattern: combobox/listbox with stable option IDs and active-descendant state, or explicit roving focus with correctly announced results.",
+      "Keep typing, composition/IME, debounce, pending results, full-search fallback and Enter activation coherent.",
+      "Ensure the selected row scrolls into view when suggestions exceed the result viewport."
+    ],
+    "checks": [
+      "ArrowDown/Up announce and expose the current suggestion; Enter opens exactly that item.",
+      "Pending/empty results do not point aria-activedescendant at a removed node.",
+      "Escape closes the overlay and returns focus; Tab remains predictable; keyboard selection stays visible.",
+      "Verify VoiceOver on iPhone and a desktop screen reader, including mixed book/author results and rapid query changes."
+    ],
+    "screens": [
+      "target-10-search-keyboard-selected.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "ads-scroll-shift",
+    "title": "[P2] Unresolved ad-slot timeout collapses visible layout and shifts the scroll position",
+    "severity": "P2 — unexpected layout/scroll jump",
+    "area": "Shared ad placement / search and other AdUnit callers",
+    "route": "/search?q=spring",
+    "role": "Guest or signed-in reader; ad request unavailable",
+    "viewport": "1440×1000; controlled blocked-ad script response",
+    "observed": "An unresolved ad reserves a visible slot, then is removed after seven seconds. While the slot/footer is on screen, this changes the footer position and document scroll. Content moves after the reader has already settled on it.",
+    "impact": "Users with ad blockers, unavailable ad networks or slow/no-fill responses experience an unexpected late jump. The current fallback removes the blank space but trades it for a stability problem.",
+    "steps": [
+      "Use a search with results and an AdUnit below them.",
+      "Block the ad script/network or simulate a successful empty script response that never marks the slot filled/unfilled. The audit used the latter locally.",
+      "Scroll the pending ad slot and footer into view before seven seconds elapse.",
+      "Wait for the fallback and compare the ad height, footer coordinates and scrollY before/after."
+    ],
+    "evidence": [
+      "Before: slot height=116px, footer viewport y=694.45, scrollY=687. After: slot height=0, footer viewport y=612.45, scrollY=621.",
+      "Observed footer movement: −82px; observed scrollY change: −66px. This is a controlled browser reproduction, not a field Core Web Vitals/CLS measurement.",
+      "AdUnit transitions to empty after 7000ms when no filled state exists; the empty-state CSS removes the reserved geometry."
+    ],
+    "sources": [
+      "[components/AdUnit.tsx:77](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/AdUnit.tsx#L77)",
+      "[index.css:11518](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L11518)"
+    ],
+    "plan": [
+      "Handle known script errors/unfilled states as early as practical rather than waiting for a late visible collapse.",
+      "Define a stable policy for pending slots: collapse before exposure or after the affected region is offscreen, while preserving valid filled ad dimensions.",
+      "Do not remove advertising, keep permanent large blanks, or interfere with the ad provider’s ownership of filled content without a product decision."
+    ],
+    "checks": [
+      "Blocked script, no-fill, slow-fill, late-fill and successful-fill scenarios preserve the current reading/scroll context.",
+      "No late visible collapse moves a focused link or pointer target under the user.",
+      "Check home, search and other shared callers at mobile and desktop widths, including browser back restoration.",
+      "Record layout-shift entries during validation; distinguish field measurements from synthetic results."
+    ],
+    "screens": [
+      "target-11-ad-before-timeout.png",
+      "target-12-ad-after-timeout.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "reader-table-actions",
+    "title": "[P2] Per-passage actions inflate every reader table cell and turn headers into control stacks",
+    "severity": "P2 — supported rich content loses its intended compact structure",
+    "area": "Reader / table rendering and passage controls",
+    "route": "/book/:book/chapter/:chapter",
+    "role": "Signed-in reader with full chapter access",
+    "viewport": "390×844; six-column table",
+    "observed": "Every paragraph inside a table cell receives the normal reader bookmark and comment controls. The table-specific CSS makes both controls permanently visible in normal flow. Narrow cells stack the two 44px controls under even a one-word heading, inflating the header and crowding the table.",
+    "impact": "A compact piece of supporting information becomes a large control grid. The effect is most pronounced on mobile and interrupts the reading rhythm. Table horizontal containment itself is present; this ticket is not claiming page-level overflow.",
+    "steps": [
+      "Insert a six-column/two-row table in a chapter, with one-word headings and a short paragraph in each cell.",
+      "Publish and open as a signed-in reader at 390×844.",
+      "Scroll to the table in Paper or Sepia; inspect the bookmark/comment stack beneath each heading and body cell."
+    ],
+    "evidence": [
+      "The Sepia screenshot shows both passage actions rendered under One, Two and Three, and under every body paragraph.",
+      "ReaderPage recursively wraps paragraph nodes with reader-comment-block and appends passage actions even inside th/td.",
+      "reader-v2.css explicitly changes table-cell passage actions to position:static, opacity:1 and 44×44 dimensions, putting them into the table layout."
+    ],
+    "sources": [
+      "[pages/ReaderPage.tsx:998](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/pages/ReaderPage.tsx#L998)",
+      "[styles/reader-v2.css:656](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/reader-v2.css#L656)"
+    ],
+    "plan": [
+      "Define table-aware passage interaction so controls do not occupy permanent prose-sized stacks in every cell.",
+      "Preserve saving/commenting on supported passages, existing anchors and thread identity; use a compact contextual/table-level affordance where appropriate.",
+      "Keep touch functionality independent of hover and preserve accessible names, focus and table semantics."
+    ],
+    "checks": [
+      "One-word headers remain compact and readable rather than reserving two stacked control rows.",
+      "At 320, 390, 820 and 1440px, table scrolling and passage actions are usable without collisions or document overflow.",
+      "Existing table passage comments/bookmarks still open the correct thread/passage after the presentation change.",
+      "Compare writer editor, reader preview and published reader for consistent table content geometry; test all reader appearances."
+    ],
+    "screens": [
+      "target-05-reader-sepia-table.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "search-contrast",
+    "title": "[P2] Search rating text and highlighted suggestion metadata fail contrast thresholds",
+    "severity": "P2 — text readability/accessibility defect",
+    "area": "Full search and global suggestions",
+    "route": "/search?q=spring and global search overlay",
+    "role": "Guest or signed-in reader",
+    "viewport": "1440×1000 and 390×844, Light appearance",
+    "observed": "The numeric story rating inherits the decorative gold star color. In a selected suggestion, author metadata inherits gray that is too pale for the highlighted background.",
+    "impact": "Readers with low vision struggle to compare ratings or identify the author of the active suggestion.",
+    "steps": [
+      "Search for a story that has a numeric rating.",
+      "Inspect its rating in Light appearance at desktop and mobile widths.",
+      "Open global search for the same query and press ArrowDown to highlight a suggestion."
+    ],
+    "evidence": [
+      "Rating text: #f59e0b on #fbfaf7, 13px, 2.05:1.",
+      "Highlighted “by Mira Ellery” metadata: #6b7280 on #f2eeec, 12px, 4.19:1.",
+      "Measurements are from axe-core 4.13 on the actual rendered DOM, cross-checked against screenshots/source. This is a specific contrast finding, not a claim of a complete WCAG audit."
+    ],
+    "sources": [
+      "[index.css:2548](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/index.css#L2548)",
+      "[components/SearchOverlay.tsx:210](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/components/SearchOverlay.tsx#L210)"
+    ],
+    "plan": [
+      "Separate readable rating text from decorative star accent styling.",
+      "Use a sufficiently strong existing muted token for selected-row metadata without changing the established search layout or palette direction."
+    ],
+    "checks": [
+      "Rating text and selected/unselected metadata meet at least 4.5:1 on their effective backgrounds.",
+      "Check Light/Dark, desktop/mobile, hover, keyboard selection and zero-rating/New states.",
+      "Preserve result-card entrance motion and the search state machine."
+    ],
+    "screens": [
+      "003-search-1440-light.png",
+      "037-search-390-light.png",
+      "target-10-search-keyboard-selected.png"
+    ],
+    "related": "#53 concerns broader search theme alignment; this is a measured contrast defect.",
+    "caveat": ""
+  },
+  {
+    "key": "writer-note-contrast",
+    "title": "[P2] New-story Author’s content note optional label is too faint",
+    "severity": "P2 — text readability/accessibility defect",
+    "area": "Writer / create story form",
+    "route": "/write/book/create",
+    "role": "Writer",
+    "viewport": "1440×1000 and 390×844, Light appearance",
+    "observed": "The “(optional)” text alongside Author’s content note uses text-gray-400 against the pale writer form surface.",
+    "impact": "The field’s optional status is harder to discover, particularly for readers with low vision. This is active form guidance, not a disabled control.",
+    "steps": [
+      "Open New story from Writer studio in Light appearance.",
+      "Scroll to Author’s content note.",
+      "Inspect the optional qualifier at desktop and mobile widths."
+    ],
+    "evidence": [
+      "Foreground #9ca3af, background #f6f7fa, 14px normal text, measured 2.36:1.",
+      "Measurements are from axe-core 4.13 on the actual rendered DOM, cross-checked against screenshots/source. This is a specific contrast finding, not a claim of a complete WCAG audit."
+    ],
+    "sources": [
+      "[pages/CreateBookPage.tsx:231](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/pages/CreateBookPage.tsx#L231)"
+    ],
+    "plan": [
+      "Replace the faint utility color with an existing writer-form muted text token that meets normal-text contrast.",
+      "Keep the form order, wording, validation and established typography unchanged."
+    ],
+    "checks": [
+      "The optional qualifier meets at least 4.5:1 in Light and Dark.",
+      "Verify required/optional cues, disabled states and validation messages stay distinct.",
+      "Test the create/save-draft flow at 390 and 1440px without changing form behavior."
+    ],
+    "screens": [
+      "027-create-1440-light.png",
+      "061-create-390-light.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "analytics-axis-contrast",
+    "title": "[P2] Writer statistics chart axis labels have insufficient text contrast",
+    "severity": "P2 — text readability/accessibility defect",
+    "area": "Writer / statistics",
+    "route": "/write/analytics",
+    "role": "Writer with story read data",
+    "viewport": "1440×1000 and 390×844, Light appearance",
+    "observed": "The reader-momentum vertical axis uses pale blue-gray 11px labels on a white chart surface.",
+    "impact": "Writers cannot as easily interpret chart magnitude, weakening the usefulness of statistics despite the chart itself being visible.",
+    "steps": [
+      "Open Story statistics for a writer with reader-momentum data.",
+      "Inspect the numeric vertical-axis labels in Light appearance.",
+      "Repeat at mobile width."
+    ],
+    "evidence": [
+      ".ww-trend-axis labels: #8191ac on #ffffff, 11px normal text, 3.19:1. Two captured labels failed.",
+      "Measurements are from axe-core 4.13 on the actual rendered DOM, cross-checked against screenshots/source. This is a specific contrast finding, not a claim of a complete WCAG audit."
+    ],
+    "sources": [
+      "[styles/writer-v2.css:321](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/writer-v2.css#L321)"
+    ],
+    "plan": [
+      "Use a stronger existing chart/writer muted token for axis text.",
+      "Keep the chart, data processing, scale, spacing and motion unchanged."
+    ],
+    "checks": [
+      "All axis text meets at least 4.5:1 on the effective chart surface.",
+      "Verify empty, low, high and filtered data in Light/Dark at 390 and 1440px.",
+      "Ensure labels are still aligned with grid values and do not overlap chart bars."
+    ],
+    "screens": [
+      "030-analytics-1440-light.png",
+      "064-analytics-390-light.png"
+    ],
+    "related": "#75 tracks analytics work; this ticket isolates axis readability.",
+    "caveat": ""
+  },
+  {
+    "key": "gray-badge-contrast",
+    "title": "[P3] Profile genre buttons and Safety last-updated badge narrowly fail text contrast",
+    "severity": "P3 — text readability/accessibility defect",
+    "area": "Profile and Safety badges",
+    "route": "/profile and /safety",
+    "role": "Signed-in profile owner; guest can view Safety",
+    "viewport": "1440×1000 and 390×844, Light appearance",
+    "observed": "Two surfaces use the same gray-500-on-gray-100 pairing for small text: favorite-genre buttons on Profile and the Last Updated label on Safety.",
+    "impact": "Small supporting text narrowly misses the normal-text contrast requirement. The fixes can share a token/style decision rather than introducing different arbitrary colors.",
+    "steps": [
+      "Open a profile with favorite genres in Light appearance and inspect the genre chips.",
+      "Open Safety and inspect Last Updated near the top.",
+      "Check both at 390 and 1440px."
+    ],
+    "evidence": [
+      "#6b7280 on #f3f4f6 measured 4.39:1.",
+      "Profile genre buttons are 12px bold; Last Updated is 14px normal. Both are below large-text size and need 4.5:1.",
+      "Measurements are from axe-core 4.13 on the actual rendered DOM, cross-checked against screenshots/source. This is a specific contrast finding, not a claim of a complete WCAG audit."
+    ],
+    "sources": [
+      "[pages/ProfilePage.tsx:109](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/pages/ProfilePage.tsx#L109)",
+      "[pages/SafetyRulesPage.tsx:64](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/pages/SafetyRulesPage.tsx#L64)"
+    ],
+    "plan": [
+      "Slightly strengthen the shared small-text foreground on these light badge surfaces.",
+      "Preserve chip backgrounds, border radius, spacing, genre navigation and legal-page structure."
+    ],
+    "checks": [
+      "Both badge types meet at least 4.5:1 with a small margin for rendering differences.",
+      "Check hover/focus/pressed and Dark states as well as default Light.",
+      "Profile genre activation still opens the same genre route."
+    ],
+    "screens": [
+      "023-profile-1440-light.png",
+      "057-profile-390-light.png",
+      "015-safety-1440-light.png",
+      "049-safety-390-light.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "founding-helper-contrast",
+    "title": "[P3] Founding Writers application helper text fails contrast on the green form surface",
+    "severity": "P3 — text readability/accessibility defect",
+    "area": "Founding Writers application form",
+    "route": "/founding-writers",
+    "role": "Prospective writer / guest",
+    "viewport": "1440×1000 and 390×844, Light appearance",
+    "observed": "Required-field explanation, Optional helpers, sample character counter and submission privacy note use the same muted foreground on the pale green application surface.",
+    "impact": "Important form guidance is unnecessarily difficult to read, including the explanation of required fields and how application information is used.",
+    "steps": [
+      "Open Founding Writers in Light appearance.",
+      "Inspect the application panel introduction, optional field notes, sample counter and submit privacy note.",
+      "Repeat after scrolling to the form on mobile. No application submission is needed."
+    ],
+    "evidence": [
+      "Six measured helper nodes: #6c716d on #edf2e9, 10–12px text, 4.37:1.",
+      "Measurements are from axe-core 4.13 on the actual rendered DOM, cross-checked against screenshots/source. This is a specific contrast finding, not a claim of a complete WCAG audit."
+    ],
+    "sources": [
+      "[styles/founding-writers.css:5](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/founding-writers.css#L5)",
+      "[styles/founding-writers.css:43](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/founding-writers.css#L43)",
+      "[styles/founding-writers.css:63](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/founding-writers.css#L63)"
+    ],
+    "plan": [
+      "Introduce or reuse an appropriate form-muted foreground for the green panel, with normal-text contrast above 4.5:1.",
+      "Apply it consistently to panel helpers/counters/notes, avoiding unnecessary changes to already compliant text on other backgrounds."
+    ],
+    "checks": [
+      "All six affected helper categories meet at least 4.5:1 in Light; verify Dark overrides too.",
+      "Required/optional instructions and privacy wording remain unchanged.",
+      "Desktop/mobile form layout, input states, attachment validation and submit feedback are unaffected."
+    ],
+    "screens": [
+      "018-founding-1440-light.png",
+      "052-founding-390-light.png"
+    ],
+    "related": "",
+    "caveat": ""
+  },
+  {
+    "key": "admin-text-contrast",
+    "title": "[P2] Administration overview secondary text and chart labels are below contrast thresholds",
+    "severity": "P2 — text readability/accessibility defect",
+    "area": "Administration / overview",
+    "route": "/admin",
+    "role": "Authorized administrator",
+    "viewport": "1440×1000 and 390×844, Light appearance",
+    "observed": "Overview kickers, update timestamp, metric explanations, chart day labels and footer copy use several low-contrast hardcoded colors on the admin canvas/panels.",
+    "impact": "Operators must read small data explanations and status timestamps accurately. These are operational labels rather than decorative marks.",
+    "steps": [
+      "Sign in as an authorized administrator and open Overview in Light appearance.",
+      "Inspect the administration kicker, Updated timestamp, metric helper text and seven-day chart labels.",
+      "Repeat at mobile width. Use disposable local admin data for audit captures."
+    ],
+    "evidence": [
+      "Administration kicker #9a705c on #f4f1ec: 3.84:1; panel kicker on #fffdfa: 4.26:1.",
+      "Updated/footer #91837a on #f4f1ec: 3.25:1.",
+      "Metric helper #95877e on #fffdfa: 3.42:1; chart day #82736a on #fffdfa: 4.48:1.",
+      "18 captured small-text nodes failed the 4.5:1 normal-text threshold.",
+      "Measurements are from axe-core 4.13 on the actual rendered DOM, cross-checked against screenshots/source. This is a specific contrast finding, not a claim of a complete WCAG audit."
+    ],
+    "sources": [
+      "[styles/admin-console.css:30](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/admin-console.css#L30)",
+      "[styles/admin-console.css:33](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/admin-console.css#L33)",
+      "[styles/admin-console.css:38](https://github.com/VelvetCascade/WordWeftV2/blob/4055dbf32044d69afa0679a932e22b240117143a/styles/admin-console.css#L38)"
+    ],
+    "plan": [
+      "Consolidate admin secondary-text/kicker tokens where appropriate and strengthen only failing foregrounds.",
+      "Check colors against both the canvas and panel backgrounds instead of assuming one white surface.",
+      "Preserve the admin layout, typography, access controls and underlying metrics."
+    ],
+    "checks": [
+      "Every affected normal-text label meets at least 4.5:1 on its real surface.",
+      "Verify overview at desktop/mobile and any supported Dark rendering.",
+      "Check empty, populated, updated and error/retry states without changing data or authorization behavior."
+    ],
+    "screens": [
+      "031-admin-1440-light.png",
+      "065-admin-390-light.png"
+    ],
+    "related": "",
+    "caveat": ""
+  }
+]
