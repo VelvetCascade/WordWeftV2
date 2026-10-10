@@ -209,4 +209,21 @@ class BookSchedulingControllerTest {
         mvc.perform(get("/api/books/book/chapters/chapter/edit-session")).andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void guestsCannotReadComparisonDraftBodies() throws Exception {
+        doAnswer(invocation -> { ((jakarta.servlet.http.HttpServletResponse) invocation.getArgument(1)).sendError(401); return null; })
+                .when(entryPoint).commence(any(), any(), any());
+        mvc.perform(get("/api/books/book/chapters/chapter/comparison")).andExpect(status().isUnauthorized());
+        org.mockito.Mockito.verifyNoInteractions(publishing);
+    }
+
+    @Test
+    void authorComparisonIsNotCachedAndCarriesCompleteReviewScope() throws Exception {
+        when(publishing.compare("author", "book", "chapter", "target", "token", true)).thenReturn(
+                new ChapterPublishingService.ChapterComparison(null, new com.wordweft.book.service.PublishedChapterView.Snapshot("Title", "Private", 1, List.of(), ""), false, null, 2));
+        mvc.perform(get("/api/books/book/chapters/chapter/comparison").param("releaseChapterId", "target").param("reviewToken", "token").param("includePublishedUpdates", "true").with(user(author)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.draft.content").value("Private")).andExpect(jsonPath("$.editRevision").value(2));
+    }
+
 }

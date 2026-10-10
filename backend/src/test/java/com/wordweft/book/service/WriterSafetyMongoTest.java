@@ -108,4 +108,24 @@ class WriterSafetyMongoTest {
         assertEquals(409, assertThrows(ResponseStatusException.class, () -> new ManuscriptImportService(racing, new ManuscriptParser(), mongo).undo("author", "book", batch)).getStatusCode().value());
         assertEquals(2, books.findById("book").orElseThrow().getChapters().size());
     }
+    @Test void reviewedStoryReleaseKeepsOldLiveBackupAndLeavesLaterDraftAndReaderCountersIntact() {
+        Chapter first = chapter("first", "published"), target = chapter("target", "draft"), later = chapter("later", "draft");
+        first.setContent("<p>Private updated text</p>"); first.setViewCount(37); first.setEditRevision(1);
+        story(first, target, later);
+        var revisionRepository = new MongoRepositoryFactory(mongo).getRepository(ChapterRevisionRepository.class);
+        var service = new ChapterPublishingService(books, mock(com.wordweft.notification.service.NotificationService.class));
+        service.mongo = mongo; service.chapterRevisions = new ChapterRevisionService(revisionRepository, books);
+        var review = service.reviewPublication("author", "book", "target", true);
+        assertEquals(List.of("first", "target"), review.chapters().stream().map(c -> c.id()).toList());
+        service.publishReviewed("author", "book", "target", review.reviewToken(), true);
+        Book saved = books.findById("book").orElseThrow();
+        assertEquals("<p>Private updated text</p>", saved.getChapters().get(0).getPublishedContent());
+        assertEquals(37, saved.getChapters().get(0).getViewCount());
+        assertEquals("published", saved.getChapters().get(1).getStatus());
+        assertEquals("draft", saved.getChapters().get(2).getStatus());
+        var backups = revisionRepository.findByChapterIdOrderByCreatedAtDesc("first");
+        assertEquals(1, backups.size()); assertEquals("PUBLISHED_RELEASE", backups.get(0).getReason());
+        assertEquals("<p>first text</p>", backups.get(0).getContent());
+    }
+
 }

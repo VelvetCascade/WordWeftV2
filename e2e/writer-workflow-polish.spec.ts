@@ -95,6 +95,7 @@ test('named checkpoints restore a working draft without withdrawing readers’ c
         await expect(history.getByRole('status')).toContainText('Checkpoint saved.');
         const revision = history.locator('article').filter({ hasText: 'Before revising the ending' });
         await revision.getByRole('button', { name: 'Compare and restore', exact: true }).click();
+        await history.getByText('Read complete versions', { exact: true }).click();
         await expect(history.getByRole('region', { name: 'Selected version manuscript', exact: true })).toContainText('Original ending.');
         await expect(history.getByRole('region', { name: 'Current draft manuscript', exact: true })).toContainText('Released ending.');
         await history.getByRole('button', { name: 'Restore working draft', exact: true }).click();

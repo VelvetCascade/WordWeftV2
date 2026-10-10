@@ -36,6 +36,9 @@ public class ChapterPublishingService {
     @Autowired(required = false)
     ContentAccessService contentAccessService;
 
+    @Autowired(required = false)
+    com.wordweft.manuscript.service.ChapterRevisionService chapterRevisions;
+
     @Autowired
     public ChapterPublishingService(BookRepository books, NotificationService notifications) {
         this(books, notifications, Clock.systemUTC());
@@ -48,27 +51,78 @@ public class ChapterPublishingService {
     }
 
     public record ReleaseChapter(String id, int number, String title, String status, Instant scheduledAt,
-            List<String> contentWarnings, int wordCount, String disclaimerNote, boolean complete) {}
+            List<String> contentWarnings, int wordCount, String disclaimerNote, boolean complete, String changeType) {}
     public record PublicationImpact(String reviewToken, boolean storyBecomesPublic, String resultingAgeRating,
-            List<ReleaseChapter> chapters) {}
+            List<ReleaseChapter> chapters, int privateUpdatesRemaining) {}
 
-    public PublicationImpact reviewPublication(String authorId, String bookId, String chapterId) {
-        return impact(requireOwnedBook(authorId, bookId), chapterId);
+    public record ChapterComparison(PublishedChapterView.Snapshot baseline, PublishedChapterView.Snapshot draft,
+            boolean live, Instant publishedAt, long editRevision) {}
+
+    private static boolean hasChanges(Chapter chapter) {
+        var live = PublishedChapterView.of(chapter);
+        return !java.util.Objects.equals(live.title(), java.util.Objects.requireNonNullElse(chapter.getTitle(), ""))
+                || !java.util.Objects.equals(live.content(), java.util.Objects.requireNonNullElse(chapter.getContent(), ""))
+                || !new java.util.HashSet<>(live.contentWarnings()).equals(new java.util.HashSet<>(java.util.Objects.requireNonNullElse(chapter.getContentWarnings(), List.of())))
+                || !java.util.Objects.requireNonNullElse(live.disclaimerNote(), "").equals(java.util.Objects.requireNonNullElse(chapter.getDisclaimerNote(), ""));
     }
 
-    private PublicationImpact impact(Book book, String chapterId) {
+    private static PublishedChapterView.Snapshot draftSnapshot(Chapter chapter) {
+        return new PublishedChapterView.Snapshot(java.util.Objects.requireNonNullElse(chapter.getTitle(), ""),
+                java.util.Objects.requireNonNullElse(chapter.getContent(), ""),
+                com.wordweft.manuscript.service.ManuscriptText.wordCount(chapter.getContent()),
+                List.copyOf(java.util.Objects.requireNonNullElse(chapter.getContentWarnings(), List.of())),
+                chapter.getDisclaimerNote());
+    }
+
+    private static boolean included(Chapter chapter, int index, int target, boolean includePublishedUpdates) {
+        return index <= target && (!"published".equals(chapter.getStatus()) || index == target
+                || (includePublishedUpdates && hasChanges(chapter)));
+    }
+
+    public PublicationImpact reviewPublication(String authorId, String bookId, String chapterId) {
+        return reviewPublication(authorId, bookId, chapterId, false);
+    }
+
+    public PublicationImpact reviewPublication(String authorId, String bookId, String chapterId, boolean includePublishedUpdates) {
+        return impact(requireOwnedBook(authorId, bookId), chapterId, includePublishedUpdates);
+    }
+
+    /** Load bodies only when the author opens a comparison. A release comparison must match its review. */
+    public ChapterComparison compare(String authorId, String bookId, String chapterId, String releaseChapterId,
+            String reviewToken, boolean includePublishedUpdates) {
+        Book book = requireOwnedBook(authorId, bookId);
+        Chapter chapter = requireChapter(book, chapterId);
+        if (reviewToken != null || releaseChapterId != null) {
+            if (releaseChapterId == null || reviewToken == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide the complete release review.");
+            var review = impact(book, releaseChapterId, includePublishedUpdates);
+            if (!review.reviewToken().equals(reviewToken)) throw staleReview();
+            if (review.chapters().stream().noneMatch(c -> c.id().equals(chapterId)))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This chapter is not part of the reviewed release.");
+        }
+        boolean live = "published".equals(chapter.getStatus()) && "published".equals(book.getPublicationStatus());
+        boolean hasBaseline = "published".equals(chapter.getStatus()) || chapter.getPublishedContent() != null;
+        return new ChapterComparison(hasBaseline ? PublishedChapterView.of(chapter) : null,
+                draftSnapshot(chapter), live, chapter.getPublishedAt(), chapter.getEditRevision());
+    }
+
+    private static ResponseStatusException staleReview() {
+        return new ResponseStatusException(HttpStatus.CONFLICT, "The release changed since your review. Review every affected chapter again.");
+    }
+
+    private PublicationImpact impact(Book book, String chapterId, boolean includePublishedUpdates) {
         int target = chapterIndex(book, chapterId);
         List<ReleaseChapter> releases = new java.util.ArrayList<>();
         AgeRating rating = book.getAgeRating() == null ? AgeRating.ALL_AGES : book.getAgeRating();
         for (int i = 0; i <= target; i++) {
             Chapter c = book.getChapters().get(i);
-            if (!"published".equals(c.getStatus()) || i == target) {
+            if (included(c, i, target, includePublishedUpdates)) {
                 List<String> warnings = c.getContentWarnings() == null ? List.of() : c.getContentWarnings();
                 AgeRating required = ContentAccessService.requiredRatingForWarnings(warnings);
                 if (required.getMinimumAge() > rating.getMinimumAge()) rating = required;
                 releases.add(new ReleaseChapter(c.getId(), i + 1, c.getTitle(), c.getStatus(), c.getScheduledAt(),
                         warnings, c.getWordCount(), c.getDisclaimerNote(),
-                        !isBlank(c.getTitle()) && !isBlank(stripHtml(c.getContent()))));
+                        !isBlank(c.getTitle()) && !isBlank(stripHtml(c.getContent())),
+                        !"published".equals(c.getStatus()) ? "NEW" : hasChanges(c) ? "UPDATE" : "UNCHANGED"));
             }
         }
         // Hash the reviewed manuscript and release state, never disclose manuscript bodies in the impact response.
@@ -76,21 +130,32 @@ public class ChapterPublishingService {
             var values = new java.util.ArrayList<Object>();
             values.add(java.util.Arrays.asList(book.getId(), book.getPublicationStatus(), book.getAgeRating(), book.isMature(), book.getContentWarnings()));
             for (Chapter c : book.getChapters()) values.add(java.util.Arrays.asList(c.getId(), c.getTitle(), c.getContent(),
-                    c.getContentWarnings(), c.getDisclaimerNote(), c.getStatus(), c.getScheduledAt(), c.getEditRevision()));
+                    c.getContentWarnings(), c.getDisclaimerNote(), c.getStatus(), c.getScheduledAt(), c.getEditRevision(),
+                    PublishedChapterView.of(c), c.getPublishedAt()));
             values.add(chapterId);
+            values.add(includePublishedUpdates);
             String json = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules().writeValueAsString(values);
             String token = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
                     .digest(json.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-            return new PublicationImpact(token, !"published".equals(book.getPublicationStatus()), rating.name(), releases);
+            int remaining = 0;
+            for (int i = 0; i < book.getChapters().size(); i++) {
+                Chapter c = book.getChapters().get(i);
+                if ("published".equals(c.getStatus()) && hasChanges(c) && !included(c, i, target, includePublishedUpdates)) remaining++;
+            }
+            return new PublicationImpact(token, !"published".equals(book.getPublicationStatus()), rating.name(), releases, remaining);
         } catch (Exception impossible) { throw new IllegalStateException("Could not review publication", impossible); }
     }
 
     public Book publishReviewed(String authorId, String bookId, String chapterId, String reviewToken) {
+        return publishReviewed(authorId, bookId, chapterId, reviewToken, false);
+    }
+
+    public Book publishReviewed(String authorId, String bookId, String chapterId, String reviewToken, boolean includePublishedUpdates) {
         Book book = requireOwnedBook(authorId, bookId);
-        if (reviewToken == null || !impact(book, chapterId).reviewToken().equals(reviewToken)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "The release changed since your review. Review every affected chapter again.");
+        if (reviewToken == null || !impact(book, chapterId, includePublishedUpdates).reviewToken().equals(reviewToken)) {
+            throw staleReview();
         }
-        return publishNow(book, chapterId);
+        return publishNow(book, chapterId, includePublishedUpdates);
     }
 
     /** Atomic preconditions cover ordering, manuscript revisions, schedules and story visibility. */
@@ -175,6 +240,10 @@ public class ChapterPublishingService {
     }
 
     private Book publishNow(Book book, String chapterId) {
+        return publishNow(book, chapterId, false);
+    }
+
+    private Book publishNow(Book book, String chapterId, boolean includePublishedUpdates) {
         var precondition = publicationQuery(book);
         int targetIndex = chapterIndex(book, chapterId);
         Chapter chapter = book.getChapters().get(targetIndex);
@@ -183,7 +252,7 @@ public class ChapterPublishingService {
 
         for (int index = 0; index <= targetIndex; index++) {
             Chapter required = book.getChapters().get(index);
-            if (!"published".equals(required.getStatus()) || required == chapter) {
+            if (included(required, index, targetIndex, includePublishedUpdates)) {
                 requireCompleteChapter(required);
                 ensureBookAgeRating(book, required);
             }
@@ -192,7 +261,10 @@ public class ChapterPublishingService {
         Instant publishedAt = clock.instant();
         for (int index = 0; index <= targetIndex; index++) {
             Chapter required = book.getChapters().get(index);
-            if (!"published".equals(required.getStatus()) || required == chapter) {
+            if (included(required, index, targetIndex, includePublishedUpdates)
+                    && (!includePublishedUpdates || !"published".equals(required.getStatus()) || hasChanges(required))) {
+                if (chapterRevisions != null && ("published".equals(required.getStatus()) || required.getPublishedContent() != null) && hasChanges(required))
+                    chapterRevisions.capturePublished(book.getAuthorId(), book, required);
                 publishChapter(required, publishedAt);
             }
         }

@@ -349,7 +349,7 @@ test('chapter manager releases also require the complete impact review', async (
     const row = page.locator('.ww-manage-chapter-card').filter({ has: page.getByText('Later manager draft', { exact: true }) });
     await row.getByLabel('Actions for Later manager draft', { exact: true }).click();
     await row.getByRole('button', { name: 'Publish', exact: true }).click();
-    const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true }); await expect(review).toContainText('Earlier manager draft'); await expect(review).toContainText('This private story becomes public'); await expect(review).toContainText('violence');
+    const review = page.getByRole('dialog', { name: 'Review the complete release', exact: true }); await expect(review).toContainText('Earlier manager draft'); await expect(review).toContainText('This private story becomes public'); await expect(review).toContainText(/violence/i);
     await approveRelease(page);
     await expect.poll(async () => (await api(request, `/books/${book.id}/chapters/${first}/edit-session`)).status).toBe('published');
     expect((await api(request, `/books/${book.id}/chapters/${second}/edit-session`)).status).toBe('published');

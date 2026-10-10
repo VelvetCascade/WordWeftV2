@@ -1618,17 +1618,30 @@ export interface PublicationImpact {
     reviewToken: string;
     storyBecomesPublic: boolean;
     resultingAgeRating: string;
-    chapters: { id: string; number: number; title: string; status: 'draft' | 'scheduled' | 'published'; scheduledAt?: string | null; contentWarnings: string[]; wordCount: number; disclaimerNote?: string; complete: boolean }[];
+    chapters: { id: string; number: number; title: string; status: 'draft' | 'scheduled' | 'published'; scheduledAt?: string | null; contentWarnings: string[]; wordCount: number; disclaimerNote?: string; complete: boolean; changeType?: 'NEW' | 'UPDATE' | 'UNCHANGED' }[];
+    privateUpdatesRemaining?: number;
+}
+export interface ChapterComparisonResult {
+    baseline: import('../utils/chapterComparison').ChapterSnapshot | null;
+    draft: import('../utils/chapterComparison').ChapterSnapshot;
+    live: boolean; publishedAt?: string | null; editRevision: number;
+}
+export async function getChapterComparison(bookId: string, chapterId: string, review?: { releaseChapterId: string; reviewToken: string; includePublishedUpdates?: boolean }): Promise<ChapterComparisonResult> {
+    const params = new URLSearchParams();
+    if (review) { params.set('releaseChapterId', review.releaseChapterId); params.set('reviewToken', review.reviewToken); params.set('includePublishedUpdates', String(!!review.includePublishedUpdates)); }
+    return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/comparison${params.size ? `?${params}` : ''}`, { headers: getHeaders(), cache: 'no-store' }));
 }
 export async function getChapterEditSession(bookId: string, chapterId: string): Promise<import('../types').Chapter> {
     return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/edit-session`, { headers: getHeaders(), cache: 'no-store' }));
 }
-export async function getPublicationImpact(bookId: string, chapterId: string): Promise<PublicationImpact> {
-    return handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/publication-impact`, { headers: getHeaders(), cache: 'no-store' }));
+export async function getPublicationImpact(bookId: string, chapterId: string, includePublishedUpdates = false): Promise<PublicationImpact> {
+    const result: PublicationImpact = await handleResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/publication-impact?includePublishedUpdates=${includePublishedUpdates}`, { headers: getHeaders(), cache: 'no-store' }));
+    if (includePublishedUpdates && result.privateUpdatesRemaining === undefined) throw new Error('The publishing service needs an update before it can review a complete story release. Try again after the update.');
+    return result;
 }
-export async function publishReviewed(bookId: string, chapterId: string, reviewToken: string): Promise<ManuscriptWriteResult> {
+export async function publishReviewed(bookId: string, chapterId: string, reviewToken: string, includePublishedUpdates = false): Promise<ManuscriptWriteResult> {
     return manuscriptWriteResponse(await fetch(`${API_BASE_URL}/books/${bookId}/chapters/${chapterId}/publish-reviewed`, {
-        method: 'POST', headers: getHeaders(), body: JSON.stringify({ reviewToken }),
+        method: 'POST', headers: getHeaders(), body: JSON.stringify({ reviewToken, includePublishedUpdates }),
     }));
 }
 

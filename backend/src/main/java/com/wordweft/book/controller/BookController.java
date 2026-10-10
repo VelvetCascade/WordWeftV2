@@ -424,15 +424,25 @@ public class BookController {
     }
 
     @GetMapping("/{bookId}/chapters/{chapterId}/publication-impact")
-    public ResponseEntity<?> publicationImpact(@PathVariable String bookId, @PathVariable String chapterId) {
-        return viewerScoped(chapterPublishingService.reviewPublication(getCurrentUserId(), bookId, chapterId));
+    public ResponseEntity<?> publicationImpact(@PathVariable String bookId, @PathVariable String chapterId,
+            @RequestParam(defaultValue = "false") boolean includePublishedUpdates) {
+        return viewerScoped(chapterPublishingService.reviewPublication(getCurrentUserId(), bookId, chapterId, includePublishedUpdates));
     }
 
-    public record ReviewedPublicationRequest(String reviewToken) {}
+    @GetMapping("/{bookId}/chapters/{chapterId}/comparison")
+    public ResponseEntity<?> chapterComparison(@PathVariable String bookId, @PathVariable String chapterId,
+            @RequestParam(required = false) String releaseChapterId, @RequestParam(required = false) String reviewToken,
+            @RequestParam(defaultValue = "false") boolean includePublishedUpdates) {
+        return viewerScoped(chapterPublishingService.compare(getCurrentUserId(), bookId, chapterId, releaseChapterId, reviewToken, includePublishedUpdates));
+    }
+
+    public record ReviewedPublicationRequest(String reviewToken, boolean includePublishedUpdates) {
+        public ReviewedPublicationRequest(String reviewToken) { this(reviewToken, false); }
+    }
     @PostMapping("/{bookId}/chapters/{chapterId}/publish-reviewed")
     public ResponseEntity<?> publishReviewed(@PathVariable String bookId, @PathVariable String chapterId,
             @RequestBody ReviewedPublicationRequest request) {
-        Book committed = chapterPublishingService.publishReviewed(getCurrentUserId(), bookId, chapterId, request.reviewToken());
+        Book committed = chapterPublishingService.publishReviewed(getCurrentUserId(), bookId, chapterId, request.reviewToken(), request.includePublishedUpdates());
         return revisionResponse(getCurrentUserId(), committed, chapterId);
     }
 

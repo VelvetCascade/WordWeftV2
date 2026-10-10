@@ -3,6 +3,7 @@ package com.wordweft.manuscript.service;
 import com.wordweft.book.model.Book;
 import com.wordweft.book.model.Chapter;
 import com.wordweft.book.repository.BookRepository;
+import com.wordweft.book.service.PublishedChapterView;
 import com.wordweft.manuscript.model.ChapterRevision;
 import com.wordweft.manuscript.repository.ChapterRevisionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -173,4 +174,17 @@ class ChapterRevisionServiceTest {
         assertEquals(403, listError.getStatusCode().value());
         assertEquals(403, restoreError.getStatusCode().value());
     }
+    @Test
+    void releaseBackupCapturesReaderSnapshotAndNeverPrivateEdits() {
+        PublishedChapterView.capture(chapter);
+        chapter.setTitle("Private revised title"); chapter.setContent("Private revised content");
+        service.capturePublished("author", book, chapter);
+        ArgumentCaptor<ChapterRevision> saved = ArgumentCaptor.forClass(ChapterRevision.class);
+        verify(revisions).save(saved.capture());
+        assertEquals("Current title", saved.getValue().getTitle());
+        assertEquals("<p>Current content</p>", saved.getValue().getContent());
+        assertEquals("PUBLISHED_RELEASE", saved.getValue().getReason());
+        assertEquals("Private revised content", chapter.getContent());
+    }
+
 }
