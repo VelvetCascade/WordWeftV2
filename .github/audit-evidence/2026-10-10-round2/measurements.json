@@ -1676,5 +1676,227 @@
     ],
     "errors": [],
     "violations": []
+  },
+  {
+    "name": "reader-dark-app-light-table",
+    "file": "reader-dark-app-light-table.png",
+    "url": "/book/6aca28f85a766f705be4c020/chapter/14f11b19-f2b7-4707-a69b-22edf3ae090f",
+    "width": 390,
+    "height": 844,
+    "scrollY": 4295,
+    "docWidth": 390,
+    "globalTheme": "dark",
+    "contentTheme": "light",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#paragraph-22 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">One</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-23 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Two</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-24 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Three</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-25 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Four</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-26 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Five</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-27 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Six</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.14 (foreground color: #30322f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-28 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-29 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-30 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-31 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-32 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-33 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #30322f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "summary"
+            ],
+            "html": "<summary>A quiet secret</summary>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.51 (foreground color: #efebe9, background color: #897973, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reader-dark-app-sepia-table",
+    "file": "reader-dark-app-sepia-table.png",
+    "url": "/book/6aca28f85a766f705be4c020/chapter/14f11b19-f2b7-4707-a69b-22edf3ae090f",
+    "width": 390,
+    "height": 844,
+    "scrollY": 4295,
+    "docWidth": 390,
+    "globalTheme": "dark",
+    "contentTheme": "sepia",
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#paragraph-22 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">One</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-23 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Two</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-24 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Three</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-25 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Four</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-26 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Five</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-27 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Six</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.06 (foreground color: #483d2f, background color: #4e342e, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-28 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-29 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-30 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-31 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-32 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#paragraph-33 > .z-10"
+            ],
+            "html": "<p class=\" relative z-10\">Dialogue and some longer text in a narrow table cell.</p>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 1.3 (foreground color: #483d2f, background color: #3e2723, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "summary"
+            ],
+            "html": "<summary>A quiet secret</summary>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 3.8 (foreground color: #efebe9, background color: #867367, font size: 12.8pt (17.1px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
   }
 ]
