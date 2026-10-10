@@ -210,7 +210,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
     const [reviewLoading, setReviewLoading] = useState(false);
     const [releaseConfirmed, setReleaseConfirmed] = useState(false);
     const isSavingRef = useRef(false);
-    const queuedSaveRef = useRef<{ status: 'draft' | 'published' | 'preserve'; content: string; title: string } | null>(null);
+    const queuedSaveRef = useRef<{ status: 'draft' | 'published' | 'preserve'; content: string; title: string; version: number } | null>(null);
     const editVersionRef = useRef(0);
     const saveSucceededRef = useRef(true);
     const releaseNavigationRef = useRef<(() => void) | null>(null);
@@ -450,6 +450,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
                 status: queued && priority[queued.status] > priority[status] ? queued.status : status,
                 content: currentContent,
                 title: currentTitle,
+                version: editVersionRef.current,
             };
             setSaveState('unsaved');
             if (status === 'published') setPublishState('publishing');
@@ -534,9 +535,11 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             isSavingRef.current = false;
             const queued = queuedSaveRef.current;
             queuedSaveRef.current = null;
-            if (queued && !conflictRef.current) {
+            // A newer edit has its own debounce. Flushing an older queued snapshot here
+            // would cancel that timer and incorrectly mark the newer text as saved.
+            if (queued && !conflictRef.current && queued.version === editVersionRef.current) {
                 void handleSave(queued.status, queued.content, queued.title);
-            } else if (status === 'published') {
+            } else if (status === 'published' || queued?.status === 'published') {
                 setPublishState('idle');
             }
         }
@@ -697,7 +700,9 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             isSavingRef.current = false;
             const queued = queuedSaveRef.current;
             queuedSaveRef.current = null;
-            if (queued) void handleSave('preserve', queued.content, queued.title);
+            if (queued && !conflictRef.current && queued.version === editVersionRef.current) {
+                void handleSave('preserve', queued.content, queued.title);
+            }
         }
     };
 
@@ -754,7 +759,7 @@ export const ChapterEditorPage: React.FC<ChapterEditorPageProps> = ({ currentUse
             expectedRevisionRef.current = updated.savedChapterRevision ?? expectedRevisionRef.current + 1;
             onUserUpdate(updated); setSaveState(saveSucceededRef.current ? 'saved' : 'unsaved');
         } catch (error) { setSaveState('unsaved'); setSaveError(error instanceof Error ? error.message : 'Could not cancel the schedule.'); }
-        finally { isSavingRef.current = false; const queued = queuedSaveRef.current; queuedSaveRef.current = null; if (queued && !conflictRef.current) void handleSave('preserve', queued.content, queued.title); }
+        finally { isSavingRef.current = false; const queued = queuedSaveRef.current; queuedSaveRef.current = null; if (queued && !conflictRef.current && queued.version === editVersionRef.current) void handleSave('preserve', queued.content, queued.title); }
     };
 
 
