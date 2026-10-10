@@ -304,4 +304,84 @@ class ChapterPublishingServiceTest {
         assertEquals("published", chapter.getStatus());
     }
 
+    @Test
+    void comparisonUsesLiveSnapshotNotLatestBackupOrEditedDraft() {
+        chapter.setStatus("published"); PublishedChapterView.capture(chapter);
+        chapter.setContent("Private revised manuscript."); chapter.setTitle("Private title");
+        chapter.setContentWarnings(List.of("GRIEF")); chapter.setDisclaimerNote("Private note");
+        var comparison = service.compare("author-1", "book-1", "chapter-1", null, null, false);
+        assertTrue(comparison.live());
+        assertEquals("The Return", comparison.baseline().title());
+        assertEquals("A complete chapter ready for readers.", comparison.baseline().content());
+        assertEquals("Private revised manuscript.", comparison.draft().content());
+        assertEquals(List.of("GRIEF"), comparison.draft().contentWarnings());
+        verify(books, never()).save(any());
+    }
+
+    @Test
+    void legacyPublishedComparisonAndNewChapterBaselineAreHonest() {
+        var fresh = service.compare("author-1", "book-1", "chapter-1", null, null, false);
+        assertNull(fresh.baseline()); assertFalse(fresh.live());
+        chapter.setStatus("published");
+        var legacy = service.compare("author-1", "book-1", "chapter-1", null, null, false);
+        assertEquals(chapter.getContent(), legacy.baseline().content());
+        assertEquals("UNCHANGED", service.reviewPublication("author-1", "book-1", "chapter-1").chapters().get(0).changeType());
+        chapter.setStatus("draft"); PublishedChapterView.capture(chapter);
+        assertFalse(service.compare("author-1", "book-1", "chapter-1", null, null, false).live());
+        assertNotNull(service.compare("author-1", "book-1", "chapter-1", null, null, false).baseline());
+    }
+
+    @Test
+    void ordinaryChapterReleaseKeepsOtherPublishedEditsPrivateAndDisclosesThem() {
+        Chapter earlier = releasedChapter("earlier", "Original earlier"); earlier.setContent("Private earlier update");
+        book.setChapters(List.of(earlier, chapter));
+        var impact = service.reviewPublication("author-1", "book-1", "chapter-1");
+        assertEquals(1, impact.privateUpdatesRemaining());
+        assertEquals(List.of("chapter-1"), impact.chapters().stream().map(c -> c.id()).toList());
+        service.publishReviewed("author-1", "book-1", "chapter-1", impact.reviewToken());
+        assertEquals("Original earlier", PublishedChapterView.of(earlier).content());
+        assertEquals("NEW", impact.chapters().get(0).changeType());
+    }
+
+    @Test
+    void storyReleaseReviewsAndPublishesAllEarlierUpdatesButLeavesLaterChaptersAndUnchangedReleasesAlone() {
+        Chapter earlier = releasedChapter("earlier", "Original earlier"); earlier.setContent("Private earlier update");
+        Chapter unchanged = releasedChapter("unchanged", "Unchanged text");
+        Chapter later = releasedChapter("later", "Original later"); later.setContent("Private later update");
+        book.setChapters(List.of(earlier, unchanged, chapter, later));
+        var impact = service.reviewPublication("author-1", "book-1", "chapter-1", true);
+        assertEquals(List.of("earlier", "chapter-1"), impact.chapters().stream().map(c -> c.id()).toList());
+        assertEquals("UPDATE", impact.chapters().get(0).changeType()); assertEquals(1, impact.privateUpdatesRemaining());
+        service.publishReviewed("author-1", "book-1", "chapter-1", impact.reviewToken(), true);
+        assertEquals("Private earlier update", PublishedChapterView.of(earlier).content());
+        assertEquals("Original later", PublishedChapterView.of(later).content());
+        assertEquals(NOW.minusSeconds(500), unchanged.getPublishedAt()); assertEquals(0, unchanged.getEditRevision());
+    }
+
+    @Test
+    void reviewTokenBindsComparisonReleaseScopeAndLiveBaseline() {
+        chapter.setStatus("published"); PublishedChapterView.capture(chapter); chapter.setContent("Updated");
+        var review = service.reviewPublication("author-1", "book-1", "chapter-1", true);
+        assertNotNull(service.compare("author-1", "book-1", "chapter-1", "chapter-1", review.reviewToken(), true));
+        assertEquals(409, assertThrows(ResponseStatusException.class, () -> service.publishReviewed("author-1", "book-1", "chapter-1", review.reviewToken(), false)).getStatusCode().value());
+        chapter.setPublishedContent("Another published baseline");
+        assertEquals(409, assertThrows(ResponseStatusException.class, () -> service.compare("author-1", "book-1", "chapter-1", "chapter-1", review.reviewToken(), true)).getStatusCode().value());
+        assertEquals(409, assertThrows(ResponseStatusException.class, () -> service.publishReviewed("author-1", "book-1", "chapter-1", review.reviewToken(), true)).getStatusCode().value());
+        verify(books, never()).save(any());
+    }
+
+    @Test
+    void comparisonIsOwnerOnlyAndCannotReadChaptersOutsideReviewedRelease() {
+        Chapter later = releasedChapter("later", "Later text"); book.setChapters(List.of(chapter, later));
+        var review = service.reviewPublication("author-1", "book-1", "chapter-1");
+        assertEquals(403, assertThrows(ResponseStatusException.class, () -> service.compare("other", "book-1", "chapter-1", null, null, false)).getStatusCode().value());
+        assertEquals(400, assertThrows(ResponseStatusException.class, () -> service.compare("author-1", "book-1", "later", "chapter-1", review.reviewToken(), false)).getStatusCode().value());
+        assertEquals(400, assertThrows(ResponseStatusException.class, () -> service.compare("author-1", "book-1", "chapter-1", "chapter-1", null, false)).getStatusCode().value());
+    }
+
+    private Chapter releasedChapter(String id, String content) {
+        Chapter result = new Chapter(); result.setId(id); result.setTitle(id); result.setContent(content); result.updateWordCount();
+        result.setStatus("published"); result.setPublishedAt(NOW.minusSeconds(500)); PublishedChapterView.capture(result); return result;
+    }
+
 }

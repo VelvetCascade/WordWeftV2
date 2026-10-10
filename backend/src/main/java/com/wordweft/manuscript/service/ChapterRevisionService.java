@@ -56,7 +56,8 @@ public class ChapterRevisionService {
 
         String hash = hash(chapter.getTitle() + "\n" + chapter.getContent() + "\n" + chapter.getContentWarnings() + "\n" + chapter.getDisclaimerNote());
         Optional<ChapterRevision> latest = revisions.findFirstByChapterIdOrderByCreatedAtDesc(chapter.getId());
-        if (latest.isPresent() && hash.equals(latest.get().getContentHash())) {
+        if (latest.isPresent() && hash.equals(latest.get().getContentHash())
+                && !("PUBLISHED_RELEASE".equals(reason) && !"PUBLISHED_RELEASE".equals(latest.get().getReason()))) {
             return Optional.empty();
         }
         Instant now = clock.instant();
@@ -87,6 +88,15 @@ public class ChapterRevisionService {
         OwnedChapter owned = requireOwnedChapter(authorId, bookId, chapterId);
         List<ChapterRevision> result = revisions.findByChapterIdOrderByCreatedAtDesc(owned.chapter().getId());
         return result == null ? List.of() : result.stream().limit(MAX_REVISIONS).map(this::semanticRevision).toList();
+    }
+
+    /** Retain the release readers saw before replacing it, rather than backing up the private draft. */
+    public void capturePublished(String authorId, Book book, Chapter chapter) {
+        var live = PublishedChapterView.of(chapter);
+        Chapter copy = new Chapter();
+        copy.setId(chapter.getId()); copy.setTitle(live.title()); copy.setContent(live.content());
+        copy.setContentWarnings(live.contentWarnings()); copy.setDisclaimerNote(live.disclaimerNote());
+        capture(authorId, book, copy, "PUBLISHED_RELEASE", true);
     }
 
     public Book restore(String authorId, String bookId, String chapterId, String revisionId) {

@@ -93,7 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/feedback/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/*/chapters/*/revisions", "/api/books/*/chapters/*/edit-session",
-                                "/api/books/*/chapters/*/publication-impact").authenticated()
+                                "/api/books/*/chapters/*/publication-impact", "/api/books/*/chapters/*/comparison").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/characters/book/*", "/api/characters/*", "/api/story-bible/book/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/books/*/chapters/*/view").permitAll()
