@@ -1,0 +1,359 @@
+[
+  {
+    "name": "bible-author-reveal-preview",
+    "file": "bible-author-reveal-preview.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=bible",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 776,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "bible-created-gated-entry",
+    "file": "bible-created-gated-entry.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=bible",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "bible-deleted-entry",
+    "file": "bible-deleted-entry.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=bible",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-note-draft-retained",
+    "file": "private-note-draft-retained.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "note": "A private observation kept in this tab.",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-note-existing-overwritten-before-load",
+    "file": "private-note-existing-overwritten-before-load.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "submittedNote": "",
+    "persistedNote": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-note-loading-save-enabled",
+    "file": "private-note-loading-save-enabled.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "note": "",
+    "saveEnabled": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-note-save-success",
+    "file": "private-note-save-success.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-passages-initial-failure",
+    "file": "private-passages-initial-failure.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-passages-recovered-stale-error",
+    "file": "private-passages-recovered-stale-error.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "loads": 2,
+    "alerts": [
+      "Saved passages could not be loaded. Your unsaved note stays here.Reload saved passages"
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-reply-failure-no-feedback",
+    "file": "review-reply-failure-no-feedback.png",
+    "url": "/book/local-story-spring",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 837,
+    "docWidth": 1440,
+    "alerts": [],
+    "draft": "Please retain this when the service fails.",
+    "errors": [
+      "Temporary review-reply service failure"
+    ],
+    "violations": []
+  },
+  {
+    "name": "review-reply-newer-edit-cleared",
+    "file": "review-reply-newer-edit-cleared.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1679,
+    "docWidth": 390,
+    "posts": [
+      {
+        "content": "The reply I wanted to post once."
+      },
+      {
+        "content": "The reply I wanted to post once."
+      }
+    ],
+    "newerDraftVisible": 0,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-reply-pending-duplicates",
+    "file": "review-reply-pending-duplicates.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1679,
+    "docWidth": 390,
+    "posts": [
+      {
+        "content": "The reply I wanted to post once."
+      },
+      {
+        "content": "The reply I wanted to post once."
+      }
+    ],
+    "submitDisabled": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-reply-reopened-empty",
+    "file": "review-reply-reopened-empty.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1679,
+    "docWidth": 390,
+    "draft": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "scene-created-mobile",
+    "file": "scene-created-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=scenes",
+    "width": 390,
+    "height": 844,
+    "scrollY": 233,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "scene-deleted-mobile",
+    "file": "scene-deleted-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=scenes",
+    "width": 390,
+    "height": 844,
+    "scrollY": 652,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "scene-invalid-position-mobile",
+    "file": "scene-invalid-position-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=scenes",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1552,
+    "docWidth": 390,
+    "alerts": [
+      "Story time position must be a whole number between \u2212100000 and 100000."
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "scene-timeline-mobile",
+    "file": "scene-timeline-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=scenes&view=timeline",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-live-draft-isolation",
+    "file": "writer-live-draft-isolation.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "liveContainsNewSentence": false,
+    "draftContainsNewSentence": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-live-reader-after-release",
+    "file": "writer-live-reader-after-release.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-new-chapter-autosaved",
+    "file": "writer-new-chapter-autosaved.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-new-story-created",
+    "file": "writer-new-story-created.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-preview-new-chapter",
+    "file": "writer-preview-new-chapter.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-private-note-deleted-mobile",
+    "file": "writer-private-note-deleted-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=notes",
+    "width": 390,
+    "height": 844,
+    "scrollY": 422,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-private-note-expanded-mobile",
+    "file": "writer-private-note-expanded-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=notes",
+    "width": 390,
+    "height": 844,
+    "scrollY": 127,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-published-draft-comparison",
+    "file": "writer-published-draft-comparison.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-release-review",
+    "file": "writer-release-review.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-release-success",
+    "file": "writer-release-success.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-update-live-verified",
+    "file": "writer-update-live-verified.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "newSentenceVisible": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "writer-update-release-review",
+    "file": "writer-update-release-review.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/chapter/e726f45e-bd06-45b3-ada0-14a842642584/edit",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  }
+]
