@@ -1,0 +1,281 @@
+[
+  {
+    "name": "author-follow-toggled",
+    "file": "author-follow-toggled.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "initial": "Follow",
+    "next": "Following",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-created-post-mobile",
+    "file": "community-created-post-mobile.png",
+    "url": "/community/post/6acbc3bf1f90457dafbdbc3a",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-edited-post-mobile",
+    "file": "community-edited-post-mobile.png",
+    "url": "/community/post/6acbc3bf1f90457dafbdbc3a",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-menu-no-dismiss-1440",
+    "file": "community-menu-no-dismiss-1440.png",
+    "url": "/community/post/6acbc3bf1f90457dafbdbc3a",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "afterEscape": "true",
+    "afterOutside": "true",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-menu-no-dismiss-390",
+    "file": "community-menu-no-dismiss-390.png",
+    "url": "/community/post/6acbc3bf1f90457dafbdbc3a",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "afterEscape": "true",
+    "afterOutside": "true",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-poll-voted-mobile",
+    "file": "community-poll-voted-mobile.png",
+    "url": "/community/post/6acbc3ca1f90457dafbdbc3b",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-saved-feed-empty-after-reopen",
+    "file": "community-saved-feed-empty-after-reopen.png",
+    "url": "/community?mode=saved",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "renderedCards": 0,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "community-unsaved-post-still-in-saved-feed",
+    "file": "community-unsaved-post-still-in-saved-feed.png",
+    "url": "/community?mode=saved",
+    "width": 390,
+    "height": 844,
+    "scrollY": 204,
+    "docWidth": 390,
+    "backendSavedIDs": [],
+    "renderedCards": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "contact-newer-edit-lost",
+    "file": "contact-newer-edit-lost.png",
+    "url": "/contact",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1150,
+    "docWidth": 390,
+    "submittedMessage": "The first message being sent to support.",
+    "newMessageDraft": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "contact-pending-newer-edit",
+    "file": "contact-pending-newer-edit.png",
+    "url": "/contact",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1818,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "profile-following-after-author-action",
+    "file": "profile-following-after-author-action.png",
+    "url": "/profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "before": [
+      "1Following"
+    ],
+    "after": [
+      "1Following"
+    ],
+    "backendFollowing": {
+      "count": 2,
+      "ids": [
+        "local-author-2",
+        "local-writer"
+      ]
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "profile-following-live-connections",
+    "file": "profile-following-live-connections.png",
+    "url": "/profile",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-created-real-mobile",
+    "file": "review-created-real-mobile.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1241,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-delete-confirm-mobile",
+    "file": "review-delete-confirm-mobile.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1241,
+    "docWidth": 390,
+    "errors": [],
+    "violations": [
+      {
+        "id": "button-name",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".hover\\:text-text-body.flex-shrink-0.text-gray-400"
+            ],
+            "html": "<button class=\"text-gray-400 hover:text-text-body flex-shrink-0\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"w-4 h-4\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></button>",
+            "failure": "Fix any of the following:\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".dark\\:hover\\:text-dark-text-body"
+            ],
+            "html": "<button class=\"text-sm text-gray-400 hover:text-text-body dark:hover:text-dark-text-body\">Maybe Later</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "review-deleted-real-mobile",
+    "file": "review-deleted-real-mobile.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1241,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-edited-real-mobile",
+    "file": "review-edited-real-mobile.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1241,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-update-nudge-blocks-pointer",
+    "file": "review-update-nudge-blocks-pointer.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1241,
+    "docWidth": 390,
+    "blocked": true,
+    "reviewStillOpen": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "review-update-obscured-by-success-nudge",
+    "file": "review-update-obscured-by-success-nudge.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1241,
+    "docWidth": 390,
+    "hitTarget": "<div class=\"flex gap-3 mt-2\"><button class=\"text-sm font-bold text-accent hover:underline\">Share this Book</button><button class=\"text-sm text-gray-400 hover:text-text-body dark:hover:text-dark-text-body\">Maybe Later</button></div>",
+    "errors": [],
+    "violations": [
+      {
+        "id": "button-name",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".hover\\:text-text-body.flex-shrink-0.text-gray-400"
+            ],
+            "html": "<button class=\"text-gray-400 hover:text-text-body flex-shrink-0\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"w-4 h-4\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></button>",
+            "failure": "Fix any of the following:\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".dark\\:hover\\:text-dark-text-body"
+            ],
+            "html": "<button class=\"text-sm text-gray-400 hover:text-text-body dark:hover:text-dark-text-body\">Maybe Later</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #9ca3af, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  }
+]
