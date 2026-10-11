@@ -148,6 +148,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     const [birthday, setBirthday] = useState('');
     const [otp, setOtp] = useState('');
     const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+    const [isResendingOtp, setIsResendingOtp] = useState(false);
+    const resendPendingRef = useRef(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -359,6 +361,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
 
     const handleAuthAction = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (resendPendingRef.current) return;
         setError(null);
         setSuccessMsg(null);
         setIsLoading(true);
@@ -424,7 +427,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
     };
 
     const handleResendOtp = async () => {
-        if (otpResendCooldown > 0) return;
+        if (otpResendCooldown > 0 || isLoading || resendPendingRef.current) return;
+        resendPendingRef.current = true;
+        setIsResendingOtp(true);
         setError(null);
         setSuccessMsg(null);
         try {
@@ -433,6 +438,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
            setOtpResendCooldown(60); // 1 min cooldown
         } catch (err: any) {
            setError(getFriendlyError(err));
+        } finally {
+           resendPendingRef.current = false;
+           setIsResendingOtp(false);
         }
     };
 
@@ -531,7 +539,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                     <button
                         type="button"
                         onClick={() => window.location.hash = '/'}
-                        disabled={isLoading}
+                        disabled={isLoading || isResendingOtp}
                         className="ww-auth-close absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-dark-surface-alt transition-colors"
                         aria-label="Close sign in"
                     >
@@ -606,11 +614,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                                 </div>
                                 <button
                                     type="button"
-                                    disabled={otpResendCooldown > 0 || isLoading}
+                                    disabled={otpResendCooldown > 0 || isLoading || isResendingOtp}
                                     onClick={handleResendOtp}
                                     className={`text-sm font-semibold transition-colors ${otpResendCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-accent hover:underline'}`}
                                 >
-                                    {otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown}s` : 'Resend Code'}
+                                    {isResendingOtp ? 'Sending code…' : otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown}s` : 'Resend Code'}
                                 </button>
                             </div>
                         )}
@@ -688,7 +696,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, initialView = 'logi
                         {error && <p role="alert" className="ww-account-message error text-center text-xs text-danger font-sans pt-2 leading-tight">{error}</p>}
                         {successMsg && <p role="status" className="ww-account-message success text-center text-xs text-success font-sans pt-2 leading-tight font-semibold">{successMsg}</p>}
 
-                        <button type="submit" disabled={isLoading || (view === 'otp' && otp.length !== 6) || (view === 'forgot' && resetCooldown > 0)} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
+                        <button type="submit" disabled={isLoading || isResendingOtp || (view === 'otp' && otp.length !== 6) || (view === 'forgot' && resetCooldown > 0)} className="w-full bg-accent text-white font-sans font-semibold h-12 rounded-xl hover:bg-primary transition-transform hover:scale-105 duration-300 shadow-lg !mt-6 disabled:bg-gray-400 disabled:scale-100">
                             {isLoading ? 'Processing...' : (
                                 view === 'login' ? 'Sign In' :
                                     view === 'signup' ? 'Create an account' :
