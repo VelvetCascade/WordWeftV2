@@ -1,0 +1,453 @@
+{
+  "results": [
+    {
+      "state": "light-1440-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 7.655468081872875,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            255,
+            254,
+            253
+          ],
+          "ratio": 7.9324481727671445,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 6.945048149058951,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 6.945048149058951,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 7.655468081872875,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            255,
+            254,
+            253
+          ],
+          "ratio": 7.9324481727671445,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 6.945048149058951,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            80,
+            81,
+            78
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 6.945048149058951,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 10.909150133319113,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 9.72512747160633,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 8.660291073543348,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 8.660291073543348,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 10.909150133319113,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 9.72512747160633,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 8.660291073543348,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            209,
+            206,
+            198
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 8.660291073543348,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 0
+}
