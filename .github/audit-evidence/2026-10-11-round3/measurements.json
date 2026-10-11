@@ -1,0 +1,549 @@
+[
+  {
+    "name": "auth-resend-concurrent",
+    "file": "auth-resend-concurrent.png",
+    "url": "/auth",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "requests": 2,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "auth-unverified-signin-otp",
+    "file": "auth-unverified-signin-otp.png",
+    "url": "/auth",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "author-cancel-download-fallback",
+    "file": "author-cancel-download-fallback.png",
+    "url": "/author/local-writer",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "nativeShares": [
+      {
+        "fileCount": 1,
+        "title": "Mira Ellery on WordWeft"
+      }
+    ],
+    "downloads": [
+      "wordweft-the-last-spring-in-bellweather-quote.png",
+      "wordweft-author-mira-ellery.png"
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "author-card-after-assets-settle",
+    "file": "author-card-after-assets-settle.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "heldImages": 7,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "author-card-export-pending",
+    "file": "author-card-export-pending.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "heldImages": 6,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "author-card-images-pending",
+    "file": "author-card-images-pending.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "heldImages": 6,
+    "downloadEnabled": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "feedback-newer-edit-lost-after-return",
+    "file": "feedback-newer-edit-lost-after-return.png",
+    "url": "/feedback",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "returnedDraft": "",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "feedback-pending-newer-edit",
+    "file": "feedback-pending-newer-edit.png",
+    "url": "/feedback",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1439,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "feedback-pending-newer-edit-hidden",
+    "file": "feedback-pending-newer-edit-hidden.png",
+    "url": "/feedback",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "submittedText": "First feedback intended for submission",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-return-after",
+    "file": "library-return-after.png",
+    "url": "/library",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "query": "",
+    "sort": "recent",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-return-before",
+    "file": "library-return-before.png",
+    "url": "/library",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "notifications-unread-empty-with-more",
+    "file": "notifications-unread-empty-with-more.png",
+    "url": "/notifications",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "requestedPages": [
+      0
+    ],
+    "loadMoreControls": 0,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "notifications-unread-found-after-manual-all-load",
+    "file": "notifications-unread-found-after-manual-all-load.png",
+    "url": "/notifications",
+    "width": 390,
+    "height": 844,
+    "scrollY": 25,
+    "docWidth": 390,
+    "requestedPages": [
+      0,
+      1
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "quote-cancel-download-fallback",
+    "file": "quote-cancel-download-fallback.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 275,
+    "docWidth": 1440,
+    "nativeShares": [
+      {
+        "fileCount": 1,
+        "title": "The Last Spring in Bellweather - The First Light"
+      }
+    ],
+    "downloads": [
+      "wordweft-the-last-spring-in-bellweather-quote.png"
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "quote-keyboard-selection",
+    "file": "quote-keyboard-selection.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 280,
+    "docWidth": 1440,
+    "selectedText": "By the time June reached the village, the rain had stopped. The houses leaned toward the road as if t",
+    "quoteControls": 0,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "quote-pointer-selection",
+    "file": "quote-pointer-selection.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 280,
+    "docWidth": 1440,
+    "quoteControls": 1,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "quote-share-controls",
+    "file": "quote-share-controls.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 275,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".border-transparent"
+            ],
+            "html": "<button class=\"flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 border-transparent text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich\">Quick Share</button>",
+            "failure": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f7f7f7, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "quote-theme-selected-state",
+    "file": "quote-theme-selected-state.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 275,
+    "docWidth": 1440,
+    "themes": [
+      {
+        "name": "Obsidian",
+        "pressed": null,
+        "selected": null
+      },
+      {
+        "name": "Espresso",
+        "pressed": null,
+        "selected": null
+      },
+      {
+        "name": "Linen",
+        "pressed": null,
+        "selected": null
+      },
+      {
+        "name": "Rosewood",
+        "pressed": null,
+        "selected": null
+      },
+      {
+        "name": "Gallery",
+        "pressed": null,
+        "selected": null
+      }
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-author-390-light",
+    "file": "share-author-390-light.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-author-native-failure",
+    "file": "share-author-native-failure.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "shareAttempts": 1,
+    "alerts": [],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-backdrop-gap-390",
+    "file": "share-backdrop-gap-390.png",
+    "url": "/author/local-writer",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "navRect": {
+      "x": 195,
+      "y": 790,
+      "width": 91.5,
+      "height": 46,
+      "top": 790,
+      "right": 286.5,
+      "bottom": 836,
+      "left": 195
+    },
+    "overlay": {
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 812,
+        "top": 0,
+        "right": 390,
+        "bottom": 812,
+        "left": 0
+      },
+      "maxHeight": "812px"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-backdrop-gap-740",
+    "file": "share-backdrop-gap-740.png",
+    "url": "/author/local-writer",
+    "width": 740,
+    "height": 360,
+    "scrollY": 262,
+    "docWidth": 740,
+    "navRect": {
+      "x": 370,
+      "y": 306,
+      "width": 179,
+      "height": 46,
+      "top": 306,
+      "right": 549,
+      "bottom": 352,
+      "left": 370
+    },
+    "overlay": {
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 740,
+        "height": 328,
+        "top": 0,
+        "right": 740,
+        "bottom": 328,
+        "left": 0
+      },
+      "maxHeight": "328px"
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-background-nav-activated-390",
+    "file": "share-background-nav-activated-390.png",
+    "url": "/community",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "click": {
+      "x": 240.75,
+      "y": 822
+    },
+    "resultingRoute": "/community",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-background-nav-activated-740",
+    "file": "share-background-nav-activated-740.png",
+    "url": "/community",
+    "width": 740,
+    "height": 360,
+    "scrollY": 0,
+    "docWidth": 740,
+    "click": {
+      "x": 459.5,
+      "y": 338
+    },
+    "resultingRoute": "/community",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-book-copy-failure-390-light",
+    "file": "share-book-copy-failure-390-light.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "alerts": [
+      "Your browser could not copy the link. Select the link below to copy it manually."
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-book-short-320",
+    "file": "share-book-short-320.png",
+    "url": "/book/local-story-spring",
+    "width": 320,
+    "height": 568,
+    "scrollY": 0,
+    "docWidth": 320,
+    "dialogRect": {
+      "x": 16,
+      "y": 18.5,
+      "width": 288,
+      "height": 499,
+      "top": 18.5,
+      "right": 304,
+      "bottom": 517.5,
+      "left": 16
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-chapter-390-light",
+    "file": "share-chapter-390-light.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "sharedUrl": "http://127.0.0.1:3010/book/local-story-spring",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-chapter-channels-1440-dark",
+    "file": "share-chapter-channels-1440-dark.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "shares": [
+      {
+        "title": "The Last Spring in Bellweather - What the Rain Revealed",
+        "text": "Reading Chapter 2: 'What the Rain Revealed' from 'The Last Spring in Bellweather'. #WordWeft",
+        "url": "http://127.0.0.1:3010/book/local-story-spring"
+      }
+    ],
+    "copies": [
+      "http://127.0.0.1:3010/book/local-story-spring"
+    ],
+    "externalTargets": [
+      [
+        "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%202%3A%20'What%20the%20Rain%20Revealed'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+        "_blank",
+        "noopener,noreferrer"
+      ],
+      [
+        "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring",
+        "_blank",
+        "noopener,noreferrer"
+      ],
+      [
+        "https://api.whatsapp.com/send?text=Reading%20Chapter%202%3A%20'What%20the%20Rain%20Revealed'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft%20http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring",
+        "_blank",
+        "noopener,noreferrer"
+      ],
+      [
+        "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%202%3A%20'What%20the%20Rain%20Revealed'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+        "_blank",
+        "noopener,noreferrer"
+      ]
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-chapter-channels-390-light",
+    "file": "share-chapter-channels-390-light.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "shares": [
+      {
+        "title": "The Last Spring in Bellweather - What the Rain Revealed",
+        "text": "Reading Chapter 2: 'What the Rain Revealed' from 'The Last Spring in Bellweather'. #WordWeft",
+        "url": "http://127.0.0.1:3010/book/local-story-spring"
+      }
+    ],
+    "copies": [
+      "http://127.0.0.1:3010/book/local-story-spring"
+    ],
+    "externalTargets": [
+      [
+        "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%202%3A%20'What%20the%20Rain%20Revealed'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+        "_blank",
+        "noopener,noreferrer"
+      ],
+      [
+        "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring",
+        "_blank",
+        "noopener,noreferrer"
+      ],
+      [
+        "https://api.whatsapp.com/send?text=Reading%20Chapter%202%3A%20'What%20the%20Rain%20Revealed'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft%20http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring",
+        "_blank",
+        "noopener,noreferrer"
+      ],
+      [
+        "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3010%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%202%3A%20'What%20the%20Rain%20Revealed'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+        "_blank",
+        "noopener,noreferrer"
+      ]
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "share-chapter-native-failure-390-light",
+    "file": "share-chapter-native-failure-390-light.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "alerts": [],
+    "errors": [],
+    "violations": []
+  }
+]

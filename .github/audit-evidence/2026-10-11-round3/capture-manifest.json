@@ -1,0 +1,551 @@
+[
+  {
+    "name": "share-chapter-390-light",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-channels-390-light",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-native-failure-390-light",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-book-copy-failure-390-light",
+    "route": "/book/local-story-spring",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-390-light",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-card-390-light",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-390-dark",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-channels-390-dark",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-native-failure-390-dark",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-book-copy-failure-390-dark",
+    "route": "/book/local-story-spring",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-390-dark",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-card-390-dark",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-1440-light",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-channels-1440-light",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-native-failure-1440-light",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-book-copy-failure-1440-light",
+    "route": "/book/local-story-spring",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-1440-light",
+    "route": "/author/local-writer",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-card-1440-light",
+    "route": "/author/local-writer",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-1440-dark",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-channels-1440-dark",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-chapter-native-failure-1440-dark",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-book-copy-failure-1440-dark",
+    "route": "/book/local-story-spring",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-1440-dark",
+    "route": "/author/local-writer",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-card-1440-dark",
+    "route": "/author/local-writer",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "library-return-before",
+    "route": "/library",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "library-return-after",
+    "route": "/library",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "quote-keyboard-selection",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "quote-pointer-selection",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "quote-share-controls",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "quote-theme-selected-state",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-book-short-320",
+    "route": "/book/local-story-spring",
+    "viewport": [
+      320,
+      568
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-card-short-320",
+    "route": "/author/local-writer",
+    "viewport": [
+      320,
+      568
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-book-short-740",
+    "route": "/book/local-story-spring",
+    "viewport": [
+      740,
+      360
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-card-short-740",
+    "route": "/author/local-writer",
+    "viewport": [
+      740,
+      360
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-unverified-signin-otp",
+    "route": "/auth",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-resend-concurrent",
+    "route": "/auth",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-otp-invalid",
+    "route": "/auth",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-otp-verified",
+    "route": "/home",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-forgot-email-sent",
+    "route": "/auth",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-password-reset-success",
+    "route": "/reset-password?token=63d442ad-66f7-4ff4-b09f-5f88c8f379f4",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "auth-reset-new-password-login",
+    "route": "/home",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-backdrop-gap-390",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-background-nav-activated-390",
+    "route": "/community",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-backdrop-gap-740",
+    "route": "/author/local-writer",
+    "viewport": [
+      740,
+      360
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-background-nav-activated-740",
+    "route": "/community",
+    "viewport": [
+      740,
+      360
+    ],
+    "errors": []
+  },
+  {
+    "name": "quote-cancel-download-fallback",
+    "route": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "author-cancel-download-fallback",
+    "route": "/author/local-writer",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "errors": []
+  },
+  {
+    "name": "feedback-form-entry",
+    "route": "/feedback",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "author-card-images-pending",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "author-card-export-pending",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "author-card-after-assets-settle",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "feedback-pending-newer-edit",
+    "route": "/feedback",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "feedback-pending-newer-edit-hidden",
+    "route": "/feedback",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "feedback-newer-edit-lost-after-return",
+    "route": "/feedback",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "notifications-unread-empty-with-more",
+    "route": "/notifications",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "notifications-unread-found-after-manual-all-load",
+    "route": "/notifications",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "signup-legal-terms-dialog",
+    "route": "/auth",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "signup-ui-code-sent",
+    "route": "/auth",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "signup-ui-verified",
+    "route": "/home",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-native-failure",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  },
+  {
+    "name": "share-author-native-cancellation",
+    "route": "/author/local-writer",
+    "viewport": [
+      390,
+      844
+    ],
+    "errors": []
+  }
+]
