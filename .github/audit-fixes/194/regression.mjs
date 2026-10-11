@@ -1,0 +1,68 @@
+import { chromium } from '/workspace/node_modules/playwright-core/index.mjs';
+import { strict as assert } from 'node:assert';
+import fs from 'node:fs';
+const tokens = JSON.parse(fs.readFileSync('/workspace/wordweft-audit/local-tokens.json'));
+const browser = await chromium.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox'] });
+try {
+ for (const width of [1280, 390]) {
+  const context = await browser.newContext({ viewport: {width, height: 900}, isMobile: width < 500, hasTouch: width < 500 });
+  await context.addInitScript(token => { localStorage.setItem('wordweft_jwt', token); localStorage.setItem('ww_welcomeJourneyCompleted','true'); localStorage.setItem('hasSeenWhatsNewPopup_v1','true'); }, tokens.reader);
+  const page = await context.newPage();
+  await page.goto('http://127.0.0.1:3026/library');
+  await page.getByRole('button', {name: 'New shelf', exact:true}).click();
+  const dialog = page.getByRole('dialog');
+  let release; let count = 0;
+  await page.route('**/api/library/shelves', async route => {
+   if (route.request().method() !== 'POST') return route.continue();
+   count++; await new Promise(resolve => { release = resolve; });
+   await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Synthetic retryable failure'})});
+  });
+  await dialog.getByRole('textbox',{name:'Shelf name'}).fill('Original shelf');
+  await dialog.getByRole('button',{name:'Create shelf',exact:true}).click();
+  await page.waitForFunction(() => document.querySelector('[role=dialog]')?.textContent.includes('Creating…'));
+  assert.equal(await dialog.getByRole('button',{name:'Close create shelf dialog'}).isDisabled(), true, 'Close must follow the same pending policy as Cancel and Escape');
+  assert.equal(await dialog.getByRole('textbox',{name:'Shelf name'}).isDisabled(),true);
+  await page.keyboard.press('Escape');
+  assert.equal(await dialog.count(),1);
+  await page.mouse.click(5,5);
+  assert.equal(await dialog.count(),1);
+  release();
+  await dialog.getByRole('alert').waitFor();
+  assert.equal(await dialog.getByRole('textbox',{name:'Shelf name'}).inputValue(),'Original shelf');
+  assert.equal(count,1);
+  await page.screenshot({path:`.github/audit-fixes/194/${width}-retry.png`});
+  await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.waitForFunction(() => document.activeElement?.textContent.includes('New shelf'));
+  await page.unroute('**/api/library/shelves');
+  const name = `Audit 194 ${width} ${Date.now()}`;
+  await page.getByRole('button', {name:'New shelf',exact:true}).click();
+  await dialog.getByRole('textbox',{name:'Shelf name'}).fill(name);
+  await dialog.getByRole('radio',{name:'Public · On your public profile'}).check();
+  let response;
+  await page.route('**/api/library/shelves', async route => {
+   if (route.request().method() !== 'POST') return route.continue();
+   count++; response = await route.fetch();
+   await new Promise(resolve => { release = resolve; });
+   await route.fulfill({response});
+  });
+  await dialog.getByRole('button',{name:'Create shelf',exact:true}).click();
+  await page.waitForFunction(() => document.querySelector('[role=dialog]')?.textContent.includes('Creating…'));
+  assert.equal(await dialog.getByRole('button',{name:'Close create shelf dialog'}).isDisabled(),true);
+  while (!response) await page.waitForTimeout(50);
+  assert.equal(response.ok(),true);
+  release();
+  await dialog.waitFor({state:'hidden'});
+  await page.getByRole('status').filter({hasText:'Shelf created.'}).waitFor();
+  assert.equal(count,2);
+  const data=await response.json();
+  const shelf=data.library.find(item=>item.name===name);
+  assert.equal(shelf.visibility,'PUBLIC');
+  await page.screenshot({path:`.github/audit-fixes/194/${width}-success.png`});
+  await page.getByRole('button',{name:'New shelf',exact:true}).click();
+  assert.equal(await dialog.getByRole('textbox',{name:'Shelf name'}).inputValue(),'');
+  assert.equal(await dialog.getByRole('radio',{name:'Private · Only you'}).isChecked(),true);
+  await context.request.delete(`http://127.0.0.1:3026/api/library/shelves/${shelf.id}`,{headers:{Authorization:`Bearer ${tokens.reader}`}});
+  await context.close();
+ }
+ console.log('PASS desktop/mobile pending dismissal, immutable submitted draft, failure preservation, single submission and focus return');
+} finally { await browser.close(); }
