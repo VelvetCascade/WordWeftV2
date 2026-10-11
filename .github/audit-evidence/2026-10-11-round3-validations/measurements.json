@@ -1,0 +1,237 @@
+[
+  {
+    "name": "character-created-public-private-fields-mobile",
+    "file": "character-created-public-private-fields-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=characters",
+    "width": 390,
+    "height": 844,
+    "scrollY": 577,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "character-deleted-mobile",
+    "file": "character-deleted-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=characters",
+    "width": 390,
+    "height": 844,
+    "scrollY": 341,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "character-edited-mobile",
+    "file": "character-edited-mobile.png",
+    "url": "/write/book/6acbc15b1f90457dafbdbc30/manage?tab=characters",
+    "width": 390,
+    "height": 844,
+    "scrollY": 128,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "guest-character-availability",
+    "file": "guest-character-availability.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-custom-shelf-management-actions",
+    "file": "library-custom-shelf-management-actions.png",
+    "url": "/library",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "actions": [
+      "Share on public profile",
+      "Organize stories"
+    ],
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "library-public-shelf-after-bulk-add",
+    "file": "library-public-shelf-after-bulk-add.png",
+    "url": "/library",
+    "width": 390,
+    "height": 844,
+    "scrollY": 290,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "private-shelf-hidden-from-guest",
+    "file": "private-shelf-hidden-from-guest.png",
+    "url": "/author/local-reader",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "shelfVisible": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "public-shelf-visible-to-guest",
+    "file": "public-shelf-visible-to-guest.png",
+    "url": "/author/local-reader",
+    "width": 1440,
+    "height": 1000,
+    "scrollY": 0,
+    "docWidth": 1440,
+    "shelfVisible": true,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-bible-after-completion",
+    "file": "reader-bible-after-completion.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1059,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-bible-before-completion",
+    "file": "reader-bible-before-completion.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30",
+    "width": 390,
+    "height": 844,
+    "scrollY": 930,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-character-api-before-completion",
+    "file": "reader-character-api-before-completion.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30",
+    "width": 390,
+    "height": 844,
+    "scrollY": 930,
+    "docWidth": 390,
+    "privateGoalPresent": false,
+    "privateAliasPresent": false,
+    "spoilerPresent": false,
+    "gatedLorePresent": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-characters-after-completion",
+    "file": "reader-characters-after-completion.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30",
+    "width": 390,
+    "height": 844,
+    "scrollY": 1059,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-characters-before-completion",
+    "file": "reader-characters-before-completion.png",
+    "url": "/book/6acbc15b1f90457dafbdbc30",
+    "width": 390,
+    "height": 844,
+    "scrollY": 930,
+    "docWidth": 390,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-continue-opens-next-chapter",
+    "file": "reader-continue-opens-next-chapter.png",
+    "url": "/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "route": "http://127.0.0.1:3010/book/local-story-spring/chapter/local-story-spring-chapter-2",
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-progress-both-chapters-complete",
+    "file": "reader-progress-both-chapters-complete.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "progress": {
+      "id": "local-progress-spring",
+      "userId": "local-reader",
+      "bookId": "local-story-spring",
+      "overallProgress": 100,
+      "finished": true,
+      "lastReadChapterIndex": 1,
+      "lastReadChapterId": "local-story-spring-chapter-2",
+      "lastReadScrollPosition": 2905,
+      "lastReadTimestamp": "2026-10-11T17:32:44.46",
+      "chapters": {
+        "local-story-spring-chapter-1": {
+          "progress": 100,
+          "scrollPosition": 3341
+        },
+        "local-story-spring-chapter-2": {
+          "progress": 100,
+          "scrollPosition": 2905
+        }
+      },
+      "completedChapterIds": [
+        "local-story-spring-chapter-1",
+        "local-story-spring-chapter-2"
+      ],
+      "bookCompletionCounted": true
+    },
+    "errors": [],
+    "violations": []
+  },
+  {
+    "name": "reader-progress-first-chapter-complete",
+    "file": "reader-progress-first-chapter-complete.png",
+    "url": "/book/local-story-spring",
+    "width": 390,
+    "height": 844,
+    "scrollY": 0,
+    "docWidth": 390,
+    "progress": {
+      "id": "local-progress-spring",
+      "userId": "local-reader",
+      "bookId": "local-story-spring",
+      "overallProgress": 50,
+      "finished": false,
+      "lastReadChapterIndex": 0,
+      "lastReadChapterId": "local-story-spring-chapter-1",
+      "lastReadScrollPosition": 3341,
+      "lastReadTimestamp": "2026-10-11T17:32:40.408",
+      "chapters": {
+        "local-story-spring-chapter-1": {
+          "progress": 100,
+          "scrollPosition": 3341
+        }
+      },
+      "completedChapterIds": [
+        "local-story-spring-chapter-1"
+      ],
+      "bookCompletionCounted": false
+    },
+    "readLabel": "Continue reading",
+    "errors": [],
+    "violations": []
+  }
+]
