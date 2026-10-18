@@ -1,0 +1,19 @@
+Journey feedback 1280
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: feedback pending draft must clearly prevent edits
+
+false !== true
+
+    at file:///workspace/ww-fix-207/.github/audit-fixes/207/regression.mjs:48:14 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

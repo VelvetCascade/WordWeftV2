@@ -1,0 +1,121 @@
+
+> wordweft@0.0.0 build
+> vite build && node scripts/build-seo.mjs
+
+vite v6.4.1 building for production...
+transforming...
+✓ 2975 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    1.72 kB │ gzip:   0.89 kB
+dist/assets/logo-D-27Agip.svg                      2.60 kB │ gzip:   1.36 kB
+dist/assets/ChapterDisclaimerModal-k3ihhPtA.css    0.50 kB │ gzip:   0.20 kB
+dist/assets/ReaderPage-D02bnmhF.css                0.87 kB │ gzip:   0.44 kB
+dist/assets/writer-experience-Dt4LYub-.css         2.10 kB │ gzip:   0.73 kB
+dist/assets/quality-Dao9nTDG.css                   2.95 kB │ gzip:   0.89 kB
+dist/assets/WritingDemoModal-B0sdHeUe.css          6.44 kB │ gzip:   1.63 kB
+dist/assets/planning-Civ0yzWo.css                  6.91 kB │ gzip:   1.72 kB
+dist/assets/CharacterPreview-DZ7gADZ4.css          7.00 kB │ gzip:   1.67 kB
+dist/assets/FootnoteTooltip-CIPyuJ2l.css          10.68 kB │ gzip:   2.14 kB
+dist/assets/ChapterEditorPage-DDB4q42f.css        11.06 kB │ gzip:   2.74 kB
+dist/assets/founding-writers-sslkL9ab.css         12.84 kB │ gzip:   3.31 kB
+dist/assets/NoteList-DL95hSYn.css                 17.26 kB │ gzip:   3.76 kB
+dist/assets/AdminConsolePage-BqehN77P.css         17.70 kB │ gzip:   4.58 kB
+dist/assets/support-v2-D62ToaPh.css               38.88 kB │ gzip:   7.74 kB
+dist/assets/CommunityPostCard-DMO6zPmE.css        39.36 kB │ gzip:   7.10 kB
+dist/assets/reader-v2-DmgKUgIC.css                68.18 kB │ gzip:  10.68 kB
+dist/assets/index-Cp0Pl16B.css                   558.34 kB │ gzip:  97.84 kB
+dist/assets/shareLinks-TK8l2GGI.js                 0.23 kB │ gzip:   0.19 kB
+dist/assets/entityMetadata-DWs1YODP.js             0.28 kB │ gzip:   0.19 kB
+dist/assets/check-CgbOtWb3.js                      0.30 kB │ gzip:   0.25 kB
+dist/assets/chevron-down-D58We4PK.js               0.30 kB │ gzip:   0.25 kB
+dist/assets/AgeRatingBadge-DFWaEEy_.js             0.33 kB │ gzip:   0.27 kB
+dist/assets/plus-DphIW06B.js                       0.33 kB │ gzip:   0.26 kB
+dist/assets/cloud-BbkfRxMh.js                      0.33 kB │ gzip:   0.27 kB
+dist/assets/ReturnNavigation-a8ZqOpao.js           0.37 kB │ gzip:   0.28 kB
+dist/assets/rotate-ccw-Cti-sVmz.js                 0.37 kB │ gzip:   0.29 kB
+dist/assets/ellipsis-CWmDQvcy.js                   0.40 kB │ gzip:   0.27 kB
+dist/assets/upload-DcUw7bG3.js                     0.40 kB │ gzip:   0.30 kB
+dist/assets/settings-2-CKtyhtrO.js                 0.43 kB │ gzip:   0.30 kB
+dist/assets/lock-keyhole-CVQJ6PhY.js               0.43 kB │ gzip:   0.33 kB
+dist/assets/link-BeUtGQos.js                       0.43 kB │ gzip:   0.30 kB
+dist/assets/send-ZARInCbK.js                       0.46 kB │ gzip:   0.34 kB
+dist/assets/refresh-cw-CeYZbzvy.js                 0.50 kB │ gzip:   0.33 kB
+dist/assets/shield-alert-Bdy3wgi-.js               0.53 kB │ gzip:   0.37 kB
+dist/assets/share-2-DXSehwTZ.js                    0.53 kB │ gzip:   0.34 kB
+dist/assets/calendar-days-MI6_A6J_.js              0.67 kB │ gzip:   0.37 kB
+dist/assets/triangle-alert-CKHD3VuA.js             0.80 kB │ gzip:   0.41 kB
+dist/assets/discoveryFilters-CRqFbi65.js           0.99 kB │ gzip:   0.55 kB
+dist/assets/supportIncident-f3v0xdOc.js            1.30 kB │ gzip:   0.71 kB
+dist/assets/ChapterDisclaimerModal-BIaTYNA-.js     1.78 kB │ gzip:   0.89 kB
+dist/assets/readingTools-BxfXC_dV.js               1.80 kB │ gzip:   0.97 kB
+dist/assets/Footer-A-uSHYvv.js                     1.80 kB │ gzip:   0.77 kB
+dist/assets/ConfirmDialog-DoqHy_yT.js              1.84 kB │ gzip:   0.91 kB
+dist/assets/AdUnit-DauvxktN.js                     1.90 kB │ gzip:   0.99 kB
+dist/assets/TermsPage-qGic6ED2.js                  1.90 kB │ gzip:   0.78 kB
+dist/assets/CommunityFeed-DWdy-KM1.js              2.23 kB │ gzip:   1.17 kB
+dist/assets/BookCard-DILbqi4k.js                   2.36 kB │ gzip:   1.02 kB
+dist/assets/DiscoveryLandingPage-B48ug_hR.js       3.16 kB │ gzip:   1.15 kB
+dist/assets/AboutPage-BB2PBDGN.js                  3.27 kB │ gzip:   1.31 kB
+dist/assets/GenrePage-CrEwrcYa.js                  3.31 kB │ gzip:   1.47 kB
+dist/assets/SortDropdown-m6kAJLRE.js               3.45 kB │ gzip:   1.46 kB
+dist/assets/PublicCatalogPage-Emhzdgh5.js          3.48 kB │ gzip:   1.42 kB
+dist/assets/DisclosureMenu-D_s3E7Zg.js             3.49 kB │ gzip:   1.58 kB
+dist/assets/ReportModal-CNyZP9ig.js                3.78 kB │ gzip:   1.67 kB
+dist/assets/CharacterPreview-BvJEGjXv.js           6.41 kB │ gzip:   2.42 kB
+dist/assets/ResetPasswordPage-BGWWnHw-.js          6.91 kB │ gzip:   2.19 kB
+dist/assets/ContentPlaceholder-CN17WJ_B.js         7.57 kB │ gzip:   1.84 kB
+dist/assets/FormDraftNotice-Sb_L4rLj.js            7.80 kB │ gzip:   3.08 kB
+dist/assets/FoundingWriterAdminPage-Bo6AMoyu.js    7.85 kB │ gzip:   2.57 kB
+dist/assets/ReadingGrowthPage-DEGgZorX.js          8.59 kB │ gzip:   2.96 kB
+dist/assets/CommunityPostPage-DOj5ZoTs.js          8.74 kB │ gzip:   3.31 kB
+dist/assets/ProfilePage-9Rv0W4Do.js                9.90 kB │ gzip:   3.34 kB
+dist/assets/ContactPage-z6kCUill.js                9.98 kB │ gzip:   3.84 kB
+dist/assets/FeedbackPage-DVwiffjT.js              10.10 kB │ gzip:   3.62 kB
+dist/assets/SearchResultsPage-Dns1Ncvr.js         10.24 kB │ gzip:   3.49 kB
+dist/assets/WriterAnalyticsPage-BulbnNTX.js       10.60 kB │ gzip:   3.34 kB
+dist/assets/WritingDemoModal-BfckaMna.js          11.03 kB │ gzip:   3.39 kB
+dist/assets/CreateBookPage-SJeEYUIL.js            11.38 kB │ gzip:   3.93 kB
+dist/assets/SafetyRulesPage-SunV2YPS.js           12.27 kB │ gzip:   3.78 kB
+dist/assets/NotificationsPage-DfBIGr51.js         12.47 kB │ gzip:   4.47 kB
+dist/assets/FeaturesPage-DLA_wNlp.js              12.52 kB │ gzip:   4.45 kB
+dist/assets/HookFeedPage-C2AQXqV6.js              13.83 kB │ gzip:   5.09 kB
+dist/assets/CommunityPage-DWOD00fw.js             13.95 kB │ gzip:   4.73 kB
+dist/assets/PrivacyPage-CG40FyXO.js               14.34 kB │ gzip:   4.19 kB
+dist/assets/CharacterList-HhaTGaf4.js             15.51 kB │ gzip:   5.31 kB
+dist/assets/CategoryPage-BnWlFloB.js              15.91 kB │ gzip:   5.15 kB
+dist/assets/LegalTermsContent-Bk4fTFmk.js         17.21 kB │ gzip:   5.91 kB
+dist/assets/LibraryPage-CfN3QmNF.js               19.33 kB │ gzip:   6.21 kB
+dist/assets/profilePresentation-DcfuS3VH.js       19.35 kB │ gzip:   6.56 kB
+dist/assets/ShareModal-D23I74N7.js                21.01 kB │ gzip:   7.48 kB
+dist/assets/FoundingWritersPage-CJEQIb8Z.js       21.08 kB │ gzip:   6.46 kB
+dist/assets/WriterDashboardPage-CeF7SeEr.js       21.84 kB │ gzip:   7.20 kB
+dist/assets/AuthorPage-B_9NX2Jx.js                23.17 kB │ gzip:   6.39 kB
+dist/assets/EditProfilePage-3PxS2AN2.js           25.14 kB │ gzip:   6.53 kB
+dist/assets/CommunityPostCard-B_A-4KNn.js         25.40 kB │ gzip:   8.32 kB
+dist/assets/FootnoteTooltip-C5c6aHWf.js           29.84 kB │ gzip:  11.27 kB
+dist/assets/AdminConsolePage-C_N4p513.js          29.85 kB │ gzip:   8.78 kB
+dist/assets/AuthPage-J0-kZL_g.js                  30.37 kB │ gzip:   9.47 kB
+dist/assets/HomePage-B3dyjNz_.js                  32.91 kB │ gzip:   9.60 kB
+dist/assets/index-BJWqBsIT.js                     33.84 kB │ gzip:  11.58 kB
+dist/assets/BookDetailsPage-xoYXlZ3B.js           34.78 kB │ gzip:  10.32 kB
+dist/assets/NoteList-8bMPtm_H.js                  46.88 kB │ gzip:  13.98 kB
+dist/assets/ManageChaptersPage-DVo4Ee-y.js        48.22 kB │ gzip:  14.11 kB
+dist/assets/ReaderPage-BRyWEveI.js                63.78 kB │ gzip:  19.29 kB
+dist/assets/ImageUpload-U0jFD102.js               75.43 kB │ gzip:  28.21 kB
+dist/assets/three-D4dPcXH-.js                    353.35 kB │ gzip: 137.96 kB
+dist/assets/index-DQYLEKZy.js                    545.26 kB │ gzip: 168.49 kB
+dist/assets/ChapterEditorPage-XKGoZINV.js        648.09 kB │ gzip: 202.33 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.27s
+vite v6.4.1 building SSR bundle for production...
+transforming...
+✓ 1765 modules transformed.
+rendering chunks...
+dist-ssr/static.mjs  806.64 kB
+✓ built in 1.97s
+SEO build: 17 complete public pages; dynamic HTML and sitemap function ready.

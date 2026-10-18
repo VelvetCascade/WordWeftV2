@@ -1,0 +1,25 @@
+Journey feedback 1280
+Releasing feedback 1280
+Success settled feedback 1280
+Lifecycle start feedback 1280
+Lifecycle release feedback 1280
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: A response from the unmounted form must not clear the reopened entry
++ actual - expected
+
++ ''
+- 'New draft after browser Back'
+
+    at file:///workspace/ww-fix-207/.github/audit-fixes/207/regression.mjs:82:14 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '',
+  expected: 'New draft after browser Back',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
