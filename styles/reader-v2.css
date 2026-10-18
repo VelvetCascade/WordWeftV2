@@ -476,6 +476,10 @@
 .ww-story-page.ww-story-v2 .ww-review-compose-actions button:disabled { opacity: .5; cursor: not-allowed; }
 .ww-story-page.ww-story-v2 .ww-story-shelves-panel { background: var(--reading-panel) !important; color: var(--reading-ink); border: 1px solid var(--reading-line); border-radius: 12px !important; }
 .reader-experience.reader-v2 .reader-header-actions .reader-more-button { display: none; }
+/* Match the compact header breakpoint so hidden sharing always has a menu. */
+@media (min-width: 721px) and (max-width: 767px) {
+  .reader-experience.reader-v2 .reader-header-actions .reader-more-button { display: grid; }
+}
 .reader-experience.reader-v2 .reader-more-overlay { position: fixed; inset: 0; z-index: 45; background: #191C1C45; display: grid; place-items: center; padding: 24px; }
 .reader-experience.reader-v2 .reader-more-panel { width: min(380px, 100%); padding: 20px; border: 1px solid var(--reader-line); border-radius: 14px; background: var(--reader-panel-solid); color: var(--reader-ink); }
 .reader-experience.reader-v2 .reader-more-panel > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 10px; }

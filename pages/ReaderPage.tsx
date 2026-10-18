@@ -1074,7 +1074,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                     </button></div>
                     <div className="reader-header-chapter">
                         <span>Chapter {currentChapterIndex + 1} of {book.chapters.length}</span>
-                        <strong>{chapter.title}</strong>
+                        <strong title={chapter.title}>{chapter.title}</strong>
                     </div>
                     <div className="reader-header-actions">
                         <button onClick={handleToggleBookmark} disabled={bookmarkSaving} className={isBookmarked ? 'reader-action-active' : ''} aria-label={isBookmarked ? 'Remove story from library' : 'Save story to library'}>
