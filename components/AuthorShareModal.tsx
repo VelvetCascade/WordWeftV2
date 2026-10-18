@@ -360,10 +360,17 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [copyError, setCopyError] = useState('');
+    const [isSharing, setIsSharing] = useState(false);
+    const nativeShareAttempt = useRef(0);
     const [activeTab, setActiveTab] = useState<'quick' | 'card'>('quick');
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const publicUrl = url || authorShareUrl(author.id);
     useEffect(() => { if (isOpen) { setCopied(false); setCopyError(''); } }, [isOpen]);
+
+    useEffect(() => {
+        setIsSharing(false);
+        return () => { nativeShareAttempt.current += 1; };
+    }, [isOpen, publicUrl]);
 
     const shareTitle = `${author.name} on WordWeft`;
     const shareText = `Discover ${author.name}'s stories on WordWeft!`;
@@ -399,12 +406,18 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     };
 
     const handleNativeShare = async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({ title: shareTitle, text: shareText, url: publicUrl });
-            } catch (e) {
-                console.log('Native share cancelled or failed', e);
+        if (!navigator.share || isSharing) return;
+        const attempt = ++nativeShareAttempt.current;
+        setIsSharing(true);
+        setCopyError('');
+        try {
+            await navigator.share({ title: shareTitle, text: shareText, url: publicUrl });
+        } catch (error) {
+            if (attempt === nativeShareAttempt.current && (error as { name?: string })?.name !== 'AbortError') {
+                setCopyError('Your browser could not share this link. Copy it below, or select it to copy manually.');
             }
+        } finally {
+            if (attempt === nativeShareAttempt.current) setIsSharing(false);
         }
     };
 
@@ -477,7 +490,7 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
                             </div>
 
                             {typeof navigator !== 'undefined' && navigator.share && (
-                                <button onClick={handleNativeShare} className="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-md flex items-center justify-center gap-2">
+                                <button onClick={handleNativeShare} disabled={isSharing} aria-busy={isSharing} className="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-md flex items-center justify-center gap-2">
                                     <ShareIcon className="w-5 h-5" /> Share via...
                                 </button>
                             )}
