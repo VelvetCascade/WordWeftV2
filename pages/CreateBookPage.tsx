@@ -228,7 +228,7 @@ export const CreateBookPage: React.FC<CreateBookPageProps> = ({ currentUser, onU
                                 </div>
                             </div>
                             <div className="ww-create-field">
-                                <label htmlFor="customDisclaimer">Author’s content note <span className="text-gray-400">(optional)</span></label>
+                                <label htmlFor="customDisclaimer">Author’s content note <span style={{ color: 'var(--ww-muted)' }}>(optional)</span></label>
                                 <textarea id="customDisclaimer" rows={3} maxLength={1000} value={customDisclaimer} onChange={e => setCustomDisclaimer(e.target.value)} placeholder="Add context without spoiling the story." />
                             </div>
                         </section>
