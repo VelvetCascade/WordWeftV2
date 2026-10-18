@@ -1,7 +1,7 @@
 import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { SupportIncidentReference } from '../components/SupportIncidentReference';
 import { latestSupportIncident } from '../utils/supportIncident';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Check, LockKeyhole, Mail, Plus, Search } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { ReturnNavigation } from '../components/ReturnNavigation';
@@ -36,6 +36,9 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
     const [query, setQuery] = useState(initialDraft?.query || '');
     const [formData, setFormData] = useState({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '', ...initialDraft?.formData });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const submissionPending = useRef(false);
+    const mounted = useRef(false);
+    useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
     const [submitted, setSubmitted] = useState(false);
     const [incidentId] = useState(latestSupportIncident);
     const [includeIncident, setIncludeIncident] = useState(false);
@@ -49,14 +52,18 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
         setError(null);
     };
     const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault(); setIsSubmitting(true); setError(null);
+        event.preventDefault();
+        if (submissionPending.current) return;
+        submissionPending.current = true;
+        setIsSubmitting(true); setError(null);
         try {
             await api.submitGrievance({ ...formData, message: `${formData.message}${includeIncident && incidentId ? `\n\nIncident reference: ${incidentId}` : ''}` });
+            if (!mounted.current) return;
             updateHistoryState({ wordWeftContact: undefined });
             setSubmitted(true);
             setFormData({ name: currentUser?.name || '', email: currentUser?.email || '', category: '', subject: '', message: '' });
-        } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again later.'); }
-        finally { setIsSubmitting(false); }
+        } catch (failure) { if (mounted.current) setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again later.'); }
+        finally { submissionPending.current = false; if (mounted.current) setIsSubmitting(false); }
     };
     const topics = helpTopics.filter(topic => topic.join(' ').toLowerCase().includes(query.trim().toLowerCase()));
     return (
@@ -75,6 +82,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
                     <section className="wv-contact-form" aria-labelledby="help-note">
                         <h2 id="help-note">Send us a note</h2>
                         {!currentUser ? <div className="wv-notice wv-signin-notice"><LockKeyhole size={28} aria-hidden="true" /><h3>Sign in to send a message</h3><p>The grievance submission form is available to signed-in users. You can also contact us directly by email.</p><a href="/auth" onClick={event => { if (onSignIn) { event.preventDefault(); onSignIn(); } }} className="wv-button wv-button-primary">Sign in or register <ArrowRight size={18} /></a></div> : submitted ? <div className="wv-notice wv-success" role="status"><Check size={28} aria-hidden="true" /><h3>Message sent</h3><p>Thank you for reaching out. We’ll respond to your inquiry as soon as possible.</p><button type="button" onClick={() => setSubmitted(false)} className="wv-button">Send another message</button></div> : <form onSubmit={handleSubmit} className="wv-form" aria-busy={isSubmitting}>
+                            <fieldset disabled={isSubmitting} aria-label="Support message" style={{ display: 'contents' }}>
                             {error && <p className="wv-error" role="alert">{error}</p>}
                             <div className="wv-field-pair">
                                 <label className="wv-field" htmlFor="contact-name">Full name <span aria-hidden="true">*</span><input id="contact-name" name="name" autoComplete="name" value={formData.name} onChange={handleChange} required placeholder="Your name" /></label>
@@ -84,6 +92,7 @@ export const ContactPage: React.FC<{ currentUser: User | null; onSignIn?: () => 
                             <label className="wv-field" htmlFor="contact-subject">Subject <span aria-hidden="true">*</span><input id="contact-subject" name="subject" value={formData.subject} onChange={handleChange} required placeholder="A short description" /></label>
                             <label className="wv-field" htmlFor="contact-message">Your message <span aria-hidden="true">*</span><textarea id="contact-message" name="message" value={formData.message} onChange={handleChange} required rows={6} placeholder="Tell us what happened. Include a story or chapter link if it helps." /></label>
                             <SupportIncidentReference incidentId={incidentId} selected={includeIncident} onChange={setIncludeIncident} /><button type="submit" disabled={isSubmitting} className="wv-button wv-button-primary">{isSubmitting ? 'Sending…' : 'Send message'} {!isSubmitting && <ArrowRight size={18} />}</button><p className="wv-hint">All fields are required. Your message is sent to the WordWeft support team.</p>
+                            </fieldset>
                         </form>}
                     </section>
                 </div>

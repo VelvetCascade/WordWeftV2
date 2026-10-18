@@ -41,7 +41,7 @@
 .wv-help-policies { display:flex; flex-wrap:wrap; gap:16px; margin-top:20px; font-size:12px; color:var(--support-umber); }
 .wv-help-policies a:hover { text-decoration:underline; }
 .wv-support .wv-form { margin-top:26px; display:grid; gap:21px; padding:0 !important; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; }
-.wv-form > .wv-button { justify-self:start; }
+.wv-form > .wv-button, .wv-form > fieldset > .wv-button { justify-self:start; }
 .wv-field { display:block; color:var(--support-ink); font:500 14px/1.6 'Rubik',sans-serif; }
 .wv-field input,.wv-field select,.wv-field textarea { display:block; margin-top:9px; width:100%; min-height:50px; padding:13px 15px; color:var(--support-ink); font:400 14px/1.5 'Rubik',sans-serif; border:1px solid #d9d3c9; border-radius:8px; background:#fff; }
 .wv-field input[readonly] { background:#f0eee9; color:#656b65; }
