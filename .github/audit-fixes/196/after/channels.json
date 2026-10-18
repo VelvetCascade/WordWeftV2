@@ -1,0 +1,25 @@
+[
+  {
+    "width": 390,
+    "chapter": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "channels": "native, clipboard, X, Facebook, WhatsApp, Telegram",
+    "quote": "chapter URL",
+    "book": "book URL"
+  },
+  {
+    "width": 1440,
+    "chapter": "/book/local-story-spring/chapter/local-story-spring-chapter-1",
+    "channels": "native, clipboard, X, Facebook, WhatsApp, Telegram",
+    "quote": "chapter URL",
+    "book": "book URL"
+  },
+  {
+    "role": "reader",
+    "recipient": "chapter 2 ID retained; authenticated content available"
+  },
+  {
+    "role": "writer",
+    "recipient": "chapter 2 ID retained; authenticated content available",
+    "manage": "chapter share link retained"
+  }
+]
