@@ -59,7 +59,8 @@ export async function check(page, selector, state) {
     });
   });
   assert(samples.length, `No visible text for ${selector}`);
-  const axe = await new AxeBuilder({ page }).include(selector).withRules(['color-contrast']).analyze();
+  // All scoped targets are in the main document; axe.run avoids a second page.
+  const axe = await new AxeBuilder({ page }).setLegacyMode().include(selector).withRules(['color-contrast']).analyze();
   const row = { state, selector, samples, axe:axe.violations.map(v => ({ id:v.id, targets:v.nodes.map(n=>n.target), details:v.nodes.map(n=>n.failureSummary) })) };
   results.push(row);
   if (samples.some(s=>s.ratio<4.5) || row.axe.length) failures.push(row);
