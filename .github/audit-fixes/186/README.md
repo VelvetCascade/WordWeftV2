@@ -6,6 +6,6 @@ Paired `before-390-pending.png` → `after-390-pending.png` and `before-1440-pen
 
 The before runtime uses unchanged production ReaderPage.tsx; after uses this branch. Existing community/reader pending and failure screenshots show desktop/mobile recovery. All accounts/content are disposable local fixtures. Chromium mobile touch emulation was tested; native iPhone/Safari was not.
 
-Regression: `E2E_BASE_URL=http://127.0.0.1:3025 npx playwright test e2e/comment-draft-ownership.spec.ts e2e/reader-async-actions.spec.ts --grep 'pending reader|community pending'`. Use the disposable local backend accounts from its fixture seeder. Tests cover keyboard edits, disabled submit/cancel/toggle, delayed failure, retained draft and one successful retry for reader/community roots and replies. Reader chapter and passage discussions share the tested composer. `red.log` records pre-fix editable composer failure.
+Regression: `E2E_BASE_URL=http://127.0.0.1:3025 npx playwright test e2e/comment-draft-ownership.spec.ts e2e/reader-async-actions.spec.ts --grep 'pending reader|community pending'`. Use the disposable local backend accounts from its fixture seeder. Tests cover keyboard edits, disabled submit/cancel/toggle, delayed failure, retained draft and one successful retry for reader/community roots and replies. Reader chapter and passage discussions share the tested composer. `red.txt` records pre-fix editable composer failure.
 
 This branch changes pending composer ownership only. Shared-file overlap: other audit fixes may edit ReaderPage.tsx and CommunityComments.tsx.
