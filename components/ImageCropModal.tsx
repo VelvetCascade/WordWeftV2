@@ -27,6 +27,7 @@ interface ImageCropModalProps {
     contextLabel?: string;
     onConfirm: (croppedFile: File) => void;
     onCancel: () => void;
+    onChooseAnother?: () => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     contextLabel = 'Image',
     onConfirm,
     onCancel,
+    onChooseAnother,
 }) => {
     const dialogRef = useDialog(true, onCancel);
     // Image loading
@@ -51,6 +53,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const [natW, setNatW] = useState(0);
     const [natH, setNatH] = useState(0);
     const [loaded, setLoaded] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
 
     // Display (how big the image renders in the canvas area)
     const [dispW, setDispW] = useState(0);
@@ -94,6 +97,9 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
     useEffect(() => {
         const url = URL.createObjectURL(file);
+        setLoaded(false);
+        setLoadFailed(false);
+        loaderImgRef.current = null;
         setImgSrc(url);
         return () => URL.revokeObjectURL(url);
     }, [file]);
@@ -614,15 +620,22 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         style={{ cursor }}
                     >
                         {/* Hidden loader img — always in DOM so onLoad fires immediately */}
-                        <img
+                        {imgSrc && <img
                             src={imgSrc}
                             alt=""
                             onLoad={handleImgLoad}
+                            onError={() => { setLoaded(false); setLoadFailed(true); loaderImgRef.current = null; }}
                             style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
                             draggable={false}
-                        />
+                        />}
 
-                        {!loaded && (
+                        {loadFailed && <div className="crop-load-error" role="alert">
+                            <p>We couldn’t read this image.</p>
+                            <p>Choose another JPG, PNG, or WEBP image, or cancel cropping and try again.</p>
+                            {onChooseAnother && <button type="button" className="crop-toolbar-btn" onClick={onChooseAnother}>Choose another image</button>}
+                        </div>}
+
+                        {!loaded && !loadFailed && (
                             <div className="crop-loading">
                                 <div className="crop-loading-spinner" />
                                 <span>Loading image…</span>
@@ -777,6 +790,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
 
                 {/* ── Footer toolbar ────────────────────────────────────── */}
                 <div className="crop-modal-footer">
+                    <fieldset disabled={!loaded} aria-label="Crop adjustments" style={{ display: 'contents' }}>
 
                     {/* Rotate */}
                     <div className="crop-toolbar-group">
@@ -837,6 +851,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
                         <span className="crop-zoom-label">{Math.round(zoom * 100)}%</span>
                     </div>
 
+                    </fieldset>
                 </div>
             </div>
         </div>

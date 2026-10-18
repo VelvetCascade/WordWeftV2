@@ -6263,6 +6263,13 @@ body[data-active-mood="serene"] .ww-prose {
 
 .dark .crop-loading { color: #BCAAA4; }
 
+.crop-load-error { max-width: 340px; padding: 24px; text-align: center; color: #795548; font: 400 0.9rem/1.6 'Rubik', sans-serif; }
+.crop-load-error p { margin-bottom: 12px; }
+.crop-load-error p:first-child { font-weight: 600; }
+.crop-load-error .crop-toolbar-btn { margin: 0 auto; }
+.dark .crop-load-error { color: #D7CCC8; }
+.crop-modal-footer :disabled { opacity: 0.45; cursor: not-allowed; }
+
 .crop-loading-spinner {
     width: 32px;
     height: 32px;

@@ -220,6 +220,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     contextLabel={label}
                     onConfirm={handleCropConfirm}
                     onCancel={handleCropCancel}
+                    onChooseAnother={() => { handleCropCancel(); fileInputRef.current?.click(); }}
                 />
             )}
         </>
