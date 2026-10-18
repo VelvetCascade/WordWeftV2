@@ -1,7 +1,7 @@
 import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { SupportIncidentReference } from '../components/SupportIncidentReference';
 import { latestSupportIncident } from '../utils/supportIncident';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Check, Plus, X } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { ReturnNavigation } from '../components/ReturnNavigation';
@@ -40,6 +40,9 @@ export const FeedbackPage: React.FC = () => {
     const [contactPermission, setContactPermission] = useState(initialDraft.contactPermission === true);
     const [contactEmail, setContactEmail] = useState(() => textDraft('contactEmail'));
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const submissionPending = useRef(false);
+    const mounted = useRef(false);
+    useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
     const [submitted, setSubmitted] = useState(false);
     const [incidentId] = useState(latestSupportIncident);
     const [includeIncident, setIncludeIncident] = useState(false);
@@ -53,14 +56,18 @@ export const FeedbackPage: React.FC = () => {
     }, [userType, overallRating, triedFeatures, otherFeature, whatFeltGood, whatWasFrustrating, missingFeatures, performanceIssue, performanceDetails, usageFrequency, usageWhy, openThoughts, contactPermission, contactEmail, submitted]);
 
     const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault(); setError(''); setIsSubmitting(true);
+        event.preventDefault();
+        if (submissionPending.current) return;
+        submissionPending.current = true;
+        setError(''); setIsSubmitting(true);
         try {
             await api.submitFeedback({ userType, overallRating: overallRating || null, triedFeatures: Object.entries(triedFeatures).filter(([, selected]) => selected).map(([feature]) => feature), otherTriedFeature: otherFeature || null, whatFeltGood: whatFeltGood || null, whatWasFrustrating: whatWasFrustrating || null, missingFeatures, performanceIssue: performanceIssue || null, performanceDetails: `${performanceDetails}${includeIncident && incidentId ? `\nIncident reference: ${incidentId}` : ''}` || null, usageFrequency: usageFrequency || null, usageFrequencyWhy: usageWhy || null, openThoughts: openThoughts || null, contactPermission, contactEmail: contactPermission ? contactEmail : null });
+            if (!mounted.current) return;
             updateHistoryState({ wordWeftFeedback: undefined });
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-        } catch (failure) { setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again.'); }
-        finally { setIsSubmitting(false); }
+        } catch (failure) { if (mounted.current) setError(failure instanceof Error ? failure.message : 'Something went wrong. Please try again.'); }
+        finally { submissionPending.current = false; if (mounted.current) setIsSubmitting(false); }
     };
 
     return <div className="wv-support">
@@ -70,6 +77,7 @@ export const FeedbackPage: React.FC = () => {
             <div className="wv-feedback-layout">
                 <aside className="wv-feedback-aside"><h2>A better place for stories.</h2><p>You’re using an early version of WordWeft. Reader and writer feedback helps us choose what to build next.</p><p>Need help with an account or want to report content?</p><a href="/contact" className="wv-button">Help and contact <ArrowRight size={17} /></a><a href="/privacy" className="wv-feedback-privacy">Read our Privacy Policy</a></aside>
                 <form className="wv-feedback-form" onSubmit={handleSubmit} aria-busy={isSubmitting}>
+                    <fieldset disabled={isSubmitting} aria-label="Feedback responses" style={{ display: 'contents' }}>
                     <Group number={1} title="What describes you best?"><Options name="userType" choices={[["writer", "Mainly a writer"], ["reader", "Mainly a reader"], ["both", "Both"]]} value={userType} onChange={setUserType} /></Group>
                     <Group number={2} title="Overall experience" subtitle="How would you rate your experience so far?"><div className="wv-feedback-rating" role="group" aria-label="Overall experience rating">{ratingLabels.map((label, index) => <button key={label} type="button" aria-pressed={overallRating === index + 1} aria-label={`${index + 1}: ${label}`} className={overallRating === index + 1 ? 'is-selected' : ''} onClick={() => setOverallRating(index + 1)}>{index + 1}</button>)}</div><div className="wv-feedback-rating-labels"><span>{ratingLabels[0]}</span><span>{overallRating ? ratingLabels[overallRating - 1] : ratingLabels[4]}</span></div></Group>
                     <Group number={3} title="What did you try?" subtitle="Select all that apply."><div className="wv-feedback-options">{features.map(feature => <CheckOption key={feature} label={feature} checked={!!triedFeatures[feature]} onChange={selected => setTriedFeatures(previous => ({ ...previous, [feature]: selected }))} />)}</div><label className="wv-field">Other feature <span className="wv-hint">Optional</span><input value={otherFeature} onChange={event => setOtherFeature(event.target.value)} placeholder="Anything else you tried" /></label></Group>
@@ -83,6 +91,7 @@ export const FeedbackPage: React.FC = () => {
                     <SupportIncidentReference incidentId={incidentId} selected={includeIncident} onChange={setIncludeIncident} />
                     {error && <p className="wv-error" role="alert">{error}</p>}
                     <div className="wv-feedback-submit"><p className="wv-hint">Your responses are shared with the WordWeft team.</p><button type="submit" disabled={isSubmitting} className="wv-button wv-button-primary">{isSubmitting ? 'Submitting…' : 'Send feedback'} {!isSubmitting && <ArrowRight size={18} />}</button></div>
+                    </fieldset>
                 </form>
             </div>
         </main>}

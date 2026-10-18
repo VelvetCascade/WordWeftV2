@@ -1,0 +1,38 @@
+[
+  {
+    "width": 1280,
+    "kind": "feedback",
+    "pendingDisabled": false,
+    "requests": 1,
+    "submittedText": "Original intended draft",
+    "returnedDraft": "",
+    "newerEditAccepted": true
+  },
+  {
+    "width": 1280,
+    "kind": "contact",
+    "pendingDisabled": false,
+    "requests": 1,
+    "submittedText": "Original intended draft",
+    "returnedDraft": "",
+    "newerEditAccepted": true
+  },
+  {
+    "width": 390,
+    "kind": "feedback",
+    "pendingDisabled": false,
+    "requests": 1,
+    "submittedText": "Original intended draft",
+    "returnedDraft": "",
+    "newerEditAccepted": true
+  },
+  {
+    "width": 390,
+    "kind": "contact",
+    "pendingDisabled": false,
+    "requests": 1,
+    "submittedText": "Original intended draft",
+    "returnedDraft": "",
+    "newerEditAccepted": true
+  }
+]
