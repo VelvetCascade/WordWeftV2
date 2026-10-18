@@ -1,0 +1,12 @@
+[
+  {
+    "width": 1280,
+    "pendingEnabled": true,
+    "concurrentRequests": 4
+  },
+  {
+    "width": 390,
+    "pendingEnabled": true,
+    "concurrentRequests": 4
+  }
+]

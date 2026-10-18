@@ -1,0 +1,18 @@
+[
+  {
+    "width": 1280,
+    "pendingEnabled": false,
+    "concurrentRequests": 1,
+    "totalRequests": 2,
+    "deliveryFailureRecovered": true,
+    "cooldownAfterAcceptance": true
+  },
+  {
+    "width": 390,
+    "pendingEnabled": false,
+    "concurrentRequests": 1,
+    "totalRequests": 2,
+    "deliveryFailureRecovered": true,
+    "cooldownAfterAcceptance": true
+  }
+]
