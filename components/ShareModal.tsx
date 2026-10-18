@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Book } from '../types';
 import { ShareIcon, LinkIcon, DocumentDuplicateIcon, XMarkIcon, CheckCircleIcon, TwitterIcon, InstagramIcon } from './icons/Icons';
 import { useTheme } from '../contexts/ThemeContext';
-import { storyShareUrl } from '../utils/shareLinks';
+import { chapterShareUrl, storyShareUrl } from '../utils/shareLinks';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -627,7 +627,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const quoteCanvasRef = useRef<HTMLCanvasElement>(null);
-    const publicUrl = url || storyShareUrl(book.id);
+    const publicUrl = url || (chapter ? chapterShareUrl(book.id, chapter.id) : storyShareUrl(book.id));
 
     const shareTitle = chapter ? `${book.title} - ${chapter.title}` : book.title;
     const authorName = book.author?.name || 'an unknown author';

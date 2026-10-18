@@ -12,6 +12,9 @@ const normalizedOrigin = (origin?: string) => {
 export const storyShareUrl = (bookId: string, origin?: string) =>
     `${normalizedOrigin(origin)}/book/${encodeURIComponent(bookId)}`;
 
+export const chapterShareUrl = (bookId: string, chapterId: string, origin?: string) =>
+    `${storyShareUrl(bookId, origin)}/chapter/${encodeURIComponent(chapterId)}`;
+
 export const authorShareUrl = (authorId: string, origin?: string) =>
     `${normalizedOrigin(origin)}/author/${encodeURIComponent(authorId)}`;
 
