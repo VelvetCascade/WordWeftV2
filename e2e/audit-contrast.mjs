@@ -7,7 +7,7 @@ export const baseURL = process.env.E2E_BASE_URL || 'http://127.0.0.1:3000';
 assert(['localhost', '127.0.0.1'].includes(new URL(baseURL).hostname), 'Use a disposable local runtime');
 export const output = process.env.AUDIT_OUTPUT;
 if (output) fs.mkdirSync(output, { recursive: true });
-export const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || '/usr/bin/chromium', args: ['--no-sandbox'] });
+export const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args: ['--no-sandbox'] });
 const results = [], failures = [];
 export async function session(theme, width, role = 'writer') {
   const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1000 }, hasTouch: width === 390, isMobile: width === 390, extraHTTPHeaders: { 'X-Forwarded-For': `127.92.${Math.floor(Math.random()*200)}.${Math.floor(Math.random()*200)}` } });
