@@ -1,0 +1,525 @@
+{
+  "results": [
+    {
+      "state": "light-1440-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            245,
+            158,
+            11
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 2.0575803966334725,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".search-book-card-rating"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.05 (foreground color: #f59e0b, background color: #fbfaf7, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            255,
+            254,
+            253
+          ],
+          "ratio": 4.799289052226809,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 4.201892382152109,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".search-overlay-item-subtitle > span:nth-child(1)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.19 (foreground color: #6b7280, background color: #f2eeec, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 4.201892382152109,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".search-overlay-item-subtitle > span:nth-child(1)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.19 (foreground color: #6b7280, background color: #f2eeec, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            245,
+            158,
+            11
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 2.0575803966334725,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".search-book-card-rating"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.05 (foreground color: #f59e0b, background color: #fbfaf7, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            255,
+            254,
+            253
+          ],
+          "ratio": 4.799289052226809,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 4.201892382152109,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".search-overlay-item-subtitle > span:nth-child(1)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.19 (foreground color: #6b7280, background color: #f2eeec, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 4.201892382152109,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            242.46,
+            238.16,
+            236.06
+          ],
+          "ratio": 7.392312350442437,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".search-overlay-item-subtitle > span:nth-child(1)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.19 (foreground color: #6b7280, background color: #f2eeec, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            245,
+            158,
+            11
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.987287884282364,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.023296695130053,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 5.363786002233443,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 5.363786002233443,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-rating",
+      "selector": ".search-book-card-rating",
+      "samples": [
+        {
+          "foreground": [
+            245,
+            158,
+            11
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.987287884282364,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-suggestions",
+      "selector": ".search-overlay-item-subtitle > span:not(.search-overlay-rating)",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.023296695130053,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-selected",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 5.363786002233443,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-hover",
+      "selector": ".search-overlay-item-active .search-overlay-item-subtitle > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 5.363786002233443,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            223,
+            183,
+            149
+          ],
+          "background": [
+            45.77,
+            45.92,
+            44.71
+          ],
+          "ratio": 7.356838503897296,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 6
+}

@@ -2036,12 +2036,12 @@ body[data-active-mood="serene"] .ww-prose {
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: #6B7280;
+    color: var(--ww-copy);
     margin-top: 2px;
 }
 
 .dark .search-overlay-item-subtitle {
-    color: #9CA3AF;
+    color: var(--ww-copy);
 }
 
 .search-overlay-item-meta {
@@ -2054,9 +2054,11 @@ body[data-active-mood="serene"] .ww-prose {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    color: #F59E0B;
+    color: var(--ww-copy);
     font-weight: 600;
 }
+
+.search-overlay-rating svg { color: #F59E0B; }
 
 .search-overlay-genres {
     display: flex;
@@ -2549,7 +2551,7 @@ body[data-active-mood="serene"] .ww-prose {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    color: #F59E0B;
+    color: var(--ww-copy);
     font-size: 13px;
     font-weight: 600;
 }
