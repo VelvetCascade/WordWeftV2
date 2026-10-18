@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
-const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
+import { mkdirSync, existsSync } from 'node:fs';
+const browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE||process.env.CHROMIUM_PATH||(existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});
 try {for(const [width,height] of [[390,844],[740,360],[1440,900]]) {
  const page=await browser.newPage({viewport:{width,height}});page.setDefaultTimeout(8000);
  await page.route('**/audit-schedule',route=>route.fulfill({contentType:'text/html',body:`<html><head><script type="module">import RefreshRuntime from '/@react-refresh';RefreshRuntime.injectIntoGlobalHook(window);window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;</script></head><body><div id="root"></div><script type="module">import React from '/node_modules/.vite/deps/react.js';import ReactDOM from '/node_modules/.vite/deps/react-dom_client.js';import {ScheduleChapterDialog} from '/components/ScheduleChapterDialog.tsx';import '/index.css';function App(){const[open,setOpen]=React.useState(false);return React.createElement(React.Fragment,null,React.createElement('button',{onClick:()=>setOpen(true)},'Open schedule'),React.createElement(ScheduleChapterDialog,{isOpen:open,chapterTitle:'Synthetic chapter',onClose:()=>setOpen(false),onConfirm:()=>new Promise(resolve=>{window.finishSchedule=resolve})}))}ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));</script></body></html>`}));

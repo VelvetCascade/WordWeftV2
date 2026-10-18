@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
-const browser = await chromium.launch({executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args:['--no-sandbox']});
+import { mkdirSync, existsSync } from 'node:fs';
+const browser = await chromium.launch({executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || process.env.CHROMIUM_PATH || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args:['--no-sandbox']});
 try {
  for (const [width,height] of [[390,844],[740,360],[1440,900]]) {
   const page = await browser.newPage({viewport:{width,height}});
