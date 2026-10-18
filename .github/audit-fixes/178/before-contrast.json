@@ -1,0 +1,221 @@
+{
+  "results": [
+    {
+      "state": "light-1440-optional",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            246,
+            247,
+            250
+          ],
+          "ratio": 2.369983759668422,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".text-gray-400"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f6f7fa, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-focused",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            246,
+            247,
+            250
+          ],
+          "ratio": 2.369983759668422,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".text-gray-400"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f6f7fa, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-optional",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            246,
+            247,
+            250
+          ],
+          "ratio": 2.369983759668422,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".text-gray-400"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f6f7fa, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-focused",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            246,
+            247,
+            250
+          ],
+          "ratio": 2.369983759668422,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".text-gray-400"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f6f7fa, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-optional",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            23,
+            30,
+            42
+          ],
+          "ratio": 6.587813489215888,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-focused",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            23,
+            30,
+            42
+          ],
+          "ratio": 6.587813489215888,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-optional",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            23,
+            30,
+            42
+          ],
+          "ratio": 6.587813489215888,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-focused",
+      "selector": "label[for=customDisclaimer] > span",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            23,
+            30,
+            42
+          ],
+          "ratio": 6.587813489215888,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 4
+}
