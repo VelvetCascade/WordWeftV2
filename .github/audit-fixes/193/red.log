@@ -1,0 +1,17 @@
+Journey avatar 1280
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 5000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('dialog', { name: /Crop/ }).getByRole('alert') to be visible[22m
+
+    at /workspace/ww-fix-193/.github/audit-fixes/193/regression.mjs:40:37 {
+  log: [
+    "  - waiting for getByRole('dialog', { name: /Crop/ }).getByRole('alert') to be visible"
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.19.0

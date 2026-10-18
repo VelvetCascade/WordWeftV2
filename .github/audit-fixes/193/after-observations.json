@@ -1,0 +1,62 @@
+[
+  {
+    "width": 1280,
+    "entry": "avatar",
+    "formats": [
+      "png",
+      "jpg",
+      "webp"
+    ],
+    "loadingStuck": false,
+    "actionableError": true,
+    "sameFileRetry": true,
+    "validRetry": true,
+    "objectUrlsRevoked": true,
+    "uploadRequests": 0
+  },
+  {
+    "width": 1280,
+    "entry": "cover",
+    "formats": [
+      "png",
+      "jpg",
+      "webp"
+    ],
+    "loadingStuck": false,
+    "actionableError": true,
+    "sameFileRetry": true,
+    "validRetry": true,
+    "objectUrlsRevoked": true,
+    "uploadRequests": 0
+  },
+  {
+    "width": 390,
+    "entry": "avatar",
+    "formats": [
+      "png",
+      "jpg",
+      "webp"
+    ],
+    "loadingStuck": false,
+    "actionableError": true,
+    "sameFileRetry": true,
+    "validRetry": true,
+    "objectUrlsRevoked": true,
+    "uploadRequests": 0
+  },
+  {
+    "width": 390,
+    "entry": "cover",
+    "formats": [
+      "png",
+      "jpg",
+      "webp"
+    ],
+    "loadingStuck": false,
+    "actionableError": true,
+    "sameFileRetry": true,
+    "validRetry": true,
+    "objectUrlsRevoked": true,
+    "uploadRequests": 0
+  }
+]
