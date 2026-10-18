@@ -17,6 +17,6 @@ Portable regression (start the frontend locally first):
 E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e -- e2e/audit-169-reader-appearance.spec.ts
 ```
 
-This mounts the real reader using deterministic synthetic API fixtures. It checks rendered contrast ≥4.5:1 for table text, expanded disclosure, summary, quote, emphasis, link and code in all six application/reader theme combinations; both Lamp modes with atmosphere Full/Off; disclosure pointer and keyboard behavior; desktop/mobile widths. CSS `color()`/`color-mix()` values are converted by the browser before compositing backgrounds. Optional `AUDIT_EVIDENCE_DIR` captures matching initial Night states.
+This mounts the real reader using deterministic synthetic API fixtures. It checks rendered contrast ≥4.5:1 for table text, expanded disclosure, summary, quote, emphasis, link and code in all six application/reader theme combinations; both Lamp modes with atmosphere Full/Off; a deterministic eerie mood section asserts the real detector is active for Full and none for Off; disclosure pointer and keyboard behavior; desktop/mobile widths. CSS `color()`/`color-mix()` values are converted by the browser before compositing backgrounds. Optional `AUDIT_EVIDENCE_DIR` captures matching initial Night states.
 
 Footnote styles already use independent reader variables, so they required no change. Author inline styles, typography, artwork and layout are retained. The preview shares the same reader classes; this regression exercises the published reader, not an independent editor-preview workflow.

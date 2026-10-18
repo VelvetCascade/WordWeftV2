@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import { mkdirSync } from 'node:fs';
 test.setTimeout(120_000);
 
-const content = '<table><thead><tr><th><p>Heading one</p></th><th><p>Heading two</p></th></tr></thead><tbody><tr><td><p>A readable cell</p></td><td><p>Another cell</p></td></tr></tbody></table><details><summary>Collapsible passage</summary><div data-details-content><p>The hidden passage stays readable.</p></div></details><blockquote><p>A remembered line with <strong>emphasis</strong>.</p></blockquote><p>A <a href="https://example.test">chapter link</a> and <code>inline code</code>.</p>';
+const content = '<div data-mood="eerie"><table><thead><tr><th><p>Heading one</p></th><th><p>Heading two</p></th></tr></thead><tbody><tr><td><p>A readable cell</p></td><td><p>Another cell</p></td></tr></tbody></table><details><summary>Collapsible passage</summary><div data-details-content><p>The hidden passage stays readable.</p></div></details><blockquote><p>A remembered line with <strong>emphasis</strong>.</p></blockquote><p>A <a href="https://example.test">chapter link</a> and <code>inline code</code>.</p></div>';
 const story = { id: 'appearance-story', title: 'Reading surfaces', genres: ['Fantasy'], author: { id: 'writer', name: 'Fixture Writer', avatarUrl: '/favicon.svg' }, chapters: [{ id: 'chapter', title: 'Reader appearance', status: 'published', wordCount: 70 }], tags: [], publicationStatus: 'published', readingStatus: 'Ongoing', coverUrl: '/favicon.svg', contentWarnings: [] };
 
 for (const width of [390, 1440]) test(`rich blocks follow reader appearance independently at ${width}px`, async ({ page }) => {
@@ -41,6 +41,12 @@ for (const width of [390, 1440]) test(`rich blocks follow reader appearance inde
         await page.getByRole('group', { name: 'Lamp Reading', exact: true }).getByRole('button', { name: lamp, exact: true }).click();
         await page.getByRole('group', { name: 'Atmosphere intensity', exact: true }).getByRole('button', { name: atmosphere, exact: true }).click();
         await page.getByRole('button', { name: 'Close preferences', exact: true }).click();
+        // Put the fixture's mood section across the real detector's reading line.
+        await copy.locator('[data-mood="eerie"]').evaluate(el => {
+            const top = el.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo(0, Math.max(0, top - Math.min(innerHeight * .32, 260) + 24));
+        });
+        await expect(page.locator('.ww-atmospheres')).toHaveAttribute('data-active-atmosphere', atmosphere === 'Off' ? 'none' : 'eerie');
         await page.waitForTimeout(350); // Let the existing reader color transition finish before measuring.
         // Measure the browser's effective composited surface, including transparent paragraphs.
         const contrast = await copy.locator('th p, td p, summary, details p, blockquote p, strong, a, code').evaluateAll(elements => {
