@@ -1,0 +1,68 @@
+[
+  {
+    "width": 390,
+    "entry": "book",
+    "visibleFailure": "Copy/select-link live alert",
+    "retry": "success",
+    "cancel": "quiet; no copy side effect",
+    "pending": "one request",
+    "lateFailure": "ignored after close/reopen",
+    "unsupported": "copy/manual controls retained",
+    "clipboardDenied": "manual selection available"
+  },
+  {
+    "width": 390,
+    "entry": "author",
+    "visibleFailure": "Copy/select-link live alert",
+    "retry": "success",
+    "cancel": "quiet; no copy side effect",
+    "pending": "one request",
+    "lateFailure": "ignored after close/reopen",
+    "unsupported": "copy/manual controls retained",
+    "clipboardDenied": "manual selection available"
+  },
+  {
+    "width": 390,
+    "entry": "chapter",
+    "visibleFailure": "Copy/select-link live alert",
+    "retry": "success",
+    "cancel": "quiet; no copy side effect",
+    "pending": "one request",
+    "lateFailure": "ignored after close/reopen",
+    "unsupported": "copy/manual controls retained",
+    "clipboardDenied": "manual selection available"
+  },
+  {
+    "width": 1440,
+    "entry": "book",
+    "visibleFailure": "Copy/select-link live alert",
+    "retry": "success",
+    "cancel": "quiet; no copy side effect",
+    "pending": "one request",
+    "lateFailure": "ignored after close/reopen",
+    "unsupported": "copy/manual controls retained",
+    "clipboardDenied": "manual selection available"
+  },
+  {
+    "width": 1440,
+    "entry": "author",
+    "visibleFailure": "Copy/select-link live alert",
+    "retry": "success",
+    "cancel": "quiet; no copy side effect",
+    "pending": "one request",
+    "lateFailure": "ignored after close/reopen",
+    "unsupported": "copy/manual controls retained",
+    "clipboardDenied": "manual selection available"
+  },
+  {
+    "width": 1440,
+    "entry": "chapter",
+    "visibleFailure": "Copy/select-link live alert",
+    "retry": "success",
+    "cancel": "quiet; no copy side effect",
+    "pending": "one request",
+    "lateFailure": "ignored after close/reopen",
+    "unsupported": "copy/manual controls retained",
+    "clipboardDenied": "manual selection available"
+  }
+]
