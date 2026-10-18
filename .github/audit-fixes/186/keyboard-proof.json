@@ -1,0 +1,46 @@
+[
+  {
+    "phase": "before",
+    "width": 390,
+    "payload": {
+      "paragraphIndex": null,
+      "content": "Synthetic submitted thought",
+      "parentId": null
+    },
+    "pendingDraft": "New unsent thought",
+    "readOnly": false
+  },
+  {
+    "phase": "before",
+    "width": 1440,
+    "payload": {
+      "paragraphIndex": null,
+      "content": "Synthetic submitted thought",
+      "parentId": null
+    },
+    "pendingDraft": "New unsent thought",
+    "readOnly": false
+  },
+  {
+    "phase": "after",
+    "width": 390,
+    "payload": {
+      "paragraphIndex": null,
+      "content": "Synthetic submitted thought",
+      "parentId": null
+    },
+    "pendingDraft": "Synthetic submitted thought",
+    "readOnly": true
+  },
+  {
+    "phase": "after",
+    "width": 1440,
+    "payload": {
+      "paragraphIndex": null,
+      "content": "Synthetic submitted thought",
+      "parentId": null
+    },
+    "pendingDraft": "Synthetic submitted thought",
+    "readOnly": true
+  }
+]

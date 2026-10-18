@@ -220,3 +220,43 @@ test('an older comments snapshot retains a comment successfully posted while the
         earlierComments.release();
     }
 });
+
+for (const reply of [false, true]) test(`pending reader ${reply ? 'reply' : 'comment'} prevents draft editing and preserves failed text`, async ({ page }) => {
+    await interceptReaderApi(page);
+    const pending = deferredResponse();
+    let fail = true;
+    let requests = 0;
+    await page.route(`**/api/books/${bookId}/chapters/${chapters[0].id}/comments`, async route => {
+        if (route.request().method() !== 'POST') return route.fallback();
+        requests++;
+        await pending.promise;
+        if (fail) return route.fulfill({ status: 503, json: { message: 'Synthetic comment failure' } });
+        return route.fulfill({ json: { id: 'retry-comment', bookId, chapterId: chapters[0].id,
+            ...route.request().postDataJSON(), createdAt: '2026-01-02T00:00:00Z', userId: 'reader-async-account',
+            user: { id: 'reader-async-account', name: 'Async Reader', avatarUrl: '/favicon.svg' } } });
+    });
+    await page.goto(`/book/${bookId}/chapter/${chapters[0].id}`);
+    await page.getByRole('button', { name: 'Open chapter discussion', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    if (reply) await dialog.getByRole('button', { name: 'Reply', exact: true }).first().click();
+    const textarea = reply ? dialog.getByRole('textbox', { name: 'Reply to Async Reader' }) : dialog.getByLabel('Your comment', { exact: true });
+    await textarea.fill('A recoverable synthetic thought');
+    const submit = reply ? dialog.locator('form').first().locator('button[type=submit]') : dialog.locator('form').last().locator('button[type=submit]');
+    try {
+        await submit.click();
+        await expect(textarea).toHaveAttribute('readonly', '');
+        await expect(submit).toBeDisabled();
+        await textarea.focus();
+        await page.keyboard.type(' unsent edit');
+        await expect(textarea).toHaveValue('A recoverable synthetic thought');
+        pending.release();
+        await expect(dialog.getByRole('alert')).toContainText('Synthetic comment failure');
+        await expect(textarea).toHaveValue('A recoverable synthetic thought');
+        await expect(textarea).not.toHaveAttribute('readonly', '');
+        fail = false;
+        await submit.click();
+        await expect(dialog.getByText('A recoverable synthetic thought', { exact: true })).toBeVisible();
+        expect(requests).toBe(2);
+        if (!reply) await expect(textarea).toHaveValue('');
+    } finally { pending.release(); }
+});

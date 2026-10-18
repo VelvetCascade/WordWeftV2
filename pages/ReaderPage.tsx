@@ -67,7 +67,7 @@ const CommentItem: React.FC<{
 
     const handleSubmitReply = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!replyContent.trim()) return;
+        if (!replyContent.trim() || isSubmitting) return;
         setIsSubmitting(true);
         setReplyError('');
         try {
@@ -111,6 +111,7 @@ const CommentItem: React.FC<{
                 <div className="flex justify-end gap-3 mt-2">
                     <button onClick={() => onReport(comment)} className="text-xs font-semibold text-gray-400 hover:text-danger">Report</button>
                     <button
+                        disabled={isSubmitting}
                         onClick={() => setIsReplying(!isReplying)}
                         className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-accent dark:hover:text-accent flex items-center gap-1"
                     >
@@ -124,6 +125,8 @@ const CommentItem: React.FC<{
                         <label className="sr-only" htmlFor={`reply-${comment.id}`}>Reply to {comment.user.name}</label>
                         <textarea
                             id={`reply-${comment.id}`}
+                            readOnly={isSubmitting}
+                            aria-busy={isSubmitting}
                             value={replyContent}
                             onChange={e => setReplyContent(e.target.value)}
                             placeholder={`Replying to ${comment.user.name}...`}
@@ -132,7 +135,7 @@ const CommentItem: React.FC<{
                             autoFocus
                         />
                         <div className="flex justify-end gap-2">
-                            <button type="button" onClick={() => setIsReplying(false)} className="text-xs px-3 py-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-dark-border rounded">Cancel</button>
+                            <button type="button" disabled={isSubmitting} onClick={() => setIsReplying(false)} className="text-xs px-3 py-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-dark-border rounded">Cancel</button>
                             <button
                                 type="submit"
                                 disabled={isSubmitting || !replyContent.trim()}
@@ -255,6 +258,8 @@ const CommentDrawer: React.FC<{
                         <label className="reader-thread-input-label" htmlFor="reader-new-comment">Your comment</label>
                         <textarea
                             id="reader-new-comment"
+                            readOnly={isSubmitting}
+                            aria-busy={isSubmitting}
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
                             placeholder="Start a new discussion..."
