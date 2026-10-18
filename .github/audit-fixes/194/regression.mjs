@@ -1,14 +1,19 @@
-import { chromium } from '/workspace/node_modules/playwright-core/index.mjs';
+import { chromium, request } from '@playwright/test';
 import { strict as assert } from 'node:assert';
-import fs from 'node:fs';
-const tokens = JSON.parse(fs.readFileSync('/workspace/wordweft-audit/local-tokens.json'));
-const browser = await chromium.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox'] });
+const baseURL = process.env.E2E_BASE_URL || 'http://127.0.0.1:3026';
+assert.ok(['localhost','127.0.0.1'].includes(new URL(baseURL).hostname), 'Use disposable local fixtures');
+const api = await request.newContext({baseURL, extraHTTPHeaders:{'X-Forwarded-For': `127.194.${Math.floor(Math.random()*200)+1}.1`}});
+const login = await api.post('/api/auth/login',{data:{email:process.env.E2E_EMAIL || 'reader@example.test', password:process.env.E2E_PASSWORD || 'WordWeftLocal123!'}});
+assert.ok(login.ok(), 'Start the disposable local backend');
+const {token} = await login.json();
+const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? {executablePath: process.env.CHROMIUM_PATH} : {}), args: ['--no-sandbox'] });
 try {
  for (const width of [1280, 390]) {
   const context = await browser.newContext({ viewport: {width, height: 900}, isMobile: width < 500, hasTouch: width < 500 });
-  await context.addInitScript(token => { localStorage.setItem('wordweft_jwt', token); localStorage.setItem('ww_welcomeJourneyCompleted','true'); localStorage.setItem('hasSeenWhatsNewPopup_v1','true'); }, tokens.reader);
+  await context.route(/^https:\/\/(?:pagead2\.googlesyndication\.com|googleads\.g\.doubleclick\.net)\//, route=>route.fulfill({status:200,contentType:'application/javascript',body:''}));
+  await context.addInitScript(token => { localStorage.setItem('wordweft_jwt', token); localStorage.setItem('ww_welcomeJourneyCompleted','true'); localStorage.setItem('hasSeenWhatsNewPopup_v1','true'); }, token);
   const page = await context.newPage();
-  await page.goto('http://127.0.0.1:3026/library');
+  await page.goto(`${baseURL}/library`);
   await page.getByRole('button', {name: 'New shelf', exact:true}).click();
   const dialog = page.getByRole('dialog');
   let release; let count = 0;
@@ -26,6 +31,7 @@ try {
   assert.equal(await dialog.count(),1);
   await page.mouse.click(5,5);
   assert.equal(await dialog.count(),1);
+  await page.screenshot({path:`.github/audit-fixes/194/after-pending-${width}.png`});
   release();
   await dialog.getByRole('alert').waitFor();
   assert.equal(await dialog.getByRole('textbox',{name:'Shelf name'}).inputValue(),'Original shelf');
@@ -52,6 +58,7 @@ try {
   assert.equal(response.ok(),true);
   release();
   await dialog.waitFor({state:'hidden'});
+  await page.waitForFunction(() => document.activeElement?.textContent.includes('New shelf'));
   await page.getByRole('status').filter({hasText:'Shelf created.'}).waitFor();
   assert.equal(count,2);
   const data=await response.json();
@@ -61,8 +68,8 @@ try {
   await page.getByRole('button',{name:'New shelf',exact:true}).click();
   assert.equal(await dialog.getByRole('textbox',{name:'Shelf name'}).inputValue(),'');
   assert.equal(await dialog.getByRole('radio',{name:'Private · Only you'}).isChecked(),true);
-  await context.request.delete(`http://127.0.0.1:3026/api/library/shelves/${shelf.id}`,{headers:{Authorization:`Bearer ${tokens.reader}`}});
+  await context.request.delete(`${baseURL}/api/library/shelves/${shelf.id}`,{headers:{Authorization:`Bearer ${token}`}});
   await context.close();
  }
  console.log('PASS desktop/mobile pending dismissal, immutable submitted draft, failure preservation, single submission and focus return');
-} finally { await browser.close(); }
+} finally { await browser.close(); await api.dispose(); }
