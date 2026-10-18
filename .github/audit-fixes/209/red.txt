@@ -6,7 +6,7 @@ Running 1 test using 1 worker
   ✘  1 e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http (22.7s)
 
 
-  1) e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http 
+  1) e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http
 
     Error: expect(received).toBe(expected) // Object.is equality
 
@@ -40,4 +40,4 @@ Running 1 test using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
   1 failed
-    e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http 
+    e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http
