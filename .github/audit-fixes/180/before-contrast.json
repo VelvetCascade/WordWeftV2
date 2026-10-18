@@ -1,0 +1,1033 @@
+{
+  "results": [
+    {
+      "state": "light-1440-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(1)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".mt-5 > span:nth-child(1)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(1)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(2)"
+            ],
+            [
+              ".rounded-md.px-2\\.5.py-1:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            114,
+            128
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 4.3929342157461635,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".mt-5 > span:nth-child(1)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.39 (foreground color: #6b7280, background color: #f3f4f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 10
+}

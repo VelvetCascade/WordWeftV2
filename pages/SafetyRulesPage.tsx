@@ -60,7 +60,7 @@ export const SafetyRulesPage: React.FC = () => {
                             ⚠️ Violation may result in content removal, monetization restriction, suspension, or permanent ban.
                         </div>
                     </div>
-                    <div className="mt-5 inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
+                    <div className="mt-5 inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dark-surface-alt px-4 py-2 rounded-full">
                         <span>Last Updated:</span>
                         <span className="font-semibold text-text-rich dark:text-dark-text-rich">February 15, 2026</span>
                     </div>

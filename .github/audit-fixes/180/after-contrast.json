@@ -1,0 +1,873 @@
+{
+  "results": [
+    {
+      "state": "light-1440-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 7.72840875118014,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-genres",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-hover",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-focus",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-pressed",
+      "selector": ".ww-profile-genres button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-safety",
+      "selector": ".wv-legal-header .rounded-full > span:first-child",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 0
+}
