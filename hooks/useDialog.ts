@@ -6,8 +6,8 @@ let unlockedPadding = '';
 let unlockedPaddingPriority = '';
 
 /** Keep a sheet keyboard reachable and return focus to the control that opened it. */
-export function useDialog(open: boolean, onClose: () => void, dismissible = true) {
-  const ref = useRef<HTMLDivElement>(null);
+export function useDialog<T extends HTMLElement = HTMLDivElement>(open: boolean, onClose: () => void, dismissible = true) {
+  const ref = useRef<T>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const dismissibleRef = useRef(dismissible);
