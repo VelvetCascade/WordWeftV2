@@ -1,3 +1,16 @@
-Synthetic local fixtures, Chromium. Regression: `node scripts/audit/dialog-backdrop.mjs` against frontend3022/backend8080. Author and book dialog at390×844,740×360,1440×900. Production failed backdrop-bottom assertion812 !=844; fixed branch passes full bounds and pointer-dismissal/navigation assertions, Escape and close button. Screenshots show fixed author dialog at all three sizes. Book/chapter/quote share one panel implementation.
+# #197 — full viewport dialog backdrops
 
-Full suite320pass; typecheck succeeds; production+SEO build succeeds (existing large-chunk warning). No native-device testing.
+Before: the viewport height limit was applied to the fixed backdrop. At 390×844 its bottom stopped at 812px, exposing mobile navigation; the same defect affected scheduling.
+
+After: author, book, chapter, quote and scheduling dialog ownership belongs to the inner panel. The backdrop reaches the viewport bottom while panels keep the responsive height limit and internal scrolling. Scheduling remains protected from dismissal while a request is pending.
+
+Reproduce using synthetic canonical local fixtures and a running Vite frontend/backend:
+
+```sh
+E2E_BASE_URL=http://127.0.0.1:3022 node scripts/audit/dialog-backdrop.mjs
+E2E_BASE_URL=http://127.0.0.1:3022 node scripts/audit/schedule-backdrop.mjs
+```
+
+The first script exercises real author/book/chapter/selected-quote entry points at 390×844, 740×360 and 1440×900, full backdrop bounds, panel limits, content scrolling, blocked background navigation, Tab wrapping, trigger focus restoration, Escape and close. The second imports the real scheduling component in a small Vite browser harness, checks the same backdrop bounds and a simulated visualViewport height change, and verifies pending Escape/backdrop dismissal is blocked. It never submits a real schedule. Native keyboard/Safari were not tested.
+
+Production failed the share backdrop check (812 != 844). The scheduling follow-up independently failed the same check before its panel ref change. Matching before screenshots are linked in the PR and issue comment; images here show the corrected state. Full validation results are recorded in the PR.

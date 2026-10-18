@@ -31,7 +31,7 @@ export const ScheduleChapterDialog: React.FC<ScheduleChapterDialogProps> = ({
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [confirmed, setConfirmed] = useState(false);
-    const dialogRef = useDialog(isOpen, onClose, !isSubmitting);
+    const dialogRef = useDialog<HTMLFormElement>(isOpen, onClose, !isSubmitting);
     const present = usePresence(isOpen);
 
     useEffect(() => {
@@ -60,8 +60,8 @@ export const ScheduleChapterDialog: React.FC<ScheduleChapterDialogProps> = ({
     };
 
     return (
-        <div ref={dialogRef} tabIndex={-1} className="ww-presence ww-schedule-backdrop" data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined} role="dialog" aria-modal="true" aria-labelledby="schedule-title" onMouseDown={event => event.target === event.currentTarget && !isSubmitting && onClose()}>
-            <form className="ww-schedule-dialog" onSubmit={handleSubmit}>
+        <div className="ww-presence ww-schedule-backdrop" data-state={isOpen ? 'open' : 'closed'} inert={!isOpen} aria-hidden={!isOpen || undefined} onMouseDown={event => event.target === event.currentTarget && !isSubmitting && onClose()}>
+            <form ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="schedule-title" className="ww-schedule-dialog" onSubmit={handleSubmit}>
                 <button type="button" className="ww-studio-dialog-close" onClick={onClose} disabled={isSubmitting} aria-label="Close scheduling"><X size={20} /></button>
                 <span className="ww-schedule-eyebrow">Release planning</span>
                 <h2 id="schedule-title">Schedule {chapterTitle.trim() || 'this chapter'}</h2>
