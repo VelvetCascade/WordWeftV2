@@ -10173,6 +10173,43 @@ body {
 .reader-chapter-meta i { width: 3px; height: 3px; background: currentColor; border-radius: 50%; opacity: 0.5; }
 
 .reader-copy { color: var(--reader-copy) !important; }
+/* Rich manuscript surfaces follow the reader appearance, including editor previews.
+   Keep these scoped so authoring surfaces retain their application theme. */
+.reader-experience .reader-copy th,
+.reader-experience .reader-copy td {
+    color: var(--reader-copy);
+    border-color: var(--reader-line);
+    background: var(--reader-panel-solid);
+}
+.reader-experience .reader-copy th,
+.reader-experience .reader-copy details summary {
+    color: var(--reader-ink);
+    background: color-mix(in srgb, var(--reader-panel-solid) 88%, var(--reader-accent));
+}
+.reader-experience .reader-copy details {
+    background: var(--reader-panel-solid);
+    border-color: var(--reader-line);
+}
+.reader-experience .reader-copy details summary:hover {
+    color: var(--reader-ink);
+    background: color-mix(in srgb, var(--reader-panel-solid) 78%, var(--reader-accent));
+}
+.reader-experience .reader-copy details summary::before { border-left-color: var(--reader-accent); }
+.reader-experience .reader-copy details > :not(summary) { border-top-color: var(--reader-line); }
+.reader-experience .reader-copy strong { color: inherit; }
+.reader-experience .reader-copy a { color: var(--reader-accent); }
+.reader-experience .reader-copy a:hover { color: var(--reader-ink); }
+.reader-experience .reader-copy code,
+.reader-experience .reader-copy pre {
+    color: var(--reader-copy);
+    background: var(--reader-panel-solid);
+    border-color: var(--reader-line);
+}
+.reader-experience .reader-copy blockquote {
+    background: var(--reader-accent-soft);
+    border-left-color: var(--reader-accent);
+}
+.reader-experience .reader-copy hr { border-top-color: var(--reader-line); }
 .reader-copy.reader-font-literary { font-family: 'WordWeft Serif', Georgia, serif !important; }
 .reader-copy.reader-font-modern { font-family: 'Rubik', system-ui, sans-serif !important; letter-spacing: -0.012em; }
 .reader-copy.has-cipher-font { font-family: var(--reader-cipher-font) !important; }
