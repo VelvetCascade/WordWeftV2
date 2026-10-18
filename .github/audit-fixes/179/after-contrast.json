@@ -1,0 +1,1545 @@
+{
+  "results": [
+    {
+      "state": "light-1440-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-empty",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-low",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-high",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-empty",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-low",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-high",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            98,
+            107,
+            121
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 5.3866770877857,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-empty",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-low",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-high",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-empty",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-low",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-high",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            168,
+            178,
+            194
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 6.75914487375679,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 0
+}

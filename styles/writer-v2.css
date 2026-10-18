@@ -318,7 +318,7 @@ html .ww-app .ww-writer-v2 .ww-editor-title-block > textarea { display: block; w
 .ww-writer-v2 .ww-trend-legend i:first-child { background: #8298bb; }
 .ww-writer-v2 .ww-trend-legend i:nth-of-type(2) { background: #344e83; }
 .ww-trend-chart-frame { position: relative; padding-left: 40px; }
-.ww-trend-axis { position: absolute; inset: 0 auto 27px 0; display: flex; flex-direction: column; justify-content: space-between; color: #8191ac; font-size: 11px; }
+.ww-trend-axis { position: absolute; inset: 0 auto 27px 0; display: flex; flex-direction: column; justify-content: space-between; color: var(--studio-muted); font-size: 11px; }
 .ww-trend-data { margin-top: 18px; color: var(--studio-muted); font-size: 13px; }
 .ww-trend-data summary { cursor: pointer; min-height: 36px; }
 .ww-trend-data table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }

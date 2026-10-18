@@ -1,0 +1,621 @@
+{
+  "results": [
+    {
+      "state": "light-1440-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 3.191830607088803,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-axis",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-filtered",
+      "selector": ".ww-trend-axis > span",
+      "samples": [
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            129,
+            145,
+            172
+          ],
+          "background": [
+            32,
+            42,
+            57
+          ],
+          "ratio": 4.532186921491673,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 4
+}
