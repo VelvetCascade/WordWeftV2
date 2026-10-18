@@ -6,7 +6,7 @@ import { canShowCommunityContent, commentVisibilityDelta, communityError, commun
 import { ReportModal } from '../ReportModal';
 import { CommunityAuthor, CommunityEmpty, CommunityError, CommunityLoading, CommunityModal, useCommunitySession } from './CommunityShared';
 
-const CommentForm: React.FC<{ postId: string; parentId?: string; onAdded: (comment: CommunityComment) => void; onCancel?: () => void }> = ({ postId, parentId, onAdded, onCancel }) => {
+const CommentForm: React.FC<{ postId: string; parentId?: string; onAdded: (comment: CommunityComment) => void; onCancel?: () => void; onPendingChange?: (pending: boolean) => void }> = ({ postId, parentId, onAdded, onCancel, onPendingChange }) => {
   const { user, requireAuth } = useCommunitySession();
   const [body, setBody] = useState('');
   const [error, setError] = useState('');
@@ -14,15 +14,16 @@ const CommentForm: React.FC<{ postId: string; parentId?: string; onAdded: (comme
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); if (!requireAuth() || pending) return;
     const validation = validateComment(body); setError(validation); if (validation) return;
-    setPending(true);
-    try { const comment = await api.addComment(postId, body.trim(), parentId); onAdded(comment); setBody(''); onCancel?.(); } catch (err) { setError(communityError(err)); } finally { setPending(false); }
+    setPending(true); onPendingChange?.(true);
+    try { const comment = await api.addComment(postId, body.trim(), parentId); onAdded(comment); setBody(''); onCancel?.(); } catch (err) { setError(communityError(err)); } finally { setPending(false); onPendingChange?.(false); }
   };
   if (!user) return <button className="community-sign-in-comment community-button" onClick={requireAuth}>Sign in to join the conversation</button>;
-  return <form className="community-comment-form" onSubmit={submit}><label className="community-field">{parentId ? 'Your reply' : 'Add your voice'}<textarea rows={3} maxLength={2000} value={body} onChange={event => setBody(event.target.value)} placeholder="Be thoughtful. Be curious. Keep it about the story." /><small>{body.length}/2,000</small></label>{error && <p role="alert" className="community-error">{error}</p>}<div className="community-dialog-actions">{onCancel && <button type="button" className="community-button" disabled={pending} onClick={onCancel}>Cancel</button>}<button className="community-button primary" disabled={pending}>{pending ? 'Posting…' : parentId ? 'Post reply' : 'Post comment'}</button></div></form>;
+  return <form className="community-comment-form" onSubmit={submit}><label className="community-field">{parentId ? 'Your reply' : 'Add your voice'}<textarea rows={3} maxLength={2000} readOnly={pending} aria-busy={pending} value={body} onChange={event => setBody(event.target.value)} placeholder="Be thoughtful. Be curious. Keep it about the story." /><small>{body.length}/2,000</small></label>{error && <p role="alert" className="community-error">{error}</p>}<div className="community-dialog-actions">{onCancel && <button type="button" className="community-button" disabled={pending} onClick={onCancel}>Cancel</button>}<button className="community-button primary" disabled={pending}>{pending ? 'Posting…' : parentId ? 'Post reply' : 'Post comment'}</button></div></form>;
 };
 const CommentItem: React.FC<{ comment: CommunityComment; post: CommunityPost; onUpdate: (comment: CommunityComment) => void; onAdded: (comment: CommunityComment) => void; orphan?: boolean }> = ({ comment, post, onUpdate, onAdded, orphan }) => {
   const { user, requireAuth } = useCommunitySession();
   const [reply, setReply] = useState(false);
+  const [replyPending, setReplyPending] = useState(false);
   const [report, setReport] = useState(false);
   const [action, setAction] = useState<'DELETE' | 'REMOVE' | 'RESTORE' | null>(null);
   const [reason, setReason] = useState('');
@@ -47,9 +48,9 @@ const CommentItem: React.FC<{ comment: CommunityComment; post: CommunityPost; on
   return <article className="community-comment" id={`comment-${comment.id}`}>
     {orphan && <p className="community-muted">Reply to an earlier comment · Load more to find the full thread.</p>}
     {showContent ? <><CommunityAuthor author={comment.author} date={comment.createdAt} />{!active && <p className="community-moderation-preview">Removed comment · visible to moderators only</p>}<p className="community-post-body">{comment.body}</p></> : <p className="community-tombstone">{comment.status === 'DELETED' ? 'This comment was deleted by its author.' : 'This comment was removed by moderation.'}</p>}
-    <div className="community-comment-actions">{active && <><button aria-label={comment.liked ? 'Unlike comment' : 'Like comment'} aria-pressed={comment.liked} disabled={pending || comment.author.id === user?.id} onClick={like}><Heart size={14} fill={comment.liked ? 'currentColor' : 'none'} />{comment.likeCount}</button>{!post.locked && <button disabled={pending} onClick={() => { if (requireAuth()) setReply(!reply); }}>Reply</button>}{comment.canEdit && <button disabled={pending} onClick={() => setAction('DELETE')}>Delete</button>}{comment.author.id !== user?.id && <button onClick={() => { if (requireAuth()) setReport(true); }}>Report</button>}</>}{comment.canModerate && comment.status !== 'DELETED' && <button disabled={pending} onClick={() => setAction(active ? 'REMOVE' : 'RESTORE')}>{active ? 'Remove' : 'Restore'}</button>}</div>
+    <div className="community-comment-actions">{active && <><button aria-label={comment.liked ? 'Unlike comment' : 'Like comment'} aria-pressed={comment.liked} disabled={pending || comment.author.id === user?.id} onClick={like}><Heart size={14} fill={comment.liked ? 'currentColor' : 'none'} />{comment.likeCount}</button>{!post.locked && <button disabled={pending || replyPending} onClick={() => { if (requireAuth()) setReply(!reply); }}>Reply</button>}{comment.canEdit && <button disabled={pending} onClick={() => setAction('DELETE')}>Delete</button>}{comment.author.id !== user?.id && <button onClick={() => { if (requireAuth()) setReport(true); }}>Report</button>}</>}{comment.canModerate && comment.status !== 'DELETED' && <button disabled={pending} onClick={() => setAction(active ? 'REMOVE' : 'RESTORE')}>{active ? 'Remove' : 'Restore'}</button>}</div>
     {error && !action && <p className="community-error" role="alert">{error}</p>}
-    {reply && !post.locked && <CommentForm postId={post.id} parentId={communityReplyTargetId(comment)} onAdded={onAdded} onCancel={() => setReply(false)} />}
+    {reply && !post.locked && <CommentForm postId={post.id} parentId={communityReplyTargetId(comment)} onAdded={onAdded} onPendingChange={setReplyPending} onCancel={() => setReply(false)} />}
     <ReportModal isOpen={report} onClose={() => setReport(false)} targetType="COMMUNITY_COMMENT" targetId={comment.id} targetTitle={`Comment by ${comment.author.name}`} />
     {action && <CommunityModal title={`${action === 'DELETE' ? 'Delete' : action === 'REMOVE' ? 'Remove' : 'Restore'} this comment?`} onClose={() => setAction(null)} busy={pending}><form className="community-dialog-body" onSubmit={confirm}><p>{action === 'DELETE' ? 'The comment text will be deleted. Replies remain in the conversation.' : 'This moderation action changes visibility for everyone.'}</p>{action !== 'DELETE' && <label className="community-field">Reason<textarea value={reason} maxLength={1000} required={action === 'REMOVE'} onChange={event => setReason(event.target.value)} /></label>}{error && <p className="community-error" role="alert">{error}</p>}<div className="community-dialog-actions"><button type="button" disabled={pending} className="community-button" onClick={() => setAction(null)}>Cancel</button><button className="community-button primary" disabled={pending || action === 'REMOVE' && !reason.trim()}>{pending ? 'Saving…' : 'Confirm'}</button></div></form></CommunityModal>}
   </article>;
