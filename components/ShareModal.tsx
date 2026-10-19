@@ -1,3 +1,4 @@
+import { ResilientImage } from './ResilientImage';
 import { useDialog } from '../hooks/useDialog';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Book } from '../types';
@@ -803,7 +804,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         <div className="animate-fade-in flex flex-col gap-6">
 
                             <div className="flex items-center gap-4 bg-gray-50 dark:bg-dark-surface-alt p-4 rounded-2xl">
-                                <img src={book.coverUrl} className="w-16 h-24 object-cover rounded-lg shadow-sm" alt="Cover" />
+                                <ResilientImage src={book.coverUrl} className="w-16 h-24 shrink-0 object-cover rounded-lg shadow-sm" alt={`Cover of ${book.title}`} fallbackLabel={book.title} variant="cover" />
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-sans font-bold text-text-rich dark:text-dark-text-rich truncate">{shareTitle}</h4>
                                     <p className="text-sm text-text-body dark:text-dark-text-body mt-1 line-clamp-2">By {book.author?.name || 'Unknown Author'}</p>
