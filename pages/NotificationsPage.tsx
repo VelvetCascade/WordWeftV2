@@ -267,10 +267,10 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                         <div className="py-16 px-5 text-center">
                             <Bell className="w-9 h-9 mx-auto mb-4 text-teal-700" strokeWidth={1.5} aria-hidden="true" />
                             <p className="font-sans m-0 text-[15px] font-semibold text-text-rich dark:text-dark-text-rich">
-                                {searchQuery ? 'No matching notifications' : 'No notifications yet'}
+                                {isLoading ? 'Loading notifications…' : hasMore ? 'No matches in loaded notifications' : (searchQuery || activeFilter !== 'ALL') ? 'No matching notifications' : 'No notifications yet'}
                             </p>
                             <p className="font-sans mt-1 text-[13px] text-gray-500 dark:text-gray-400">
-                                {searchQuery ? 'Try a different search term' : "You're all caught up!"}
+                                {hasMore ? 'Load more to check older notifications.' : (searchQuery || activeFilter !== 'ALL') ? 'Try another filter or search term.' : "You're all caught up!"}
                             </p>
                         </div>
                     ) : (
@@ -322,7 +322,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({
                     )}
 
                     {/* Load More */}
-                    {hasMore && filtered.length > 0 && (
+                    {hasMore && (
                         <button
                             onClick={onLoadMore}
                             disabled={isLoading}
