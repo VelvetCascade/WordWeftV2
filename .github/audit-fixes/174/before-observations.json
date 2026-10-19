@@ -1,0 +1,26 @@
+[
+  {
+    "width": 1280,
+    "activeId": null,
+    "focusedInput": true,
+    "semanticSelection": false,
+    "mixedAuthorActivation": false,
+    "scrollIntoView": false,
+    "pendingAndEmptyClearActive": false,
+    "compositionGuard": false,
+    "tabAndEscape": false,
+    "fullSearchFallback": false
+  },
+  {
+    "width": 390,
+    "activeId": null,
+    "focusedInput": true,
+    "semanticSelection": false,
+    "mixedAuthorActivation": false,
+    "scrollIntoView": false,
+    "pendingAndEmptyClearActive": false,
+    "compositionGuard": false,
+    "tabAndEscape": false,
+    "fullSearchFallback": false
+  }
+]
