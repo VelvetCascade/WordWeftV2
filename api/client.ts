@@ -1181,7 +1181,7 @@ export async function replyToReview(userId: string, bookId: string, reviewId: st
         headers: getHeaders(),
         body: JSON.stringify({ content })
     });
-    return await handleResponse(response);
+    return await handleResponse(response, { requireArray: true });
 }
 
 export async function deleteReview(userId: string, bookId: string): Promise<Review[]> {

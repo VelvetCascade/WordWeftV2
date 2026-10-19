@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+(node:11680) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"requests":["review-1","review-2"],"responseOrder":["review-2","review-1"],"firstReplyVisible":1,"secondReplyVisible":0,"secondFormCleared":true}
+  ✘  1 e2e/review-reply-ownership.spec.ts:88:1 › reordered replies on two reviews preserve both saved conversations (17.4s)
+
+
+  1) e2e/review-reply-ownership.spec.ts:88:1 › reordered replies on two reviews preserve both saved conversations
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.ww-story-review-item').nth(1).getByText('Saved parallel reply 2', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.ww-story-review-item').nth(1).getByText('Saved parallel reply 2', { exact: true }) with timeout 10000ms
+      - waiting for locator('.ww-story-review-item').nth(1).getByText('Saved parallel reply 2', { exact: true })
+
+
+      118 |         if (process.env.AUDIT_PROOF_DIR) await page.locator('.ww-story-review-item').first().locator('..').screenshot({path:`${process.env.AUDIT_PROOF_DIR}/reordered-${process.env.AUDIT_MOBILE ? '390':'1440'}.png`});
+      119 |         console.log(JSON.stringify({requests, responseOrder:['review-2','review-1'], firstReplyVisible: await items.nth(0).getByText('Saved parallel reply 1',{exact:true}).count(), secondReplyVisible: await items.nth(1).getByText('Saved parallel reply 2',{exact:true}).count(), secondFormCleared:await items.nth(1).locator('form').count() === 0}));
+    > 120 |         await expect(items.nth(1).getByText('Saved parallel reply 2',{exact:true})).toBeVisible();
+          |                                                                                     ^
+      121 |     } finally { releaseFirst(); releaseSecond(); }
+      122 | });
+      123 |
+        at e2e/review-reply-ownership.spec.ts:120:85
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/review-reply-ownership-reo-f7cad-ve-both-saved-conversations/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/review-reply-ownership-reo-f7cad-ve-both-saved-conversations/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/review-reply-ownership-reo-f7cad-ve-both-saved-conversations/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/review-reply-ownership-reo-f7cad-ve-both-saved-conversations/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e/review-reply-ownership.spec.ts:88:1 › reordered replies on two reviews preserve both saved conversations

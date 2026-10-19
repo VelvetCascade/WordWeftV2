@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { Book, User, Shelf, LibraryBook, BookProgress, Review } from '../types';
 import { discussLink } from '../utils/community';
 import { BookCard } from '../components/BookCard';
@@ -78,14 +78,27 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState('');
     const [areRepliesExpanded, setAreRepliesExpanded] = useState(false);
+    const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+    const [replyError, setReplyError] = useState('');
+    const replyInFlight = useRef(false);
 
     const handleSubmitReply = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!replyContent.trim()) return;
-        await onReply(review.id, replyContent);
-        setReplyContent('');
-        setIsReplying(false);
-        setAreRepliesExpanded(true);
+        if (!replyContent.trim() || replyInFlight.current) return;
+        replyInFlight.current = true;
+        setIsSubmittingReply(true);
+        setReplyError('');
+        try {
+            await onReply(review.id, replyContent.trim());
+            setReplyContent('');
+            setIsReplying(false);
+            setAreRepliesExpanded(true);
+        } catch (error) {
+            setReplyError(error instanceof Error ? error.message : 'Your reply could not be posted. Please try again.');
+        } finally {
+            replyInFlight.current = false;
+            setIsSubmittingReply(false);
+        }
     };
 
     return (
@@ -117,6 +130,7 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                     <div className="flex items-center gap-4 mt-4">
                         {currentUser && (
                             <button
+                                disabled={isSubmittingReply}
                                 onClick={() => setIsReplying(!isReplying)}
                                 className="text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent flex items-center gap-1 transition-colors"
                             >
@@ -140,6 +154,9 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                                 <img src={currentUser!.avatarUrl} alt={currentUser!.name} className="w-8 h-8 rounded-full hidden sm:block" />
                                 <div className="flex-1">
                                     <textarea
+                                        aria-label={`Reply to ${review.user.name}`}
+                                        readOnly={isSubmittingReply}
+                                        aria-busy={isSubmittingReply}
                                         value={replyContent}
                                         onChange={e => setReplyContent(e.target.value)}
                                         placeholder="Write a reply..."
@@ -147,9 +164,10 @@ const ReviewItem: React.FC<{ review: Review, currentUser: User | null, onReply: 
                                         rows={2}
                                         autoFocus
                                     />
+                                    {replyError && <p role="alert" className="mt-2 text-sm text-danger">{replyError} Your reply is still here; try again.</p>}
                                     <div className="flex justify-end gap-2 mt-2">
-                                        <button type="button" onClick={() => setIsReplying(false)} className="px-3 py-1.5 text-sm font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg">Cancel</button>
-                                        <button type="submit" disabled={!replyContent.trim()} className="px-3 py-1.5 text-sm font-semibold text-white bg-accent rounded-lg hover:bg-primary disabled:opacity-50">Post Reply</button>
+                                        <button type="button" disabled={isSubmittingReply} onClick={() => setIsReplying(false)} className="px-3 py-1.5 text-sm font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-surface-alt rounded-lg">Cancel</button>
+                                        <button type="submit" disabled={isSubmittingReply || !replyContent.trim()} className="px-3 py-1.5 text-sm font-semibold text-white bg-accent rounded-lg hover:bg-primary disabled:opacity-50">{isSubmittingReply ? 'Posting…' : 'Post Reply'}</button>
                                     </div>
                                 </div>
                             </div>
@@ -202,6 +220,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     // Library and profile mutations replace the user object. Only changes to
     // the viewer's access should reload the story's account-specific data.
     const bookAccessKey = JSON.stringify([bookId, currentUser?.id ?? null, currentUser?.dateOfBirth ?? null, currentUser?.allowMatureContent ?? false]);
+    const activeReplyScope = useRef(bookAccessKey);
+    activeReplyScope.current = bookAccessKey;
     const [loadedBookAccessKey, setLoadedBookAccessKey] = useState<string | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
 
@@ -476,8 +496,17 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
 
     const handleReplyToReview = async (reviewId: string, content: string) => {
         if (!currentUser) return;
+        const scope = bookAccessKey;
         const updatedReviews = await api.replyToReview(currentUser.id, bookId, reviewId, content);
-        setAllReviews(updatedReviews);
+        if (activeReplyScope.current !== scope) return;
+        const updatedReview = updatedReviews.find(review => review.id === reviewId);
+        if (!updatedReview || !Array.isArray(updatedReview.replies)) throw new Error('Your reply could not be confirmed. Please try again.');
+        // Reply responses contain a whole-list snapshot. Only reconcile the
+        // requested review so an older response cannot undo another composer.
+        setAllReviews(previous => previous.map(review => review.id === reviewId ? {
+            ...review,
+            replies: [...new Map([...review.replies, ...updatedReview.replies].map(reply => [reply.id, reply])).values()],
+        } : review));
     };
 
     const handleToggleChapterLike = async (chapterId: string) => {
@@ -678,7 +707,7 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                             <div className="space-y-6">
                                 {allReviews.filter(review => review.userId !== currentUser?.id).map(review => (
                                     <ReviewItem
-                                        key={review.id}
+                                        key={`${bookId}:${currentUser?.id ?? 'guest'}:${review.id}`}
                                         review={review}
                                         currentUser={currentUser}
                                         onReply={handleReplyToReview}

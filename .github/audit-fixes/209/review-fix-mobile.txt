@@ -1,0 +1,13 @@
+
+Running 5 tests using 1 worker
+
+(node:15766) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http (5.9s)
+  ✓  2 e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from offline (8.4s)
+  ✓  3 e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from malformed (9.7s)
+  ✓  4 e2e/review-reply-ownership.spec.ts:71:1 › an older review reply cannot populate the newly selected story (5.9s)
+{"requests":["review-1","review-2"],"responseOrder":["review-2","review-1"],"firstReplyVisible":1,"secondReplyVisible":1,"secondFormCleared":true}
+  ✓  5 e2e/review-reply-ownership.spec.ts:88:1 › reordered replies on two reviews preserve both saved conversations (6.7s)
+
+  5 passed (38.3s)

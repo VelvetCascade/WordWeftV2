@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+(node:33112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http (22.7s)
+
+
+  1) e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 2
+
+    Call Log:
+    - Timeout 10000ms exceeded while waiting on the predicate
+
+      50 |         if (process.env.AUDIT_PROOF_DIR && failure === 'http') await item.scrollIntoViewIfNeeded();
+      51 |         if (process.env.AUDIT_PROOF_DIR && failure === 'http') await item.screenshot({path: `${process.env.AUDIT_PROOF_DIR}/pending-${process.env.AUDIT_MOBILE ? '390' : '1440'}.png`});
+    > 52 |         await expect.poll(() => requests).toBe(1);
+         |                                           ^
+      53 |         await expect(form.getByRole('button', { name: /Posting|Post Reply/ })).toBeDisabled();
+      54 |         await expect(text).toHaveAttribute('readonly','');
+      55 |         await expect(text).toHaveValue('A recoverable synthetic reply');
+        at /workspace/ww-fix-209/e2e/review-reply-ownership.spec.ts:52:43
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/review-reply-ownership-rev-6bfff-uest-and-recovers-from-http/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/review-reply-ownership-rev-6bfff-uest-and-recovers-from-http/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/review-reply-ownership-rev-6bfff-uest-and-recovers-from-http/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/review-reply-ownership-rev-6bfff-uest-and-recovers-from-http/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e/review-reply-ownership.spec.ts:31:66 › review reply owns one request and recovers from http
