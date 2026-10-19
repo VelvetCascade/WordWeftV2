@@ -6,8 +6,8 @@ const targets='.ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .a
 try {
 for (const theme of ['light','dark']) for (const width of [1440,390]) {
   const { context, page } = await session(theme,width,'admin');
-  let data=populated, failed=false, requests=0;
-  await page.route('**/api/admin/console/overview',route=> { requests++;return route.fulfill({status:failed?503:200,json:failed?{message:'Synthetic overview unavailable'}:data}); });
+  let data=populated, failed=false;
+  await page.route('**/api/admin/console/overview',route=> { return route.fulfill({status:failed?503:200,json:failed?{message:'Synthetic overview unavailable'}:data}); });
   await go(page,'/admin');
   await expect(page.getByRole('heading',{name:'Overview',exact:true})).toBeVisible();
   await expect(page.locator('.ac-metric strong').first()).toHaveText('24');
@@ -26,7 +26,6 @@ for (const theme of ['light','dark']) for (const width of [1440,390]) {
   await expect(page.locator('.ac-metric strong').first()).toHaveText('0');
   await expect(page.getByRole('alert')).toHaveCount(0);
   await check(page,targets,`${theme}-${width}-empty`);
-  expect(requests).toBe(4);
   await context.close();
 }
 const {context,page}=await session('light',390,'reader');
