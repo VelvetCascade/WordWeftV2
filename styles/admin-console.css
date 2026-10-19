@@ -139,6 +139,7 @@
 .ac-denied a { color:var(--ww-brand); font-weight:700; text-decoration:underline; }
 .dark .ac-shell { --ac-paper:#292420; --ac-canvas:#211d1a; --ac-ink:#f3ece5; --ac-copy:#c7b5a8; --ac-line:#473b32; --ac-accent:#d1a088; }
 .dark .ac-metric,.dark .ac-panel,.dark .ac-topbar { background:var(--ac-paper); }
+.dark .ac-topbar button { background:var(--ac-paper); }
 .dark .ac-panel h3,.dark .ac-table strong,.dark .ac-story strong,.dark .ac-person strong { color:var(--ac-ink); }
 .dark .ac-search,.dark .ac-select select,.dark .ac-pager button,.dark .ac-report,.dark .ac-outline,.dark .ac-review-form textarea { background:#322b26; color:var(--ac-ink); border-color:#54473f; }
 .dark .ac-table th,.dark .ac-report blockquote { background:#332c27; color:var(--ac-copy); }
