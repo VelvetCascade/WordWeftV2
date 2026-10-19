@@ -96,7 +96,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
   const [twitter, setTwitter] = useState(draft?.twitter ?? user.socials?.twitter ?? '');
   const [instagram, setInstagram] = useState(draft?.instagram ?? user.socials?.instagram ?? '');
   const [threads, setThreads] = useState(draft?.threads ?? user.socials?.threads ?? '');
-  const [socialErrors, setSocialErrors] = useState<{ twitter?: string, instagram?: string, threads?: string }>({});
+  const [socialFieldToFocus, setSocialFieldToFocus] = useState<'twitter' | 'instagram' | 'threads' | null>(null);
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
@@ -160,15 +160,29 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     return patterns[type].test(url) ? '' : `Invalid ${type} URL format`;
   };
 
+  // Validate the entire shared draft, including values recovered from history.
+  const socialErrors = {
+    twitter: validateUrl(twitter, 'twitter'),
+    instagram: validateUrl(instagram, 'instagram'),
+    threads: validateUrl(threads, 'threads'),
+  };
+  const firstInvalidSocial = (['twitter', 'instagram', 'threads'] as const).find(type => socialErrors[type]);
+  const socialLabels = { twitter: 'X or Twitter profile URL', instagram: 'Instagram profile URL', threads: 'Threads profile URL' };
+  const reviewSocialField = (type: 'twitter' | 'instagram' | 'threads') => {
+    setActiveSection('profile');
+    setSocialFieldToFocus(type);
+  };
+  useEffect(() => {
+    if (activeSection !== 'profile' || !socialFieldToFocus) return;
+    document.getElementById(`profile-${socialFieldToFocus}`)?.focus();
+    setSocialFieldToFocus(null);
+  }, [activeSection, socialFieldToFocus]);
+
   const handleSocialChange = (val: string, type: 'twitter' | 'instagram' | 'threads') => {
     if (type === 'twitter') setTwitter(val);
     if (type === 'instagram') setInstagram(val);
     if (type === 'threads') setThreads(val);
-
-    setSocialErrors(prev => ({
-      ...prev,
-      [type]: validateUrl(val, type)
-    }));
+    setSaveSuccess(null);
   };
 
   const toggleGenre = (genre: string) => {
@@ -189,16 +203,12 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
     e.preventDefault();
     if (isSaving || isAvatarUploading) return;
 
-    // Check validation before submitting
-    const twErr = validateUrl(twitter, 'twitter');
-    const igErr = validateUrl(instagram, 'instagram');
-    const thErr = validateUrl(threads, 'threads');
-
+    // Check the whole shared draft before submitting.
     setSaveError(null);
     setSaveSuccess(null);
 
-    if (twErr || igErr || thErr) {
-      setSocialErrors({ twitter: twErr, instagram: igErr, threads: thErr });
+    if (firstInvalidSocial) {
+      reviewSocialField(firstInvalidSocial);
       return;
     }
 
@@ -311,6 +321,10 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
           </nav>
 
         <div className="ww-settings-panel bg-white dark:bg-dark-surface rounded-2xl border dark:border-dark-border">
+          {firstInvalidSocial && <div role="alert" className="mb-5 rounded-xl border border-danger p-4 text-sm">
+            <p className="text-danger">A profile link needs attention. Your profile, privacy and story preferences are saved together; changes have not been saved.</p>
+            <button type="button" className="mt-2 text-accent underline" onClick={() => reviewSocialField(firstInvalidSocial)}>Review {socialLabels[firstInvalidSocial]}</button>
+          </div>}
           {activeSection !== 'security' && <form onSubmit={handleSave} className={`space-y-6 ${activeSection === 'profile' ? 'ww-settings-profile-form' : ''}`}>
             <header className="ww-settings-panel-head">
               <div><h2>{activeSection === 'profile' ? 'Public profile' : 'Story preferences'}</h2><p>{activeSection === 'profile' ? 'This is how your author portfolio appears to readers.' : 'Choose what helps WordWeft shape your library.'}</p></div>
@@ -401,14 +415,17 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     <TwitterIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
+                    id="profile-twitter"
                     aria-label="X or Twitter profile URL"
+                    aria-invalid={!!socialErrors.twitter}
+                    aria-describedby={socialErrors.twitter ? 'profile-twitter-error' : undefined}
                     type="url"
                     value={twitter}
                     onChange={(e) => handleSocialChange(e.target.value, 'twitter')}
                     placeholder="https://x.com/username"
                     className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.twitter ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
                   />
-                  {socialErrors.twitter && <p className="text-xs text-danger mt-1">{socialErrors.twitter}</p>}
+                  {socialErrors.twitter && <p id="profile-twitter-error" className="text-xs text-danger mt-1">{socialErrors.twitter}</p>}
                 </div>
 
                 <div className="relative">
@@ -416,14 +433,17 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     <InstagramIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
+                    id="profile-instagram"
                     aria-label="Instagram profile URL"
+                    aria-invalid={!!socialErrors.instagram}
+                    aria-describedby={socialErrors.instagram ? 'profile-instagram-error' : undefined}
                     type="url"
                     value={instagram}
                     onChange={(e) => handleSocialChange(e.target.value, 'instagram')}
                     placeholder="https://instagram.com/username"
                     className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.instagram ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
                   />
-                  {socialErrors.instagram && <p className="text-xs text-danger mt-1">{socialErrors.instagram}</p>}
+                  {socialErrors.instagram && <p id="profile-instagram-error" className="text-xs text-danger mt-1">{socialErrors.instagram}</p>}
                 </div>
 
                 <div className="relative">
@@ -431,14 +451,17 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     <ThreadsIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <input
+                    id="profile-threads"
                     aria-label="Threads profile URL"
+                    aria-invalid={!!socialErrors.threads}
+                    aria-describedby={socialErrors.threads ? 'profile-threads-error' : undefined}
                     type="url"
                     value={threads}
                     onChange={(e) => handleSocialChange(e.target.value, 'threads')}
                     placeholder="https://threads.net/@username"
                     className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.threads ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
                   />
-                  {socialErrors.threads && <p className="text-xs text-danger mt-1">{socialErrors.threads}</p>}
+                  {socialErrors.threads && <p id="profile-threads-error" className="text-xs text-danger mt-1">{socialErrors.threads}</p>}
                 </div>
               </div>
             </div>
@@ -513,7 +536,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                 </button>
                 <button
                   type="submit"
-                  disabled={!isDirty || isSaving || isAvatarUploading || !!(socialErrors.twitter || socialErrors.instagram || socialErrors.threads)}
+                  disabled={!isDirty || isSaving || isAvatarUploading}
                   className="bg-accent text-white font-sans font-semibold px-6 py-2.5 rounded-xl hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAvatarUploading ? 'Uploading avatar…' : isSaving ? 'Saving…' : 'Save Changes'}
