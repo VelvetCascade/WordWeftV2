@@ -1,0 +1,1501 @@
+{
+  "results": [
+    {
+      "state": "light-1440-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.986829266734301,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "#reader > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#reader > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#reader > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#characters > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#characters > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#characters > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#mood > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#mood > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#mood > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#search > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#search > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#search > div:nth-child(1) > ul > li:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "article:nth-child(1) > .wv-challenge-meta > span:nth-child(1)"
+            ],
+            [
+              ".wv-challenge-meta > span:nth-child(2)"
+            ],
+            [
+              "article:nth-child(2) > .wv-challenge-meta > span"
+            ],
+            [
+              "article:nth-child(3) > .wv-challenge-meta > span"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-390-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 2.745107007524892,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "#reader > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#reader > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#reader > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#worldbuilding > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#characters > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#characters > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#characters > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#spoiler > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#mood > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#mood > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#mood > div:nth-child(1) > ul > li:nth-child(3)"
+            ],
+            [
+              "#search > div:nth-child(1) > ul > li:nth-child(1)"
+            ],
+            [
+              "#search > div:nth-child(1) > ul > li:nth-child(2)"
+            ],
+            [
+              "#search > div:nth-child(1) > ul > li:nth-child(3)"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.74 (foreground color: #59635b, background color: #191c1c, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-390-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 2.324379097903966,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "article:nth-child(1) > .wv-challenge-meta > span:nth-child(1)"
+            ],
+            [
+              ".wv-challenge-meta > span:nth-child(2)"
+            ],
+            [
+              "article:nth-child(2) > .wv-challenge-meta > span"
+            ],
+            [
+              "article:nth-child(3) > .wv-challenge-meta > span"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.32 (foreground color: #28675e, background color: #222626, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    }
+  ],
+  "failures": 4
+}
