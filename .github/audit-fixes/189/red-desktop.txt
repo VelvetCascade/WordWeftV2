@@ -1,0 +1,92 @@
+
+Running 2 tests using 1 worker
+
+(node:31934) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 e2e/community-validation-focus.spec.ts:14:1 › invalid community publication focuses and describes each next blocking field (22.0s)
+(node:33039) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 e2e/community-validation-focus.spec.ts:26:1 › unsupported recovered format is announced and focused without losing the draft (19.4s)
+
+
+  1) e2e/community-validation-focus.spec.ts:14:1 › invalid community publication focuses and describes each next blocking field 
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  getByRole('dialog', { name: 'Create a post' }).getByRole('combobox', { name: 'Circle', exact: true })
+    Expected: focused
+    Received: inactive
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeFocused" getByRole('dialog', { name: 'Create a post' }).getByRole('combobox', { name: 'Circle', exact: true }) with timeout 10000ms
+      - waiting for getByRole('dialog', { name: 'Create a post' }).getByRole('combobox', { name: 'Circle', exact: true })
+        22 × locator resolved to <select aria-label="Circle" aria-invalid="true">…</select>
+           - unexpected value "inactive"
+
+
+      15 |  await composer(page);const dialog=page.getByRole('dialog',{name:'Create a post'});const submit=dialog.getByRole('button',{name:'Publish post',exact:true});
+      16 |  await submit.focus();await page.keyboard.press('Enter');if(process.env.AUDIT_PROOF_DIR){await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/validation-${size}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/focus-${size}.json`,JSON.stringify(await page.evaluate(()=>({activeTag:document.activeElement?.tagName,activeLabel:document.activeElement?.getAttribute('aria-label'),activeText:document.activeElement?.textContent,description:document.activeElement?.getAttribute('aria-describedby'),invalid:document.activeElement?.getAttribute('aria-invalid')})),null,2));}
+    > 17 |  const circle=dialog.getByRole('combobox',{name:'Circle',exact:true});await expect(circle).toBeFocused();await expect(circle).toHaveAccessibleDescription('Choose a circle for your conversation.');
+         |                                                                                            ^
+      18 |  const box=await circle.boundingBox();expect(box?.y).toBeGreaterThanOrEqual((await dialog.locator('header').boundingBox())!.y+(await dialog.locator('header').boundingBox())!.height);expect((box?.y||0)+(box?.height||0)).toBeLessThan(page.viewportSize()!.height);
+      19 |  await circle.selectOption('circle-update');await submit.click();const body=dialog.getByRole('textbox',{name:/Your post/});await expect(body).toBeFocused();await expect(body).toHaveAccessibleDescription('Write between 1 and 5,000 characters.');await body.fill('A retained synthetic conversation.');
+      20 |  await circle.selectOption('circle-questions');await submit.click();const title=dialog.getByRole('textbox',{name:'Title',exact:true});await expect(title).toBeFocused();await expect(title).toHaveAccessibleDescription('Use a title between 3 and 140 characters.');await title.fill('A synthetic poll question');
+        at e2e/community-validation-focus.spec.ts:17:92
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/community-validation-focus-c23d1-es-each-next-blocking-field/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/community-validation-focus-c23d1-es-each-next-blocking-field/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/community-validation-focus-c23d1-es-each-next-blocking-field/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/community-validation-focus-c23d1-es-each-next-blocking-field/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e/community-validation-focus.spec.ts:26:1 › unsupported recovered format is announced and focused without losing the draft 
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  getByRole('dialog', { name: 'Create a post' }).getByRole('button', { name: 'Update', exact: true })
+    Expected: focused
+    Received: inactive
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeFocused" getByRole('dialog', { name: 'Create a post' }).getByRole('button', { name: 'Update', exact: true }) with timeout 10000ms
+      - waiting for getByRole('dialog', { name: 'Create a post' }).getByRole('button', { name: 'Update', exact: true })
+        22 × locator resolved to <button type="button" aria-pressed="false">Update</button>
+           - unexpected value "inactive"
+
+
+      27 |  await page.addInitScript(()=>localStorage.setItem('wordweft:form-draft:v1:composer-reader:community-post',JSON.stringify({version:1,savedAt:Date.now(),value:{circleId:'circle-update',type:'POLL',title:'A retained poll title',body:'A retained body.',pollOptions:['One','Two'],contentWarnings:[]}})));
+      28 |  await composer(page);const dialog=page.getByRole('dialog',{name:'Create a post'});await dialog.getByRole('button',{name:'Publish post',exact:true}).click();
+    > 29 |  const update=dialog.getByRole('button',{name:'Update',exact:true});await expect(update).toBeFocused();await expect(update).toHaveAccessibleDescription(/Choose a format supported by this circle/);
+         |                                                                                          ^
+      30 |  await expect(dialog.getByRole('group',{name:'Post format',exact:true})).toHaveAttribute('aria-invalid','true');await expect(dialog.getByRole('textbox',{name:'Your post',exact:true})).toHaveValue('A retained body.');
+      31 |  await update.click();await expect(update).toHaveAttribute('aria-pressed','true');
+      32 | });
+        at e2e/community-validation-focus.spec.ts:29:90
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/community-validation-focus-5443e-ed-without-losing-the-draft/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/community-validation-focus-5443e-ed-without-losing-the-draft/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/community-validation-focus-5443e-ed-without-losing-the-draft/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/community-validation-focus-5443e-ed-without-losing-the-draft/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    e2e/community-validation-focus.spec.ts:14:1 › invalid community publication focuses and describes each next blocking field 
+    e2e/community-validation-focus.spec.ts:26:1 › unsupported recovered format is announced and focused without losing the draft 
