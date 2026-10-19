@@ -1,0 +1,22 @@
+[
+  {
+    "width": 1280,
+    "saveRequests": 2,
+    "invalidDraftBlockedRequest": true,
+    "visibleCrossTabFeedback": true,
+    "firstInvalidFieldFocused": true,
+    "recoveredDraft": true,
+    "serverFailureRetry": true,
+    "persistedSharedChanges": true
+  },
+  {
+    "width": 390,
+    "saveRequests": 2,
+    "invalidDraftBlockedRequest": true,
+    "visibleCrossTabFeedback": true,
+    "firstInvalidFieldFocused": true,
+    "recoveredDraft": true,
+    "serverFailureRetry": true,
+    "persistedSharedChanges": true
+  }
+]
