@@ -16,10 +16,10 @@ for(const width of [1440,390]) {
  await page.goto(baseURL+'/edit-profile');
  const input=page.getByRole('textbox',{name:'Threads profile URL'});
  await input.fill('https://www.threads.com/@wordweft');
- await input.scrollIntoViewIfNeeded();
+ await input.evaluate(element=>element.scrollIntoView({block:'center'}));
  await page.evaluate(()=>document.fonts.ready);
- if(output) await page.screenshot({path:path.join(output,`${width}-threads-current.png`)});
- if(process.env.AUDIT_BASELINE==='1') { console.log(width,'current-domain rejected:',await page.getByText('Invalid threads URL format',{exact:true}).count()); await context.close(); continue; }
+ if(output) await page.screenshot({path:path.join(output,`${width}-threads-current.png`),fullPage:true});
+ if(process.env.AUDIT_BASELINE==='1'||process.env.AUDIT_CAPTURE_ONLY==='1') { console.log(width,'current-domain rejected:',await page.getByText('Invalid threads URL format',{exact:true}).count()); await context.close(); continue; }
  await expect(page.getByText('Invalid threads URL format',{exact:true})).toHaveCount(0);
  for(const url of ['https://threads.net/@wordweft','https://www.threads.net/@word.weft','https://threads.com/@wordweft','https://www.threads.com/@wordweft/']) {
    await input.fill(url); await expect(page.getByText('Invalid threads URL format',{exact:true})).toHaveCount(0);
