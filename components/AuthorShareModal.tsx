@@ -1,3 +1,4 @@
+import { ResilientImage } from './ResilientImage';
 import { useDialog } from '../hooks/useDialog';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { authorShareUrl } from '../utils/shareLinks';
@@ -469,7 +470,7 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
                     {activeTab === 'quick' && (
                         <div className="animate-fade-in flex flex-col gap-6">
                             <div className="flex items-center gap-4 bg-gray-50 dark:bg-dark-surface-alt p-4 rounded-2xl">
-                                <img src={author.avatarUrl} className="w-16 h-16 object-cover rounded-full shadow-sm" alt="Avatar" />
+                                <ResilientImage src={author.avatarUrl} className="w-16 h-16 shrink-0 object-cover rounded-full shadow-sm" alt={`${author.name}'s avatar`} fallbackLabel={author.name} variant="avatar" />
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-sans font-bold text-text-rich dark:text-dark-text-rich truncate">{author.name}</h4>
                                     <p className="text-sm text-text-body dark:text-dark-text-body mt-1">WordWeft Author</p>
