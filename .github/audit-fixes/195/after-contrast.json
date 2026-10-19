@@ -1,0 +1,1293 @@
+{
+  "results": [
+    {
+      "state": "light-1440-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            99,
+            105,
+            96
+          ],
+          "background": [
+            251,
+            250,
+            247
+          ],
+          "ratio": 5.4082834545981635,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            40,
+            103,
+            94
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.579044641609117,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-features",
+      "selector": ".wv-feature-section li",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 7.758550884576267,
+          "fontSize": "13px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-challenges",
+      "selector": ".wv-challenge-meta > span",
+      "samples": [
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            131,
+            188,
+            176
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 7.125626845122983,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 0
+}

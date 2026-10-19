@@ -126,7 +126,7 @@ html .ww-app .wv-legal .wv-support-shell { width:calc(100% - 64px); max-width:11
 .wv-feature-section:nth-of-type(even) > div:first-child { order:2; }
 .wv-feature-section > div:first-child > p:not(.wv-eyebrow) { font-size:15px; line-height:1.8; color:var(--support-copy); }
 .wv-feature-section .wv-eyebrow { margin-bottom:14px; }
-.wv-feature-section ul { margin-top:22px; padding-left:18px; list-style:disc; color:#59635b; font-size:13px; line-height:1.8; }
+.wv-feature-section ul { margin-top:22px; padding-left:18px; list-style:disc; color:var(--support-copy); font-size:13px; line-height:1.8; }
 .wv-feature-section li { margin:8px 0; padding-left:5px; }
 .wv-feature-demo { padding:24px; min-width:0; border:1px solid #dcd7ce; border-radius:10px; background:#fff; }
 .wv-demo-topline { display:flex; justify-content:space-between; align-items:center; gap:16px; color:#636960; font-size:10px; line-height:1.6; }
@@ -273,7 +273,7 @@ html .ww-app .wv-legal .wv-support-shell { width:calc(100% - 64px); max-width:11
 .wv-growth-signin .wv-button { flex-shrink:0; margin-left:auto; }
 .wv-challenge-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; }
 .wv-challenge-card { display:flex; flex-direction:column; padding:25px; border:1px solid var(--support-line); border-radius:9px; background:#fff; }
-.wv-challenge-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; color:#28675e; font-size:10px; line-height:1.6; }
+.wv-challenge-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--support-teal,#28675e); font-size:10px; line-height:1.6; }
 .wv-challenge-meta span { display:inline-flex; gap:5px; align-items:center; }
 .wv-challenge-meta > span:first-child { text-transform:uppercase; letter-spacing:.08em; }
 .wv-challenge-card h3 { font:600 25px/1.3 'WordWeft Serif',serif; margin:20px 0 14px; }
@@ -333,7 +333,7 @@ html .ww-app .wv-legal .wv-support-shell { width:calc(100% - 64px); max-width:11
 .ww-app .wv-support .wv-about-grid,.ww-app .wv-support .wv-about-beginning { padding-block:0 !important; }
 .ww-app .wv-support .wv-about-copy section { padding-bottom:0 !important; padding-top:30px !important; }
 .ww-app .wv-support .wv-about-copy section:first-child { padding-top:0 !important; }
-.dark .wv-support { --support-paper:var(--ww-canvas); --support-ink:var(--ww-ink); --support-copy:var(--ww-muted); --support-umber:var(--ww-brand); --support-line:var(--ww-line); }
+.dark .wv-support { --support-paper:var(--ww-canvas); --support-ink:var(--ww-ink); --support-copy:var(--ww-muted); --support-umber:var(--ww-brand); --support-line:var(--ww-line); --support-teal:var(--ww-teal); }
 .dark .wv-support :is(.wv-feedback-form,.wv-feature-demo,.wv-catalog-cover,.wv-empty,.wv-hook-loading,.wv-event-card,.wv-challenge-card,.wv-taste-dialog) { color:var(--ww-ink); background:var(--ww-paper); border-color:var(--ww-line); }
 .dark .wv-support :is(.wv-notice,.wv-help-email,.wv-feature-end,.wv-discovery-related,.wv-policy-nav,.wv-growth-signin,.wv-character-card,.wv-event-submit) { background:var(--ww-paper-soft); border-color:var(--ww-line); }
 .dark .wv-support :is(h1,h2,h3,h4,h5) { color:var(--ww-ink); }
