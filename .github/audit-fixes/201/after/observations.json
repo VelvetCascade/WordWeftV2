@@ -1,0 +1,18 @@
+[
+  {
+    "width": 390,
+    "navigation": "chapter change clears quote and dialog",
+    "keyboard": "selection change → one action → Tab → Enter opens quote",
+    "focus": "returns to passage",
+    "invalid": "cleared/too long/outside prose do not retain quote",
+    "pointer": "one action and one quote dialog"
+  },
+  {
+    "width": 1440,
+    "navigation": "chapter change clears quote and dialog",
+    "keyboard": "selection change → one action → Tab → Enter opens quote",
+    "focus": "returns to passage",
+    "invalid": "cleared/too long/outside prose do not retain quote",
+    "pointer": "one action and one quote dialog"
+  }
+]
