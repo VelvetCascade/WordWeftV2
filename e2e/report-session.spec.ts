@@ -51,3 +51,16 @@ test('failed reports keep the draft available for a single retry',async({page,re
  await expect(page.getByRole('button',{name:'Close report form'})).toBeEnabled();
  await page.getByRole('button',{name:'Submit report',exact:true}).click();await expect(page.getByText('LOCAL-RETRY-188',{exact:true})).toBeVisible();expect(attempts).toBe(2);
 });
+
+for(const outcome of ['success','failure'])test(`parent replaces target while old ${outcome} is pending`,async({page})=>{
+ let release!:()=>void;const held=new Promise<void>(resolve=>release=resolve);let requested=false;
+ await page.route('**/api/reports',async route=>{requested=true;await held;await route.fulfill(outcome==='success'?{json:{ticketNumber:'OLD-RECEIPT'}}:{status:500,json:{message:'Old target failed'}});});
+ await page.goto('/e2e/report-harness.html');
+ await page.getByRole('radio',{name:/Spam or scam/}).check();await page.getByRole('button',{name:'Submit report',exact:true}).click();await expect.poll(()=>requested).toBe(true);
+ await page.evaluate(()=>window.postMessage('replace',location.origin));await expect(page.getByText('second',{exact:true})).toBeVisible();
+ release();await page.waitForResponse(response=>response.url().endsWith('/api/reports'));
+ await expect(page.getByText('OLD-RECEIPT',{exact:true})).toHaveCount(0);await expect(page.getByText('Old target failed',{exact:true})).toHaveCount(0);
+ await page.getByRole('radio',{name:/Spam or scam/}).check();await expect(page.getByRole('button',{name:'Submit report',exact:true})).toBeEnabled();
+ await page.evaluate(()=>window.postMessage('close',location.origin));await expect(page.getByRole('dialog')).toHaveCount(0);
+ await page.evaluate(()=>window.postMessage('open',location.origin));await expect(page.getByRole('button',{name:'Submit report',exact:true})).toBeDisabled();
+});
