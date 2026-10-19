@@ -1,0 +1,162 @@
+{
+  "rows": [
+    {
+      "surface": "book",
+      "theme": "light",
+      "width": 390,
+      "mode": "failed",
+      "key": "book-light-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Cover",
+        "fallback": false,
+        "broken": true,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "book",
+      "theme": "dark",
+      "width": 390,
+      "mode": "failed",
+      "key": "book-dark-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Cover",
+        "fallback": false,
+        "broken": true,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "light",
+      "width": 390,
+      "mode": "failed",
+      "key": "chapter-light-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Cover",
+        "fallback": false,
+        "broken": true,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "dark",
+      "width": 390,
+      "mode": "failed",
+      "key": "chapter-dark-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Cover",
+        "fallback": false,
+        "broken": true,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "light",
+      "width": 390,
+      "mode": "failed",
+      "key": "author-light-390-failed",
+      "initialBox": {
+        "x": 57,
+        "y": 284.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Avatar",
+        "fallback": false,
+        "broken": true,
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "dark",
+      "width": 390,
+      "mode": "failed",
+      "key": "author-dark-390-failed",
+      "initialBox": {
+        "x": 57,
+        "y": 284.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Avatar",
+        "fallback": false,
+        "broken": true,
+        "width": 64,
+        "height": 64
+      }
+    }
+  ],
+  "failures": [
+    {
+      "key": "book-light-390-failed",
+      "message": "No browser broken-image icon\n\ntrue !== false\n"
+    },
+    {
+      "key": "book-dark-390-failed",
+      "message": "No browser broken-image icon\n\ntrue !== false\n"
+    },
+    {
+      "key": "chapter-light-390-failed",
+      "message": "No browser broken-image icon\n\ntrue !== false\n"
+    },
+    {
+      "key": "chapter-dark-390-failed",
+      "message": "No browser broken-image icon\n\ntrue !== false\n"
+    },
+    {
+      "key": "author-light-390-failed",
+      "message": "No browser broken-image icon\n\ntrue !== false\n"
+    },
+    {
+      "key": "author-dark-390-failed",
+      "message": "No browser broken-image icon\n\ntrue !== false\n"
+    }
+  ]
+}

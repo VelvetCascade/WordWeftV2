@@ -1,0 +1,401 @@
+{
+  "rows": [
+    {
+      "surface": "book",
+      "theme": "light",
+      "width": 390,
+      "mode": "failed",
+      "key": "book-light-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "book",
+      "theme": "dark",
+      "width": 390,
+      "mode": "failed",
+      "key": "book-dark-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "book",
+      "theme": "light",
+      "width": 1440,
+      "mode": "missing",
+      "key": "book-light-1440-missing",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "book",
+      "theme": "light",
+      "width": 1440,
+      "mode": "empty",
+      "key": "book-light-1440-empty",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "book",
+      "theme": "light",
+      "width": 1440,
+      "mode": "valid",
+      "key": "book-light-1440-valid",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": false,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "book",
+      "theme": "light",
+      "width": 1440,
+      "mode": "slow",
+      "key": "book-light-1440-slow",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "light",
+      "width": 390,
+      "mode": "failed",
+      "key": "chapter-light-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "dark",
+      "width": 390,
+      "mode": "failed",
+      "key": "chapter-dark-390-failed",
+      "initialBox": {
+        "x": 47,
+        "y": 242,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "light",
+      "width": 1440,
+      "mode": "missing",
+      "key": "chapter-light-1440-missing",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "light",
+      "width": 1440,
+      "mode": "empty",
+      "key": "chapter-light-1440-empty",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "light",
+      "width": 1440,
+      "mode": "valid",
+      "key": "chapter-light-1440-valid",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": false,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "chapter",
+      "theme": "light",
+      "width": 1440,
+      "mode": "slow",
+      "key": "chapter-light-1440-slow",
+      "initialBox": {
+        "x": 526,
+        "y": 369,
+        "width": 64,
+        "height": 96
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Cover of The Last Spring in Bellweather",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 96
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "light",
+      "width": 390,
+      "mode": "failed",
+      "key": "author-light-390-failed",
+      "initialBox": {
+        "x": 57,
+        "y": 284.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Mira Ellery's avatar",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "dark",
+      "width": 390,
+      "mode": "failed",
+      "key": "author-dark-390-failed",
+      "initialBox": {
+        "x": 57,
+        "y": 284.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Mira Ellery's avatar",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "light",
+      "width": 1440,
+      "mode": "missing",
+      "key": "author-light-1440-missing",
+      "initialBox": {
+        "x": 537,
+        "y": 406.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Mira Ellery's avatar",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "light",
+      "width": 1440,
+      "mode": "empty",
+      "key": "author-light-1440-empty",
+      "initialBox": {
+        "x": 537,
+        "y": 406.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Mira Ellery's avatar",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "light",
+      "width": 1440,
+      "mode": "valid",
+      "key": "author-light-1440-valid",
+      "initialBox": {
+        "x": 537,
+        "y": 406.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "IMG",
+        "role": null,
+        "label": "Mira Ellery's avatar",
+        "fallback": false,
+        "broken": false,
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
+      "surface": "author",
+      "theme": "light",
+      "width": 1440,
+      "mode": "slow",
+      "key": "author-light-1440-slow",
+      "initialBox": {
+        "x": 537,
+        "y": 406.5,
+        "width": 64,
+        "height": 64
+      },
+      "state": {
+        "tag": "SPAN",
+        "role": "img",
+        "label": "Mira Ellery's avatar",
+        "fallback": true,
+        "broken": false,
+        "width": 64,
+        "height": 64
+      }
+    }
+  ],
+  "failures": []
+}
