@@ -183,7 +183,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                         role="combobox"
                         aria-autocomplete="list"
                         aria-controls={listboxId}
-                        aria-expanded={isOpen && hasSuggestions}
+                        aria-expanded={isOpen && (totalResults > 0 || isLoading)}
                         aria-activedescendant={activeOptionId}
                         aria-busy={isLoading}
                         data-dialog-focus
