@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+(node:44049) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog (9.6s)
+
+
+  1) e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 1
+
+      46 |     await update.scrollIntoViewIfNeeded();
+      47 |     if(process.env.AUDIT_PROOF_DIR) await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/edit-${proofWidth}.png`});
+    > 48 |     expect(await page.getByText('Your review is live!',{exact:true}).count()).toBe(0);
+         |                                                                               ^
+      49 |     // Check both the hit target and a real pointer/touch update.
+      50 |     expect(await update.evaluate(button=>{const r=button.getBoundingClientRect();return button.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))})).toBe(true);
+      51 |     if(process.env.AUDIT_MOBILE || process.env.AUDIT_LANDSCAPE)await update.tap();else await update.click();
+        at e2e/review-dialog-notice.spec.ts:48:79
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/review-dialog-notice-a-rec-e28a3-prompt-over-the-next-dialog/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/review-dialog-notice-a-rec-e28a3-prompt-over-the-next-dialog/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/review-dialog-notice-a-rec-e28a3-prompt-over-the-next-dialog/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/review-dialog-notice-a-rec-e28a3-prompt-over-the-next-dialog/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog 
