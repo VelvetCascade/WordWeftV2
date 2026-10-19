@@ -1,0 +1,5 @@
+{
+  "method": "PUT",
+  "path": "/api/users/profile",
+  "threads": "https://www.threads.com/@wordweft"
+}
