@@ -1,0 +1,42 @@
+{
+  "before": {
+    "height": 116,
+    "footerY": 612.1875,
+    "scrollY": 572,
+    "focusedHref": "/",
+    "shifts": [
+      {
+        "value": 0.00006037808641975309,
+        "hadRecentInput": false
+      },
+      {
+        "value": 0.02305679012345679,
+        "hadRecentInput": false
+      },
+      {
+        "value": 0.02305679012345679,
+        "hadRecentInput": false
+      }
+    ]
+  },
+  "after": {
+    "height": 116,
+    "footerY": 612.1875,
+    "scrollY": 572,
+    "focusedHref": "/",
+    "shifts": [
+      {
+        "value": 0.00006037808641975309,
+        "hadRecentInput": false
+      },
+      {
+        "value": 0.02305679012345679,
+        "hadRecentInput": false
+      },
+      {
+        "value": 0.02305679012345679,
+        "hadRecentInput": false
+      }
+    ]
+  }
+}

@@ -11515,8 +11515,10 @@ body,
     max-width: 100%;
 }
 
-.ww-ad-unit[data-load-state="empty"] {
-    display: none !important;
+.ww-ad-unit[data-collapsed="true"] {
+    height: 0;
+    margin-block: 0 !important;
+    padding-block: 0 !important;
 }
 
 /* The landing-page demo is a composed reading scene, not a color swatch. */

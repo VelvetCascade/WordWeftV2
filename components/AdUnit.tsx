@@ -20,20 +20,16 @@ declare global {
 }
 
 const PUBLISHER_ID = 'ca-pub-2048279980945962';
-let adsenseScriptLoaded = false;
-
-const loadAdsenseScript = (): void => {
-  if (adsenseScriptLoaded) return;
-  if (document.querySelector(`script[src*="adsbygoogle"]`)) {
-    adsenseScriptLoaded = true;
-    return;
-  }
+const loadAdsenseScript = (): HTMLScriptElement => {
+  const existing = document.querySelector<HTMLScriptElement>('script[src*="adsbygoogle"]');
+  if (existing) return existing;
   const script = document.createElement('script');
   script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUBLISHER_ID}`;
   script.async = true;
   script.crossOrigin = 'anonymous';
+  script.addEventListener('error', () => { script.dataset.wwFailed = 'true'; });
   document.head.appendChild(script);
-  adsenseScriptLoaded = true;
+  return script;
 };
 
 interface AdUnitProps {
@@ -45,20 +41,38 @@ interface AdUnitProps {
 
 const AdUnit: React.FC<AdUnitProps> = ({ format = 'horizontal', className = '' }) => {
   const adRef = useRef<HTMLModElement>(null);
+  const slotRef = useRef<HTMLDivElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
   const pushed = useRef(false);
   const [loadState, setLoadState] = useState<'pending' | 'filled' | 'empty'>('pending');
 
   useEffect(() => {
-    loadAdsenseScript();
-
+    const script = loadAdsenseScript();
     const ad = adRef.current;
+    let empty = false;
+    const settleGeometry = () => {
+      const slot = slotRef.current;
+      // Changes below the viewport cannot move current content or scroll anchors.
+      // Above-viewport collapses can still change scrollY, so retain those too.
+      if (slot && slot.getBoundingClientRect().top >= window.innerHeight) setCollapsed(empty);
+    };
+    const markEmpty = () => {
+      if (ad?.getAttribute('data-ad-status') === 'filled') return;
+      empty = true; setLoadState('empty'); settleGeometry();
+    };
     const updateLoadState = () => {
       const status = ad?.getAttribute('data-ad-status');
-      if (status === 'filled') setLoadState('filled');
-      if (status === 'unfilled') setLoadState('empty');
+      if (status === 'filled') { empty = false; setLoadState('filled'); settleGeometry(); }
+      if (status === 'unfilled') markEmpty();
     };
     const observer = ad ? new MutationObserver(updateLoadState) : null;
     if (ad && observer) observer.observe(ad, { attributes: true, attributeFilter: ['data-ad-status'] });
+
+    script.addEventListener('error', markEmpty);
+    if (script.dataset.wwFailed === 'true') markEmpty();
+    updateLoadState();
+    window.addEventListener('scroll', settleGeometry, { passive: true });
+    window.addEventListener('resize', settleGeometry);
 
     // Small delay to ensure the script has loaded before pushing.
     const timer = setTimeout(() => {
@@ -72,16 +86,17 @@ const AdUnit: React.FC<AdUnitProps> = ({ format = 'horizontal', className = '' }
       }
     }, 300);
 
-    // Ad blockers and failed networks often never set data-ad-status. Collapse
-    // that unresolved slot so it cannot leave a large blank hole in the page.
-    const emptyFallback = window.setTimeout(() => {
-      if (ad?.getAttribute('data-ad-status') !== 'filled') setLoadState('empty');
-    }, 7000);
+    // Networks/ad blockers may never report a status. Mark unavailable now,
+    // but defer geometry changes until the slot is safely below the viewport.
+    const emptyFallback = window.setTimeout(markEmpty, 7000);
 
     return () => {
       clearTimeout(timer);
       window.clearTimeout(emptyFallback);
       observer?.disconnect();
+      script.removeEventListener('error', markEmpty);
+      window.removeEventListener('scroll', settleGeometry);
+      window.removeEventListener('resize', settleGeometry);
     };
   }, []);
 
@@ -105,9 +120,12 @@ const AdUnit: React.FC<AdUnitProps> = ({ format = 'horizontal', className = '' }
 
   return (
     <div
+      ref={slotRef}
       className={`ww-ad-unit ${className}`}
+      data-collapsed={collapsed}
       data-load-state={loadState}
-      aria-hidden={loadState === 'empty'}
+      aria-hidden={loadState === 'empty' || collapsed}
+      inert={collapsed ? true : undefined}
       style={{
         margin: '32px auto',
         maxWidth: '1100px',
