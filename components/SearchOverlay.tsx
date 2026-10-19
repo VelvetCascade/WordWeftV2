@@ -2,7 +2,7 @@ import { navigatePath } from '../utils/navigation';
 import { useDialog } from '../hooks/useDialog';
 import { useDelayedFlag, usePresence } from '../hooks/usePresence';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useId } from 'react';
 import type { SearchBookResult, SearchAuthorResult } from '../types';
 import * as api from '../api/client';
 import { StarIcon } from './icons/Icons';
@@ -32,8 +32,22 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     const requestGateRef = useRef<ReturnType<typeof createLatestRequestGate> | null>(null);
     if (!requestGateRef.current) requestGateRef.current = createLatestRequestGate();
 
+    const suggestionId = useId();
+    const listboxId = `${suggestionId}-suggestions`;
+    const optionId = (index: number) => `${suggestionId}-option-${index}`;
+    const resultsRef = useRef<HTMLDivElement>(null);
     const totalResults = books.length + authors.length;
     const suggestionsPending = isLoading || resultQuery !== query.trim();
+
+    const hasSuggestions = !suggestionsPending && totalResults > 0;
+    const activeOptionId = isOpen && hasSuggestions && selectedIndex >= 0 && selectedIndex < totalResults
+        ? optionId(selectedIndex) : undefined;
+
+    useEffect(() => {
+        if (activeOptionId) {
+            resultsRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+        }
+    }, [activeOptionId]);
 
     // Focus input when overlay opens
     useEffect(() => {
@@ -111,6 +125,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (suggestionsPending) return;
@@ -165,6 +180,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                         autoComplete="off"
                         spellCheck={false}
                         aria-label="Search stories and people"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-controls={listboxId}
+                        aria-expanded={isOpen && hasSuggestions}
+                        aria-activedescendant={activeOptionId}
                         aria-busy={isLoading}
                         data-dialog-focus
                     />
@@ -177,8 +197,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                 <div className="ww-search-progress" role="status">{showLoading && <><span className="search-overlay-spinner" aria-hidden="true" /><span>Searching…</span></>}</div>
 
                 {/* Results */}
-                {(books.length > 0 || authors.length > 0 || isLoading) && (
-                    <div className="search-overlay-results" id="search-overlay-results" aria-busy={isLoading}>
+                    <div className="search-overlay-results" id="search-overlay-results" aria-busy={isLoading} ref={resultsRef} hidden={totalResults === 0 && !isLoading}>
+                        <div id={listboxId} role="listbox" aria-label="Story and people suggestions">
 
                         {/* Books Section */}
                         {books.length > 0 && (
@@ -193,6 +213,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                     <button
                                         type="button"
                                         key={book.id}
+                                        id={optionId(i)}
+                                        role="option"
+                                        aria-selected={activeOptionId === optionId(i)}
+                                        tabIndex={-1}
                                         disabled={suggestionsPending}
                                         className={`search-overlay-item ${selectedIndex === i ? 'search-overlay-item-active' : ''}`}
                                         onClick={() => navigateToBook(book.id)}
@@ -248,6 +272,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                                         <button
                                             type="button"
                                         key={author.id}
+                                            id={optionId(idx)}
+                                            role="option"
+                                            aria-selected={activeOptionId === optionId(idx)}
+                                            tabIndex={-1}
                                         disabled={suggestionsPending}
                                             className={`search-overlay-item ${selectedIndex === idx ? 'search-overlay-item-active' : ''}`}
                                             onClick={() => navigateToAuthor(author.id)}
@@ -279,6 +307,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                             </div>
                         )}
 
+                        </div>
+
                         {/* Footer hint */}
                         {totalResults > 0 && (
                             <button className="search-overlay-footer" onClick={navigateToFullSearch}>
@@ -290,7 +320,6 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                             </button>
                         )}
                     </div>
-                )}
 
                 {searchError && (
                     <div className="search-overlay-error" role="alert">
