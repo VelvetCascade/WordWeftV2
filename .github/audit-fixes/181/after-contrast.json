@@ -1,0 +1,453 @@
+{
+  "results": [
+    {
+      "state": "light-1440-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            89,
+            99,
+            91
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 5.498586997031821,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 0
+}

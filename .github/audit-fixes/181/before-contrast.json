@@ -1,0 +1,541 @@
+{
+  "results": [
+    {
+      "state": "light-1440-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".fw-section-heading > p"
+            ],
+            [
+              ".fw-field:nth-child(2) > small"
+            ],
+            [
+              "fieldset:nth-child(2) > .fw-field-grid > .fw-field-wide.fw-field > small"
+            ],
+            [
+              "em"
+            ],
+            [
+              "fieldset:nth-child(3) > .fw-field-grid > .fw-field-wide.fw-field:nth-child(5) > small"
+            ],
+            [
+              ".fw-submit-row > p"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "em"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".fw-section-heading > p"
+            ],
+            [
+              ".fw-field:nth-child(2) > small"
+            ],
+            [
+              "fieldset:nth-child(2) > .fw-field-grid > .fw-field-wide.fw-field > small"
+            ],
+            [
+              "em"
+            ],
+            [
+              "fieldset:nth-child(3) > .fw-field-grid > .fw-field-wide.fw-field:nth-child(5) > small"
+            ],
+            [
+              ".fw-submit-row > p"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            108,
+            113,
+            109
+          ],
+          "background": [
+            237,
+            242,
+            233
+          ],
+          "ratio": 4.378242507891656,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "em"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.37 (foreground color: #6c716d, background color: #edf2e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-helpers",
+      "selector": ".fw-form-heading p, .fw-field small, .fw-field em, .fw-submit-row p",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-counter",
+      "selector": ".fw-field em",
+      "samples": [
+        {
+          "foreground": [
+            178,
+            174,
+            166
+          ],
+          "background": [
+            34,
+            38,
+            38
+          ],
+          "ratio": 6.916477949734814,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 4
+}
