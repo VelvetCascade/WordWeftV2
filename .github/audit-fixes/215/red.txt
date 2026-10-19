@@ -6,7 +6,7 @@ Running 1 test using 1 worker
   ✘  1 e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog (9.6s)
 
 
-  1) e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog 
+  1) e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog
 
     Error: expect(received).toBe(expected) // Object.is equality
 
@@ -37,4 +37,4 @@ Running 1 test using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
   1 failed
-    e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog 
+    e2e/review-dialog-notice.spec.ts:35:1 › a recently saved review does not leave its share prompt over the next dialog
