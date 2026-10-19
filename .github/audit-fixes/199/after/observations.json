@@ -1,0 +1,38 @@
+[
+  {
+    "width": 390,
+    "kind": "quote",
+    "cancellation": "no downloads or failure notice",
+    "pending": "one request",
+    "unsupported": "one valid PNG matching preview",
+    "failure": "one valid PNG with fallback status",
+    "nativeSuccess": "no download"
+  },
+  {
+    "width": 390,
+    "kind": "author",
+    "cancellation": "no downloads or failure notice",
+    "pending": "one request",
+    "unsupported": "one valid PNG matching preview",
+    "failure": "one valid PNG with fallback status",
+    "nativeSuccess": "no download"
+  },
+  {
+    "width": 1440,
+    "kind": "quote",
+    "cancellation": "no downloads or failure notice",
+    "pending": "one request",
+    "unsupported": "one valid PNG matching preview",
+    "failure": "one valid PNG with fallback status",
+    "nativeSuccess": "no download"
+  },
+  {
+    "width": 1440,
+    "kind": "author",
+    "cancellation": "no downloads or failure notice",
+    "pending": "one request",
+    "unsupported": "one valid PNG matching preview",
+    "failure": "one valid PNG with fallback status",
+    "nativeSuccess": "no download"
+  }
+]
