@@ -1,0 +1,453 @@
+{
+  "results": [
+    {
+      "state": "light-390-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            104,
+            102,
+            96
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 5.370322855414439,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 7.9564367950483526,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-390-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            104,
+            102,
+            96
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 5.370322855414439,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 7.9564367950483526,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            188,
+            170,
+            164
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 6.336257613978237,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            216,
+            195,
+            148
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 8.17121397413617,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            188,
+            170,
+            164
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 6.336257613978237,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            216,
+            195,
+            148
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 8.17121397413617,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 0
+}

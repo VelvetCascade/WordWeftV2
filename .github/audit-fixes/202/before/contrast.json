@@ -1,0 +1,477 @@
+{
+  "results": [
+    {
+      "state": "light-390-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 2.375024523003975,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 7.9564367950483526,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".border-transparent"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f7f7f7, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "light-1440-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 2.375024523003975,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            107,
+            67,
+            47
+          ],
+          "background": [
+            247.27,
+            247.25,
+            247.19
+          ],
+          "ratio": 7.9564367950483526,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".border-transparent"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #9ca3af, background color: #f7f7f7, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            75,
+            85,
+            99
+          ],
+          "background": [
+            243,
+            244,
+            246
+          ],
+          "ratio": 6.86712857158153,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 5.561227714414099,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            216,
+            195,
+            148
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 8.17121397413617,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-tabs",
+      "selector": ".ww-share-dialog > div:nth-child(2) button",
+      "samples": [
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 5.561227714414099,
+          "fontSize": "14px"
+        },
+        {
+          "foreground": [
+            216,
+            195,
+            148
+          ],
+          "background": [
+            59.54,
+            37.83,
+            33.910000000000004
+          ],
+          "ratio": 8.17121397413617,
+          "fontSize": "14px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-themes",
+      "selector": ".ww-share-content .flex.gap-2.mb-4 button",
+      "samples": [
+        {
+          "foreground": [
+            255,
+            255,
+            255
+          ],
+          "background": [
+            107,
+            67,
+            47
+          ],
+          "ratio": 8.505229902794541,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        },
+        {
+          "foreground": [
+            156,
+            163,
+            175
+          ],
+          "background": [
+            25,
+            28,
+            28
+          ],
+          "ratio": 6.756625878328484,
+          "fontSize": "12px"
+        }
+      ],
+      "axe": []
+    }
+  ],
+  "failures": 2
+}

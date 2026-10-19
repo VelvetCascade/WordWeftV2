@@ -1,0 +1,562 @@
+[
+  {
+    "theme": "light",
+    "width": 390,
+    "quickState": [
+      null,
+      null
+    ],
+    "quoteState": [
+      null,
+      null
+    ],
+    "choices": [
+      {
+        "name": "Obsidian",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Espresso",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Linen",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Rosewood",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Gallery",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      }
+    ],
+    "exports": 0
+  },
+  {
+    "theme": "light",
+    "width": 1440,
+    "quickState": [
+      null,
+      null
+    ],
+    "quoteState": [
+      null,
+      null
+    ],
+    "choices": [
+      {
+        "name": "Obsidian",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Espresso",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Linen",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Rosewood",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Gallery",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      }
+    ],
+    "exports": 0
+  },
+  {
+    "theme": "dark",
+    "width": 390,
+    "quickState": [
+      null,
+      null
+    ],
+    "quoteState": [
+      null,
+      null
+    ],
+    "choices": [
+      {
+        "name": "Obsidian",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Espresso",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Linen",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Rosewood",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Gallery",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      }
+    ],
+    "exports": 0
+  },
+  {
+    "theme": "dark",
+    "width": 1440,
+    "quickState": [
+      null,
+      null
+    ],
+    "quoteState": [
+      null,
+      null
+    ],
+    "choices": [
+      {
+        "name": "Obsidian",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Espresso",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Linen",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Rosewood",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      },
+      {
+        "name": "Gallery",
+        "states": [
+          {
+            "name": "Obsidian",
+            "pressed": null
+          },
+          {
+            "name": "Espresso",
+            "pressed": null
+          },
+          {
+            "name": "Linen",
+            "pressed": null
+          },
+          {
+            "name": "Rosewood",
+            "pressed": null
+          },
+          {
+            "name": "Gallery",
+            "pressed": null
+          }
+        ]
+      }
+    ],
+    "exports": 0
+  }
+]
