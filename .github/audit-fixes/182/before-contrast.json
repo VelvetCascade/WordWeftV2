@@ -358,6 +358,27 @@
       ]
     },
     {
+      "state": "light-1440-refresh-button",
+      "selector": ".ac-topbar button",
+      "samples": [
+        {
+          "foreground": [
+            50,
+            39,
+            33
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.504859691251657,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
       "state": "light-1440-updated",
       "selector": ".ac-as-of",
       "samples": [
@@ -1174,6 +1195,27 @@
       ]
     },
     {
+      "state": "light-390-refresh-button",
+      "selector": ".ac-topbar button",
+      "samples": [
+        {
+          "foreground": [
+            50,
+            39,
+            33
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.504859691251657,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": []
+    },
+    {
       "state": "light-390-updated",
       "selector": ".ac-as-of",
       "samples": [
@@ -1982,6 +2024,39 @@
       ]
     },
     {
+      "state": "dark-1440-refresh-button",
+      "selector": ".ac-topbar button",
+      "samples": [
+        {
+          "foreground": [
+            243,
+            236,
+            229
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 1.1705328765763023,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "header > button"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #f3ece5, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
       "state": "dark-1440-updated",
       "selector": ".ac-as-of",
       "samples": [
@@ -2762,6 +2837,39 @@
       ]
     },
     {
+      "state": "dark-390-refresh-button",
+      "selector": ".ac-topbar button",
+      "samples": [
+        {
+          "foreground": [
+            243,
+            236,
+            229
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 1.1705328765763023,
+          "fontSize": "11px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "header > button"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 1.17 (foreground color: #f3ece5, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
       "state": "dark-390-updated",
       "selector": ".ac-as-of",
       "samples": [
@@ -3193,5 +3301,5 @@
       ]
     }
   ],
-  "failures": 14
+  "failures": 16
 }
