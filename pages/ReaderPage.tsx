@@ -20,7 +20,7 @@ import { ShareModal } from '../components/ShareModal';
 import { ChapterDisclaimerModal } from '../components/ChapterDisclaimerModal';
 import { ReportModal } from '../components/ReportModal';
 import parse, { attributesToProps, domToReact } from 'html-react-parser';
-import { replaceReaderChapter, returnToStory } from '../utils/navigation';
+import { navigatePath, replaceReaderChapter, returnToStory } from '../utils/navigation';
 import { readReaderPreferences } from '../utils/runtimeLifecycle';
 import { readLampMode, type LampReadingMode } from '../utils/lampReading';
 import { ReaderLamp } from '../components/ReaderLamp';
@@ -50,6 +50,19 @@ interface ReaderPageProps {
     currentUser: User | null;
     onUserUpdate: (user: User) => void;
 }
+
+// Keep local profile navigation inside the router even when a surrounding
+// discussion dialog/card stops bubbling. Modified clicks retain native behavior.
+const openDiscussionAuthor = (event: React.MouseEvent<HTMLAnchorElement>, fromDrawer = false) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (fromDrawer) {
+        const source = new URL(window.location.href);
+        source.searchParams.set('discussion', 'all');
+        window.history.replaceState(window.history.state, '', source.pathname + source.search);
+    }
+    navigatePath(event.currentTarget.getAttribute('href')!);
+};
 
 const CommentItem: React.FC<{
     comment: Comment;
@@ -87,21 +100,23 @@ const CommentItem: React.FC<{
 
             <div className={`bg-gray-50 dark:bg-dark-surface-alt p-3 rounded-xl border border-transparent ${isReplying ? 'border-accent/50' : ''}`}>
                 <div className="flex items-start gap-2 mb-1">
-                    <ResilientImage
-                        src={comment.user.avatarUrl}
-                        alt={comment.user.name}
-                        fallbackLabel={comment.user.name}
-                        className="w-6 h-6 rounded-full flex-shrink-0 cursor-pointer"
-                        onClick={() => window.location.hash = `/author/${comment.user.id}`}
-                    />
+                    <a href={`/author/${encodeURIComponent(comment.user.id)}`} aria-label={`${comment.user.name}'s profile`} className="flex-shrink-0" onClick={event => openDiscussionAuthor(event, true)}>
+                        <ResilientImage
+                            src={comment.user.avatarUrl}
+                            alt=""
+                            fallbackLabel={comment.user.name}
+                            className="w-6 h-6 rounded-full"
+                        />
+                    </a>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                            <span
-                                className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich truncate cursor-pointer hover:text-accent"
-                                onClick={() => window.location.hash = `/author/${comment.user.id}`}
+                            <a
+                                href={`/author/${encodeURIComponent(comment.user.id)}`}
+                                className="font-sans font-bold text-xs text-text-rich dark:text-dark-text-rich truncate hover:text-accent"
+                                onClick={event => openDiscussionAuthor(event, true)}
                             >
                                 {comment.user.name}
-                            </span>
+                            </a>
                             <span className="text-[10px] text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm text-text-body dark:text-dark-text-body mt-1 break-words">{comment.content}</p>
@@ -1214,20 +1229,18 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                                     onClick={() => openCommentDrawer(comment.paragraphIndex)}
                                 >
                                     <div className="flex items-start gap-4">
-                                        <ResilientImage
-                                            src={comment.user.avatarUrl}
-                                            alt={comment.user.name}
-                                            fallbackLabel={comment.user.name}
-                                            className="w-10 h-10 rounded-full flex-shrink-0 cursor-pointer"
-                                            onClick={(e) => { e.stopPropagation(); window.location.hash = `/author/${comment.user.id}`; }}
-                                        />
+                                        <a href={`/author/${encodeURIComponent(comment.user.id)}`} aria-label={`${comment.user.name}'s profile`} className="flex-shrink-0" onClick={event => { event.stopPropagation(); openDiscussionAuthor(event); }}>
+                                            <ResilientImage
+                                                src={comment.user.avatarUrl}
+                                                alt=""
+                                                fallbackLabel={comment.user.name}
+                                                className="w-10 h-10 rounded-full"
+                                            />
+                                        </a>
                                         <div className="flex-1">
                                             <div className="flex items-baseline justify-between">
-                                                <h4
-                                                    className="reader-discussion-author font-sans font-bold cursor-pointer"
-                                                    onClick={(e) => { e.stopPropagation(); window.location.hash = `/author/${comment.user.id}`; }}
-                                                >
-                                                    {comment.user.name}
+                                                <h4 className="reader-discussion-author font-sans font-bold">
+                                                    <a href={`/author/${encodeURIComponent(comment.user.id)}`} onClick={event => { event.stopPropagation(); openDiscussionAuthor(event); }}>{comment.user.name}</a>
                                                 </h4>
                                                 <span className="reader-discussion-date text-xs">{new Date(comment.createdAt).toLocaleDateString()}</span>
                                             </div>
