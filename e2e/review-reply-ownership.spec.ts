@@ -3,7 +3,7 @@ import { test, expect, type Page } from './fixtures';
 if (process.env.AUDIT_MOBILE) test.use({ viewport: {width:390,height:844}, isMobile:true, hasTouch:true });
 
 const reviews = [{ id: 'review-one', userId: 'other-reader', user: { id: 'other-reader', name: 'Synthetic Reviewer', avatarUrl: '/favicon.svg' }, rating: 4, comment: 'A memorable synthetic crossing.', date: '2026-01-01', replies: [] }];
-async function story(page: Page) {
+async function story(page: Page, initialReviews = reviews) {
     await page.addInitScript(() => {
         localStorage.setItem('wordweft_jwt', 'synthetic-local-token');
         localStorage.setItem('ww_welcomeJourneyCompleted', 'true');
@@ -17,7 +17,7 @@ async function story(page: Page) {
             id: path.split('/').pop(), title: path.endsWith('two') ? 'The second crossing' : 'The first crossing', summary: 'A synthetic story.',
             author: { id: 'reply-writer', name: 'Synthetic Writer', avatarUrl: '/favicon.svg', bio: '' }, coverUrl: '/favicon.svg', genres: ['Fantasy'], tags: [], publicationStatus: 'published', readingStatus: 'Ongoing', ageRating: 'ALL_AGES', rating: 4, reviewsCount: 1, viewCount: 0, likesCount: 0, commentCount: 0, chapters: [],
         } });
-        if (path.endsWith('/reviews')) return route.fulfill({ json: path.includes('story-two') ? [{...reviews[0], id:'review-two', comment:'A separate second story review.'}] : reviews });
+        if (path.endsWith('/reviews')) return route.fulfill({ json: path.includes('story-two') ? [{...reviews[0], id:'review-two', comment:'A separate second story review.'}] : initialReviews });
         if (path.includes('/reading/progress')) return route.fulfill({ json: null });
         if (path.endsWith('/unread-count')) return route.fulfill({ json: 0 });
         if (path.endsWith('/notifications/stream')) return route.fulfill({ contentType: 'text/event-stream', body: '' });
@@ -25,7 +25,7 @@ async function story(page: Page) {
     });
     await page.goto('/book/reply-story');
     await page.getByRole('button', { name: /^Reviews/ }).click();
-    await page.locator('.ww-story-review-item').getByRole('button', { name: 'Reply', exact: true }).click();
+    await page.locator('.ww-story-review-item').first().getByRole('button', { name: 'Reply', exact: true }).click();
 }
 
 for (const failure of ['http', 'offline', 'malformed'] as const) test(`review reply owns one request and recovers from ${failure}`, async ({ page }) => {
@@ -82,4 +82,41 @@ test('an older review reply cannot populate the newly selected story', async ({p
         await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
         await expect(page.getByText('A separate second story review.',{exact:true})).toBeVisible();await expect(page.getByText('STALE first story response')).toHaveCount(0);
     } finally {release()}
+});
+
+
+test('reordered replies on two reviews preserve both saved conversations', async ({page}) => {
+    const parallelReviews = [1, 2].map(n => ({ ...reviews[0], id: `parallel-review-${n}`, comment: `Parallel review ${n}` }));
+    await story(page, parallelReviews);
+    let releaseFirst!: () => void, releaseSecond!: () => void;
+    const firstGate = new Promise<void>(resolve => { releaseFirst = resolve; });
+    const secondGate = new Promise<void>(resolve => { releaseSecond = resolve; });
+    const requests: string[] = [];
+    const savedReply = (n: number) => ({ id: `parallel-reply-${n}`, user: {id:'reply-reader',name:'Synthetic Reader',avatarUrl:'/favicon.svg'}, content:`Saved parallel reply ${n}`, timestamp:'2026-01-02' });
+    await page.route('**/api/books/reply-story/reviews/parallel-review-*/reply', async route => {
+        const first = route.request().url().includes('parallel-review-1/');
+        requests.push(first ? 'review-1' : 'review-2');
+        await (first ? firstGate : secondGate);
+        // The first snapshot predates mutation 2, but arrives last.
+        return route.fulfill({json: parallelReviews.map((review, i) => ({...review, replies: i === 0 || !first ? [savedReply(i + 1)] : []}))});
+    });
+    const items = page.locator('.ww-story-review-item');
+    try {
+        await items.nth(0).locator('textarea').fill('Saved parallel reply 1');
+        await items.nth(0).getByRole('button',{name:'Post Reply',exact:true}).click();
+        await items.nth(1).getByRole('button',{name:'Reply',exact:true}).click();
+        await items.nth(1).locator('textarea').fill('Saved parallel reply 2');
+        await items.nth(1).getByRole('button',{name:'Post Reply',exact:true}).click();
+        await expect.poll(() => requests.length).toBe(2);
+        expect(requests).toEqual(['review-1','review-2']);
+        releaseSecond();
+        await expect(items.nth(1).getByText('Saved parallel reply 2',{exact:true})).toBeVisible();
+        await expect(items.nth(1).locator('form')).toHaveCount(0);
+        releaseFirst();
+        await expect(items.nth(0).locator('form')).toHaveCount(0);
+        await expect(items.nth(0).getByText('Saved parallel reply 1',{exact:true})).toBeVisible();
+        if (process.env.AUDIT_PROOF_DIR) await page.locator('.ww-story-review-item').first().locator('..').screenshot({path:`${process.env.AUDIT_PROOF_DIR}/reordered-${process.env.AUDIT_MOBILE ? '390':'1440'}.png`});
+        console.log(JSON.stringify({requests, responseOrder:['review-2','review-1'], firstReplyVisible: await items.nth(0).getByText('Saved parallel reply 1',{exact:true}).count(), secondReplyVisible: await items.nth(1).getByText('Saved parallel reply 2',{exact:true}).count(), secondFormCleared:await items.nth(1).locator('form').count() === 0}));
+        await expect(items.nth(1).getByText('Saved parallel reply 2',{exact:true})).toBeVisible();
+    } finally { releaseFirst(); releaseSecond(); }
 });

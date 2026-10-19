@@ -498,7 +498,15 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
         if (!currentUser) return;
         const scope = bookAccessKey;
         const updatedReviews = await api.replyToReview(currentUser.id, bookId, reviewId, content);
-        if (activeReplyScope.current === scope) setAllReviews(updatedReviews);
+        if (activeReplyScope.current !== scope) return;
+        const updatedReview = updatedReviews.find(review => review.id === reviewId);
+        if (!updatedReview || !Array.isArray(updatedReview.replies)) throw new Error('Your reply could not be confirmed. Please try again.');
+        // Reply responses contain a whole-list snapshot. Only reconcile the
+        // requested review so an older response cannot undo another composer.
+        setAllReviews(previous => previous.map(review => review.id === reviewId ? {
+            ...review,
+            replies: [...new Map([...review.replies, ...updatedReview.replies].map(reply => [reply.id, reply])).values()],
+        } : review));
     };
 
     const handleToggleChapterLike = async (chapterId: string) => {
