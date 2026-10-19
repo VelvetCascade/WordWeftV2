@@ -259,6 +259,14 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
     const [pendingChapterLikes, setPendingChapterLikes] = useState<Set<string>>(new Set());
     const reviewDialogRef = useDialog(isReviewComposeOpen, () => setIsReviewComposeOpen(false), pendingAction !== 'save-review');
     const shelvesDialogRef = useDialog(isManageShelvesModalOpen, () => setIsManageShelvesModalOpen(false), !isSavingShelves);
+    const hasActiveStoryDialog = isReviewComposeOpen || isShareModalOpen || isManageShelvesModalOpen || isReportModalOpen || confirmation !== null;
+    useEffect(() => { if (hasActiveStoryDialog) setShowReviewShareNudge(false); }, [hasActiveStoryDialog]);
+    useEffect(() => { setShowReviewShareNudge(false); }, [bookId]);
+    useEffect(() => {
+        if (!showReviewShareNudge) return;
+        const timer = window.setTimeout(() => setShowReviewShareNudge(false), 10000);
+        return () => window.clearTimeout(timer);
+    }, [showReviewShareNudge]);
 
     const openManageShelvesModal = () => {
         if (!currentUser) return;
@@ -449,7 +457,6 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             setIsEditingReview(false);
             setIsReviewComposeOpen(false);
             setShowReviewShareNudge(true);
-            setTimeout(() => setShowReviewShareNudge(false), 10000);
         } catch (error) {
             setActionError(error instanceof Error ? error.message : 'Your review could not be saved.');
         } finally {
@@ -782,8 +789,8 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
             />
 
             {/* R2: Post-review share nudge */}
-            {showReviewShareNudge && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border shadow-lifted rounded-2xl px-5 py-4 flex items-start gap-4 animate-fade-in">
+            {showReviewShareNudge && !hasActiveStoryDialog && (
+                <div className="ww-review-share-nudge fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border shadow-lifted rounded-2xl px-5 py-4 flex items-start gap-4 animate-fade-in">
                     <CheckCircleIcon className="w-6 h-6 text-success flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm text-text-rich dark:text-dark-text-rich">Your review is live!</p>
@@ -791,19 +798,19 @@ export const BookDetailsPage: React.FC<BookDetailsPageProps> = ({ bookId, curren
                         <div className="flex gap-3 mt-2">
                             <button
                                 onClick={() => { setShowReviewShareNudge(false); setIsShareModalOpen(true); }}
-                                className="text-sm font-bold text-accent hover:underline"
+                                className="text-sm font-bold text-accent dark:text-dark-text-rich hover:underline"
                             >
                                 Share this Book
                             </button>
                             <button
                                 onClick={() => setShowReviewShareNudge(false)}
-                                className="text-sm text-gray-400 hover:text-text-body dark:hover:text-dark-text-body"
+                                className="text-sm text-text-body dark:text-dark-text-body hover:underline"
                             >
                                 Maybe Later
                             </button>
                         </div>
                     </div>
-                    <button onClick={() => setShowReviewShareNudge(false)} className="text-gray-400 hover:text-text-body flex-shrink-0">
+                    <button aria-label="Dismiss review sharing suggestion" onClick={() => setShowReviewShareNudge(false)} className="text-text-body dark:text-dark-text-body flex-shrink-0">
                         <XMarkIcon className="w-4 h-4" />
                     </button>
                 </div>
