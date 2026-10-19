@@ -1,0 +1,3197 @@
+{
+  "results": [
+    {
+      "state": "light-1440-overview",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.846293627271624,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-as-of"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            [
+              "footer"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-updated",
+      "selector": ".ac-as-of",
+      "samples": [
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".ac-as-of"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-error",
+      "selector": ".ac-intro .ac-kicker, .ac-as-of, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.846293627271624,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".ac-kicker"
+            ],
+            [
+              ".ac-as-of"
+            ],
+            [
+              "footer"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-1440-empty",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.846293627271624,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-as-of"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            [
+              "footer"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-overview",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.846293627271624,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-as-of"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            [
+              "footer"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-updated",
+      "selector": ".ac-as-of",
+      "samples": [
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".ac-as-of"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-error",
+      "selector": ".ac-intro .ac-kicker, .ac-as-of, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.846293627271624,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".ac-kicker"
+            ],
+            [
+              ".ac-as-of"
+            ],
+            [
+              "footer"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "light-390-empty",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.846293627271624,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 3.421557317552239,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.48685912533879,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            255,
+            253,
+            250
+          ],
+          "ratio": 4.267771783686161,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            244,
+            241,
+            236
+          ],
+          "ratio": 3.252198448810863,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-as-of"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ],
+            [
+              "footer"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.84 (foreground color: #9a705c, background color: #f4f1ec, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.42 (foreground color: #95877e, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #82736a, background color: #fffdfa, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #9a705c, background color: #fffdfa, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.25 (foreground color: #91837a, background color: #f4f1ec, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-overview",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 3.8605140626521046,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-updated",
+      "selector": ".ac-as-of",
+      "samples": [
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-1440-error",
+      "selector": ".ac-intro .ac-kicker, .ac-as-of, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 3.8605140626521046,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".ac-kicker"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-1440-empty",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 3.8605140626521046,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-390-overview",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 3.8605140626521046,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-390-updated",
+      "selector": ".ac-as-of",
+      "samples": [
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": []
+    },
+    {
+      "state": "dark-390-error",
+      "selector": ".ac-intro .ac-kicker, .ac-as-of, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 3.8605140626521046,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              ".ac-kicker"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    },
+    {
+      "state": "dark-390-empty",
+      "selector": ".ac-kicker, .ac-as-of, .ac-metric small, .ac-chart-day > span, .ac-footer",
+      "samples": [
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 3.8605140626521046,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            149,
+            135,
+            126
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 4.42033913141442,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            130,
+            115,
+            106
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.3708309707654385,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            154,
+            112,
+            92
+          ],
+          "background": [
+            41,
+            36,
+            32
+          ],
+          "ratio": 3.5438735873759,
+          "fontSize": "10px"
+        },
+        {
+          "foreground": [
+            145,
+            131,
+            122
+          ],
+          "background": [
+            33,
+            29,
+            26
+          ],
+          "ratio": 4.56573326347922,
+          "fontSize": "10px"
+        }
+      ],
+      "axe": [
+        {
+          "id": "color-contrast",
+          "targets": [
+            [
+              "p:nth-child(1)"
+            ],
+            [
+              ".ac-metric:nth-child(1) > small"
+            ],
+            [
+              ".ac-metric:nth-child(2) > small"
+            ],
+            [
+              ".ac-metric:nth-child(3) > small"
+            ],
+            [
+              ".ac-metric:nth-child(4) > small"
+            ],
+            [
+              ".ac-metric:nth-child(5) > small"
+            ],
+            [
+              ".ac-metric:nth-child(6) > small"
+            ],
+            [
+              ".ac-activity > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-chart-day:nth-child(1) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(2) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(3) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(4) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(5) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(6) > span"
+            ],
+            [
+              ".ac-chart-day:nth-child(7) > span"
+            ],
+            [
+              "section:nth-child(2) > .ac-panel-heading > div > .ac-kicker"
+            ],
+            [
+              ".ac-summary > div:nth-child(1) > .ac-kicker"
+            ]
+          ],
+          "details": [
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.86 (foreground color: #9a705c, background color: #211d1a, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #95877e, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.37 (foreground color: #82736a, background color: #292420, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1",
+            "Fix any of the following:\n  Element has insufficient color contrast of 3.54 (foreground color: #9a705c, background color: #292420, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          ]
+        }
+      ]
+    }
+  ],
+  "failures": 14
+}
