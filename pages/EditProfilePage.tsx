@@ -151,10 +151,21 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
 
   const validateUrl = (url: string, type: 'twitter' | 'instagram' | 'threads') => {
     if (!url) return '';
+    if (type === 'threads') {
+      try {
+        const profile = new URL(url);
+        const valid = profile.protocol === 'https:'
+          && ['threads.com', 'www.threads.com', 'threads.net', 'www.threads.net'].includes(profile.hostname)
+          && !profile.username && !profile.password && !profile.port && !profile.search && !profile.hash
+          && /^\/@[a-zA-Z0-9_.]+\/?$/.test(profile.pathname);
+        return valid ? '' : 'Invalid threads URL format';
+      } catch {
+        return 'Invalid threads URL format';
+      }
+    }
     const patterns = {
       twitter: /^https?:\/\/(www\.)?(twitter|x)\.com\/[a-zA-Z0-9_]{1,15}\/?$/,
-      instagram: /^https?:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
-      threads: /^https?:\/\/(www\.)?threads\.net\/@[a-zA-Z0-9_.]+\/?$/
+      instagram: /^https?:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/
     };
 
     return patterns[type].test(url) ? '' : `Invalid ${type} URL format`;
@@ -435,7 +446,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({ user, onUpdate
                     type="url"
                     value={threads}
                     onChange={(e) => handleSocialChange(e.target.value, 'threads')}
-                    placeholder="https://threads.net/@username"
+                    placeholder="https://threads.com/@username"
                     className={`w-full h-11 pl-10 pr-4 rounded-xl font-sans text-base shadow-sm focus:ring-accent focus:border-accent transition-all duration-300 dark:bg-dark-surface-alt dark:text-dark-text-rich ${socialErrors.threads ? 'border-danger' : 'border-gray-300 dark:border-dark-border'}`}
                   />
                   {socialErrors.threads && <p className="text-xs text-danger mt-1">{socialErrors.threads}</p>}
