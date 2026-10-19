@@ -1,0 +1,44 @@
+[
+  {
+    "width": 390,
+    "surface": "preferences",
+    "count": 1
+  },
+  {
+    "width": 390,
+    "surface": "focus",
+    "count": 1,
+    "focus": {
+      "label": "Dismiss tip",
+      "tipOpacity": "0"
+    }
+  },
+  {
+    "width": 740,
+    "surface": "preferences",
+    "count": 1
+  },
+  {
+    "width": 740,
+    "surface": "focus",
+    "count": 1,
+    "focus": {
+      "label": "Dismiss tip",
+      "tipOpacity": "0"
+    }
+  },
+  {
+    "width": 1440,
+    "surface": "preferences",
+    "count": 1
+  },
+  {
+    "width": 1440,
+    "surface": "focus",
+    "count": 1,
+    "focus": {
+      "label": "Dismiss tip",
+      "tipOpacity": "0"
+    }
+  }
+]

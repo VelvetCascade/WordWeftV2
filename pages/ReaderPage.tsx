@@ -1048,6 +1048,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             {/* Contextual Reader Onboarding */}
             {chapterContent.access !== 'AUTH_REQUIRED' ? (
                 <ReaderDiscoveryCoach
+                    paused={isFocusMode || isSettingsPanelVisible || isTocVisible || isReaderMoreOpen || isCommentDrawerOpen || isPassageToolsOpen || isShareModalOpen || isStoryBibleOpen || !!viewingCharacter || isDisclaimerOpen || !!reportTarget}
                     hasMentions={chapter?.content?.includes('href="/author/') || chapter?.content?.includes('mention')}
                     hasSpoilers={chapter?.content?.includes('data-spoiler') || chapter?.content?.includes('spoiler-text')}
                 />
