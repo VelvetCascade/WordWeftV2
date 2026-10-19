@@ -349,6 +349,9 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     // Quote sharing state
     const [selectedQuote, setSelectedQuote] = useState('');
     const [quoteTooltipPos, setQuoteTooltipPos] = useState<{ x: number; y: number } | null>(null);
+    const [quoteSelectionError, setQuoteSelectionError] = useState('');
+    const quoteButtonRef = useRef<HTMLButtonElement>(null);
+    const quotePassageRef = useRef<HTMLElement | null>(null);
     const [shareInitialTab, setShareInitialTab] = useState<'quick' | 'story' | 'quote'>('quick');
 
     // Character Mention State
@@ -391,6 +394,55 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
     const { trackEvent } = useAnalytics();
 
     const chapter = book?.chapters[currentChapterIndex];
+    useEffect(() => {
+        setSelectedQuote('');
+        setQuoteTooltipPos(null);
+        setQuoteSelectionError('');
+        quotePassageRef.current = null;
+        setShareInitialTab('quick');
+        setIsShareModalOpen(false);
+    }, [bookId, chapter?.id]);
+
+    useEffect(() => {
+        const updateSelection = () => {
+            if (isShareModalOpen || document.activeElement === quoteButtonRef.current) return;
+            const selection = window.getSelection();
+            const prose = moodContentRef.current;
+            const inside = prose && selection?.rangeCount && !selection.isCollapsed &&
+                prose.contains(selection.anchorNode) && prose.contains(selection.focusNode);
+            const text = inside ? selection!.toString().trim() : '';
+            setSelectedQuote('');
+            setQuoteSelectionError('');
+            if (text.length < 10) { setQuoteTooltipPos(null); return; }
+            const range = selection!.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            setQuoteTooltipPos({ x: Math.max(100, Math.min(window.innerWidth - 100, rect.left + rect.width / 2)), y: rect.top + window.scrollY - 44 });
+            if (text.length > 280) {
+                setQuoteSelectionError('Select 10–280 characters to share a quote.');
+                return;
+            }
+            setSelectedQuote(text);
+            const element = range.startContainer instanceof Element ? range.startContainer : range.startContainer.parentElement;
+            quotePassageRef.current = element?.closest<HTMLElement>('.reader-comment-block') || prose;
+        };
+        const reachQuote = (event: KeyboardEvent) => {
+            if (event.key !== 'Tab' || event.shiftKey || isShareModalOpen || !quoteButtonRef.current) return;
+            const target = event.target as HTMLElement;
+            if (target === quoteButtonRef.current || target.closest('input,textarea,select,[role="dialog"]')) return;
+            const selection = window.getSelection();
+            if (!selection?.isCollapsed && moodContentRef.current?.contains(selection?.anchorNode || null)) {
+                event.preventDefault();
+                quoteButtonRef.current.focus();
+            }
+        };
+        document.addEventListener('selectionchange', updateSelection);
+        document.addEventListener('keydown', reachQuote);
+        return () => {
+            document.removeEventListener('selectionchange', updateSelection);
+            document.removeEventListener('keydown', reachQuote);
+        };
+    }, [isShareModalOpen, chapter?.id]);
+
     activeChapterRef.current = chapter?.id;
     useEffect(() => {
         readerMountedRef.current = true;
@@ -1105,18 +1157,7 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 onCopy={(e) => e.preventDefault()}
                 onCut={(e) => e.preventDefault()}
                 onContextMenu={(e) => e.preventDefault()}
-                onMouseUp={() => {
-                    const selection = window.getSelection();
-                    const text = selection?.toString().trim() || '';
-                    if (text.length >= 10 && text.length <= 280) {
-                        const range = selection!.getRangeAt(0);
-                        const rect = range.getBoundingClientRect();
-                        setSelectedQuote(text);
-                        setQuoteTooltipPos({ x: rect.left + rect.width / 2, y: rect.top + window.scrollY - 44 });
-                    } else {
-                        setQuoteTooltipPos(null);
-                    }
-                }}
+
             >
                 <div className="reader-chapter-intro">
                     <span>{book.genres[0] && `${book.genres[0]} · `}Chapter {currentChapterIndex + 1}{chapterContent.access !== 'AUTH_REQUIRED' && ` · ${readingMinutes} min read`}</span>
@@ -1382,12 +1423,18 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
             {reportTarget && <ReportModal isOpen onClose={() => setReportTarget(null)} targetType={reportTarget.type} targetId={reportTarget.id} targetTitle={reportTarget.title} />}
 
             {/* Floating Quote Share Tooltip */}
+            {quoteTooltipPos && quoteSelectionError && <p role="status" style={{ position: 'absolute', left: '50%', top: quoteTooltipPos.y, transform: 'translateX(-50%)' }} className="z-50 bg-accent text-white text-xs px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap">{quoteSelectionError}</p>}
+
             {quoteTooltipPos && selectedQuote && (
                 <button
                     style={{ position: 'absolute', left: quoteTooltipPos.x, top: quoteTooltipPos.y, transform: 'translateX(-50%)' }}
                     className="z-50 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:bg-primary transition-colors whitespace-nowrap"
-                    onMouseDown={(e) => {
-                        e.preventDefault();
+                    ref={quoteButtonRef}
+                    onMouseDown={event => event.preventDefault()}
+                    onClick={() => {
+                        // useDialog restores this stable passage, rather than the disappearing tooltip.
+                        const passage = quotePassageRef.current;
+                        if (passage) { passage.tabIndex = -1; passage.focus({ preventScroll: true }); }
                         setShareInitialTab('quote');
                         setIsShareModalOpen(true);
                         setQuoteTooltipPos(null);
