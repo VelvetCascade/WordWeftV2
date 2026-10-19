@@ -625,6 +625,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     const [activeTab, setActiveTab] = useState<'quick' | 'story' | 'quote'>(initialTab);
     const [posterTheme, setPosterTheme] = useState<PosterTheme>('midnight');
     const [isGenerating, setIsGenerating] = useState(false);
+    const exportInProgress = useRef(false);
+    const [exportMessage, setExportMessage] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const quoteCanvasRef = useRef<HTMLCanvasElement>(null);
     const publicUrl = url || storyShareUrl(book.id);
@@ -656,6 +658,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         if (isOpen) {
             setCopied(false);
             setCopyError('');
+            setExportMessage('');
             const targetTab = (quickShareOnly || initialTab === 'story') ? 'quick' : initialTab;
             setActiveTab(targetTab);
         }
@@ -716,23 +719,26 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     };
 
     const handleDownloadCanvas = async (canvas: HTMLCanvasElement | null, filenamePrefix: string) => {
-        if (!canvas) return;
+        if (!canvas || exportInProgress.current) return;
+        exportInProgress.current = true;
+        setExportMessage('');
         setIsGenerating(true);
         try {
             const dataUrl = canvas.toDataURL('image/png');
+            let shareFailed = false;
 
             // Try Web Share API with files first
-            if (navigator.canShare) {
+            if (navigator.canShare && navigator.share) {
                 try {
                     const blob = await (await fetch(dataUrl)).blob();
                     const file = new File([blob], `${filenamePrefix}.png`, { type: 'image/png' });
                     if (navigator.canShare({ files: [file] })) {
                         await navigator.share({ files: [file], title: shareTitle, text: shareText });
-                        setIsGenerating(false);
                         return;
                     }
-                } catch (e) {
-                    console.log('Web share not supported or cancelled', e);
+                } catch (error) {
+                    if ((error as { name?: string })?.name === 'AbortError') return;
+                    shareFailed = true;
                 }
             }
 
@@ -741,9 +747,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             link.download = `wordweft-${book.title.replace(/\s+/g, '-').toLowerCase()}-${filenamePrefix}.png`;
             link.href = dataUrl;
             link.click();
+            if (shareFailed) setExportMessage('Sharing was unavailable. Your image was downloaded instead.');
         } catch (error) {
             console.error('Error generating image:', error);
+            setExportMessage('Your image could not be exported. Please try again.');
         } finally {
+            exportInProgress.current = false;
             setIsGenerating(false);
         }
     };
@@ -945,12 +954,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 />
                             </div>
 
+                            {exportMessage && <p role="status" className="mt-4 text-sm text-text-body dark:text-dark-text-body">{exportMessage}</p>}
                             <button
                                 onClick={() => handleDownloadCanvas(quoteCanvasRef.current, 'quote')}
                                 disabled={isGenerating}
                                 className="mt-6 w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {isGenerating ? 'Generating...' : 'Download Quote Card'}
+                                {isGenerating ? 'Generating...' : 'Share or download Quote Card'}
                             </button>
                         </div>
                     )}

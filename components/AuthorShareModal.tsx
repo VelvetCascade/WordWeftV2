@@ -358,12 +358,14 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     url,
 }) => {
     const [isGenerating, setIsGenerating] = useState(false);
+    const exportInProgress = useRef(false);
+    const [exportMessage, setExportMessage] = useState('');
     const [copied, setCopied] = useState(false);
     const [copyError, setCopyError] = useState('');
     const [activeTab, setActiveTab] = useState<'quick' | 'card'>('quick');
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const publicUrl = url || authorShareUrl(author.id);
-    useEffect(() => { if (isOpen) { setCopied(false); setCopyError(''); } }, [isOpen]);
+    useEffect(() => { if (isOpen) { setCopied(false); setCopyError(''); setExportMessage(''); } }, [isOpen]);
 
     const shareTitle = `${author.name} on WordWeft`;
     const shareText = `Discover ${author.name}'s stories on WordWeft!`;
@@ -409,22 +411,25 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     };
 
     const handleDownloadCanvas = async () => {
-        if (!canvasRef.current) return;
+        if (!canvasRef.current || exportInProgress.current) return;
+        exportInProgress.current = true;
+        setExportMessage('');
         setIsGenerating(true);
         try {
             const dataUrl = canvasRef.current.toDataURL('image/png');
+            let shareFailed = false;
 
-            if (navigator.canShare) {
+            if (navigator.canShare && navigator.share) {
                 try {
                     const blob = await (await fetch(dataUrl)).blob();
                     const file = new File([blob], `wordweft-author-${author.name.replace(/\s+/g, '-').toLowerCase()}.png`, { type: 'image/png' });
                     if (navigator.canShare({ files: [file] })) {
                         await navigator.share({ files: [file], title: shareTitle, text: shareText });
-                        setIsGenerating(false);
                         return;
                     }
-                } catch (e) {
-                    console.log('Web share not supported or cancelled', e);
+                } catch (error) {
+                    if ((error as { name?: string })?.name === 'AbortError') return;
+                    shareFailed = true;
                 }
             }
 
@@ -432,9 +437,12 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
             link.download = `wordweft-author-${author.name.replace(/\s+/g, '-').toLowerCase()}.png`;
             link.href = dataUrl;
             link.click();
+            if (shareFailed) setExportMessage('Sharing was unavailable. Your image was downloaded instead.');
         } catch (error) {
             console.error('Error generating image:', error);
+            setExportMessage('Your image could not be exported. Please try again.');
         } finally {
+            exportInProgress.current = false;
             setIsGenerating(false);
         }
     };
@@ -522,12 +530,13 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
                                 />
                             </div>
 
+                            {exportMessage && <p role="status" className="mt-4 text-sm text-text-body dark:text-dark-text-body">{exportMessage}</p>}
                             <button
                                 onClick={handleDownloadCanvas}
                                 disabled={isGenerating}
                                 className="mt-6 w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {isGenerating ? 'Generating...' : 'Download Card'}
+                                {isGenerating ? 'Generating...' : 'Share or download Card'}
                             </button>
                         </div>
                     )}
