@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Book, BookProgress, LibraryBook, Shelf, User } from '../types';
 import { Footer } from '../components/Footer';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -16,6 +16,7 @@ import { openReaderFromStory } from '../utils/navigation';
 import { completedChapterCount, isReadingFinished, resumeChapterIndex } from '../utils/readingJourney';
 import '../styles/reader-v2.css';
 import { hasNewReleasedChapter, nextUnreadChapterIndex } from '../utils/readingTools';
+import { readHistoryState, updateHistoryState } from '../utils/historyEntryState';
 import { useDialog } from '../hooks/useDialog';
 
 type LibrarySort = 'recent' | 'title' | 'progress';
@@ -54,13 +55,24 @@ const LibraryBookCard: React.FC<{
 
 
 export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => void }> = ({ user, onUserUpdate }) => {
+    const [savedLibrary] = useState(() => {
+        const saved = readHistoryState().wordWeftLibrary;
+        if (saved?.userId !== user.id) return null;
+        return {
+            activeShelfId: saved.activeShelfId === 'all' || user.library?.some(shelf => shelf.id === saved.activeShelfId) ? saved.activeShelfId as string : 'all',
+            activeView: ['reading', 'saved', 'finished', 'caughtup', 'updates', 'all'].includes(saved.activeView) ? saved.activeView as LibraryView : 'reading' as LibraryView,
+            query: typeof saved.query === 'string' ? saved.query : '',
+            sort: ['recent', 'title', 'progress'].includes(saved.sort) ? saved.sort as LibrarySort : 'recent' as LibrarySort,
+            visibleBookCount: Number.isInteger(saved.visibleBookCount) && saved.visibleBookCount >= 20 ? saved.visibleBookCount as number : 20,
+        };
+    });
     const [allProgress, setAllProgress] = useState<Record<string, BookProgress>>({});
-    const [activeShelfId, setActiveShelfId] = useState('all');
-    const [activeView, setActiveView] = useState<LibraryView>('reading');
+    const [activeShelfId, setActiveShelfId] = useState(savedLibrary?.activeShelfId ?? 'all');
+    const [activeView, setActiveView] = useState<LibraryView>(savedLibrary?.activeView ?? 'reading');
     const [isProgressLoading, setIsProgressLoading] = useState(true);
-    const [query, setQuery] = useState('');
-    const [sort, setSort] = useState<LibrarySort>('recent');
-    const [visibleBookCount, setVisibleBookCount] = useState(20);
+    const [query, setQuery] = useState(savedLibrary?.query ?? '');
+    const [sort, setSort] = useState<LibrarySort>(savedLibrary?.sort ?? 'recent');
+    const [visibleBookCount, setVisibleBookCount] = useState(savedLibrary?.visibleBookCount ?? 20);
     const [loadError, setLoadError] = useState('');
     const [loadAttempt, setLoadAttempt] = useState(0);
     const [isCreateShelfOpen, setIsCreateShelfOpen] = useState(false);
@@ -102,7 +114,7 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
             .then(progress => {
                 if (!active) return;
                 setAllProgress(progress);
-                if (loadAttempt === 0) {
+                if (loadAttempt === 0 && !savedLibrary) {
                     const started = Object.entries(progress).filter(([, item]) => item.overallProgress > 0);
                     const hasUnfinished = started.some(([bookId, item]) => {
                         const book = user.library.flatMap(shelf => shelf.books).find(book => book.id === bookId);
@@ -174,7 +186,18 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
         });
     }, [activeShelf, activeView, query, sort, allProgress]);
 
-    useEffect(() => setVisibleBookCount(20), [activeShelfId, activeView, query, sort]);
+    const filterKey = JSON.stringify([activeShelfId, activeView, query, sort]);
+    const previousFilters = useRef(filterKey);
+    useEffect(() => {
+        if (previousFilters.current !== filterKey) {
+            previousFilters.current = filterKey;
+            setVisibleBookCount(20);
+        }
+    }, [filterKey]);
+    useEffect(() => {
+        if (window.location.pathname !== '/library') return;
+        updateHistoryState({ wordWeftLibrary: { userId: user.id, activeShelfId, activeView, query, sort, visibleBookCount } });
+    }, [user.id, activeShelfId, activeView, query, sort, visibleBookCount]);
 
     const inProgressCount = allBooks.filter(book => book.progress > 0 && !isReadingFinished(book.chapters, allProgress[book.id])).length;
     const completedCount = allBooks.filter(book => book.readingStatus === 'Completed' && isReadingFinished(book.chapters, allProgress[book.id])).length;
@@ -239,7 +262,7 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
     const resumeCard = resumeBook ? <section className="ww-library-resume-v2" aria-label="Continue reading"><ResilientImage src={resumeBook.coverUrl} alt={resumeBook.title} fallbackLabel={resumeBook.title} variant="cover" className="ww-library-resume-cover" /><div className="ww-library-resume-copy"><span className="ww-page-eyebrow">Pick up where you left off</span><h2>{resumeBook.title}</h2><p>{resumeBook.author.name}{resumeChapter && <> · Chapter {resumeIndex + 1}<br />{resumeChapter.title}</>}</p><div className="ww-saved-reading-progress"><div><span>Your reading progress</span><strong>{Math.round(resumeBook.progress)}%</strong></div><div className="ww-reading-progress-track"><span style={{ width: `${Math.min(100, resumeBook.progress)}%` }} /></div><p>{completedChapterCount(resumeBook.chapters, resumeProgress)} {completedChapterCount(resumeBook.chapters, resumeProgress) === 1 ? 'chapter' : 'chapters'} finished · Your next chapter{resumeChapter ? ` · ${Math.round(resumeProgress?.chapters?.[resumeChapter.id]?.progress ?? 0)}% through this chapter` : ''}{resumeProgress?.pendingSync ? ' · Saved on this device; sync pending' : ''}</p></div>{hasNewReleasedChapter(resumeBook.chapters, resumeProgress) && <p className="ww-library-update-badge">New chapter released</p>}<div className="ww-library-resume-actions"><button type="button" onClick={() => openBook(resumeBook)}>Continue{resumeChapter ? ` chapter ${resumeIndex + 1}` : ' reading'}<BookOpenIcon className="w-4 h-4" /></button><a href={`/book/${encodeURIComponent(resumeBook.id)}`}>Story details</a><button type="button" className="ww-library-resume-secondary" aria-label={`Restart ${resumeBook.title}`} title="Restart reading progress" onClick={() => setLibraryAction({ kind: 'restart', bookId: resumeBook.id })}>Restart</button><button type="button" className="ww-library-resume-secondary" aria-label={`Remove ${resumeBook.title} from library`} title="Remove story from library" onClick={() => setLibraryAction({ kind: 'remove', bookId: resumeBook.id })}>Remove</button></div></div></section> : null;
 
     return (
-        <div className="ww-reading-library-page ww-library-v2">
+        <div className="ww-reading-library-page ww-library-v2" data-route-loading={isProgressLoading ? 'true' : undefined}>
             <div className="ww-library-page-content">
                 <header className="ww-library-heading-v2"><div><span className="ww-page-eyebrow">Your reading space</span><h1>Your library</h1><p>Your next chapter is right where you left it.</p></div><a href="/category"><BookOpenIcon className="w-4 h-4" />Discover stories</a></header>
                 {!isProgressLoading && resumeCard}

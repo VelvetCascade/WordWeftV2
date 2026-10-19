@@ -538,7 +538,7 @@ const App: React.FC = () => {
       case 'profile':
         return <ProfilePage user={currentUser!} />;
       case 'library':
-        return <LibraryPage user={currentUser!} onUserUpdate={handleAccountUpdate} />;
+        return <LibraryPage user={currentUser!} key={currentUser!.id} onUserUpdate={handleAccountUpdate} />;
       case 'edit-profile':
         return <EditProfilePage user={currentUser!} onUpdateProfile={handleUpdateProfile} onChangePassword={handleChangePassword} />;
       case 'auth':
