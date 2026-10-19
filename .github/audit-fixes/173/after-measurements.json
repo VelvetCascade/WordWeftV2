@@ -1,0 +1,44 @@
+[
+  {
+    "width": 390,
+    "surface": "preferences",
+    "count": 0
+  },
+  {
+    "width": 390,
+    "surface": "focus",
+    "count": 0,
+    "focus": {
+      "label": "Reading appearance and themes",
+      "tipOpacity": null
+    }
+  },
+  {
+    "width": 740,
+    "surface": "preferences",
+    "count": 0
+  },
+  {
+    "width": 740,
+    "surface": "focus",
+    "count": 0,
+    "focus": {
+      "label": "Reading appearance and themes",
+      "tipOpacity": null
+    }
+  },
+  {
+    "width": 1440,
+    "surface": "preferences",
+    "count": 0
+  },
+  {
+    "width": 1440,
+    "surface": "focus",
+    "count": 0,
+    "focus": {
+      "label": "Reading appearance and themes",
+      "tipOpacity": null
+    }
+  }
+]

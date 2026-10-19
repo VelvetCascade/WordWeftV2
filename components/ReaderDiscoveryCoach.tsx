@@ -100,11 +100,13 @@ function readDismissed(): Set<string> {
 }
 
 interface ReaderDiscoveryCoachProps {
+    paused?: boolean;
     hasMentions?: boolean;
     hasSpoilers?: boolean;
 }
 
 export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
+    paused = false,
     hasMentions = false,
     hasSpoilers = false,
 }) => {
@@ -112,6 +114,7 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
     const session = useRef<number | null>(null);
     const dismissed = useRef<Set<string>>(new Set());
     const reduceMotion = useReducedMotion();
+    const completed = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         // Effect replay restarts timers for the same mount. A real remount starts
@@ -122,10 +125,14 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
             dismissed.current = readDismissed();
         }
 
+        // Keep the instance/session alive while a reader surface owns attention.
+        // Clear pending timers and resume remaining tips after ordinary reading returns.
+        if (paused) { setActiveNudge(null); return; }
+
         // Filter nudges for current session
         const sessionNudges = NUDGES.filter(n => {
             if (n.session !== session.current) return false;
-            if (dismissed.current.has(n.id)) return false;
+            if (dismissed.current.has(n.id) || completed.current.has(n.id)) return false;
             if (n.requiresFeature === 'mentions' && !hasMentions) return false;
             if (n.requiresFeature === 'spoilers' && !hasSpoilers) return false;
             return true;
@@ -142,19 +149,23 @@ export const ReaderDiscoveryCoach: React.FC<ReaderDiscoveryCoachProps> = ({
             timers.push(showTimer);
 
             const hideTimer = window.setTimeout(() => {
+                completed.current.add(nudge.id);
                 setActiveNudge(prev => prev?.id === nudge.id ? null : prev);
             }, nudge.delayMs + nudge.durationMs);
             timers.push(hideTimer);
         });
 
         return () => timers.forEach(t => clearTimeout(t));
-    }, []);
+    }, [paused, hasMentions, hasSpoilers]);
 
     const handleDismiss = (nudgeId: string) => {
         setActiveNudge(null);
         dismissed.current.add(nudgeId);
         writeOptionalTip(DISMISSED_KEY, JSON.stringify(Array.from(dismissed.current)));
     };
+
+    // Bypass exit animation too: suppressed guidance must leave the focus tree now.
+    if (paused) return null;
 
     return (
         <AnimatePresence>
