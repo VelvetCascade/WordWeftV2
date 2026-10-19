@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+(node:24101) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 e2e/discussion-profile-links.spec.ts:32:1 › discussion authors are keyboard links for missing avatars and nested replies (30.9s)
+
+
+  1) e2e/discussion-profile-links.spec.ts:32:1 › discussion authors are keyboard links for missing avatars and nested replies 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: getByRole('dialog').getByRole('link', { name: 'Synthetic Reader', exact: true })
+    Expected: "/author/discussion-reader"
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('dialog').getByRole('link', { name: 'Synthetic Reader', exact: true }) with timeout 10000ms
+      - waiting for getByRole('dialog').getByRole('link', { name: 'Synthetic Reader', exact: true })
+
+
+      37 |     if (process.env.AUDIT_PROOF_DIR) await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/discussion-${process.env.AUDIT_MOBILE?'390':'1440'}.png`});
+      38 |     const name = dialog.getByRole('link',{name:author.name,exact:true});
+    > 39 |     await expect(name).toHaveAttribute('href',`/author/${author.id}`);
+         |                        ^
+      40 |     await expect(dialog.getByRole('link',{name:nestedAuthor.name,exact:true})).toHaveAttribute('href',`/author/${nestedAuthor.id}`);
+      41 |     const avatar = dialog.getByRole('link',{name:`${author.name}'s profile`,exact:true});
+      42 |     await expect(avatar).toHaveAttribute('href',`/author/${author.id}`);
+        at e2e/discussion-profile-links.spec.ts:39:24
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, copyfile 'test-results/.playwright-artifacts-0/traces/eb8c3615b105f44427e2-f5cd4e34903540661942-recording1.network' -> 'test-results/.playwright-artifacts-0/traces/eb8c3615b105f44427e2-f5cd4e34903540661942-recording1-pwnetcopy-1.network'
+
+    Error: browserContext._wrapApiCall: ENOENT: no such file or directory, open 'test-results/.playwright-artifacts-0/traces/eb8c3615b105f44427e2-f5cd4e34903540661942.trace'
+
+    Error: ENOENT: no such file or directory, open 'test-results/.playwright-artifacts-0/5aa6497a87e7e8fd729aeb2aa28f8b01.zip'
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/discussion-profile-links-d-803db--avatars-and-nested-replies/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e/discussion-profile-links.spec.ts:32:1 › discussion authors are keyboard links for missing avatars and nested replies 
