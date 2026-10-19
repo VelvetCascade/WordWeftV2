@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import type { ReportCategory, ReportTargetType } from '../types';
 import { XMarkIcon, CheckCircleIcon } from './icons/Icons';
 import * as api from '../api/client';
@@ -22,32 +22,44 @@ export const ReportModal: React.FC<{ isOpen: boolean; onClose: () => void; targe
     const [error, setError] = useState('');
     const [ticket, setTicket] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const dialogRef = useDialog(isOpen, onClose, !submitting);
+    const session = useRef(0);
+    const pending = useRef(false);
+    const dismiss = () => { if (!pending.current) onClose(); };
+    const dialogRef = useDialog(isOpen, dismiss, !submitting);
 
-    useEffect(() => { if (isOpen) { setCategory(''); setDescription(''); setError(''); setTicket(''); } }, [isOpen, targetId]);
+    useLayoutEffect(() => {
+        session.current++;
+        pending.current = false;
+        setSubmitting(false);
+        setCategory(''); setDescription(''); setError(''); setTicket('');
+        // A parent can replace the target or close/unmount the dialog independently.
+        return () => { session.current++; };
+    }, [isOpen, targetType, targetId]);
     if (!isOpen) return null;
 
     const submit = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!category) return;
+        if (!category || pending.current) return;
+        const requestSession = session.current;
+        pending.current = true;
         setSubmitting(true); setError('');
         try {
             const report = await api.submitReport({ targetType, targetId, category, description: description.trim() });
-            setTicket(report.ticketNumber);
+            if (session.current === requestSession) setTicket(report.ticketNumber);
         } catch (err: any) {
-            setError(err.message || 'Could not submit this report.');
-        } finally { setSubmitting(false); }
+            if (session.current === requestSession) setError(err.message || 'Could not submit this report.');
+        } finally { if (session.current === requestSession) { pending.current = false; setSubmitting(false); } }
     };
 
     return (
-        <div className="report-modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}>
+        <div className="report-modal-backdrop" onMouseDown={e => e.target === e.currentTarget && dismiss()}>
             <section className="report-modal" ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title">
-                <button type="button" className="report-modal-close" onClick={onClose} aria-label="Close report form"><XMarkIcon className="w-5 h-5" /></button>
+                <button type="button" className="report-modal-close disabled:opacity-50 disabled:cursor-not-allowed" disabled={submitting} onClick={dismiss} aria-label="Close report form"><XMarkIcon className="w-5 h-5" /></button>
                 {ticket ? <div className="report-success">
                     <CheckCircleIcon className="w-12 h-12" />
                     <p className="report-eyebrow">Report received</p><h2 id="report-title">Thank you for speaking up.</h2>
                     <p>Our moderation queue now has your report. Keep this reference in case you need to follow up.</p>
-                    <strong>{ticket}</strong><button type="button" onClick={onClose}>Done</button>
+                    <strong>{ticket}</strong><button type="button" onClick={dismiss}>Done</button>
                 </div> : <form onSubmit={submit}>
                     <p className="report-eyebrow">Private report</p><h2 id="report-title">Tell us what’s wrong.</h2>
                     <p className="report-target">Reporting: <strong>{targetTitle}</strong></p>
@@ -60,7 +72,7 @@ export const ReportModal: React.FC<{ isOpen: boolean; onClose: () => void; targe
                     <label className="report-notes"><span>Additional context <small>Optional</small></span><textarea maxLength={1500} rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="Share links, chapter details, or context that will help a moderator review this." /><small>{description.length}/1500</small></label>
                     <p className="report-privacy">Your identity is not shared with the reported user. Deliberately false or abusive reports may lead to account action.</p>
                     {error && <p className="report-error">{error}</p>}
-                    <div className="report-actions"><button type="button" onClick={onClose}>Cancel</button><button type="submit" className="primary" disabled={!category || submitting}>{submitting ? 'Sending…' : 'Submit report'}</button></div>
+                    <div className="report-actions"><button type="button" onClick={dismiss} disabled={submitting} className="disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button><button type="submit" className="primary" disabled={!category || submitting}>{submitting ? 'Sending…' : 'Submit report'}</button></div>
                 </form>}
             </section>
         </div>
