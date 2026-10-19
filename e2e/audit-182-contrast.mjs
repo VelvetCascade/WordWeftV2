@@ -12,6 +12,7 @@ for (const theme of ['light','dark']) for (const width of [1440,390]) {
   await expect(page.getByRole('heading',{name:'Overview',exact:true})).toBeVisible();
   await expect(page.locator('.ac-metric strong').first()).toHaveText('24');
   await check(page,targets,`${theme}-${width}-overview`);
+  await check(page,'.ac-topbar button',`${theme}-${width}-refresh-button`);
   data={...populated,generatedAt:'2026-10-19T12:00:00Z'};
   await page.getByRole('button',{name:/Refresh/}).click();
   await expect(page.locator('.ac-as-of')).toContainText('19');
