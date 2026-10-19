@@ -786,8 +786,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         {tabConfig.map(tab => (
                             <button
                                 key={tab.key}
+                                aria-pressed={activeTab === tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === tab.key ? 'border-accent text-accent' : 'border-transparent text-gray-400 hover:text-text-rich dark:hover:text-dark-text-rich'}`}
+                                className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === tab.key ? 'border-accent text-accent' : 'border-transparent text-text-body dark:text-dark-text-body hover:text-text-rich dark:hover:text-dark-text-rich'}`}
                             >
                                 {tab.label}
                             </button>
@@ -923,6 +924,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                                 {THEME_KEYS.map(tk => (
                                     <button
                                         key={tk}
+                                        aria-pressed={posterTheme === tk}
                                         onClick={() => setPosterTheme(tk)}
                                         className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${posterTheme === tk
                                             ? 'bg-accent text-white shadow-md scale-105'
