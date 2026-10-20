@@ -8,7 +8,7 @@ import { CommunityAuthor, CommunityModal, useCommunitySession } from './Communit
 import { CommunityComposer } from './CommunityComposer';
 import { ResilientImage } from '../ResilientImage';
 
-export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post: CommunityPost) => void; onDelete: (id: string) => void; detail?: boolean; onWarningRevealChange?: (revealed: boolean) => void }> = ({ post, onUpdate, onDelete, detail = false, onWarningRevealChange }) => {
+export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post: CommunityPost) => void; onSaveCommitted?: (post: CommunityPost) => void; onDelete: (id: string) => void; detail?: boolean; onWarningRevealChange?: (revealed: boolean) => void }> = ({ post, onUpdate, onSaveCommitted, onDelete, detail = false, onWarningRevealChange }) => {
   const { user, requireAuth } = useCommunitySession();
   const [revealed, setRevealed] = useState(false);
   const [pending, setPending] = useState(false);
@@ -30,7 +30,11 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
     if (!requireAuth() || pending) return;
     const active = kind === 'like' ? !post.liked : !post.saved;
     setPending(true); setError(''); onUpdate(optimisticReaction(post, kind, active));
-    try { onUpdate(await api.setReaction(post.id, kind, active)); } catch (err) { onUpdate(post); setError(communityError(err)); } finally { setPending(false); }
+    try {
+      const updated = await api.setReaction(post.id, kind, active);
+      onUpdate(updated);
+      if (kind === 'save') onSaveCommitted?.(updated);
+    } catch (err) { onUpdate(post); setError(communityError(err)); } finally { setPending(false); }
   };
   const vote = async (optionId: string) => {
     if (!requireAuth() || pending) return;

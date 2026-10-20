@@ -1,0 +1,69 @@
+{
+  "rows": [
+    {
+      "case": "successful unsave",
+      "width": 390,
+      "backendSaved": false,
+      "renderedCards": 1,
+      "emptyStates": 0
+    },
+    {
+      "case": "successful unsave",
+      "width": 1440,
+      "backendSaved": false,
+      "renderedCards": 1,
+      "emptyStates": 0
+    },
+    {
+      "case": "failed unsave",
+      "width": 390,
+      "renderedCards": 1,
+      "saved": true,
+      "visibleError": true
+    },
+    {
+      "case": "discover retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "following retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "circles retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "circle retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "detail retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "stale in-flight pagination",
+      "renderedCards": 1,
+      "nextCursorRetained": true
+    }
+  ],
+  "failures": [
+    {
+      "name": "success-390",
+      "message": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "name": "success-1440",
+      "message": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "name": "pagination",
+      "message": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    }
+  ]
+}
