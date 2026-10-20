@@ -48,7 +48,7 @@ const formatJoinDate = (dateStr?: string) => {
 
 // ── Main Component ──
 
-export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null; onSignIn?: () => void }> = ({ authorId, currentUser = null, onSignIn = () => { window.location.hash = '/auth'; } }) => {
+export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null; onSignIn?: () => void; onFollowStart?: (authorId: string) => (isFollowing: boolean) => void }> = ({ authorId, currentUser = null, onFollowStart, onSignIn = () => { window.location.hash = '/auth'; } }) => {
     const { trackEvent } = useAnalytics();
     const [author, setAuthor] = useState<Author | null>(null);
     const [authorBooks, setAuthorBooks] = useState<Book[]>([]);
@@ -111,6 +111,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
         if (!author || isFollowLoading) return;
         if (!currentUser) { onSignIn(); return; }
         
+        const reconcileFollowing = onFollowStart?.(author.id);
         // Optimistic UI update
         const prevAuthor = { ...author };
         const isNowFollowing = !author.isFollowing;
@@ -128,6 +129,7 @@ export const AuthorPage: React.FC<{ authorId: string; currentUser?: User | null;
             } else {
                 await api.followUser(author.id);
             }
+            reconcileFollowing?.(isNowFollowing);
         } catch (error) {
             // Revert on failure
             setAuthor(prevAuthor);
