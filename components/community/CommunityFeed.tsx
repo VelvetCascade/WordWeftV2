@@ -14,11 +14,13 @@ export const CommunityFeed: React.FC<{ query: FeedQuery; refreshKey?: number }> 
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const generation = useRef(0);
+  const removedSaved = useRef(new Set<string>());
   const restricted = query.mode && query.mode !== 'discover' && !user;
   const { mode, circle, authorId, type } = query;
   useEffect(() => {
     const controller = new AbortController();
     generation.current += 1;
+    removedSaved.current = new Set();
     setPosts([]); setCursor(null); setError(''); setLoadingMore(false);
     if (restricted) { setLoading(false); return; }
     setLoading(true);
@@ -29,11 +31,21 @@ export const CommunityFeed: React.FC<{ query: FeedQuery; refreshKey?: number }> 
     if (!cursor || loadingMore) return;
     const current = generation.current;
     setLoadingMore(true); setError('');
-    try { const page = await api.getFeed({ mode, circle, authorId, type, cursor }); if (current === generation.current) { setPosts(previous => mergeById(previous, page.items)); setCursor(page.nextCursor); } } catch (err) { if (current === generation.current) setError(communityError(err)); } finally { if (current === generation.current) setLoadingMore(false); }
+    try { const page = await api.getFeed({ mode, circle, authorId, type, cursor }); if (current === generation.current) {
+      // A page requested before an unsave can still contain the old saved item.
+      const incoming = mode === 'saved' ? page.items.filter(post => !removedSaved.current.has(post.id)) : page.items;
+      setPosts(previous => mergeById(previous, incoming)); setCursor(page.nextCursor);
+    } } catch (err) { if (current === generation.current) setError(communityError(err)); } finally { if (current === generation.current) setLoadingMore(false); }
+  };
+  const current = generation.current;
+  const saveCommitted = (updated: CommunityPost) => {
+    if (current !== generation.current || mode !== 'saved' || updated.saved) return;
+    removedSaved.current.add(updated.id);
+    setPosts(previous => previous.filter(post => post.id !== updated.id));
   };
   if (restricted) return <CommunityEmpty title="Make this space your own">Sign in to see {mode === 'following' ? 'the writers you follow' : mode === 'saved' ? 'your saved conversations' : 'your joined circles'}.<button className="community-button primary" onClick={requireAuth}>Sign in to continue</button></CommunityEmpty>;
   return <div className="community-feed" aria-busy={loading || loadingMore}>
-    {loading ? <CommunityLoading /> : <>{posts.map(post => <CommunityPostCard key={post.id} post={post} onUpdate={updated => setPosts(previous => previous.map(item => item.id === updated.id ? updated : item))} onDelete={id => setPosts(previous => previous.filter(item => item.id !== id))} />)}{!posts.length && !error && <CommunityEmpty title={mode === 'saved' ? 'Keep the conversations that stay with you.' : authorId ? 'The next chapter is still being written.' : 'There’s room for a new conversation.'}>{mode === 'saved' ? 'Save a post to find it here later.' : mode === 'following' ? 'Follow readers and writers from their profiles to see their updates here.' : mode === 'circles' ? 'Join a circle to bring its conversations into your feed.' : 'Share a reading discovery, ask a question, or let a story find its people.'}</CommunityEmpty>}</>}
+    {loading ? <CommunityLoading /> : <>{posts.map(post => <CommunityPostCard key={post.id} post={post} onUpdate={updated => setPosts(previous => previous.map(item => item.id === updated.id ? updated : item))} onSaveCommitted={saveCommitted} onDelete={id => setPosts(previous => previous.filter(item => item.id !== id))} />)}{!posts.length && !error && <CommunityEmpty title={mode === 'saved' ? 'Keep the conversations that stay with you.' : authorId ? 'The next chapter is still being written.' : 'There’s room for a new conversation.'}>{mode === 'saved' ? 'Save a post to find it here later.' : mode === 'following' ? 'Follow readers and writers from their profiles to see their updates here.' : mode === 'circles' ? 'Join a circle to bring its conversations into your feed.' : 'Share a reading discovery, ask a question, or let a story find its people.'}</CommunityEmpty>}</>}
     {error && <CommunityError message={error} onRetry={posts.length ? loadMore : () => setRetry(value => value + 1)} />}
     {cursor && <button className="community-button community-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore ? 'Loading conversations…' : 'More conversations'}</button>}
   </div>;

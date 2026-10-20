@@ -1,0 +1,56 @@
+{
+  "rows": [
+    {
+      "case": "successful unsave",
+      "width": 390,
+      "backendSaved": false,
+      "renderedCards": 0,
+      "emptyStates": 1
+    },
+    {
+      "case": "successful unsave",
+      "width": 1440,
+      "backendSaved": false,
+      "renderedCards": 0,
+      "emptyStates": 1
+    },
+    {
+      "case": "failed unsave",
+      "width": 390,
+      "renderedCards": 1,
+      "saved": true,
+      "visibleError": true
+    },
+    {
+      "case": "discover retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "following retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "circles retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "circle retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "detail retains unsaved conversation",
+      "renderedCards": 1,
+      "saved": false
+    },
+    {
+      "case": "stale in-flight pagination",
+      "renderedCards": 0,
+      "nextCursorRetained": true
+    }
+  ],
+  "failures": []
+}
