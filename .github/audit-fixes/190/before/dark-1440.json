@@ -1,0 +1,142 @@
+{
+  "samples": [
+    {
+      "label": "Update",
+      "ratio": 4.003536841497893,
+      "opacity": "0.6",
+      "foreground": [
+        158,
+        140.2,
+        156
+      ],
+      "background": [
+        56,
+        49,
+        60
+      ]
+    },
+    {
+      "label": "Release",
+      "ratio": 5.4603262595314055,
+      "opacity": "0.6",
+      "foreground": [
+        158.4,
+        159.39999999999998,
+        154.2
+      ],
+      "background": [
+        36,
+        43,
+        39
+      ]
+    },
+    {
+      "label": "Poll",
+      "ratio": 5.4603262595314055,
+      "opacity": "0.6",
+      "foreground": [
+        158.4,
+        159.39999999999998,
+        154.2
+      ],
+      "background": [
+        36,
+        43,
+        39
+      ]
+    },
+    {
+      "label": "Workshop",
+      "ratio": 5.4603262595314055,
+      "opacity": "0.6",
+      "foreground": [
+        158.4,
+        159.39999999999998,
+        154.2
+      ],
+      "background": [
+        36,
+        43,
+        39
+      ]
+    },
+    {
+      "label": "Recommendation",
+      "ratio": 5.4603262595314055,
+      "opacity": "0.6",
+      "foreground": [
+        158.4,
+        159.39999999999998,
+        154.2
+      ],
+      "background": [
+        36,
+        43,
+        39
+      ]
+    }
+  ],
+  "violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "tags": [
+        "cat.color",
+        "wcag2aa",
+        "wcag143",
+        "TTv5",
+        "TT13.c",
+        "EN-301-549",
+        "EN-9.1.4.3",
+        "ACT",
+        "RGAAv4",
+        "RGAA-3.2.1"
+      ],
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+      "nodes": [
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#968a94",
+                "bgColor": "#302f34",
+                "contrastRatio": 4.02,
+                "fontSize": "9.0pt (12px)",
+                "fontWeight": "normal",
+                "messageKey": null,
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [
+                {
+                  "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+                  "target": [
+                    "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+                  ]
+                },
+                {
+                  "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+                  "target": [
+                    ".community-modal"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Element has insufficient color contrast of 4.02 (foreground color: #968a94, background color: #302f34, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+          "target": [
+            "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+          ],
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.02 (foreground color: #968a94, background color: #302f34, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        }
+      ]
+    }
+  ]
+}

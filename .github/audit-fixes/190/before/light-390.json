@@ -1,0 +1,278 @@
+{
+  "samples": [
+    {
+      "label": "Update",
+      "ratio": 2.9603002487697387,
+      "opacity": "0.6",
+      "foreground": [
+        148.2,
+        133,
+        146.60000000000002
+      ],
+      "background": [
+        240,
+        235,
+        242
+      ]
+    },
+    {
+      "label": "Release",
+      "ratio": 2.7215122246404215,
+      "opacity": "0.6",
+      "foreground": [
+        151.4,
+        154,
+        151
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    },
+    {
+      "label": "Poll",
+      "ratio": 2.7215122246404215,
+      "opacity": "0.6",
+      "foreground": [
+        151.4,
+        154,
+        151
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    },
+    {
+      "label": "Workshop",
+      "ratio": 2.7215122246404215,
+      "opacity": "0.6",
+      "foreground": [
+        151.4,
+        154,
+        151
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    },
+    {
+      "label": "Recommendation",
+      "ratio": 2.7215122246404215,
+      "opacity": "0.6",
+      "foreground": [
+        151.4,
+        154,
+        151
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    }
+  ],
+  "violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "tags": [
+        "cat.color",
+        "wcag2aa",
+        "wcag143",
+        "TTv5",
+        "TT13.c",
+        "EN-301-549",
+        "EN-9.1.4.3",
+        "ACT",
+        "RGAAv4",
+        "RGAA-3.2.1"
+      ],
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+      "nodes": [
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#998b95",
+                "bgColor": "#f4f1f4",
+                "contrastRatio": 2.89,
+                "fontSize": "9.0pt (12px)",
+                "fontWeight": "normal",
+                "messageKey": null,
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [
+                {
+                  "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+                  "target": [
+                    "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+                  ]
+                },
+                {
+                  "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+                  "target": [
+                    ".community-modal"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+          "target": [
+            "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)"
+          ],
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#979a97",
+                "bgColor": "#fbfaf7",
+                "contrastRatio": 2.72,
+                "fontSize": "9.0pt (12px)",
+                "fontWeight": "normal",
+                "messageKey": null,
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [
+                {
+                  "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+                  "target": [
+                    ".community-modal"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Release</button>",
+          "target": [
+            "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(2)"
+          ],
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#979a97",
+                "bgColor": "#fbfaf7",
+                "contrastRatio": 2.72,
+                "fontSize": "9.0pt (12px)",
+                "fontWeight": "normal",
+                "messageKey": null,
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [
+                {
+                  "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+                  "target": [
+                    ".community-modal"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Poll</button>",
+          "target": [
+            "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(3)"
+          ],
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#979a97",
+                "bgColor": "#fbfaf7",
+                "contrastRatio": 2.72,
+                "fontSize": "9.0pt (12px)",
+                "fontWeight": "normal",
+                "messageKey": null,
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [
+                {
+                  "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+                  "target": [
+                    ".community-modal"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Workshop</button>",
+          "target": [
+            "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(4)"
+          ],
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "any": [
+            {
+              "id": "color-contrast",
+              "data": {
+                "fgColor": "#979a97",
+                "bgColor": "#fbfaf7",
+                "contrastRatio": 2.72,
+                "fontSize": "9.0pt (12px)",
+                "fontWeight": "normal",
+                "messageKey": null,
+                "expectedContrastRatio": "4.5:1"
+              },
+              "relatedNodes": [
+                {
+                  "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+                  "target": [
+                    ".community-modal"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Recommendation</button>",
+          "target": [
+            "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(5)"
+          ],
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        }
+      ]
+    }
+  ]
+}
