@@ -1,0 +1,15 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "status": 503
+    },
+    {
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "savedRows": 1,
+  "staleLoadAlerts": 0,
+  "draft": "My unsaved note survives recovery."
+}
