@@ -137,6 +137,27 @@ const App: React.FC = () => {
     setCurrentUser(current => accountUpdateEpoch === sessionEpoch.current && sessionAuthenticated.current && current?.id === updatedUser.id ? updatedUser : current);
   }, [accountUpdateEpoch]);
 
+  // Follow requests can outlive an author route. Only the latest successful action for an
+  // author may reconcile the signed-in account, without replacing other fields.
+  const followingMutations = useRef(new Map<string, number>());
+  const followingMutationSequence = useRef(0);
+  const handleFollowStart = useCallback((authorId: string) => {
+    const mutation = ++followingMutationSequence.current;
+    return (isFollowing: boolean) => {
+      if (accountUpdateEpoch !== sessionEpoch.current || (followingMutations.current.get(authorId) || 0) > mutation) return;
+      followingMutations.current.set(authorId, mutation);
+      setCurrentUser(current => {
+        if (!sessionAuthenticated.current || !current || accountUpdateEpoch !== sessionEpoch.current) return current;
+        const wasFollowing = current.following.includes(authorId);
+        return {
+          ...current,
+          following: isFollowing ? [...new Set([...current.following, authorId])] : current.following.filter(id => id !== authorId),
+          followingCount: Math.max(0, (current.followingCount || 0) + Number(isFollowing) - Number(wasFollowing)),
+        };
+      });
+    };
+  }, [accountUpdateEpoch]);
+
   // Preserve the complete intended destination through sign-in and onboarding.
   const navigateTo = (target: Page) => {
     switch (target.name) {
@@ -554,7 +575,7 @@ const App: React.FC = () => {
       case 'feedback':
         return <FeedbackPage />;
       case 'author':
-        return <AuthorPage authorId={page.authorId} currentUser={currentUser} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
+        return <AuthorPage authorId={page.authorId} currentUser={currentUser} onFollowStart={handleFollowStart} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'community':
         return <CommunityPage currentUser={currentUser} circleSlug={page.circleSlug} query={page.query} onSignIn={() => { setIntendedPage(page); window.location.hash = '/auth'; }} />;
       case 'community-post':
