@@ -1,0 +1,58 @@
+{
+  "pendingJoins": [
+    {
+      "kind": "challenges",
+      "id": "a"
+    },
+    {
+      "kind": "challenges",
+      "id": "b"
+    }
+  ],
+  "joinButtons": [
+    {
+      "text": "Joining…",
+      "disabled": true
+    },
+    {
+      "text": "Joining…",
+      "disabled": true
+    }
+  ],
+  "pendingSubmissions": [
+    {
+      "kind": "events",
+      "id": "a"
+    },
+    {
+      "kind": "events",
+      "id": "b"
+    }
+  ],
+  "settled": [
+    {
+      "kind": "challenges",
+      "id": "a"
+    },
+    {
+      "kind": "challenges",
+      "id": "b"
+    },
+    {
+      "kind": "challenges",
+      "id": "b"
+    },
+    {
+      "kind": "events",
+      "id": "a"
+    },
+    {
+      "kind": "events",
+      "id": "b"
+    },
+    {
+      "kind": "events",
+      "id": "a"
+    }
+  ]
+}
