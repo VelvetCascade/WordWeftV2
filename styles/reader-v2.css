@@ -651,10 +651,17 @@
   .reader-experience.reader-v2 .reader-comment-block.is-comment-revealed { padding-right: 0; }
 }
 
-/* Table cells have neighboring text rather than an outside annotation rail.
-   Keep their actions in a small footer inside the cell at every viewport. */
-.reader-experience.reader-v2 :is(td, th) .reader-comment-button,
-.reader-experience.reader-v2 :is(td, th) .reader-passage-bookmark { position: static; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-top: 8px; vertical-align: middle; opacity: 1 !important; pointer-events: auto; }
+/* Table passages keep their anchors, with touch/keyboard actions disclosed
+   in the cell only when requested. Closed cells stay close to editor geometry. */
+.reader-experience.reader-v2 :is(td, th) .reader-comment-block { margin-bottom: 0; }
+.reader-experience.reader-v2 .reader-table-passage-actions { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.reader-experience.reader-v2 .reader-table-passage-actions > summary::before { content: none; }
+.reader-experience.reader-v2 .reader-table-passage-actions > summary { padding: 0; background: transparent; display: flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; margin-inline: auto; color: var(--reader-accent); cursor: pointer; border-radius: 6px; list-style: none; }
+.reader-experience.reader-v2 .reader-table-passage-actions > summary::-webkit-details-marker { display: none; }
+.reader-experience.reader-v2 .reader-table-passage-actions > summary:focus-visible { outline: 2px solid var(--reader-accent); outline-offset: -2px; }
+.reader-experience.reader-v2 .reader-table-passage-actions[open] > summary { background: var(--reader-accent-soft); }
+.reader-experience.reader-v2 .reader-table-passage-buttons { padding: 0; border: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.reader-experience.reader-v2 .reader-table-passage-buttons :is(.reader-comment-button, .reader-passage-bookmark) { position: static; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; margin: 0; opacity: 1 !important; pointer-events: auto; }
 
 @media (max-width: 720px) {
   .reader-experience.reader-v2 .reader-context-left .reader-back-button { min-width: 0; width: 100%; max-width: 100%; }
