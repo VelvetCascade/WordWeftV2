@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Heart, Bookmark, MessageCircle, MoreHorizontal, Pin, LockKeyhole, BookOpen, ArrowUpRight, ShieldAlert, Share2, Check } from 'lucide-react';
 import * as api from '../../api/community';
 import type { CommunityPost, PostModerationAction } from '../../types/community';
@@ -18,6 +18,17 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
   const [action, setAction] = useState<'DELETE' | PostModerationAction | null>(null);
   const [reason, setReason] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRoot = useRef<HTMLDivElement>(null);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  useEffect(() => {
+    if (!menuOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (!menuRoot.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', outside);
+    return () => document.removeEventListener('pointerdown', outside);
+  }, [menuOpen]);
   const [shared, setShared] = useState(false);
   const href = `#/community/post/${encodeURIComponent(post.id)}`;
   const own = post.author.id === user?.id;
@@ -54,7 +65,13 @@ export const CommunityPostCard: React.FC<{ post: CommunityPost; onUpdate: (post:
     } catch (err) { setError(communityError(err)); } finally { setPending(false); }
   };
   return <article className={`community-post community-post-${post.type.toLowerCase()} ${detail ? '' : 'ww-arrive-quiet'}`}>
-    <header className="community-post-header"><CommunityAuthor author={post.author} date={post.createdAt} /><div className="community-post-menu"><button className="community-icon-button" aria-label="Post actions" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} /></button>{menuOpen && <div className="community-menu">
+    <header className="community-post-header"><CommunityAuthor author={post.author} date={post.createdAt} /><div ref={menuRoot} className="community-post-menu" onKeyDown={event => {
+      if (menuOpen && event.key === 'Escape') {
+        event.preventDefault(); event.stopPropagation(); setMenuOpen(false); menuTrigger.current?.focus({ preventScroll: true });
+      }
+    }} onBlur={event => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMenuOpen(false);
+    }}><button ref={menuTrigger} className="community-icon-button" aria-label="Post actions" aria-expanded={menuOpen} aria-controls={menuOpen ? menuId : undefined} onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} /></button>{menuOpen && <div id={menuId} className="community-menu">
       {post.canEdit && post.status === 'ACTIVE' && <><button onClick={() => { setMenuOpen(false); setEditing(true); }}>Edit post</button><button onClick={() => { setMenuOpen(false); setAction('DELETE'); }}>Delete post</button></>}
       {!own && post.status === 'ACTIVE' && <button onClick={() => { setMenuOpen(false); if (requireAuth()) setReporting(true); }}>Report post</button>}
       {post.canModerate && <>{(post.status === 'ACTIVE' ? [post.pinned ? 'UNPIN' : 'PIN', post.locked ? 'UNLOCK' : 'LOCK', 'REMOVE'] : ['RESTORE']).map(value => <button key={value} disabled={pending} onClick={() => { setMenuOpen(false); setAction(value as PostModerationAction); }}>{value === 'PIN' ? 'Pin in circle' : value === 'UNPIN' ? 'Unpin post' : value === 'LOCK' ? 'Lock discussion' : value === 'UNLOCK' ? 'Unlock discussion' : value === 'REMOVE' ? 'Remove post' : 'Restore post'}</button>)}</>}

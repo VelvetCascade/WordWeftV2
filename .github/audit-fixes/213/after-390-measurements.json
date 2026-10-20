@@ -1,0 +1,7 @@
+{
+  "width": 390,
+  "afterEscape": false,
+  "afterOutside": false,
+  "adjacentClicks": 1,
+  "keyboard": "Escape returns focus; Tab and Shift+Tab dismiss without trapping focus; report retains sign-in guard; discussion link navigates"
+}
