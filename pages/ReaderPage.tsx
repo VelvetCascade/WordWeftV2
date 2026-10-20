@@ -1000,6 +1000,24 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                 const index = blockIndex++;
                 const count = paragraphCommentCount(index);
                 const blockProps = attributesToProps(domNode.attribs);
+                // Keep the original passage index/anchor inside tables, but disclose
+                // actions on demand instead of reserving two control rows per cell.
+                let ancestor = domNode.parent;
+                while (ancestor && !['td', 'th'].includes(ancestor.name)) ancestor = ancestor.parent;
+                const isTablePassage = Boolean(ancestor);
+                const passageActions = chapterContent.access === 'FULL' ? (
+                    <><button type="button" className="reader-passage-bookmark" aria-label={`Save passage ${index + 1} or add a private note`} onClick={event => { event.stopPropagation(); setPassageIndex(index); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-4 h-4" /></button><button
+                        onClick={(event) => { event.stopPropagation(); setRevealedCommentIndex(null); openCommentDrawer(index); }}
+                        className={`reader-comment-button absolute top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'has-comments text-accent bg-accent/10' : 'text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
+                        title="Add comment"
+                        aria-label={count > 0 ? `Open ${count} paragraph comments` : 'Comment on this paragraph'}
+                    >
+                        <div className="relative">
+                            <ChatBubbleLeftIcon className="w-4 h-4" />
+                            {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
+                        </div>
+                    </button></>
+                ) : null;
 
                 return (
                     <div
@@ -1013,19 +1031,12 @@ export const ReaderPage: React.FC<ReaderPageProps> = ({ bookId, chapterIndex, ch
                             { ...blockProps, className: `${blockProps.className || ''} relative z-10` },
                             domToReact(domNode.children, parseOptions)
                         )}
-                        {chapterContent.access === 'FULL' ? (
-                            <><button type="button" className="reader-passage-bookmark" aria-label={`Save passage ${index + 1} or add a private note`} onClick={event => { event.stopPropagation(); setPassageIndex(index); setIsPassageToolsOpen(true); }}><BookmarkIcon className="w-4 h-4" /></button><button
-                                onClick={(event) => { event.stopPropagation(); setRevealedCommentIndex(null); openCommentDrawer(index); }}
-                                className={`reader-comment-button absolute top-0 p-2 rounded-full transition-all duration-200 z-20 ${count > 0 ? 'has-comments text-accent bg-accent/10' : 'text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-dark-surface-alt'}`}
-                                title="Add comment"
-                                aria-label={count > 0 ? `Open ${count} paragraph comments` : 'Comment on this paragraph'}
-                            >
-                                <div className="relative">
-                                    <ChatBubbleLeftIcon className="w-4 h-4" />
-                                    {count > 0 && <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold px-1.5 rounded-full min-w-[16px] text-center">{count}</span>}
-                                </div>
-                            </button></>
-                        ) : null}
+                        {isTablePassage && passageActions ? (
+                            <details className="reader-table-passage-actions" onClick={event => event.stopPropagation()}>
+                                <summary aria-label={`Actions for passage ${index + 1}${count ? `, ${count} comments` : ''}`} title={`Actions for passage ${index + 1}`}><MoreHorizontal className="w-4 h-4" /></summary>
+                                <div className="reader-table-passage-buttons">{passageActions}</div>
+                            </details>
+                        ) : passageActions}
                     </div>
                 );
             }
