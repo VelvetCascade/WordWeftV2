@@ -958,13 +958,19 @@ export const toggleShelfVisibility = async (shelfId: string, visibility: 'PUBLIC
     return mapBackendUserToFrontend(await handleResponse(response));
 };
 
+export const renameShelf = async (shelfId: string, name: string): Promise<User> => {
+    const response = await fetch(`${API_BASE_URL}/library/shelves/${shelfId}`, {
+        method: 'PUT', headers: getHeaders(), body: JSON.stringify({ name }),
+    });
+    return mapBackendUserToFrontend(await handleResponse(response));
+};
+
 export const deleteShelf = async (shelfId: string): Promise<User> => {
     const response = await fetch(`${API_BASE_URL}/library/shelves/${shelfId}`, {
         method: 'DELETE',
         headers: getHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete shelf');
-    return mapBackendUserToFrontend(await response.json());
+    return mapBackendUserToFrontend(await handleResponse(response));
 };
 
 export async function updateBookShelves(userId: string, bookId: string, shelfIds: string[]): Promise<User> {

@@ -50,6 +50,21 @@ public class LibraryController {
         return ResponseEntity.ok(userService.getUserProfile(userId));
     }
 
+    @PutMapping("/shelves/{shelfId}")
+    public ResponseEntity<?> renameShelf(@PathVariable String shelfId, @RequestBody Map<String, String> payload) {
+        String userId = getCurrentUserId();
+        Shelf shelf = shelfRepository.findById(shelfId).orElse(null);
+        // Built-in shelves are virtual and have no owned shelf document.
+        if (shelf == null || !userId.equals(shelf.getUserId())) return ResponseEntity.notFound().build();
+        String name = payload.get("name");
+        if (name == null || name.trim().isEmpty() || name.trim().length() > 100) {
+            return ResponseEntity.badRequest().body("Use a shelf name between 1 and 100 characters.");
+        }
+        shelf.setName(name.trim());
+        shelfRepository.save(shelf);
+        return ResponseEntity.ok(userService.getUserProfile(userId));
+    }
+
     @DeleteMapping("/shelves/{shelfId}")
     public ResponseEntity<?> deleteShelf(@PathVariable String shelfId) {
         String userId = getCurrentUserId();
