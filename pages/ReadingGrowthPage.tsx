@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookMarked, BookOpen, CalendarDays, Check, RefreshCw, Send, Target } from 'lucide-react';
 import type { Book, GenreEvent, ReadingChallenge, User } from '../types';
 import * as api from '../api/client';
@@ -15,8 +15,10 @@ export const ReadingGrowthPage: React.FC<ReadingGrowthPageProps> = ({ currentUse
     const [challenges, setChallenges] = useState<ReadingChallenge[]>([]);
     const [events, setEvents] = useState<GenreEvent[]>([]);
     const [loading, setLoading] = useState(true);
-    const [joining, setJoining] = useState('');
-    const [submitting, setSubmitting] = useState('');
+    const joiningRequests = useRef(new Set<string>());
+    const [joining, setJoining] = useState<Set<string>>(() => new Set());
+    const submittingRequests = useRef(new Set<string>());
+    const [submitting, setSubmitting] = useState<Set<string>>(() => new Set());
     const [selectedStories, setSelectedStories] = useState<Record<string, string>>({});
     const [error, setError] = useState('');
     const [reload, setReload] = useState(0);
@@ -50,7 +52,9 @@ export const ReadingGrowthPage: React.FC<ReadingGrowthPageProps> = ({ currentUse
 
     const join = async (challengeId: string) => {
         if (!currentUser) { onSignIn(); return; }
-        setJoining(challengeId);
+        if (joiningRequests.current.has(challengeId)) return;
+        joiningRequests.current.add(challengeId);
+        setJoining(new Set(joiningRequests.current));
         setError('');
         try {
             const updated = await api.joinReadingChallenge(challengeId);
@@ -58,15 +62,18 @@ export const ReadingGrowthPage: React.FC<ReadingGrowthPageProps> = ({ currentUse
         } catch (joinError) {
             setError(joinError instanceof Error ? joinError.message : 'Could not join this challenge.');
         } finally {
-            setJoining('');
+            joiningRequests.current.delete(challengeId);
+            setJoining(new Set(joiningRequests.current));
         }
     };
 
     const submit = async (event: GenreEvent) => {
         if (!currentUser) { onSignIn(); return; }
+        if (submittingRequests.current.has(event.id)) return;
         const bookId = selectedStories[event.id] || eligibleBooks(event)[0]?.id;
         if (!bookId) return;
-        setSubmitting(event.id);
+        submittingRequests.current.add(event.id);
+        setSubmitting(new Set(submittingRequests.current));
         setError('');
         try {
             const updated = await api.submitStoryToGenreEvent(event.id, bookId);
@@ -75,7 +82,8 @@ export const ReadingGrowthPage: React.FC<ReadingGrowthPageProps> = ({ currentUse
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : 'Could not submit this story.');
         } finally {
-            setSubmitting('');
+            submittingRequests.current.delete(event.id);
+            setSubmitting(new Set(submittingRequests.current));
         }
     };
 
@@ -90,7 +98,7 @@ export const ReadingGrowthPage: React.FC<ReadingGrowthPageProps> = ({ currentUse
                     {!currentUser ? <div className="wv-growth-signin"><Target size={29} aria-hidden="true" /><div><h3>Keep a goal that travels with you.</h3><p>Sign in to track chapter, reading-time and story-completion challenges automatically.</p></div><button type="button" onClick={onSignIn} className="wv-button wv-button-primary">Sign in to join <ArrowRight size={17} /></button></div> : loading ? <div className="wv-challenge-loading" role="status"><p>Loading your challenges…</p><div className="wv-challenge-grid" aria-hidden="true">{[0, 1, 2].map(item => <div key={item} />)}</div></div> : challenges.length ? <div className="wv-challenge-grid">{challenges.map(challenge => <article key={challenge.id} className="wv-challenge-card">
                         <div className="wv-challenge-meta"><span>{challenge.metric}</span>{challenge.completed && <span><Check size={14} /> Completed</span>}</div><h3>{challenge.title}</h3><p>{challenge.description}</p>
                         <div className="wv-challenge-progress"><div><span>{challengeStatusLabel(challenge)}</span><span>{challenge.progressPercent}%</span></div><progress max={100} value={Math.min(100, Math.max(0, challenge.progressPercent))} aria-label={`${challenge.title}: ${challengeStatusLabel(challenge)}`} /></div>
-                        {!challenge.joined && <button type="button" disabled={joining === challenge.id} onClick={() => void join(challenge.id)} className="wv-button wv-button-primary">{joining === challenge.id ? 'Joining…' : 'Join challenge'}</button>}
+                        {!challenge.joined && <button type="button" disabled={joining.has(challenge.id)} onClick={() => void join(challenge.id)} className="wv-button wv-button-primary">{joining.has(challenge.id) ? 'Joining…' : 'Join challenge'}</button>}
                     </article>)}</div> : !error ? <div className="wv-empty"><h3>No reading challenges available yet.</h3><p>You can explore stories and return when a new goal is available.</p><a href="/category" className="wv-button">Browse stories <ArrowRight size={17} /></a></div> : null}
                 </section>
                 <section className="wv-growth-section" aria-labelledby="events-title">
@@ -100,7 +108,7 @@ export const ReadingGrowthPage: React.FC<ReadingGrowthPageProps> = ({ currentUse
                         const open = event.timing === 'active';
                         return <article key={event.id} className="wv-event-card"><header><div className="wv-event-meta"><span>{event.genre}</span><span>{eventTimingLabel(event.startAt, event.endAt)}</span></div><h3>{event.title}</h3>{event.prompt && <blockquote>“{event.prompt}”</blockquote>}<p>{event.description}</p></header>
                             {event.stories.length > 0 && <section className="wv-event-stories" aria-label={`Stories in ${event.title}`}><h4>Stories in this event</h4><div>{event.stories.map(story => <a key={story.bookId} href={`/book/${story.bookId}`}><div className="wv-event-cover">{story.coverUrl ? <img src={story.coverUrl} alt={`Cover of ${story.title}`} loading="lazy" /> : <BookOpen size={22} aria-hidden="true" />}</div><div><h5>{story.title}</h5><p>{story.authorName}</p></div></a>)}</div></section>}
-                            <footer className="wv-event-submit">{!currentUser ? <button type="button" onClick={onSignIn} className="wv-button wv-button-plain">Sign in to submit your story <ArrowRight size={17} /></button> : open && eligible.length > 0 ? <div><label htmlFor={`event-story-${event.id}`}><BookMarked size={17} /> Choose your published story</label><div><select id={`event-story-${event.id}`} value={selectedStories[event.id] || eligible[0].id} onChange={value => setSelectedStories(previous => ({ ...previous, [event.id]: value.target.value }))}>{eligible.map(book => <option key={book.id} value={book.id}>{book.title}</option>)}</select><button type="button" disabled={submitting === event.id} onClick={() => void submit(event)} className="wv-button wv-button-primary"><Send size={16} /> {submitting === event.id ? 'Submitting…' : 'Submit story'}</button></div></div> : <p>{open ? `Publish a ${event.genre} story to submit it here.` : event.timing === 'upcoming' ? 'Submissions open when the event begins.' : 'Submissions have closed.'}</p>}</footer>
+                            <footer className="wv-event-submit">{!currentUser ? <button type="button" onClick={onSignIn} className="wv-button wv-button-plain">Sign in to submit your story <ArrowRight size={17} /></button> : open && eligible.length > 0 ? <div><label htmlFor={`event-story-${event.id}`}><BookMarked size={17} /> Choose your published story</label><div><select id={`event-story-${event.id}`} value={selectedStories[event.id] || eligible[0].id} onChange={value => setSelectedStories(previous => ({ ...previous, [event.id]: value.target.value }))}>{eligible.map(book => <option key={book.id} value={book.id}>{book.title}</option>)}</select><button type="button" disabled={submitting.has(event.id)} onClick={() => void submit(event)} className="wv-button wv-button-primary"><Send size={16} /> {submitting.has(event.id) ? 'Submitting…' : 'Submit story'}</button></div></div> : <p>{open ? `Publish a ${event.genre} story to submit it here.` : event.timing === 'upcoming' ? 'Submissions open when the event begins.' : 'Submissions have closed.'}</p>}</footer>
                         </article>;
                     })}</div>}
                 </section>

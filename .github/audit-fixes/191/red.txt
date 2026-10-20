@@ -1,0 +1,290 @@
+
+Running 2 tests using 1 worker
+
+(node:21490) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 e2e/growth-concurrent-actions.spec.ts:20:31 › independent joins and submissions settle without duplicate requests 1440 (11.4s)
+(node:21831) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 e2e/growth-concurrent-actions.spec.ts:20:31 › independent joins and submissions settle without duplicate requests 390 (7.3s)
+
+
+  1) e2e/growth-concurrent-actions.spec.ts:20:31 › independent joins and submissions settle without duplicate requests 1440 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"id": "a", "kind": "challenges", "route": {"_guid": "route@f4256bd81ce16422e0917688c1a94b36", "_type": "Route"}}, {"id": "a", "kind": "challenges", "route": {"_guid": "route@7dbab237cf8f4e8ab914475ef1cf730c", "_type": "Route"}}]
+
+      27 |  await page.waitForTimeout(150);observations.pendingJoins=requests.map(({kind,id})=>({kind,id}));observations.joinButtons=await page.locator('.wv-challenge-card button').evaluateAll(items=>items.map(item=>({text:item.textContent,disabled:(item as HTMLButtonElement).disabled})));
+      28 |  if(process.env.AUDIT_PROOF_DIR){await page.locator('.wv-challenge-grid').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/joins-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 29 |  expect.soft(requests.filter(r=>r.kind==='challenges'&&r.id==='a')).toHaveLength(1);await expect.soft(a).toBeDisabled({timeout:500});await expect.soft(b).toBeDisabled({timeout:500});
+         |                                                                     ^
+      30 |  await requests.find(r=>r.kind==='challenges'&&r.id==='b')!.route.fulfill({status:503,json:{message:'Synthetic challenge B retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic challenge B retry');
+      31 |  await expect.soft(a).toBeDisabled({timeout:500});await expect(b).toBeEnabled();
+      32 |  await requests.find(r=>r.kind==='challenges'&&r.id==='a')!.route.fulfill({json:{...challenges[0],joined:true}});await expect(challenge('a').getByRole('button')).toHaveCount(0);
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:29:69
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge B', exact: true }) }).getByRole('button')
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge B', exact: true }) }).getByRole('button') with timeout 500ms
+      - waiting for locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge B', exact: true }) }).getByRole('button')
+        5 × locator resolved to <button type="button" class="wv-button wv-button-primary">Join challenge</button>
+          - unexpected value "enabled"
+
+
+      27 |  await page.waitForTimeout(150);observations.pendingJoins=requests.map(({kind,id})=>({kind,id}));observations.joinButtons=await page.locator('.wv-challenge-card button').evaluateAll(items=>items.map(item=>({text:item.textContent,disabled:(item as HTMLButtonElement).disabled})));
+      28 |  if(process.env.AUDIT_PROOF_DIR){await page.locator('.wv-challenge-grid').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/joins-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 29 |  expect.soft(requests.filter(r=>r.kind==='challenges'&&r.id==='a')).toHaveLength(1);await expect.soft(a).toBeDisabled({timeout:500});await expect.soft(b).toBeDisabled({timeout:500});
+         |                                                                                                                                                           ^
+      30 |  await requests.find(r=>r.kind==='challenges'&&r.id==='b')!.route.fulfill({status:503,json:{message:'Synthetic challenge B retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic challenge B retry');
+      31 |  await expect.soft(a).toBeDisabled({timeout:500});await expect(b).toBeEnabled();
+      32 |  await requests.find(r=>r.kind==='challenges'&&r.id==='a')!.route.fulfill({json:{...challenges[0],joined:true}});await expect(challenge('a').getByRole('button')).toHaveCount(0);
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:29:155
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge A', exact: true }) }).getByRole('button')
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge A', exact: true }) }).getByRole('button') with timeout 500ms
+      - waiting for locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge A', exact: true }) }).getByRole('button')
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">Join challenge</button>
+          - unexpected value "enabled"
+
+
+      29 |  expect.soft(requests.filter(r=>r.kind==='challenges'&&r.id==='a')).toHaveLength(1);await expect.soft(a).toBeDisabled({timeout:500});await expect.soft(b).toBeDisabled({timeout:500});
+      30 |  await requests.find(r=>r.kind==='challenges'&&r.id==='b')!.route.fulfill({status:503,json:{message:'Synthetic challenge B retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic challenge B retry');
+    > 31 |  await expect.soft(a).toBeDisabled({timeout:500});await expect(b).toBeEnabled();
+         |                       ^
+      32 |  await requests.find(r=>r.kind==='challenges'&&r.id==='a')!.route.fulfill({json:{...challenges[0],joined:true}});await expect(challenge('a').getByRole('button')).toHaveCount(0);
+      33 |  await b.click();await expect.poll(()=>requests.filter(r=>r.kind==='challenges'&&r.id==='b').length).toBe(2);await requests.filter(r=>r.kind==='challenges'&&r.id==='b')[1].route.fulfill({json:{...challenges[1],joined:true}});await expect(challenge('b').getByRole('button')).toHaveCount(0);
+      34 |  const ea=event('a').getByRole('button',{name:/Submit story|Submitting/}),eb=event('b').getByRole('button',{name:/Submit story|Submitting/});
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:31:23
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"id": "a", "kind": "events", "route": {"_guid": "route@7c8a2133dac2497115e83fc4357df71a", "_type": "Route"}}, {"id": "a", "kind": "events", "route": {"_guid": "route@518bb9664a10018ffe2d8978a994d093", "_type": "Route"}}]
+
+      36 |  await page.waitForTimeout(150);observations.pendingSubmissions=requests.filter(r=>r.kind==='events').map(({kind,id})=>({kind,id}));
+      37 |  if(process.env.AUDIT_PROOF_DIR){await event('a').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/submissions-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 38 |  expect.soft(requests.filter(r=>r.kind==='events'&&r.id==='a')).toHaveLength(1);await expect.soft(ea).toBeDisabled({timeout:500});await expect.soft(eb).toBeDisabled({timeout:500});
+         |                                                                 ^
+      39 |  const submitted={bookId:book.id,title:book.title,authorId:'growth-writer',authorName:'Synthetic Writer'};
+      40 |  await requests.find(r=>r.kind==='events'&&r.id==='b')!.route.fulfill({json:{...events[1],stories:[submitted]}});await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect.soft(ea).toBeDisabled({timeout:500});
+      41 |  await requests.find(r=>r.kind==='events'&&r.id==='a')!.route.fulfill({status:503,json:{message:'Synthetic event A retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic event A retry');await expect(ea).toBeEnabled();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:38:65
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event B', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event B', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ }) with timeout 500ms
+      - waiting for locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event B', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">…</button>
+          - unexpected value "enabled"
+
+
+      36 |  await page.waitForTimeout(150);observations.pendingSubmissions=requests.filter(r=>r.kind==='events').map(({kind,id})=>({kind,id}));
+      37 |  if(process.env.AUDIT_PROOF_DIR){await event('a').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/submissions-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 38 |  expect.soft(requests.filter(r=>r.kind==='events'&&r.id==='a')).toHaveLength(1);await expect.soft(ea).toBeDisabled({timeout:500});await expect.soft(eb).toBeDisabled({timeout:500});
+         |                                                                                                                                                         ^
+      39 |  const submitted={bookId:book.id,title:book.title,authorId:'growth-writer',authorName:'Synthetic Writer'};
+      40 |  await requests.find(r=>r.kind==='events'&&r.id==='b')!.route.fulfill({json:{...events[1],stories:[submitted]}});await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect.soft(ea).toBeDisabled({timeout:500});
+      41 |  await requests.find(r=>r.kind==='events'&&r.id==='a')!.route.fulfill({status:503,json:{message:'Synthetic event A retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic event A retry');await expect(ea).toBeEnabled();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:38:153
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event A', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event A', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ }) with timeout 500ms
+      - waiting for locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event A', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">…</button>
+          - unexpected value "enabled"
+
+
+      38 |  expect.soft(requests.filter(r=>r.kind==='events'&&r.id==='a')).toHaveLength(1);await expect.soft(ea).toBeDisabled({timeout:500});await expect.soft(eb).toBeDisabled({timeout:500});
+      39 |  const submitted={bookId:book.id,title:book.title,authorId:'growth-writer',authorName:'Synthetic Writer'};
+    > 40 |  await requests.find(r=>r.kind==='events'&&r.id==='b')!.route.fulfill({json:{...events[1],stories:[submitted]}});await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect.soft(ea).toBeDisabled({timeout:500});
+         |                                                                                                                                                                                                                               ^
+      41 |  await requests.find(r=>r.kind==='events'&&r.id==='a')!.route.fulfill({status:503,json:{message:'Synthetic event A retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic event A retry');await expect(ea).toBeEnabled();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+      42 |  const attemptsBeforeRetry=requests.filter(r=>r.kind==='events'&&r.id==='a').length;await ea.click();await expect.poll(()=>requests.filter(r=>r.kind==='events'&&r.id==='a').length).toBe(attemptsBeforeRetry+1);await requests.filter(r=>r.kind==='events'&&r.id==='a')[attemptsBeforeRetry].route.fulfill({json:{...events[0],stories:[submitted]}});await expect(event('a').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+      43 |  observations.settled=requests.map(({kind,id})=>({kind,id}));if(process.env.AUDIT_PROOF_DIR)await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:40:223
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/growth-concurrent-actions--95954-out-duplicate-requests-1440/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/growth-concurrent-actions--95954-out-duplicate-requests-1440/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/growth-concurrent-actions--95954-out-duplicate-requests-1440/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/growth-concurrent-actions--95954-out-duplicate-requests-1440/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e/growth-concurrent-actions.spec.ts:20:31 › independent joins and submissions settle without duplicate requests 390 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"id": "a", "kind": "challenges", "route": {"_guid": "route@aa75f0e8855e3eab5f8d9881742efed7", "_type": "Route"}}, {"id": "a", "kind": "challenges", "route": {"_guid": "route@6101e026a715af4728ac7760f269c27c", "_type": "Route"}}]
+
+      27 |  await page.waitForTimeout(150);observations.pendingJoins=requests.map(({kind,id})=>({kind,id}));observations.joinButtons=await page.locator('.wv-challenge-card button').evaluateAll(items=>items.map(item=>({text:item.textContent,disabled:(item as HTMLButtonElement).disabled})));
+      28 |  if(process.env.AUDIT_PROOF_DIR){await page.locator('.wv-challenge-grid').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/joins-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 29 |  expect.soft(requests.filter(r=>r.kind==='challenges'&&r.id==='a')).toHaveLength(1);await expect.soft(a).toBeDisabled({timeout:500});await expect.soft(b).toBeDisabled({timeout:500});
+         |                                                                     ^
+      30 |  await requests.find(r=>r.kind==='challenges'&&r.id==='b')!.route.fulfill({status:503,json:{message:'Synthetic challenge B retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic challenge B retry');
+      31 |  await expect.soft(a).toBeDisabled({timeout:500});await expect(b).toBeEnabled();
+      32 |  await requests.find(r=>r.kind==='challenges'&&r.id==='a')!.route.fulfill({json:{...challenges[0],joined:true}});await expect(challenge('a').getByRole('button')).toHaveCount(0);
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:29:69
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge B', exact: true }) }).getByRole('button')
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge B', exact: true }) }).getByRole('button') with timeout 500ms
+      - waiting for locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge B', exact: true }) }).getByRole('button')
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">Join challenge</button>
+          - unexpected value "enabled"
+
+
+      27 |  await page.waitForTimeout(150);observations.pendingJoins=requests.map(({kind,id})=>({kind,id}));observations.joinButtons=await page.locator('.wv-challenge-card button').evaluateAll(items=>items.map(item=>({text:item.textContent,disabled:(item as HTMLButtonElement).disabled})));
+      28 |  if(process.env.AUDIT_PROOF_DIR){await page.locator('.wv-challenge-grid').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/joins-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 29 |  expect.soft(requests.filter(r=>r.kind==='challenges'&&r.id==='a')).toHaveLength(1);await expect.soft(a).toBeDisabled({timeout:500});await expect.soft(b).toBeDisabled({timeout:500});
+         |                                                                                                                                                           ^
+      30 |  await requests.find(r=>r.kind==='challenges'&&r.id==='b')!.route.fulfill({status:503,json:{message:'Synthetic challenge B retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic challenge B retry');
+      31 |  await expect.soft(a).toBeDisabled({timeout:500});await expect(b).toBeEnabled();
+      32 |  await requests.find(r=>r.kind==='challenges'&&r.id==='a')!.route.fulfill({json:{...challenges[0],joined:true}});await expect(challenge('a').getByRole('button')).toHaveCount(0);
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:29:155
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge A', exact: true }) }).getByRole('button')
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge A', exact: true }) }).getByRole('button') with timeout 500ms
+      - waiting for locator('.wv-challenge-card').filter({ has: getByRole('heading', { name: 'Synthetic challenge A', exact: true }) }).getByRole('button')
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">Join challenge</button>
+          - unexpected value "enabled"
+
+
+      29 |  expect.soft(requests.filter(r=>r.kind==='challenges'&&r.id==='a')).toHaveLength(1);await expect.soft(a).toBeDisabled({timeout:500});await expect.soft(b).toBeDisabled({timeout:500});
+      30 |  await requests.find(r=>r.kind==='challenges'&&r.id==='b')!.route.fulfill({status:503,json:{message:'Synthetic challenge B retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic challenge B retry');
+    > 31 |  await expect.soft(a).toBeDisabled({timeout:500});await expect(b).toBeEnabled();
+         |                       ^
+      32 |  await requests.find(r=>r.kind==='challenges'&&r.id==='a')!.route.fulfill({json:{...challenges[0],joined:true}});await expect(challenge('a').getByRole('button')).toHaveCount(0);
+      33 |  await b.click();await expect.poll(()=>requests.filter(r=>r.kind==='challenges'&&r.id==='b').length).toBe(2);await requests.filter(r=>r.kind==='challenges'&&r.id==='b')[1].route.fulfill({json:{...challenges[1],joined:true}});await expect(challenge('b').getByRole('button')).toHaveCount(0);
+      34 |  const ea=event('a').getByRole('button',{name:/Submit story|Submitting/}),eb=event('b').getByRole('button',{name:/Submit story|Submitting/});
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:31:23
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"id": "a", "kind": "events", "route": {"_guid": "route@b4e159fbb4cccd78849679f7657feb29", "_type": "Route"}}, {"id": "a", "kind": "events", "route": {"_guid": "route@d0c7b1389c9fc625beb73d100fccdf7e", "_type": "Route"}}]
+
+      36 |  await page.waitForTimeout(150);observations.pendingSubmissions=requests.filter(r=>r.kind==='events').map(({kind,id})=>({kind,id}));
+      37 |  if(process.env.AUDIT_PROOF_DIR){await event('a').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/submissions-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 38 |  expect.soft(requests.filter(r=>r.kind==='events'&&r.id==='a')).toHaveLength(1);await expect.soft(ea).toBeDisabled({timeout:500});await expect.soft(eb).toBeDisabled({timeout:500});
+         |                                                                 ^
+      39 |  const submitted={bookId:book.id,title:book.title,authorId:'growth-writer',authorName:'Synthetic Writer'};
+      40 |  await requests.find(r=>r.kind==='events'&&r.id==='b')!.route.fulfill({json:{...events[1],stories:[submitted]}});await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect.soft(ea).toBeDisabled({timeout:500});
+      41 |  await requests.find(r=>r.kind==='events'&&r.id==='a')!.route.fulfill({status:503,json:{message:'Synthetic event A retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic event A retry');await expect(ea).toBeEnabled();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:38:65
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event B', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event B', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ }) with timeout 500ms
+      - waiting for locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event B', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">…</button>
+          - unexpected value "enabled"
+
+
+      36 |  await page.waitForTimeout(150);observations.pendingSubmissions=requests.filter(r=>r.kind==='events').map(({kind,id})=>({kind,id}));
+      37 |  if(process.env.AUDIT_PROOF_DIR){await event('a').scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/submissions-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));}
+    > 38 |  expect.soft(requests.filter(r=>r.kind==='events'&&r.id==='a')).toHaveLength(1);await expect.soft(ea).toBeDisabled({timeout:500});await expect.soft(eb).toBeDisabled({timeout:500});
+         |                                                                                                                                                         ^
+      39 |  const submitted={bookId:book.id,title:book.title,authorId:'growth-writer',authorName:'Synthetic Writer'};
+      40 |  await requests.find(r=>r.kind==='events'&&r.id==='b')!.route.fulfill({json:{...events[1],stories:[submitted]}});await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect.soft(ea).toBeDisabled({timeout:500});
+      41 |  await requests.find(r=>r.kind==='events'&&r.id==='a')!.route.fulfill({status:503,json:{message:'Synthetic event A retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic event A retry');await expect(ea).toBeEnabled();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:38:153
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event A', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+    Expected: disabled
+    Received: enabled
+    Timeout:  500ms
+
+    Call log:
+      - Expect "soft toBeDisabled" locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event A', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ }) with timeout 500ms
+      - waiting for locator('.wv-event-card').filter({ has: getByRole('heading', { name: 'Synthetic event A', exact: true }) }).getByRole('button', { name: /Submit story|Submitting/ })
+        6 × locator resolved to <button type="button" class="wv-button wv-button-primary">…</button>
+          - unexpected value "enabled"
+
+
+      38 |  expect.soft(requests.filter(r=>r.kind==='events'&&r.id==='a')).toHaveLength(1);await expect.soft(ea).toBeDisabled({timeout:500});await expect.soft(eb).toBeDisabled({timeout:500});
+      39 |  const submitted={bookId:book.id,title:book.title,authorId:'growth-writer',authorName:'Synthetic Writer'};
+    > 40 |  await requests.find(r=>r.kind==='events'&&r.id==='b')!.route.fulfill({json:{...events[1],stories:[submitted]}});await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect.soft(ea).toBeDisabled({timeout:500});
+         |                                                                                                                                                                                                                               ^
+      41 |  await requests.find(r=>r.kind==='events'&&r.id==='a')!.route.fulfill({status:503,json:{message:'Synthetic event A retry'}});await expect(page.getByRole('alert')).toContainText('Synthetic event A retry');await expect(ea).toBeEnabled();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+      42 |  const attemptsBeforeRetry=requests.filter(r=>r.kind==='events'&&r.id==='a').length;await ea.click();await expect.poll(()=>requests.filter(r=>r.kind==='events'&&r.id==='a').length).toBe(attemptsBeforeRetry+1);await requests.filter(r=>r.kind==='events'&&r.id==='a')[attemptsBeforeRetry].route.fulfill({json:{...events[0],stories:[submitted]}});await expect(event('a').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();await expect(event('b').getByRole('link',{name:new RegExp(book.title)})).toBeVisible();
+      43 |  observations.settled=requests.map(({kind,id})=>({kind,id}));if(process.env.AUDIT_PROOF_DIR)await writeFile(`${process.env.AUDIT_PROOF_DIR}/requests-${width}.json`,JSON.stringify(observations,null,2));
+        at /workspace/ww-fix-191/e2e/growth-concurrent-actions.spec.ts:40:223
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/growth-concurrent-actions--3474f-hout-duplicate-requests-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/growth-concurrent-actions--3474f-hout-duplicate-requests-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/growth-concurrent-actions--3474f-hout-duplicate-requests-390/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/growth-concurrent-actions--3474f-hout-duplicate-requests-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    e2e/growth-concurrent-actions.spec.ts:20:31 › independent joins and submissions settle without duplicate requests 1440 
+    e2e/growth-concurrent-actions.spec.ts:20:31 › independent joins and submissions settle without duplicate requests 390 
