@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Book, BookProgress, LibraryBook, Shelf, User } from '../types';
 import { Footer } from '../components/Footer';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -74,7 +74,47 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
     const [selectedBooks, setSelectedBooks] = useState<Set<string>>(new Set());
     const [bulkShelfId, setBulkShelfId] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
-    const customShelves = (user.library ?? []).filter(shelf => !['all','reading','toread','completed','1'].includes(shelf.id) && shelf.name !== 'My List').sort((a,b) => a.name.localeCompare(b.name));
+    const [shelfAction, setShelfAction] = useState<{ kind: 'rename' | 'delete'; id: string; name: string } | null>(null);
+    const [shelfNameDraft, setShelfNameDraft] = useState('');
+    const [shelfActionError, setShelfActionError] = useState('');
+    const [shelfActionBusy, setShelfActionBusy] = useState(false);
+    const shelfActionPending = useRef(false);
+    const shelfSelectRef = useRef<HTMLSelectElement>(null);
+    const shelfNameRef = useRef<HTMLInputElement>(null);
+    const renameDialogRef = useDialog(shelfAction?.kind === 'rename', () => setShelfAction(null), !shelfActionBusy);
+    const startShelfAction = (kind: 'rename' | 'delete') => {
+        if (shelfActionPending.current || bulkBusy || !customShelves.some(shelf => shelf.id === activeShelfId)) return;
+        setShelfNameDraft(activeShelf.name); setShelfActionError('');
+        setShelfAction({ kind, id: activeShelf.id, name: activeShelf.name });
+    };
+    const runShelfAction = async () => {
+        if (!shelfAction || shelfActionPending.current) return;
+        const name = shelfNameDraft.trim();
+        if (shelfAction.kind === 'rename' && (!name || name.length > 100)) {
+            setShelfActionError('Use a shelf name between 1 and 100 characters.');
+            shelfNameRef.current?.focus(); return;
+        }
+        shelfActionPending.current = true; setShelfActionBusy(true); setShelfActionError('');
+        try {
+            const updatedUser = shelfAction.kind === 'rename'
+                ? await api.renameShelf(shelfAction.id, name)
+                : await api.deleteShelf(shelfAction.id);
+            onUserUpdate(updatedUser);
+            setShelfAction(null);
+            if (shelfAction.kind === 'delete') {
+                setActiveShelfId('all');
+                setBulkShelfId(current => current === shelfAction.id ? '' : current);
+                requestAnimationFrame(() => shelfSelectRef.current?.focus());
+            }
+            setActionStatus(shelfAction.kind === 'rename' ? 'Shelf renamed. Saved online.' : 'Shelf deleted. Your stories and reading place are still saved.');
+        } catch (error) {
+            setShelfActionError(error instanceof Error ? error.message : 'The shelf could not be updated. Please try again.');
+        } finally {
+            shelfActionPending.current = false; setShelfActionBusy(false);
+        }
+    };
+
+    const customShelves = (user.library ?? []).filter(shelf => !['all','reading','toread','completed','1'].includes(shelf.id)).sort((a,b) => a.name.localeCompare(b.name));
     const toggleSelectedBook = (id: string) => setSelectedBooks(ids => { const next = new Set(ids); if (next.has(id)) next.delete(id); else if (next.size < 100) next.add(id); return next; });
     const organizeSelected = async (operation: 'ADD'|'REMOVE') => {
         if (!selectedBooks.size || !bulkShelfId || bulkBusy) return;
@@ -139,7 +179,7 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
     }, [user.allowMatureContent, user.dateOfBirth]);
 
     const shelves = useMemo<Shelf[]>(() => (user.library ?? [])
-        .filter(shelf => shelf.id !== '1' && shelf.name !== 'My List')
+        .filter(shelf => shelf.id !== '1')
         .map(shelf => ({
             ...shelf,
             books: shelf.books
@@ -245,10 +285,10 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
                 {!isProgressLoading && resumeCard}
                 {(loadError || actionError) && <div role="alert" className="ww-library-error"><span>{loadError || actionError}</span>{loadError ? <button type="button" onClick={() => setLoadAttempt(attempt => attempt + 1)}>Retry</button> : <button type="button" onClick={() => setActionError('')}>Dismiss</button>}</div>}
                 <nav className="ww-library-status-tabs" aria-label="Reading status">{([{ id: 'reading', label: 'Reading', count: inProgressCount }, { id: 'saved', label: 'Saved', count: savedCount }, { id: 'finished', label: 'Finished', count: completedCount }, { id: 'caughtup', label: 'Caught up', count: caughtUpCount }, { id: 'updates', label: 'New chapters', count: updatesCount }, { id: 'all', label: 'All stories', count: allBooks.length }] as const).map(view => <button key={view.id} type="button" aria-pressed={activeView === view.id} className={activeView === view.id ? 'is-active' : ''} onClick={() => setActiveView(view.id)}>{view.label}<span>{isProgressLoading ? '…' : view.count}</span></button>)}</nav>
-                <div className="ww-library-tools-v2"><label className="ww-library-filter-input"><SearchIcon className="w-4 h-4" /><span className="sr-only">Search your library</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search your library" /></label><label className="ww-library-shelf-select"><span className="sr-only">Shelf</span><select value={activeShelf?.id ?? 'all'} onChange={event => setActiveShelfId(event.target.value)}>{navigationShelves.filter(shelf => shelf.id === activeShelfId || shelf.id === 'all' || shelf.name.toLocaleLowerCase().includes(shelfQuery.toLocaleLowerCase())).map(shelf => <option key={shelf.id} value={shelf.id}>{shelf.name} ({shelf.books.length}){customShelves.some(item => item.id === shelf.id) ? shelf.visibility === 'PUBLIC' ? ' · Public' : ' · Private' : ''}</option>)}</select></label><label className="ww-library-sort"><span className="sr-only">Sort</span><select value={sort} onChange={event => setSort(event.target.value as LibrarySort)}><option value="recent">Recently added</option><option value="title">Title A–Z</option><option value="progress">Reading progress</option></select></label><button type="button" className="ww-library-create-shelf" onClick={() => setIsCreateShelfOpen(true)}><PlusIcon className="w-4 h-4" />New shelf</button></div>
+                <div className="ww-library-tools-v2"><label className="ww-library-filter-input"><SearchIcon className="w-4 h-4" /><span className="sr-only">Search your library</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search your library" /></label><label className="ww-library-shelf-select"><span className="sr-only">Shelf</span><select ref={shelfSelectRef} value={activeShelf?.id ?? 'all'} onChange={event => setActiveShelfId(event.target.value)}>{navigationShelves.filter(shelf => shelf.id === activeShelfId || shelf.id === 'all' || shelf.name.toLocaleLowerCase().includes(shelfQuery.toLocaleLowerCase())).map(shelf => <option key={shelf.id} value={shelf.id}>{shelf.name} ({shelf.books.length}){customShelves.some(item => item.id === shelf.id) ? shelf.visibility === 'PUBLIC' ? ' · Public' : ' · Private' : ''}</option>)}</select></label><label className="ww-library-sort"><span className="sr-only">Sort</span><select value={sort} onChange={event => setSort(event.target.value as LibrarySort)}><option value="recent">Recently added</option><option value="title">Title A–Z</option><option value="progress">Reading progress</option></select></label><button type="button" className="ww-library-create-shelf" onClick={() => setIsCreateShelfOpen(true)}><PlusIcon className="w-4 h-4" />New shelf</button></div>
                 {customShelves.length > 6 && <label className="ww-library-shelf-search">Find a shelf<input type="search" value={shelfQuery} onChange={event => setShelfQuery(event.target.value)} placeholder="Search shelf names" /></label>}
                 <details className="ww-library-section-tools"><summary>Shelf tools</summary>
-                {customShelves.some(shelf => shelf.id === activeShelfId) && <div className="ww-library-visibility"><p>{activeShelf.visibility === 'PUBLIC' ? 'Public shelf · Visible on your public profile.' : 'Private shelf · Visible only to you.'}</p><button type="button" disabled={bulkBusy} onClick={changeShelfVisibility}>{activeShelf.visibility === 'PUBLIC' ? 'Make private' : 'Share on public profile'}</button></div>}
+                {customShelves.some(shelf => shelf.id === activeShelfId) && <div className="ww-library-visibility"><p>{activeShelf.visibility === 'PUBLIC' ? 'Public shelf · Visible on your public profile.' : 'Private shelf · Visible only to you.'}</p><button type="button" disabled={bulkBusy} onClick={changeShelfVisibility}>{activeShelf.visibility === 'PUBLIC' ? 'Make private' : 'Share on public profile'}</button><button type="button" disabled={bulkBusy || shelfActionBusy} onClick={() => startShelfAction('rename')}>Rename shelf</button><button type="button" disabled={bulkBusy || shelfActionBusy} onClick={() => startShelfAction('delete')}>Delete shelf</button></div>}
                 <div className="ww-library-organize"><button type="button" disabled={bulkBusy} aria-pressed={isOrganizing} onClick={() => { setIsOrganizing(value => !value); setSelectedBooks(new Set()); }}>{isOrganizing ? 'Done organizing' : 'Organize stories'}</button>{isOrganizing && <><span>{selectedBooks.size} selected · Up to 100</span><label>Shelf<select value={bulkShelfId} onChange={event => setBulkShelfId(event.target.value)}><option value="">Choose a shelf</option>{customShelves.map(shelf => <option key={shelf.id} value={shelf.id}>{shelf.name} · {shelf.visibility === 'PUBLIC' ? 'Public' : 'Private'}</option>)}</select></label><button type="button" disabled={!selectedBooks.size || !bulkShelfId || bulkBusy} onClick={() => organizeSelected('ADD')}>{bulkBusy ? 'Saving…' : 'Add to shelf'}</button><button type="button" disabled={!selectedBooks.size || !bulkShelfId || bulkBusy} onClick={() => organizeSelected('REMOVE')}>Remove from shelf</button></>}</div>
                 </details>
                 {actionStatus && <p className="ww-library-action-status" role="status">{actionStatus}</p>}
@@ -261,6 +301,9 @@ export const LibraryPage: React.FC<{ user: User; onUserUpdate: (user: User) => v
             </div>
 
             {isCreateShelfOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onMouseDown={event => { if (event.target === event.currentTarget && !isCreatingShelf) setIsCreateShelfOpen(false); }}><div ref={createShelfDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="create-shelf-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-dark-surface"><div className="mb-6 flex items-center justify-between"><div><span className="ww-page-eyebrow">Organize your reading</span><h2 id="create-shelf-title" className="mt-1 text-xl font-bold">Create a shelf</h2></div><button type="button" aria-label="Close create shelf dialog" onClick={() => setIsCreateShelfOpen(false)} className="grid min-h-11 min-w-11 place-items-center rounded-full hover:bg-gray-100 dark:hover:bg-dark-surface-alt"><XMarkIcon className="h-6 w-6" /></button></div><label className="block text-sm font-semibold">Shelf name<input autoFocus maxLength={60} value={newShelfName} onChange={event => setNewShelfName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void createShelf(); }} placeholder="For example, Weekend reads" className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none focus:border-accent focus:bg-white dark:border-dark-border dark:bg-dark-surface-alt" /></label><fieldset className="ww-shelf-visibility-options"><legend>Who can see this shelf?</legend><label><input type="radio" name="new-shelf-visibility" checked={newShelfVisibility === 'PRIVATE'} onChange={() => setNewShelfVisibility('PRIVATE')} />Private · Only you</label><label><input type="radio" name="new-shelf-visibility" checked={newShelfVisibility === 'PUBLIC'} onChange={() => setNewShelfVisibility('PUBLIC')} />Public · On your public profile</label></fieldset>{actionError && <p role="alert">{actionError}</p>}<div className="mt-6 flex gap-3"><button type="button" disabled={isCreatingShelf} onClick={() => setIsCreateShelfOpen(false)} className="flex-1 rounded-xl bg-gray-100 py-3 font-bold dark:bg-dark-surface-alt">Cancel</button><button type="button" disabled={!newShelfName.trim() || isCreatingShelf} onClick={() => void createShelf()} className="flex-1 rounded-xl bg-accent py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{isCreatingShelf ? 'Creating…' : 'Create shelf'}</button></div></div></div>}
+
+            {shelfAction?.kind === 'rename' && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={event => { if (event.target === event.currentTarget && !shelfActionBusy) setShelfAction(null); }}><div ref={renameDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="rename-shelf-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-dark-surface"><h2 id="rename-shelf-title" className="text-xl font-bold">Rename shelf</h2><form onSubmit={event => { event.preventDefault(); void runShelfAction(); }}><label className="mt-5 block text-sm font-semibold">Shelf name<input ref={shelfNameRef} data-dialog-focus maxLength={100} disabled={shelfActionBusy} value={shelfNameDraft} onChange={event => setShelfNameDraft(event.target.value)} aria-invalid={!!shelfActionError} aria-describedby={shelfActionError ? 'rename-shelf-error' : undefined} className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none focus:border-accent focus:bg-white dark:border-dark-border dark:bg-dark-surface-alt" /></label>{shelfActionError && <p id="rename-shelf-error" role="alert" className="mt-3 text-sm text-danger dark:text-red-300">{shelfActionError}</p>}<div className="mt-6 flex gap-3"><button type="button" disabled={shelfActionBusy} onClick={() => setShelfAction(null)} className="flex-1 rounded-xl bg-gray-100 py-3 font-bold dark:bg-dark-surface-alt">Cancel</button><button type="submit" disabled={shelfActionBusy} aria-busy={shelfActionBusy} className="flex-1 rounded-xl bg-accent py-3 font-bold text-white disabled:cursor-wait disabled:opacity-50">{shelfActionBusy ? 'Saving…' : 'Save name'}</button></div></form></div></div>}
+            <ConfirmDialog isOpen={shelfAction?.kind === 'delete'} title="Delete this shelf?" message={`Delete “${shelfAction?.name || ''}”? Your books, other shelves, private notes and reading progress stay in your library. Only this custom shelf is removed.`} confirmLabel="Delete shelf" processingLabel="Deleting…" isProcessing={shelfActionBusy} error={shelfActionError} onCancel={() => { if (!shelfActionPending.current) setShelfAction(null); }} onConfirm={() => void runShelfAction()} />
 
             <ConfirmDialog isOpen={!!libraryAction} title={libraryAction?.kind === 'remove' ? 'Remove this book?' : 'Restart this book?'} message={libraryAction?.kind === 'remove' ? 'This removes the story from your library. You can save it again later.' : 'Your saved reading progress will return to the beginning.'} confirmLabel={libraryAction?.kind === 'remove' ? 'Remove book' : 'Restart progress'} processingLabel={libraryAction?.kind === 'remove' ? 'Removing…' : 'Restarting…'} isProcessing={libraryActionBusy} tone={libraryAction?.kind === 'remove' ? 'danger' : 'warning'} onCancel={() => { if (!libraryActionBusy) setLibraryAction(null); }} onConfirm={() => void runLibraryAction()} />
             <Footer />

@@ -72,6 +72,26 @@ class LibraryOrganizationControllerTest {
         assertEquals(HttpStatus.NOT_FOUND,controller.deleteShelf("foreign").getStatusCode());
         verifyNoInteractions(library); verify(shelves,never()).delete(any());
     }
+    @Test void renamePreservesIdentityVisibilityAndMemberships() {
+        Shelf shelf = shelf("owned","reader"); shelf.setVisibility("PUBLIC");
+        when(shelves.findById("owned")).thenReturn(Optional.of(shelf));
+        assertEquals(HttpStatus.OK,controller.renameShelf("owned",Map.of("name","  Weekend favourites  ")).getStatusCode());
+        assertEquals("Weekend favourites",shelf.getName()); assertEquals("owned",shelf.getId()); assertEquals("PUBLIC",shelf.getVisibility());
+        verify(shelves).save(shelf); verifyNoInteractions(library);
+    }
+    @Test void invalidNamesAndForeignOrBuiltInShelvesCannotBeRenamed() {
+        when(shelves.findById("owned")).thenReturn(Optional.of(shelf("owned","reader")));
+        for (String name : List.of("", "   ", "x".repeat(101))) {
+            assertEquals(HttpStatus.BAD_REQUEST,controller.renameShelf("owned",Map.of("name",name)).getStatusCode());
+        }
+        when(shelves.findById("foreign")).thenReturn(Optional.of(shelf("foreign","other")));
+        assertEquals(HttpStatus.NOT_FOUND,controller.renameShelf("foreign",Map.of("name","New")).getStatusCode());
+        for (String id : List.of("all","reading","toread","completed","1")) {
+            assertEquals(HttpStatus.NOT_FOUND,controller.renameShelf(id,Map.of("name","New")).getStatusCode());
+            assertEquals(HttpStatus.NOT_FOUND,controller.deleteShelf(id).getStatusCode());
+        }
+        verify(shelves,never()).save(any()); verify(shelves,never()).delete(any()); verifyNoInteractions(library);
+    }
     @Test void bulkValidationCompletesBeforeSavingAnyMembership() {
         when(shelves.findById("owned")).thenReturn(Optional.of(shelf("owned","reader")));
         when(library.findByUserId("reader")).thenReturn(List.of());
