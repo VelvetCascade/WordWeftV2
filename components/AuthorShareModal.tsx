@@ -1,5 +1,5 @@
 import { useDialog } from '../hooks/useDialog';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { authorShareUrl } from '../utils/shareLinks';
 import type { User, Book } from '../types';
 import { ShareIcon, XMarkIcon, DocumentDuplicateIcon, CheckCircleIcon, TwitterIcon, InstagramIcon } from './icons/Icons';
@@ -90,10 +90,18 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
     return new Promise((resolve) => {
+        if (!src) { resolve(null); return; }
         const img = new Image();
+        const finish = (image: HTMLImageElement | null) => {
+            clearTimeout(timeout);
+            img.onload = null;
+            img.onerror = null;
+            resolve(image);
+        };
+        const timeout = window.setTimeout(() => finish(null), 8000);
         img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
+        img.onload = () => finish(img);
+        img.onerror = () => finish(null);
         img.src = src;
     });
 }
@@ -362,20 +370,34 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     const [copyError, setCopyError] = useState('');
     const [activeTab, setActiveTab] = useState<'quick' | 'card'>('quick');
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [readyCard, setReadyCard] = useState<{ canvas: HTMLCanvasElement; author: typeof author; books: Book[] } | null>(null);
+    const [renderError, setRenderError] = useState('');
+    const isCardReady = isOpen && activeTab === 'card' && readyCard?.canvas === canvasRef.current && readyCard?.author === author && readyCard?.books === authorBooks;
     const publicUrl = url || authorShareUrl(author.id);
     useEffect(() => { if (isOpen) { setCopied(false); setCopyError(''); } }, [isOpen]);
 
     const shareTitle = `${author.name} on WordWeft`;
     const shareText = `Discover ${author.name}'s stories on WordWeft!`;
 
-    const drawPoster = useCallback(async () => {
-        if (!canvasRef.current || activeTab !== 'card') return;
-        await drawAuthorPoster(canvasRef.current, author, authorBooks);
-    }, [author, authorBooks, activeTab]);
-
     useEffect(() => {
-        if (isOpen && activeTab === 'card') drawPoster();
-    }, [isOpen, drawPoster, activeTab]);
+        setReadyCard(null);
+        setRenderError('');
+        const preview = canvasRef.current;
+        if (!isOpen || activeTab !== 'card' || !preview) return;
+        let cancelled = false;
+        // Draw privately so an obsolete async revision never changes the preview.
+        const draft = document.createElement('canvas');
+        void drawAuthorPoster(draft, author, authorBooks).then(() => {
+            if (cancelled || canvasRef.current !== preview) return;
+            preview.width = draft.width;
+            preview.height = draft.height;
+            preview.getContext('2d')!.drawImage(draft, 0, 0);
+            setReadyCard({ canvas: preview, author, books: authorBooks });
+        }).catch(() => {
+            if (!cancelled) setRenderError('Your card could not be prepared. Reopen the card to try again.');
+        });
+        return () => { cancelled = true; };
+    }, [isOpen, activeTab, author, authorBooks]);
 
     const dialogRef = useDialog(isOpen, onClose);
 
@@ -409,7 +431,7 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
     };
 
     const handleDownloadCanvas = async () => {
-        if (!canvasRef.current) return;
+        if (!canvasRef.current || !isCardReady) return;
         setIsGenerating(true);
         try {
             const dataUrl = canvasRef.current.toDataURL('image/png');
@@ -522,12 +544,13 @@ export const AuthorShareModal: React.FC<AuthorShareModalProps> = ({
                                 />
                             </div>
 
+                            <p role="status" className="mt-4 text-sm text-text-body dark:text-dark-text-body">{renderError || (!isCardReady ? 'Preparing your portfolio card…' : '')}</p>
                             <button
                                 onClick={handleDownloadCanvas}
-                                disabled={isGenerating}
+                                disabled={isGenerating || !isCardReady}
                                 className="mt-6 w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {isGenerating ? 'Generating...' : 'Download Card'}
+                                {isGenerating ? 'Generating...' : !isCardReady ? 'Preparing card…' : 'Download Card'}
                             </button>
                         </div>
                     )}
