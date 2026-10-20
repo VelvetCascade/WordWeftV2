@@ -1,0 +1,878 @@
+
+Running 4 tests using 1 worker
+
+(node:3514) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery light 1440 (25.5s)
+(node:4494) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery light 390 (11.5s)
+(node:5052) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  3 e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery dark 1440 (15.4s)
+(node:6143) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  4 e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery dark 390 (16.6s)
+
+
+  1) e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery light 1440 
+
+    Error: Update rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.9603002487697387
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Release rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Poll rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Workshop rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Recommendation rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -   1
+    + Received  + 204
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#f4f1f4",
+    +               "contrastRatio": 2.89,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#998b95",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +                 "target": Array [
+    +                   "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +                 ],
+    +               },
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Release</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(2)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Poll</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(3)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Workshop</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(4)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Recommendation</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(5)",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+      29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+    > 30 |  expect.soft(axe.violations).toEqual([]);
+         |                              ^
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+      33 |  await page.getByRole('combobox',{name:'Circle',exact:true}).selectOption('circle-update');await poll.click();await expect(group.getByRole('status')).toContainText('not available in Synthetic Updates');await expect(group.getByRole('button',{name:'Update',exact:true})).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:30:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/community-format-contrast--a33ca-st-and-discovery-light-1440/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/community-format-contrast--a33ca-st-and-discovery-light-1440/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/community-format-contrast--a33ca-st-and-discovery-light-1440/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/community-format-contrast--a33ca-st-and-discovery-light-1440/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery light 390 
+
+    Error: Update rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.9603002487697387
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Release rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Poll rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Workshop rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: Recommendation rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    2.7215122246404215
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -   1
+    + Received  + 204
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#f4f1f4",
+    +               "contrastRatio": 2.89,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#998b95",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +                 "target": Array [
+    +                   "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +                 ],
+    +               },
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.89 (foreground color: #998b95, background color: #f4f1f4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Release</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(2)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Poll</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(3)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Workshop</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(4)",
+    +         ],
+    +       },
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#fbfaf7",
+    +               "contrastRatio": 2.72,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#979a97",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 2.72 (foreground color: #979a97, background color: #fbfaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"false\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Recommendation</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(5)",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+      29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+    > 30 |  expect.soft(axe.violations).toEqual([]);
+         |                              ^
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+      33 |  await page.getByRole('combobox',{name:'Circle',exact:true}).selectOption('circle-update');await poll.click();await expect(group.getByRole('status')).toContainText('not available in Synthetic Updates');await expect(group.getByRole('button',{name:'Update',exact:true})).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:30:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/community-format-contrast--c2f4c-ast-and-discovery-light-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/community-format-contrast--c2f4c-ast-and-discovery-light-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/community-format-contrast--c2f4c-ast-and-discovery-light-390/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/community-format-contrast--c2f4c-ast-and-discovery-light-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery dark 1440 
+
+    Error: Update rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    4.003536841497893
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 64
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#302f34",
+    +               "contrastRatio": 4.02,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#968a94",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 4.02 (foreground color: #968a94, background color: #302f34, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +                 "target": Array [
+    +                   "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +                 ],
+    +               },
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 960px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 4.02 (foreground color: #968a94, background color: #302f34, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+      29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+    > 30 |  expect.soft(axe.violations).toEqual([]);
+         |                              ^
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+      33 |  await page.getByRole('combobox',{name:'Circle',exact:true}).selectOption('circle-update');await poll.click();await expect(group.getByRole('status')).toContainText('not available in Synthetic Updates');await expect(group.getByRole('button',{name:'Update',exact:true})).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:30:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/community-format-contrast--41559-ast-and-discovery-dark-1440/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/community-format-contrast--41559-ast-and-discovery-dark-1440/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/community-format-contrast--41559-ast-and-discovery-dark-1440/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/community-format-contrast--41559-ast-and-discovery-dark-1440/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery dark 390 
+
+    Error: Update rendered contrast
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    4.003536841497893
+
+      27 |  const axe=await new AxeBuilder({page}).include('.community-formats > div:first-of-type').withRules(['color-contrast']).analyze();
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+    > 29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+         |                                                                                            ^
+      30 |  expect.soft(axe.violations).toEqual([]);
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:29:92
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 64
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    +     "help": "Elements must meet minimum color contrast ratio thresholds",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+    +     "id": "color-contrast",
+    +     "impact": "serious",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "bgColor": "#302f34",
+    +               "contrastRatio": 4.02,
+    +               "expectedContrastRatio": "4.5:1",
+    +               "fgColor": "#968a94",
+    +               "fontSize": "9.0pt (12px)",
+    +               "fontWeight": "normal",
+    +               "messageKey": null,
+    +             },
+    +             "id": "color-contrast",
+    +             "impact": "serious",
+    +             "message": "Element has insufficient color contrast of 4.02 (foreground color: #968a94, background color: #302f34, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +             "relatedNodes": Array [
+    +               Object {
+    +                 "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +                 "target": Array [
+    +                   "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +                 ],
+    +               },
+    +               Object {
+    +                 "html": "<div tabindex=\"-1\" class=\"community-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"_r_0_\" style=\"max-height: 812px;\">",
+    +                 "target": Array [
+    +                   ".community-modal",
+    +                 ],
+    +               },
+    +             ],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element has insufficient color contrast of 4.02 (foreground color: #968a94, background color: #302f34, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+    +         "html": "<button type=\"button\" aria-pressed=\"true\" data-unavailable=\"true\" aria-describedby=\"community-format-guidance\">Update</button>",
+    +         "impact": "serious",
+    +         "none": Array [],
+    +         "target": Array [
+    +           "button[data-unavailable=\"true\"][aria-describedby=\"community-format-guidance\"][type=\"button\"]:nth-child(1)",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.color",
+    +       "wcag2aa",
+    +       "wcag143",
+    +       "TTv5",
+    +       "TT13.c",
+    +       "EN-301-549",
+    +       "EN-9.1.4.3",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-3.2.1",
+    +     ],
+    +   },
+    + ]
+
+      28 |  if(process.env.AUDIT_PROOF_DIR){await group.scrollIntoViewIfNeeded();await page.screenshot({path:`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.png`});await writeFile(`${process.env.AUDIT_PROOF_DIR}/${theme}-${width}.json`,JSON.stringify({samples,violations:axe.violations},null,2));}
+      29 |  for(const sample of samples)expect.soft(sample.ratio,`${sample.label} rendered contrast`).toBeGreaterThanOrEqual(4.5);
+    > 30 |  expect.soft(axe.violations).toEqual([]);
+         |                              ^
+      31 |  const poll=group.getByRole('button',{name:'Poll',exact:true});await expect(poll).toBeEnabled();await poll.focus();await page.keyboard.press('Enter');await expect(group.getByRole('status')).toContainText('Choose a circle');
+      32 |  await group.getByRole('button',{name:'Use Synthetic Questions'}).click();await expect(poll).toHaveAttribute('aria-pressed','true');
+      33 |  await page.getByRole('combobox',{name:'Circle',exact:true}).selectOption('circle-update');await poll.click();await expect(group.getByRole('status')).toContainText('not available in Synthetic Updates');await expect(group.getByRole('button',{name:'Update',exact:true})).toHaveAttribute('aria-pressed','true');
+        at /workspace/ww-fix-190/e2e/community-format-contrast.spec.ts:30:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/community-format-contrast--37de7-rast-and-discovery-dark-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/community-format-contrast--37de7-rast-and-discovery-dark-390/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/community-format-contrast--37de7-rast-and-discovery-dark-390/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/community-format-contrast--37de7-rast-and-discovery-dark-390/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery light 1440 
+    e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery light 390 
+    e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery dark 1440 
+    e2e/community-format-contrast.spec.ts:14:69 › actionable formats retain contrast and discovery dark 390 

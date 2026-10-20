@@ -1,0 +1,80 @@
+{
+  "samples": [
+    {
+      "label": "Update",
+      "ratio": 7.816454358139839,
+      "opacity": "1",
+      "foreground": [
+        87,
+        65,
+        83
+      ],
+      "background": [
+        240,
+        235,
+        242
+      ]
+    },
+    {
+      "label": "Release",
+      "ratio": 6.737046123318599,
+      "opacity": "1",
+      "foreground": [
+        85,
+        90,
+        87
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    },
+    {
+      "label": "Poll",
+      "ratio": 6.737046123318599,
+      "opacity": "1",
+      "foreground": [
+        85,
+        90,
+        87
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    },
+    {
+      "label": "Workshop",
+      "ratio": 6.737046123318599,
+      "opacity": "1",
+      "foreground": [
+        85,
+        90,
+        87
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    },
+    {
+      "label": "Recommendation",
+      "ratio": 6.737046123318599,
+      "opacity": "1",
+      "foreground": [
+        85,
+        90,
+        87
+      ],
+      "background": [
+        251,
+        250,
+        247
+      ]
+    }
+  ],
+  "violations": []
+}
