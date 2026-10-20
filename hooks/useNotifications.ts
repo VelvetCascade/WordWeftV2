@@ -31,6 +31,7 @@ export function useNotifications(isLoggedIn: boolean, ownerId = 'current-account
     const notificationsRequestRef = useRef(false);
     const notificationsRef = useRef(notifications);
     notificationsRef.current = notifications;
+    const failedRequestRef = useRef<{ pageNum: number; append: boolean } | null>(null);
     const pendingRead = useRef(new Set<string>());
     const pendingAllRead = useRef(false);
 
@@ -64,13 +65,25 @@ export function useNotifications(isLoggedIn: boolean, ownerId = 'current-account
             const data = await api.getNotifications(pageNum, 20);
             if (generation !== generationRef.current) return;
             if (append) {
-                setNotifications(prev => [...prev, ...data.notifications]);
+                setNotifications(prev => {
+                    const ids = new Set(prev.map(notification => notification.id));
+                    return [...prev, ...data.notifications.filter(notification => {
+                        if (ids.has(notification.id)) return false;
+                        ids.add(notification.id);
+                        return true;
+                    })];
+                });
             } else {
                 setNotifications(data.notifications);
             }
+            setPage(pageNum);
+            failedRequestRef.current = null;
             setHasMore(data.hasNext);
         } catch (e) {
-            if (generation === generationRef.current) setError('Notifications could not be loaded. Please try again.');
+            if (generation === generationRef.current) {
+                failedRequestRef.current = { pageNum, append };
+                setError('Notifications could not be loaded. Please try again.');
+            }
         } finally {
             if (generation === generationRef.current) { notificationsRequestRef.current = false; setIsLoading(false); }
         }
@@ -79,7 +92,7 @@ export function useNotifications(isLoggedIn: boolean, ownerId = 'current-account
     // Initial load
     useEffect(() => {
         stateOwnerRef.current = identity;
-        notificationsRequestRef.current = false; pendingRead.current.clear(); pendingAllRead.current = false;
+        notificationsRequestRef.current = false; failedRequestRef.current = null; pendingRead.current.clear(); pendingAllRead.current = false;
         setNotifications([]); notificationsRef.current = []; setUnreadCount(0); setPage(0); setHasMore(true); setToastNotification(null); setError('');
         if (isLoggedIn) {
             fetchUnreadCount();
@@ -162,9 +175,8 @@ export function useNotifications(isLoggedIn: boolean, ownerId = 'current-account
 
     const loadMore = useCallback(() => {
         if (!notificationsRequestRef.current && !isLoading && hasMore) {
-            const nextPage = page + 1;
-            setPage(nextPage);
-            fetchNotifications(nextPage, true);
+            const failed = failedRequestRef.current;
+            fetchNotifications(failed?.pageNum ?? page + 1, failed?.append ?? true);
         }
     }, [isLoading, hasMore, page, fetchNotifications]);
 
@@ -211,7 +223,11 @@ export function useNotifications(isLoggedIn: boolean, ownerId = 'current-account
     const refresh = useCallback(() => {
         if (notificationsRequestRef.current) return;
         setError('');
-        setPage(0);
+        const failed = failedRequestRef.current;
+        if (failed) {
+            fetchNotifications(failed.pageNum, failed.append);
+            return;
+        }
         fetchNotifications(0);
         fetchUnreadCount();
     }, [fetchNotifications, fetchUnreadCount]);
