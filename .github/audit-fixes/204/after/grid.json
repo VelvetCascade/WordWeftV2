@@ -1,0 +1,950 @@
+{
+  "rows": [
+    {
+      "surface": "book",
+      "width": 320,
+      "theme": "light",
+      "key": "book-light-320",
+      "geometry": {
+        "columns": 2,
+        "left": 31,
+        "right": 289,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 31,
+            "y": 378,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 166,
+            "y": 378,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 31,
+            "y": 466,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 166,
+            "y": 466,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        2,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "book",
+      "width": 390,
+      "theme": "light",
+      "key": "book-light-390",
+      "geometry": {
+        "columns": 2,
+        "left": 31,
+        "right": 359,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 31,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 201,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 31,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 201,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        2,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "book",
+      "width": 390,
+      "theme": "dark",
+      "key": "book-dark-390",
+      "geometry": {
+        "columns": 2,
+        "left": 31,
+        "right": 359,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 31,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 201,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 31,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 201,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        2,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "book",
+      "width": 1440,
+      "theme": "light",
+      "key": "book-light-1440",
+      "geometry": {
+        "columns": 4,
+        "left": 510,
+        "right": 930,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 510,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 618,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 726,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 834,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        4
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=I%20just%20discovered%20'The%20Last%20Spring%20in%20Bellweather'%20by%20Mira%20Ellery%20on%20WordWeft%20%E2%80%94%204.8%20stars%2C%20300%20readers%20already.",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "chapter",
+      "width": 320,
+      "theme": "light",
+      "key": "chapter-light-320",
+      "geometry": {
+        "columns": 2,
+        "left": 31,
+        "right": 289,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 31,
+            "y": 378,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 166,
+            "y": 378,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 31,
+            "y": 466,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 166,
+            "y": 466,
+            "width": 123,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        2,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "chapter",
+      "width": 390,
+      "theme": "light",
+      "key": "chapter-light-390",
+      "geometry": {
+        "columns": 2,
+        "left": 31,
+        "right": 359,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 31,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 201,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 31,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 201,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        2,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "chapter",
+      "width": 390,
+      "theme": "dark",
+      "key": "chapter-dark-390",
+      "geometry": {
+        "columns": 2,
+        "left": 31,
+        "right": 359,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 31,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 201,
+            "y": 378,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 31,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 201,
+            "y": 466,
+            "width": 158,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        2,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "chapter",
+      "width": 1440,
+      "theme": "light",
+      "key": "chapter-light-1440",
+      "geometry": {
+        "columns": 4,
+        "left": 510,
+        "right": 930,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 510,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 618,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 726,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 834,
+            "y": 505,
+            "width": 96,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        4
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft%20http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fbook%2Flocal-story-spring&text=Reading%20Chapter%201%3A%20'The%20First%20Light'%20from%20'The%20Last%20Spring%20in%20Bellweather'.%20%23WordWeft",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/book/local-story-spring"
+    },
+    {
+      "surface": "author",
+      "width": 320,
+      "theme": "light",
+      "key": "author-light-320",
+      "geometry": {
+        "columns": 3,
+        "left": 41,
+        "right": 279,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 41,
+            "y": 388.5,
+            "width": 71.328125,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 124.328125,
+            "y": 388.5,
+            "width": 71.328125,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 207.65625,
+            "y": 388.5,
+            "width": 71.34375,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 41,
+            "y": 476.5,
+            "width": 71.328125,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          },
+          {
+            "name": "Instagram",
+            "x": 124.328125,
+            "y": 476.5,
+            "width": 71.328125,
+            "height": 72,
+            "labelWidth": 48.5,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        3,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!%20http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/author/local-writer"
+    },
+    {
+      "surface": "author",
+      "width": 390,
+      "theme": "light",
+      "key": "author-light-390",
+      "geometry": {
+        "columns": 3,
+        "left": 41,
+        "right": 349,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 41,
+            "y": 388.5,
+            "width": 94.65625,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 147.65625,
+            "y": 388.5,
+            "width": 94.671875,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 254.328125,
+            "y": 388.5,
+            "width": 94.65625,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 41,
+            "y": 476.5,
+            "width": 94.65625,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          },
+          {
+            "name": "Instagram",
+            "x": 147.65625,
+            "y": 476.5,
+            "width": 94.671875,
+            "height": 72,
+            "labelWidth": 48.5,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        3,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!%20http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/author/local-writer"
+    },
+    {
+      "surface": "author",
+      "width": 390,
+      "theme": "dark",
+      "key": "author-dark-390",
+      "geometry": {
+        "columns": 3,
+        "left": 41,
+        "right": 349,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 41,
+            "y": 388.5,
+            "width": 94.65625,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 147.65625,
+            "y": 388.5,
+            "width": 94.671875,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 254.328125,
+            "y": 388.5,
+            "width": 94.65625,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 41,
+            "y": 476.5,
+            "width": 94.65625,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          },
+          {
+            "name": "Instagram",
+            "x": 147.65625,
+            "y": 476.5,
+            "width": 94.671875,
+            "height": 72,
+            "labelWidth": 48.5,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        3,
+        2
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!%20http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/author/local-writer"
+    },
+    {
+      "surface": "author",
+      "width": 1440,
+      "theme": "light",
+      "key": "author-light-1440",
+      "geometry": {
+        "columns": 5,
+        "left": 521,
+        "right": 919,
+        "buttons": [
+          {
+            "name": "X",
+            "x": 521,
+            "y": 510.5,
+            "width": 70,
+            "height": 72,
+            "labelWidth": 6.546875,
+            "labelFits": true
+          },
+          {
+            "name": "Facebook",
+            "x": 603,
+            "y": 510.5,
+            "width": 70,
+            "height": 72,
+            "labelWidth": 45.421875,
+            "labelFits": true
+          },
+          {
+            "name": "WhatsApp",
+            "x": 685,
+            "y": 510.5,
+            "width": 70,
+            "height": 72,
+            "labelWidth": 47.96875,
+            "labelFits": true
+          },
+          {
+            "name": "Telegram",
+            "x": 767,
+            "y": 510.5,
+            "width": 70,
+            "height": 72,
+            "labelWidth": 43.328125,
+            "labelFits": true
+          },
+          {
+            "name": "Instagram",
+            "x": 849,
+            "y": 510.5,
+            "width": 70,
+            "height": 72,
+            "labelWidth": 48.5,
+            "labelFits": true
+          }
+        ]
+      },
+      "rowCounts": [
+        5
+      ],
+      "destinations": [
+        {
+          "url": "https://twitter.com/intent/tweet?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://api.whatsapp.com/send?text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!%20http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        },
+        {
+          "url": "https://t.me/share/url?url=http%3A%2F%2F127.0.0.1%3A3022%2Fauthor%2Flocal-writer&text=Discover%20Mira%20Ellery's%20stories%20on%20WordWeft!",
+          "target": "_blank",
+          "features": "noopener,noreferrer"
+        }
+      ],
+      "link": "http://127.0.0.1:3022/author/local-writer"
+    }
+  ],
+  "failures": []
+}

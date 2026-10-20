@@ -11980,6 +11980,10 @@ body[data-active-mood] .ww-prose h6 {
         row-gap: 16px !important;
     }
 
+    .ww-share-dialog .ww-share-channels {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
     .ww-share-channels > button { min-width: 0; }
     .ww-share-channels > button > span { max-width: 100%; overflow-wrap: anywhere; }
 
