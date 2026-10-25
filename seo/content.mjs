@@ -3,6 +3,30 @@ export const SITE_ORIGIN = 'https://www.wordweftstudio.com';
 export const SITE_NAME = 'WordWeft';
 export const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-banner.jpg`;
 
+export const genreIntroductions = {
+  Action: 'Action fiction builds momentum through choices under pressure. Compare the premise and opening chapter of the available stories, then follow a character through the consequences of their next move.',
+  Adventure: 'Adventure stories are shaped by journeys, unfamiliar places, and the decisions that change a traveller. Browse the published openings here and look for a setting or quest worth following.',
+  Comedy: 'Comedy can sit inside a romance, mystery, or everyday story. Find writing that uses wit, awkward situations, and memorable characters rather than assuming every funny story follows the same pattern.',
+  Crime: 'Crime fiction follows questions of motive, evidence, and consequence. Explore the premises of published stories and choose an investigation or character perspective that interests you.',
+  'Dark Fantasy': 'Dark fantasy mixes the possibilities of imagined worlds with unsettling choices, danger, or moral ambiguity. Check each story’s age rating and content notes before beginning.',
+  Drama: 'Drama focuses on the difficult choices people make, the relationships they change, and the consequences that remain. Read story descriptions to find a character or conflict you want to understand.',
+  'Fan Fiction': 'Fan fiction begins from a reader’s relationship with familiar worlds or characters. Browse only the stories available here and check each work’s description and author information before reading.',
+  Fantasy: 'Fantasy stories can begin with a small impossible detail or an entirely imagined world. Follow the premise, cast, and published chapters of the stories here to find a world worth returning to.',
+  Horror: 'Horror uses uncertainty, atmosphere, and mounting consequences to unsettle the reader. Check the synopsis and content warnings to find the kind of suspense you enjoy.',
+  Humor: 'Humorous fiction finds its voice in timing, point of view, and characters who see things differently. Explore the story premises rather than expecting every book to deliver the same kind of joke.',
+  'LGBTQ+': 'Explore stories featuring LGBTQ+ characters, experiences, and relationships. Genre labels describe aspects of a work, not its full story; read the author’s synopsis and content notes for context.',
+  Mystery: 'A mystery begins with a question that matters and keeps the reader attentive to clues. Browse each story’s premise and opening to see which puzzle you would like to follow.',
+  'Non-Fiction': 'Non-fiction writing can include essays, reflections, and accounts of real experiences. Read the description and author information to understand the work’s subject and approach.',
+  Romance: 'Romance explores attraction, trust, conflict, and the choices that bring people together or keep them apart. Browse the synopsis and chapter previews to find a relationship worth following.',
+  Supernatural: 'Supernatural fiction places unexplained forces into the lives of its characters. Discover how each story handles the unknown through its premise, setting, and opening chapter.',
+  Suspense: 'Suspense holds a question open while the stakes keep rising. Explore works that use uncertainty, secrets, and consequential choices to draw readers into the next chapter.',
+  Thriller: 'Thrillers move through escalating risks, urgent decisions, and unfolding threats. Compare their premises and content notes before settling into a fast-moving story.',
+  'Young Adult': 'Young adult fiction often explores identity, friendship, belonging, and difficult first decisions. The published stories here can span romance, fantasy, mystery, and other genres.',
+  Poetry: 'Poetry makes room for rhythm, imagery, and a distinctive voice. Explore the published work here and follow the writers whose language stays with you.',
+  'Science Fiction': 'Science fiction asks what may change when technology, discovery, or unfamiliar worlds reshape people’s lives. Choose a premise that turns an intriguing idea into a human story.',
+  'Historical Fiction': 'Historical fiction uses another time as the setting for personal choices and conflict. Read the descriptions to see how an author connects events, place, and character.',
+};
+
 export const landingPages = {
   '/read-online': {
     title: 'Read Stories & Novels Online | WordWeft',
@@ -17,7 +41,7 @@ export const landingPages = {
     ],
     steps: ['Open the library and choose a genre or search for a story.', 'Read the synopsis and check the rating and content notes.', 'Open a published chapter and adjust the reader to suit you.'],
     faqs: [
-      ['Do I need an account to read?', 'You can browse publicly available stories and read their published chapters without signing in. Saving your library, following writers, and participating require an account. Some age-rated stories require an eligible account and mature-content preferences.'],
+      ['Do I need an account to read?', 'You can browse public story pages and read a preview of the opening published chapter without signing in. Sign in to continue reading and access later chapters. Saving books, following writers, and taking part in discussions also require an account. Age-restricted stories have additional eligibility rules.'],
       ['Can I read on a phone?', 'The reader adapts to smaller screens and includes adjustable type and reading themes. WordWeft runs in your browser.'],
     ],
   },
@@ -86,6 +110,8 @@ export const landingPages = {
       ['Publishing control', 'Confirm that you can keep chapters private, publish selected chapters, schedule releases, and clearly show whether a story is ongoing or complete.'],
     ],
     sections: [
+      ['When Wattpad may be the better fit', 'Wattpad has an established international reader-and-writer community, mobile apps, in-story comments, and social discovery. If your primary goal is to meet an existing large audience or participate in a particular fan-fiction community, compare that experience directly before choosing a smaller platform.'],
+      ['When WordWeft offers something different', 'WordWeft is a newer browser-first option with a connected manuscript editor, chapter planning, character records, scenes, lore, and flexible reader controls. These features may matter more if you want to organize a long project before publishing it. Audience size and distribution are not equivalent to Wattpad.'],
       ['Write the book before promoting it', 'WordWeft keeps chapter drafting, manuscript import, story notes, characters, and publishing controls together. Draft and scheduled chapters remain private until you decide to release them.'],
       ['Build a public home for the story', 'Each published story has a cover, synopsis, genres, tags, age rating, content guidance, author link, and chapter list. Readers can understand the premise before opening chapter one.'],
       ['Give readers control of the page', 'The browser reader includes adjustable typography, width, line spacing, themes, and focus mode. Readers can save books, organize shelves, follow writers, and join discussions with an account.'],
@@ -99,6 +125,7 @@ export const landingPages = {
       ['Does WordWeft pay writers?', 'Paid publishing is not currently live. WordWeft does not promise earnings, contracts, or a particular number of readers.'],
     ],
     related: ['/writing-tools', '/publish-stories', '/read-original-fiction-online'],
+    sources: [{ label: 'Wattpad — official app features', href: 'https://apps.apple.com/us/app/wattpad-read-write-stories/id306310789' }],
   },
   '/webnovel-alternatives': {
     title: 'Webnovel Alternatives for Serial Writers | WordWeft',
@@ -113,6 +140,8 @@ export const landingPages = {
       ['Author presence', 'A useful author profile should connect the writer, their published books, and the next chapter a reader can open.'],
     ],
     sections: [
+      ['When Webnovel may be a stronger match', 'Webnovel has an established serialized-reading catalog and a formal author program with information about contracts and potential income. If monetization programs or participation in that readership are essential, read its current author terms and eligibility carefully; WordWeft does not currently offer equivalent paid publishing.'],
+      ['Where WordWeft differs', 'WordWeft keeps book planning, characters, scenes, lore, drafting, and chapter publishing together, while providing an adjustable browser reader. Evaluate those workflows independently of marketing claims about audience size or earnings.'],
       ['Plan a serial chapter by chapter', 'Create a book, organize chapters, import an existing manuscript, and keep characters, scenes, and world notes near the draft. Revision history helps you revisit earlier saved versions.'],
       ['Release only what is ready', 'A book and its chapters have explicit publishing states. You can keep unfinished work in draft, release selected chapters, or schedule a chapter for later.'],
       ['Help the right readers find the story', 'Public story pages use the synopsis, genres, tags, age rating, content notes, author profile, and published chapter list to set clear expectations.'],
@@ -126,6 +155,7 @@ export const landingPages = {
       ['Does WordWeft have coins or paid chapters?', 'Paid publishing is not currently live. The present experience focuses on reading, writing, publishing, and community features.'],
     ],
     related: ['/publish-stories', '/writing-tools', '/wattpad-alternatives'],
+    sources: [{ label: 'Webnovel — official author help center', href: 'https://www.webnovel.com/inkstone/help/list?id=9' }],
   },
   '/royal-road-alternatives': {
     title: 'Royal Road Alternatives for Fiction Writers | WordWeft',
@@ -140,6 +170,8 @@ export const landingPages = {
       ['Mobile reading', 'Many readers meet a serial on a phone. Test the actual chapter page, not only the publishing dashboard.'],
     ],
     sections: [
+      ['When Royal Road may suit you better', 'Royal Road is an established web-fiction community with discovery rankings, reviews, comments, author tools, and organized genres and tags. If established serial-reader habits and rankings are central to your plan, explore its current fiction lists and support documentation before moving a work.'],
+      ['Where WordWeft takes a different approach', 'WordWeft emphasizes a linked drafting workspace for chapters, character profiles, scene notes, and world building, alongside the public reading experience. Its early-stage readership is not comparable to an established serial-fiction community.'],
       ['Support more than the chapter list', 'WordWeft pairs chapter drafting with character profiles, scene planning, world-building notes, manuscript import, revision history, and image support.'],
       ['Publish across the genres you write', 'Writers choose the genres and tags that accurately describe a story. Readers can browse the real catalog rather than a fabricated list of empty SEO categories.'],
       ['Make a long serial comfortable to read', 'Readers can adjust typography, spacing, width, and themes, use focus mode, move through published chapters, and save stories to their library.'],
@@ -153,6 +185,7 @@ export const landingPages = {
       ['Can readers comment on chapters?', 'Signed-in readers can participate in chapter discussion and other community features available on the story.'],
     ],
     related: ['/publish-stories', '/read-original-fiction-online', '/world-building-tools'],
+    sources: [{ label: 'Royal Road — official writing, discovery and reading guide', href: 'https://www.royalroad.com/support/knowledgebase' }],
   },
   '/online-fiction-platform': {
     title: 'Online Fiction Writing & Publishing Platform | WordWeft',
@@ -208,6 +241,63 @@ export const landingPages = {
     ],
     related: ['/read-online', '/wattpad-alternatives', '/royal-road-alternatives'],
   },
+
+  '/how-to-write-a-web-novel': {
+    title: 'How to Write a Web Novel: Plan, Draft & Publish | WordWeft',
+    heading: 'How to write a web novel that readers can follow.',
+    description: 'A practical web novel writing guide: plan a serial arc, structure chapters, set a release rhythm, revise drafts, and publish without losing ownership.',
+    eyebrow: 'Web novel writing guide', cta: 'Plan your first story', href: '/write',
+    intro: 'A web novel is written for people who may read one chapter today and return next week. That changes the craft: each installment needs its own movement, while the larger story must remain coherent. Here is a straightforward way to plan, write, and publish a serial without treating your first draft as a permanent promise.',
+    sections: [
+      ['01. Start with a premise that can sustain chapters', 'Write one sentence naming a protagonist, what they want, what prevents them from getting it, and what changes if they fail. Then list three escalating complications. A premise such as “a mapmaker must restore a missing road before her village disappears” gives you a continuing problem; “a mapmaker has adventures” does not yet explain why readers should return.'],
+      ['02. Sketch the story in arcs, not a rigid hundred-chapter outline', 'Plan an opening arc with a clear promise, a turning point, and an ending that changes the situation. Note a few longer mysteries or character decisions that can develop later. Leave space for discoveries during drafting. For a first serial, outline the opening five to ten chapters in detail rather than inventing filler to reach an arbitrary chapter count.'],
+      ['03. Give each installment a satisfying change', 'Before drafting a chapter, write down its starting situation, the decision or conflict that drives it, and what is different at the end. A good chapter might reveal an answer, complicate a relationship, or force a choice. A cliffhanger can help, but repeated cliffhangers without progress quickly lose their effect.'],
+      ['04. Build a small continuity notebook', 'Track character names and motivations, places, dates, important objects, and rules of your story world. Add a note when something changes. Readers may remember a detail from chapter two when you are writing chapter twenty; you should be able to find it in seconds. WordWeft’s story workspace keeps chapter drafts, characters, scenes, and lore alongside the manuscript.'],
+      ['05. Establish a publishing rhythm you can keep', 'Draft a buffer of several chapters before announcing a schedule. Estimate writing and editing time honestly, then choose a pace that leaves room for work, study, or life. One carefully revised chapter every two weeks is better than promising daily updates you cannot maintain. If you pause, mark the story status clearly.'],
+      ['06. Revise for clarity before you publish', 'Read each installment for continuity, pacing, and obvious errors. Make sure the opening tells readers where they are, who they are following, and what has changed. Check paragraphs and dialogue on a phone, not only in your editor. You can keep future chapters private while reviewing them and publish the ready installments separately.'],
+      ['07. Help readers decide whether the story is for them', 'Write a synopsis that names the central conflict, add accurate genres and tags, and include age ratings and relevant content notes. Give the work a clear cover only if you have rights to use the artwork. Each published WordWeft story has its own page and chapter list, making the series easier to share and discover.'],
+    ],
+    steps: [
+      'Write a one-sentence premise and identify your opening arc’s turning point.',
+      'Outline the first five chapters and draft a small publishing buffer.',
+      'Create a story in WordWeft, add chapters and story details, then publish only the ready material.',
+    ],
+    faqs: [
+      ['How long should a web novel chapter be?', 'There is no universal word count. Choose a length you can revise consistently and that lets each installment advance the story. Test it on a phone; an engaging shorter chapter beats padded prose.'],
+      ['Do I need to finish the whole novel before publishing?', 'No. Many serials release progressively. A completed opening arc and several prepared chapters reduce the risk of losing momentum when real life interrupts.'],
+      ['Can I edit chapters after publishing?', 'WordWeft offers chapter editing and revision history. Review changes carefully, especially if readers already depend on an earlier plot detail.'],
+      ['Does publishing online transfer ownership?', 'Publishing on WordWeft does not require transferring ownership of your original manuscript. Review the platform terms and any other contracts before posting elsewhere.'],
+    ],
+    related: ['/how-to-plan-a-novel', '/writing-tools', '/publish-stories', '/world-building-tools'],
+  },
+  '/how-to-plan-a-novel': {
+    title: 'How to Plan a Novel: Practical Outline & Story Notes | WordWeft',
+    heading: 'A practical way to plan a novel before you write.',
+    description: 'Learn to plan a novel with a premise, character goals, turning points, a chapter outline, and story notes. Includes a usable example and revision checklist.',
+    eyebrow: 'Novel planning guide', cta: 'Open the writing workspace', href: '/write',
+    intro: 'A novel outline does not have to be a rigid template. Its job is to help you answer the questions that would otherwise stop you halfway through a draft. Start with a small plan you can revise as the story takes shape; the finished manuscript matters more than whether you followed every beat you wrote down.',
+    sections: [
+      ['01. Write the promise of the story', 'Describe who the story follows, their goal, the obstacle, and what is at stake. Example: “When a coastal town begins forgetting its own history, an apprentice archivist must recover a stolen ledger before the last witnesses disappear.” This tells you what kind of events the book needs to deliver.'],
+      ['02. Give the protagonist a choice that costs something', 'Write down what the main character wants externally and what they are afraid to admit internally. Then give them two competing needs. When a character must choose between protecting a friend and discovering the truth, scenes can turn on decisions rather than coincidences.'],
+      ['03. Define a beginning, middle, and ending', 'At the beginning, establish the normal situation and the disruption. In the middle, raise the cost of pursuing the goal and let the character’s first approach fail. At the ending, force a consequential choice and show its effects. You can move these moments during drafting; they are signposts, not page-count requirements.'],
+      ['04. Turn turning points into scene cards', 'For each scene, write four short fields: point-of-view character, immediate goal, obstacle, and outcome. A scene without a changed outcome may need a stronger conflict or could belong inside another scene. Arrange the cards into chapters based on narrative movement, not an arbitrary target length.'],
+      ['05. Maintain a source of truth for people and places', 'Keep character names, roles, relationships, locations, timelines, and world rules in one place. Mark unresolved questions. If you create a character profile after drafting a scene, link it to the book’s planning materials so the next chapter is easier to write. WordWeft provides a manuscript workspace with chapters, character profiles, scenes, and lore.'],
+      ['06. Draft before polishing the outline forever', 'Once you know the opening conflict and a few consequential decisions, write the first chapter. If the draft suggests a stronger direction, update the plan. Treat the outline as a tool to complete the work, not a prerequisite that must be perfect before you begin.'],
+      ['07. Revise with the reader’s experience in mind', 'On revision, check what readers know at each moment, whether every major action follows from character motivation, and whether the ending answers the promise of the opening. Read chapter breaks aloud and check the text on smaller screens if you plan to publish online.'],
+    ],
+    steps: [
+      'Write one premise sentence and one goal/fear pair for your protagonist.',
+      'Choose three major turning points and make a card for each opening scene.',
+      'Put chapters and character notes together, then draft the first chapter before over-planning.',
+    ],
+    faqs: [
+      ['Should I outline every chapter?', 'Only as much as helps you write. Some writers need detailed scene cards; others prefer a premise, three turning points, and a continuity notebook. Both approaches can produce a coherent novel.'],
+      ['What is the difference between a plot outline and story bible?', 'An outline maps what happens. A story bible records facts that must remain consistent, such as character relationships, setting details, timelines, and rules. Long stories often benefit from both.'],
+      ['Can WordWeft be used just for drafts?', 'You can keep books and chapters as private drafts while using the writing workspace. Publishing is a separate step.'],
+      ['Can I plan a serial with this method?', 'Yes. Break the overarching novel into shorter arcs, and give each published installment a meaningful change. See the web novel guide for release planning.'],
+    ],
+    related: ['/how-to-write-a-web-novel', '/writing-tools', '/world-building-tools', '/publish-stories'],
+  },
 };
 
 export const staticPages = {
@@ -223,4 +313,4 @@ export const staticPages = {
 };
 
 export const discoveryLinks = Object.entries(landingPages).map(([href, page]) => ({ href, label: page.eyebrow }));
-export const primaryDiscoveryLinks = discoveryLinks.filter(link => ['/read-online', '/writing-tools', '/publish-stories', '/world-building-tools'].includes(link.href));
+export const primaryDiscoveryLinks = discoveryLinks.filter(link => ['/read-online', '/writing-tools', '/publish-stories', '/world-building-tools', '/wattpad-alternatives', '/royal-road-alternatives', '/webnovel-alternatives', '/how-to-write-a-web-novel', '/how-to-plan-a-novel'].includes(link.href));

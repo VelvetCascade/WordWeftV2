@@ -7,7 +7,7 @@ import '../styles/support-v2.css';
 export const DiscoveryLandingPage: React.FC<{ path: string }> = ({ path }) => {
     const page = landingPages[path];
     if (!page) return <NotFoundPage />;
-    const details = page as typeof page & { criteria?: [string, string][]; related?: string[] };
+    const details = page as typeof page & { criteria?: [string, string][]; related?: string[]; sources?: { label: string; href: string }[] };
     const related = details.related || ['/read-online', '/writing-tools', '/publish-stories', '/world-building-tools'];
     const links = discoveryLinks.filter(link => related.includes(link.href) && link.href !== path);
     return <div className="wv-support wv-discovery">
@@ -17,6 +17,7 @@ export const DiscoveryLandingPage: React.FC<{ path: string }> = ({ path }) => {
             <div className="wv-discovery-sections">{page.sections.map(([heading, text]) => <section key={heading}><h2>{heading}</h2><p>{text}</p></section>)}</div>
             <section className="wv-discovery-steps"><h2>Getting started</h2><ol>{page.steps.map((step, index) => <li key={step}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{step}</li>)}</ol></section>
             <section className="wv-discovery-faq"><h2>Before you begin</h2>{page.faqs.map(([question, answer]) => <details className="wv-faq" key={question}><summary>{question} <Plus size={18} aria-hidden="true" /></summary><p>{answer}</p></details>)}</section>
+            {details.sources?.length ? <aside className="wv-discovery-sources" aria-label="External platform sources"><h2>Official platform references</h2><p>Compare current features and terms from the platforms themselves.</p><ul>{details.sources.map(source => <li key={source.href}><a href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}</ul></aside> : null}
             <nav className="wv-discovery-related" aria-label="Explore WordWeft"><h2>More to explore</h2><div>{links.map(link => <a className="wv-button" key={link.href} href={link.href}>{link.label} <ArrowRight size={16} /></a>)}<a className="wv-button wv-button-plain" href="/features">Explore all features <ArrowRight size={16} /></a></div></nav>
         </main><Footer />
     </div>;

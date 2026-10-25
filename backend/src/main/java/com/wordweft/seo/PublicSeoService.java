@@ -191,10 +191,17 @@ public class PublicSeoService {
         ops.add(Aggregation.match(publicCriteria()));
         switch (kind) {
             case "chapters" -> {
-                ops.add(Aggregation.unwind("chapters"));
+                // Only the first public chapter has a crawlable manuscript preview.
+                // Later chapters show a sign-in gate and contribute little unique indexable text.
+                // Preserve author-defined chapter order instead of sorting chapter UUIDs.
+                ops.add(Aggregation.unwind("chapters", "chapterOrder"));
                 ops.add(Aggregation.match(Criteria.where("chapters.status").is("published")));
-                ops.add(Aggregation.project().and("_id").as("bookId").and("chapters._id").as("chapterId")
-                        .and("lastUpdatedAt").as("lastmod").andExclude("_id"));
+                ops.add(Aggregation.sort(Sort.by(Sort.Order.asc("_id"), Sort.Order.asc("chapterOrder"))));
+                ops.add(Aggregation.group("_id")
+                        .first("chapters._id").as("chapterId")
+                        .first("lastUpdatedAt").as("lastmod"));
+                ops.add(Aggregation.project().and("_id").as("bookId").and("chapterId").as("chapterId")
+                        .and("lastmod").as("lastmod").andExclude("_id"));
                 ops.add(Aggregation.sort(Sort.by("bookId", "chapterId")));
             }
             case "authors" -> { ops.add(Aggregation.group("authorId")); ops.add(Aggregation.sort(Sort.by("_id"))); }
