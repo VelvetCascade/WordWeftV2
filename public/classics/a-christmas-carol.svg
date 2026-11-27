@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
+<defs>
+  <linearGradient id="night" x2="0" y2="1"><stop stop-color="#0b1821"/><stop offset="1" stop-color="#18313b"/></linearGradient>
+  <radialGradient id="lamp"><stop stop-color="#f6d58c" stop-opacity=".42"/><stop offset="1" stop-color="#f6d58c" stop-opacity="0"/></radialGradient>
+</defs>
+<path fill="url(#night)" d="M0 0h600v900H0z"/>
+<path fill="none" stroke="#bd9b5e" stroke-width="2" d="M28 28h544v844H28z"/>
+<path fill="none" stroke="#bd9b5e" stroke-opacity=".45" d="M36 36h528v828H36z"/>
+<g fill="#dbc79e" text-anchor="middle" font-family="DejaVu Sans" font-size="13" letter-spacing="5"><text x="300" y="101">WORDWEFT CLASSICS</text><text x="300" y="757">FIRST PUBLISHED 1843</text></g>
+<g fill="#f8ebd0" text-anchor="middle" font-family="DejaVu Serif">
+  <text x="300" y="194" font-size="41" letter-spacing="6">A CHRISTMAS</text>
+  <text x="300" y="285" font-size="90" letter-spacing="4">CAROL</text>
+  <text x="300" y="340" font-size="21" font-style="italic">A Ghost Story of Christmas</text>
+  <text x="300" y="810" font-size="32">Charles Dickens</text>
+</g>
+<path stroke="#bd9b5e" d="M212 377h176M212 717h176"/>
+<path fill="#10232c" stroke="#9e8964" stroke-width="2" d="M211 687V519a89 89 0 01178 0v168z"/>
+<path fill="#243b40" stroke="#aa9164" d="M224 683V521a76 76 0 01152 0v162z"/>
+<path fill="none" stroke="#a48f67" stroke-opacity=".6" d="M238 541v-23a62 62 0 01124 0v23zm0 18h50v100h-50zm74 0h50v100h-50z"/>
+<path fill="#09171f" d="M196 683h208v9H196zm-13 9h234v10H183z"/>
+<circle cx="300" cy="464" r="91" fill="url(#lamp)"/>
+<path fill="#ebcd8a" stroke="#312b21" stroke-width="3" d="M285 458h30l-5 27h-20z"/>
+<path fill="none" stroke="#bd9b5e" stroke-width="2" d="M281 458h38m-19-16v16m0 0v27m-10 0h20"/>
+<circle cx="347" cy="601" r="6" fill="none" stroke="#dac089" stroke-width="2"/>
+<g fill="#e7d9b8" opacity=".6">
+<circle cx="165" cy="523" r="2"/><circle cx="405" cy="511" r="2"/><circle cx="194" cy="588" r="2"/><circle cx="430" cy="592" r="1.5"/><circle cx="162" cy="647" r="1.5"/><circle cx="399" cy="636" r="2"/><circle cx="181" cy="455" r="1.5"/><circle cx="420" cy="454" r="2"/>
+</g>
+</svg>
