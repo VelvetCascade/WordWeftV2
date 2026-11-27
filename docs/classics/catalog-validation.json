@@ -1,0 +1,24 @@
+{
+  "candidate_rows": 1000,
+  "distinct_authors": 113,
+  "cross_catalog": 738,
+  "archive_only": 262,
+  "source_download_count": 44,
+  "archive_download_count": 1000,
+  "evidence": {
+    "Archive item record checked": 140,
+    "Archive search record only": 860
+  },
+  "authored_notes": 8,
+  "exclusion_reasons": {
+    "item metadata shows restricted access or no listed public OCR/PDF/scan file": 4,
+    "item metadata indicates one volume or unresolved volume designation": 20,
+    "unverified record has possible single-volume marker": 209,
+    "direct date too indeterminate": 1,
+    "item date outside the screen": 1,
+    "collected edition likely overlaps standalone works": 1
+  },
+  "earliest_scan": "1751",
+  "latest_scan": "1915",
+  "latest_death": "1920"
+}
