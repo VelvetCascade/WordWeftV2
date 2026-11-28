@@ -1593,7 +1593,7 @@ export const getNotificationStreamUrl = (): string => {
 // --- Search API ---
 
 export const searchAutocomplete = async (query: string): Promise<SearchAutocompleteResponse> => {
-    const response = await fetch(`${API_BASE_URL}/search/autocomplete?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_BASE_URL}/search/autocomplete?q=${encodeURIComponent(query)}`, { headers: getHeaders(), cache: 'no-store' });
     return handleResponse(response);
 };
 
@@ -1609,7 +1609,7 @@ export const searchFull = async (
         page: String(page),
         size: String(size),
     });
-    const response = await fetch(`${API_BASE_URL}/search?${params}`);
+    const response = await fetch(`${API_BASE_URL}/search?${params}`, { headers: getHeaders(), cache: 'no-store' });
     return handleResponse(response);
 };
 
