@@ -151,3 +151,24 @@ test('each book detail read reaches the server to preserve its view effect', asy
         assert.equal(results.every(result => result.id === 'book'), true);
     } finally { h.dispose(); }
 });
+
+test('autocomplete and full search use the current viewer session without caching personalized results', async () => {
+    const h = harness((url, init) => {
+        const books = init.headers?.Authorization === 'Bearer adult-session'
+            ? [{ id: 'classics-great-gatsby', title: 'The Great Gatsby' }] : [];
+        return Promise.resolve(json(url.includes('/autocomplete')
+            ? { books, authors: [] }
+            : { books: { items: books, total: books.length, page: 0, totalPages: books.length }, authors: { items: [], total: 0, page: 0, totalPages: 0 } }));
+    });
+    try {
+        h.storage.set('wordweft_jwt', 'adult-session');
+        assert.equal((await h.api.searchAutocomplete('Gatsby')).books[0].id, 'classics-great-gatsby');
+        assert.equal((await h.api.searchFull('Gatsby')).books.items[0].id, 'classics-great-gatsby');
+        h.storage.remove('wordweft_jwt');
+        assert.equal((await h.api.searchAutocomplete('Gatsby')).books.length, 0);
+        assert.equal((await h.api.searchFull('Gatsby')).books.items.length, 0);
+        assert.deepEqual(h.requests.map(request => request.init.headers.Authorization),
+            ['Bearer adult-session', 'Bearer adult-session', '', '']);
+        assert.ok(h.requests.every(request => request.init.cache === 'no-store'));
+    } finally { h.dispose(); }
+});
